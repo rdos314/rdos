@@ -170,6 +170,7 @@ hf_user_handle   DD ?
 hf_proc_index    DD ?
 hf_proc_sel      DW ?
 hf_file_sel      DW ?
+hf_clone_pos     DD ?,?
 
 handle_file   ENDS
 
@@ -193,7 +194,6 @@ handle_kernel_file  STRUC
 
 hkf_base         handle_kernel_interface <>
 
-hkf_clone_pos    DD ?,?
 hkf_map_linear   DD ?
 hkf_map_sel      DW ?
 
@@ -5243,6 +5243,12 @@ InitHandleSel   Proc near
     mov es:hui_clone2_proc, OFFSET CloneSel2
     mov es:hui_clone2_proc+4,cs
 ;
+    mov es:hui_exec1_proc, OFFSET ExecSel1
+    mov es:hui_exec1_proc+4,cs
+;
+    mov es:hui_exec2_proc, OFFSET ExecSel2
+    mov es:hui_exec2_proc+4,cs
+;
     mov es:hui_delete_proc, OFFSET DeleteHandleObj
     mov es:hui_delete_proc+4,cs
 ;
@@ -5489,9 +5495,9 @@ CloneSel1      Proc far
     add edx,OFFSET fh_pos_arr
     add edx,eax
     mov eax,es:[edx]
-    mov ds:hkf_clone_pos,eax
+    mov ds:hf_clone_pos,eax
     mov eax,es:[edx+4]
-    mov ds:hkf_clone_pos+4,eax
+    mov ds:hf_clone_pos+4,eax
 ;
     pop edx
     pop eax
@@ -5582,10 +5588,10 @@ csLoop:
     shl esi,3
     add edx,esi
 ;
-    mov eax,fs:hkf_clone_pos
+    mov eax,fs:hf_clone_pos
     mov es:[edx].fh_pos_arr,eax
 ;
-    mov eax,fs:hkf_clone_pos+4
+    mov eax,fs:hf_clone_pos+4
     mov es:[edx].fh_pos_arr+4,eax
 ;
     mov ax,flat_sel
@@ -5633,6 +5639,38 @@ csDone:
     pop ds
     ret
 CloneSel2      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ExecSel1
+;
+;       DESCRIPTION:    Exec handle sel, step 1
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ExecSel1      Proc far
+    clc
+    ret
+ExecSel1      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ExecSel2
+;
+;       DESCRIPTION:    Exec handle sel, step 2
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ExecSel2      Proc far
+    clc
+    ret
+ExecSel2      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -2475,8 +2475,12 @@ CloneProcHandle MACRO
     OsGate clone_proc_handle_nr
                     ENDM
 
-ExecProcHandle MACRO
-    OsGate exec_proc_handle_nr
+ExecCloseProcHandle MACRO
+    OsGate exec_close_proc_handle_nr
+                    ENDM
+
+ExecUpdateProcHandle MACRO
+    OsGate exec_update_proc_handle_nr
                     ENDM
 
 ApplyProcHandle MACRO

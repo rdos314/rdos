@@ -2196,7 +2196,7 @@ lpEnvDone:
     je lpDosExec
 
 lpForkExec:
-    ExecProcHandle
+    ExecCloseProcHandle
     ResetLdt
     mov ds,es:p_proc_sel
 
@@ -2223,6 +2223,7 @@ lpForkModOk:
     DetachFork
     LeaveSection ds:pr_cow_section
     ResetProcess
+    ExecUpdateProcHandle
 ;
     mov es:p_prog_id,bx
     mov es:p_prog_sel,gs

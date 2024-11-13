@@ -274,6 +274,7 @@ clone_proc_handle Proc far
 ;
     InitSection es:[edx].ph_section
 ;
+    int 3
     mov ecx,USER_HANDLE_COUNT
     xor ebx,ebx
 
@@ -339,15 +340,15 @@ clone_proc_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ExecProcHandle
+;           NAME:           ExecCloseProcHandle
 ;
 ;           DESCRIPTION:    Close non stdin/stdout files
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-exec_proc_handle_name DB 'Exec Proc Handle', 0
+exec_close_proc_handle_name DB 'Exec Close Proc Handle', 0
 
-exec_proc_handle Proc far
+exec_close_proc_handle Proc far
     push ds
     push eax
     push ebx
@@ -357,28 +358,45 @@ exec_proc_handle Proc far
     mov eax,proc_handle_sel
     mov ds,eax
 ;
-    mov ecx,USER_HANDLE_COUNT - 3
-    mov ebx,3
     EnterSection ds:hd_section
+;
+    mov ecx,3
+    xor ebx,ebx
 
-ephLoop:
+ecphLoopStd:
     mov ax,ds:[2*ebx].ph_sel_arr
     or ax,ax
-    jz ephNext
+    jz ecphNextStd
+;
+    push ds
+    mov ds,eax
+    call fword ptr ds:hui_exec1_proc
+    pop ds
+
+ecphNextStd:
+    inc ebx
+    loop ecphLoopStd
+
+    mov ecx,USER_HANDLE_COUNT - 3
+
+ecphLoop:
+    mov ax,ds:[2*ebx].ph_sel_arr
+    or ax,ax
+    jz ecphNext
 ;
     push ds
     mov ds,eax
     sub ds:hui_ref_count,1
-    jnz ephPop
+    jnz ecphPop
 ;
     call fword ptr ds:hui_free_proc
 
-ephPop:
+ecphPop:
     pop ds
 
-ephNext:
+ecphNext:
     inc ebx
-    loop ephLoop
+    loop ecphLoop
 ;
     LeaveSection ds:hd_section
 ;
@@ -387,7 +405,56 @@ ephNext:
     pop eax
     pop ds
     ret
-exec_proc_handle Endp
+exec_close_proc_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ExecUpdateProcHandle
+;
+;           DESCRIPTION:    Update std handles after user space reset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+exec_update_proc_handle_name DB 'Exec Update Proc Handle', 0
+
+exec_update_proc_handle Proc far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    int 3
+    mov eax,proc_handle_sel
+    mov ds,eax
+;
+    EnterSection ds:hd_section
+;
+    mov ecx,3
+    xor ebx,ebx
+
+euphLoop:
+    mov ax,ds:[2*ebx].ph_sel_arr
+    or ax,ax
+    jz euphNext
+;
+    push ds
+    mov ds,eax
+    call fword ptr ds:hui_exec2_proc
+    pop ds
+
+euphNext:
+    inc ebx
+    loop euphLoop
+;
+    LeaveSection ds:hd_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+exec_update_proc_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -514,6 +581,12 @@ InitHandleObj  Proc near
 ;
     mov es:hui_clone2_proc,OFFSET handle_fail
     mov es:hui_clone2_proc+4,cs
+;
+    mov es:hui_exec1_proc,OFFSET handle_ok
+    mov es:hui_exec1_proc+4,cs
+;
+    mov es:hui_exec2_proc,OFFSET handle_ok
+    mov es:hui_exec2_proc+4,cs
 ;
     mov es:hui_get_map_proc,OFFSET handle_fail
     mov es:hui_get_map_proc+4,cs
@@ -3209,10 +3282,16 @@ init_sys_handle     PROC near
     mov ax,clone_proc_handle_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET exec_proc_handle
-    mov edi,OFFSET exec_proc_handle_name
+    mov esi,OFFSET exec_close_proc_handle
+    mov edi,OFFSET exec_close_proc_handle_name
     xor cl,cl
-    mov ax,exec_proc_handle_nr
+    mov ax,exec_close_proc_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET exec_update_proc_handle
+    mov edi,OFFSET exec_update_proc_handle_name
+    xor cl,cl
+    mov ax,exec_update_proc_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET delete_proc_handle
