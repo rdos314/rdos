@@ -274,7 +274,6 @@ clone_proc_handle Proc far
 ;
     InitSection es:[edx].ph_section
 ;
-    int 3
     mov ecx,USER_HANDLE_COUNT
     xor ebx,ebx
 
@@ -354,7 +353,6 @@ exec_close_proc_handle Proc far
     push ebx
     push ecx
 ;
-    int 3
     mov eax,proc_handle_sel
     mov ds,eax
 ;
@@ -424,7 +422,6 @@ exec_update_proc_handle Proc far
     push ebx
     push ecx
 ;
-    int 3
     mov eax,proc_handle_sel
     mov ds,eax
 ;

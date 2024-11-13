@@ -5652,7 +5652,29 @@ CloneSel2      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExecSel1      Proc far
+    push ds
+    push es
+    push eax
+;
+    int 3
+    xor ax,ax
+    xchg ax,ds:hf_proc_sel
+    or ax,ax
+    jz esDone1
+;
+    mov ds,eax
+    call DeleteProcSel
+    mov es,eax
+    xor eax,eax
+    mov ds,eax
+    FreeMem
+
+esDone1:
     clc
+;
+    pop eax
+    pop es
+    pop ds
     ret
 ExecSel1      Endp
 
@@ -5668,6 +5690,7 @@ ExecSel1      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExecSel2      Proc far
+    int 3
     clc
     ret
 ExecSel2      Endp
