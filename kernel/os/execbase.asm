@@ -2590,7 +2590,6 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnloadProgram:
-    DeleteProcHandle
     ResetProcess
 ;
     GetThread
@@ -2665,6 +2664,7 @@ ukConsoleDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnloadProcess:
+    DeleteProcHandle
     GetThread
     mov es,ax
     mov ds,es:p_prog_sel
