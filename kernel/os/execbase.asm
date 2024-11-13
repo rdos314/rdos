@@ -2590,6 +2590,7 @@ register_loader   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnloadProgram:
+    DeleteProcHandle
     ResetProcess
 ;
     GetThread
