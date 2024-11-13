@@ -170,7 +170,7 @@ hf_user_handle   DD ?
 hf_proc_index    DD ?
 hf_proc_sel      DW ?
 hf_file_sel      DW ?
-hf_clone_pos     DD ?,?
+hf_temp_pos      DD ?,?
 
 handle_file   ENDS
 
@@ -5354,6 +5354,94 @@ CreateHandleObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SavePos
+;
+;       DESCRIPTION:    Save position
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SavePos   Proc near
+    push ds
+    push es
+    push eax
+    push edx
+;
+    mov es,ds:hf_proc_sel
+    mov edx,es:pf_map_linear
+;
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    mov eax,ds:hf_user_handle
+    dec eax
+    shl eax,3
+;
+    mov edx,es:[edx].fm_handle_ptr
+    add edx,OFFSET fh_pos_arr
+    add edx,eax
+;
+    mov eax,es:[edx]
+    mov ds:hf_temp_pos,eax
+;
+    mov eax,es:[edx+4]
+    mov ds:hf_temp_pos+4,eax
+;
+    pop edx
+    pop eax
+    pop es
+    pop ds
+    ret
+SavePos  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RestorePos
+;
+;       DESCRIPTION:    Restore position
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RestorePos   Proc near
+    push ds
+    push es
+    push eax
+    push edx
+;
+    mov es,ds:hf_proc_sel
+    mov edx,es:pf_map_linear
+;
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    mov eax,ds:hf_user_handle
+    dec eax
+    shl eax,3
+;
+    mov edx,es:[edx].fm_handle_ptr
+    add edx,OFFSET fh_pos_arr
+    add edx,eax
+;
+    mov eax,ds:hf_temp_pos
+    mov es:[edx].fh_pos_arr,eax
+;
+    mov eax,ds:hf_temp_pos+4
+    mov es:[edx].fh_pos_arr+4,eax
+;
+    pop edx
+    pop eax
+    pop es
+    pop ds
+    ret
+RestorePos  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DupSel
 ;
 ;       DESCRIPTION:    Dup handle sel
@@ -5476,33 +5564,7 @@ DupSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloneSel1      Proc far
-    push ds
-    push es
-    push eax
-    push edx
-;
-    mov es,ds:hf_proc_sel
-    mov edx,es:pf_map_linear
-;
-    mov ax,flat_data_sel
-    mov es,eax
-;
-    mov eax,ds:hf_user_handle
-    dec eax
-    shl eax,3
-;
-    mov edx,es:[edx].fm_handle_ptr
-    add edx,OFFSET fh_pos_arr
-    add edx,eax
-    mov eax,es:[edx]
-    mov ds:hf_clone_pos,eax
-    mov eax,es:[edx+4]
-    mov ds:hf_clone_pos+4,eax
-;
-    pop edx
-    pop eax
-    pop es
-    pop ds
+    call SavePos
     ret
 CloneSel1      Endp
 
@@ -5588,10 +5650,10 @@ csLoop:
     shl esi,3
     add edx,esi
 ;
-    mov eax,fs:hf_clone_pos
+    mov eax,fs:hf_temp_pos
     mov es:[edx].fh_pos_arr,eax
 ;
-    mov eax,fs:hf_clone_pos+4
+    mov eax,fs:hf_temp_pos+4
     mov es:[edx].fh_pos_arr+4,eax
 ;
     mov ax,flat_sel
@@ -5652,20 +5714,21 @@ CloneSel2      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExecSel1      Proc far
-    push ds
     push es
     push eax
+;
+    call SavePos
 ;
     xor ax,ax
     xchg ax,ds:hf_proc_sel
     or ax,ax
     jz esDone1
 ;
+    push ds
     mov ds,eax
     call DeleteProcSel
     mov es,eax
-    xor eax,eax
-    mov ds,eax
+    pop ds
     FreeMem
 
 esDone1:
@@ -5673,7 +5736,6 @@ esDone1:
 ;
     pop eax
     pop es
-    pop ds
     ret
 ExecSel1      Endp
 
@@ -5691,20 +5753,40 @@ ExecSel1      Endp
 ExecSel2      Proc far
     push ds
     push eax
+    push ebx
+    push edx
 ;
     mov ax,ds:hf_proc_sel
     or ax,ax
     jnz esDone2
 ;
+    mov ebx,ds:hf_proc_index
     push ds
     mov ds,ds:hf_file_sel
     call CreateProcSel
+    mov ds,eax
+    mov ds:pf_index,ebx
     pop ds
     mov ds:hf_proc_sel,ax
 
 esDone2:
+    call RestorePos
+;
+    mov ebx,ds:hf_user_handle
+    dec ebx
+;
+    mov ds,eax
+    inc ds:pf_ref_count
+    mov edx,ds:pf_map_linear
+;
+    mov ax,flat_sel
+    mov ds,eax
+    mov edx,ds:[edx].fm_handle_ptr
+    bts ds:[edx].fh_bitmap,ebx
     clc
 ;
+    pop edx
+    pop ebx
     pop eax
     pop ds
     ret
