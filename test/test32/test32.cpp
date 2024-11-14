@@ -11,6 +11,10 @@
 #include "videodev.h"
 #include "table.h"
 
+void TimeoutCallback(void *param)
+{
+}
+
 void main()
 {
 
@@ -123,9 +127,9 @@ void main()
 
 */
 
-    char *blk;
+    long long timeout = RdosUserGetLongSysTime();
 
-    blk = (char *)RdosStartTimer();
+    RdosStartTimer(TimeoutCallback, 0, 1234, timeout);
 
     printf("Hello world\r\n");
 }

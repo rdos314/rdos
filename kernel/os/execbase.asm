@@ -6434,33 +6434,6 @@ esFail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Start user timer
-;
-;           DESCRIPTION:    Start user timer
-;
-;           RETURNS:        EDI     Timer structure
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_user_timer_name DB 'Start User Timer', 0
-
-start_user_timer   Proc far
-    push ds
-    push eax
-;
-    GetThread
-    mov ds,eax
-    mov ds,ds:p_loader
-    call fword ptr ds:loader_start_timer_proc
-;
-    pop eax
-    pop ds
-    ret
-start_user_timer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -6912,12 +6885,6 @@ InitExec_    Proc near
     mov edi,OFFSET get_process_module_usage_name
     xor dx,dx
     mov ax,get_process_module_usage_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET start_user_timer
-    mov edi,OFFSET start_user_timer_name
-    xor dx,dx
-    mov ax,start_user_timer_nr
     RegisterBimodalUserGate
     ret
 InitExec_    Endp

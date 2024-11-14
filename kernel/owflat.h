@@ -2255,7 +2255,11 @@
 
 #pragma aux RdosStartTimer = \
     CallGate_start_user_timer \
-    __value [__edi]
+    __parm [__edi] [__esi] [__ebx] [__edx __eax]
+
+#pragma aux RdosStopTimer = \
+    CallGate_stop_user_timer \
+    __parm [__ebx]
 
 #pragma aux RdosGetActiveCores = \
     CallGate_get_active_cores \

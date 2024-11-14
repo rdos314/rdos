@@ -1002,6 +1002,12 @@ spOk:
     cmp ax,user_get_time_nr
     je spGetTime
 ;
+    cmp ax,start_user_timer_nr
+    je spStartTimer
+;
+    cmp ax,stop_user_timer_nr
+    je spStopTimer
+;
     cmp ax,create_user_section_nr
     je spCreate
 ;    
@@ -1107,6 +1113,13 @@ spGetTime:
     pop edx
     pop es
     ret
+
+
+spStartTimer:
+    int 3
+
+spStopTimer:
+    int 3
 
 spCreate:
     push es

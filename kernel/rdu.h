@@ -1026,6 +1026,7 @@
 #define usergate_delete_handle 0x00000353
 
 #define usergate_start_user_timer 0x00000354
+#define usergate_stop_user_timer 0x00000355
 
 
 
@@ -2058,6 +2059,7 @@
 #define CallGate_delete_handle 0x55 0x67 0x9a 83 3 0 0 3 0 0x5d
 
 #define CallGate_start_user_timer 0x55 0x67 0x9a 84 3 0 0 3 0 0x5d
+#define CallGate_stop_user_timer 0x55 0x67 0x9a 85 3 0 0 3 0 0x5d
 
 #else
 
@@ -3088,5 +3090,6 @@
 #define CallGate_delete_handle 0x3e 0x67 0x9a 83 3 0 0 3 0
 
 #define CallGate_start_user_timer 0x3e 0x67 0x9a 84 3 0 0 3 0
+#define CallGate_stop_user_timer 0x3e 0x67 0x9a 85 3 0 0 3 0
 
 #endif

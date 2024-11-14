@@ -1026,5 +1026,6 @@ update_handle_nr                  = 850
 delete_handle_nr                  = 851
 
 start_user_timer_nr               = 852
+stop_user_timer_nr                = 853
 
 usergate_entries                  = 880

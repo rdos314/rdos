@@ -572,9 +572,17 @@ HasGlobalTimer       MACRO
                                                 ENDM
 
 
-; OUT EDI      Timer page
+; IN  EBX       Handle
+; IN  EDX:EAX   Timeout
+; IN  ES:EDI    Callback
+; IN  DS:ESI    Param
 StartUserTimer       MACRO
         UserGate start_user_timer_nr
+                                                ENDM
+
+; IN  EBX       Handle
+StopUserTimer       MACRO
+        UserGate stop_user_timer_nr
                                                 ENDM
 
 ;;;;;;;;; CRITICAL SECTIONS ;;;;;;;;;;;;
