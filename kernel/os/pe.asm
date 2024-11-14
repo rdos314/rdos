@@ -6021,6 +6021,20 @@ attach_debug  Proc far
     pop ds
     ret
 attach_debug  Endp
+            
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           start_timer_thread
+;
+;           DESCRIPTION:    Start timer thread
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_timer_thread  Proc far
+    int 3
+    ret
+start_timer_thread  Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6070,6 +6084,7 @@ l34 DD OFFSET detach_kernel_fork_proc,    SEG code
 l35 DD OFFSET is_valid_serv,              SEG code
 l36 DD OFFSET create_serv,                SEG code
 l37 DD OFFSET init_serv_module,           SEG code
+l38 DD OFFSET start_timer_thread,         SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
