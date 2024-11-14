@@ -171,8 +171,6 @@ pr_cow_thread        DW ?
 pr_cow_counter       DW ?
 pr_cow_section       section_typ <>
 
-pr_file_linear       DD ?
-
 pr_fault_linear      DD ?,?
 pr_fault_counter     DW ?
 

@@ -796,37 +796,6 @@ gutRetry:
     ret
 get_us_time    Endp
 
-get_file  Proc near
-    push eax
-f1:
-    mov edx,1234567h
-    mov eax,ebx
-    shr eax,24
-    mov edx,es:[edx+4*eax]
-    or edx,edx
-    jz gfFail
-;
-    movzx eax,bx
-    dec eax
-    shl eax,3
-    cmp eax,1000h
-    jae gfFail    
-;
-    mov edx,es:[edx+eax]
-    or edx,edx
-    jz gfFail
-;
-    clc
-    jmp gfDone
-
-gfFail:
-    stc
-
-gfDone:
-    pop eax
-    ret
-get_file  Endp
-
 ufunc_end:        
 
 CreateUserFunc  Proc near
@@ -951,34 +920,6 @@ CreateUserFunc  Proc near
 ;
     mov edi,esi
     add edi,OFFSET p8 + 1
-    mov es:[edi],edx
-;
-    mov edx,gs:pr_file_linear
-    or edx,edx
-    jnz cufFileAlloced
-;
-    mov eax,1000h
-    AllocateLocalLinear
-    mov gs:pr_file_linear,edx
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    sub edx,ds:flat_base
-;
-    mov edi,edx
-    mov ecx,400h
-    xor eax,eax
-    rep stosd
-    jmp cufFileReloc
-
-cufFileAlloced:
-    mov ax,system_data_sel
-    mov ds,ax
-    sub edx,ds:flat_base
-
-cufFileReloc:
-    mov edi,esi
-    add edi,OFFSET f1 + 1
     mov es:[edi],edx
 ;
     pop edi
