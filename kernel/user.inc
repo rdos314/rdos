@@ -571,6 +571,9 @@ HasGlobalTimer       MACRO
         UserGate has_global_timer_nr
                                                 ENDM
 
+InitUserTimer       MACRO
+        UserGate init_user_timer_nr
+                                                ENDM
 
 ; IN  EBX       Handle
 ; IN  EDX:EAX   Timeout

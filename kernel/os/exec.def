@@ -384,7 +384,7 @@ loader_create_serv_proc           DD ?,?
 ; OUT  BX                 Module selector
 loader_init_serv_proc             DD ?,?
 
-loader_start_timer_proc           DD ?,?
+loader_init_timer_proc            DD ?,?
 
 loader_interface_struc    ENDS
 

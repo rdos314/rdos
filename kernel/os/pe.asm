@@ -819,11 +819,19 @@ get_us_time    Endp
 
 start_us_timer    Proc near
     push ecx
+    push ebp
 
 t1:
-    mov ecx,12345678h
-    mov al,[ecx].ts_started
+    mov ebp,12345678h
+    mov al,[ebp].ts_started
+    or al,al
+    jnz sutRunning
 ;
+    UserGateApp init_user_timer_nr
+
+sutRunning:
+;
+    pop ebp
     pop ecx
     ret
 start_us_timer    Endp
@@ -6128,16 +6136,16 @@ attach_debug  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           start_timer_thread
+;           NAME:           init_timer
 ;
-;           DESCRIPTION:    Start timer thread
-;;
+;           DESCRIPTION:    Init timer
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_timer_thread  Proc far
+init_timer  Proc far
     int 3
     ret
-start_timer_thread  Endp
+init_timer  Endp
                        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6187,7 +6195,7 @@ l34 DD OFFSET detach_kernel_fork_proc,    SEG code
 l35 DD OFFSET is_valid_serv,              SEG code
 l36 DD OFFSET create_serv,                SEG code
 l37 DD OFFSET init_serv_module,           SEG code
-l38 DD OFFSET start_timer_thread,         SEG code
+l38 DD OFFSET init_timer,                 SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

@@ -6431,6 +6431,32 @@ exec_serv:
 esFail:
     TerminateThread
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitUserTimer
+;
+;           DESCRIPTION:    Init user timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_user_timer_name DB 'Init User Timer',0
+    
+init_user_timer   Proc far
+    push ds
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_loader   
+    call fword ptr ds:loader_init_timer_proc
+;
+    pop eax
+    pop ds
+    ret
+init_user_timer   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -6885,6 +6911,12 @@ InitExec_    Proc near
     mov edi,OFFSET get_process_module_usage_name
     xor dx,dx
     mov ax,get_process_module_usage_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET init_user_timer
+    mov edi,OFFSET init_user_timer_name
+    xor dx,dx
+    mov ax,init_user_timer_nr
     RegisterBimodalUserGate
     ret
 InitExec_    Endp
