@@ -579,14 +579,6 @@ void RdosFreePhysical(long long ads);
 
 void RdosRegisterSwapProc(__rdos_swap_callback *callb_proc);
 
-void RdosStartTimer(    int sel_id,
-                        unsigned long expire_msb,
-                        unsigned long expire_lsb,
-                        __rdos_timer_callback *callb_proc,
-                        int callb_sel);
-
-void RdosStopTimer(     int sel_id);
-
 long RdosGetApicId();
 int RdosGetCoreCount();
 int RdosGetCore();
@@ -1213,14 +1205,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosRegisterSwapProc = \
     OsGate_register_swap_proc  \
     __parm [__es __edi]
-
-#pragma aux RdosStartTimer = \
-    OsGate_start_timer  \
-    __parm [__ebx] [__edx] [__eax] [__es __edi] [__ecx]
-
-#pragma aux RdosStopTimer = \
-    OsGate_stop_timer  \
-    __parm [__ebx]
 
 #pragma aux RdosGetApicId = \
     OsGate_get_apic_id  \
