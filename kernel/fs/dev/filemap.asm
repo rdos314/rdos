@@ -5761,9 +5761,22 @@ ExecSel2      Proc far
     jnz esDone2
 ;
     mov ebx,ds:hf_proc_index
+    cmp ebx,PROC_HANDLE_COUNT
+    jbe esProcHighOk
+;
+    int 3
+
+esProcHighOk:
+    sub ebx,1
+    jae esProcLowOk
+;
+    int 3
+
+esProcLowOk:
     push ds
     mov ds,ds:hf_file_sel
     call CreateProcSel
+    mov ds:[2*ebx].kf_sel_arr,ax
     mov ds,eax
     mov ds:pf_index,ebx
     pop ds
