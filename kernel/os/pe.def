@@ -152,6 +152,7 @@ pe_program_struc  STRUC
 ppr_base                        program_struc <>
 
 ppr_section_linear              DD ?
+ppr_timer_linear                DD ?
 ppr_get_system_time_proc        DD ?
 ppr_get_time_proc               DD ?
 ppr_start_timer_proc            DD ?

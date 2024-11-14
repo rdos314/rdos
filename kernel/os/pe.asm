@@ -797,10 +797,24 @@ gutRetry:
 get_us_time    Endp
 
 start_us_timer    Proc near
+    push ecx
+
+t1:
+    mov ecx,12345678h
+
+;
+    pop ecx
     ret
 start_us_timer    Endp
 
 stop_us_timer     Proc near
+    push ecx
+
+t2:
+    mov ecx,12345678h
+
+;
+    pop ecx
     ret
 stop_us_timer     Endp
 
@@ -936,6 +950,23 @@ CreateUserFunc  Proc near
 ;
     mov edi,esi
     add edi,OFFSET p8 + 1
+    mov es:[edi],edx
+;
+    mov eax,1000h
+    AllocateLocalLinear
+    mov gs:ppr_timer_linear,edx
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;
+    mov edi,esi
+    add edi,OFFSET t1 + 1
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET t2 + 1
     mov es:[edi],edx
 ;
     pop edi
