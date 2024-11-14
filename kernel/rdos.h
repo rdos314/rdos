@@ -147,6 +147,11 @@ struct RdosFutex
     char *Name;
 };
 
+struct RdosTimer
+{
+    char Resv[16];
+};
+
 struct RdosDirEntry
 {
     long long Inode;
@@ -733,6 +738,8 @@ void RDOSAPI RdosCreatePrioThread(void (*Start)(void *Param), int Prio, const ch
 void RDOSAPI RdosTerminateThread();
 int RDOSAPI RdosGetThreadHandle(void);
 int RDOSAPI RdosGetProcessHandle(void);
+
+struct RdosTimer *RdosStartTimer();
 
 int RDOSAPI RdosHasGlobalTimer();
 int RDOSAPI RdosGetActiveCores();

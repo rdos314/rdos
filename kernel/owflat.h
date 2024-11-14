@@ -2253,6 +2253,10 @@
     CarryToBool \
     __value [__eax]
 
+#pragma aux RdosStartTimer = \
+    CallGate_start_user_timer \
+    __value [__edi]
+
 #pragma aux RdosGetActiveCores = \
     CallGate_get_active_cores \
     __value [__eax]

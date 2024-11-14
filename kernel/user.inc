@@ -571,6 +571,12 @@ HasGlobalTimer       MACRO
         UserGate has_global_timer_nr
                                                 ENDM
 
+
+; OUT EDI      Timer page
+StartUserTimer       MACRO
+        UserGate start_user_timer_nr
+                                                ENDM
+
 ;;;;;;;;; CRITICAL SECTIONS ;;;;;;;;;;;;
 
 
