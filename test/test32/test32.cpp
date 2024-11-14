@@ -123,6 +123,10 @@ void main()
 
 */
 
+    char *blk;
+
+    blk = (char *)RdosStartTimer();
+
     printf("Hello world\r\n");
 }
 
