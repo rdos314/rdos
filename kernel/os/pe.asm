@@ -43,6 +43,27 @@ INCLUDE servdev.def
 
 SYS_BASE EQU 0DE000000h
 
+timer_entry_struc    STRUC
+
+tes_timeout      DD ?,?
+tes_callback     DD ?
+tes_param        DD ?
+tes_id           DD ?
+
+timer_entry_struc    ENDS
+
+timer_struc     STRUC
+
+ts_started      DB ?
+ts_resv         DB ?,?,?
+ts_head         DD ?
+ts_tail         DD ?
+ts_futex        futex_struc <>
+ts_timer_arr    DB 200 * SIZE timer_entry_struc DUP(?)
+
+timer_struc     ENDS
+
+
 IFDEF __WASM__
     .686p
     .xmm2
@@ -801,7 +822,7 @@ start_us_timer    Proc near
 
 t1:
     mov ecx,12345678h
-
+    mov al,[ecx].ts_started
 ;
     pop ecx
     ret
@@ -952,12 +973,14 @@ CreateUserFunc  Proc near
     add edi,OFFSET p8 + 1
     mov es:[edi],edx
 ;
-    mov eax,1000h
+    mov eax,SIZE timer_struc
     AllocateLocalLinear
     mov gs:ppr_timer_linear,edx
 ;
     mov edi,edx
-    mov ecx,400h
+    mov ecx,SIZE timer_struc
+    add ecx,3
+    shr ecx,2
     xor eax,eax
     rep stosd
 ;
