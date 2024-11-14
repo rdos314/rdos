@@ -796,6 +796,14 @@ gutRetry:
     ret
 get_us_time    Endp
 
+start_us_timer    Proc near
+    ret
+start_us_timer    Endp
+
+stop_us_timer     Proc near
+    ret
+stop_us_timer     Endp
+
 ufunc_end:        
 
 CreateUserFunc  Proc near
@@ -827,6 +835,14 @@ CreateUserFunc  Proc near
     mov edi,edx
     add edi,OFFSET get_us_time
     mov gs:ppr_get_time_proc,edi
+;    
+    mov edi,edx
+    add edi,OFFSET start_us_timer
+    mov gs:ppr_start_timer_proc,edi
+;    
+    mov edi,edx
+    add edi,OFFSET stop_us_timer
+    mov gs:ppr_stop_timer_proc,edi
 ;    
     mov edi,edx
     add edi,OFFSET create_us_section
@@ -1114,12 +1130,91 @@ spGetTime:
     pop es
     ret
 
-
 spStartTimer:
-    int 3
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_start_timer_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
 
 spStopTimer:
-    int 3
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_stop_timer_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
 
 spCreate:
     push es

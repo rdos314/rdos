@@ -147,11 +147,6 @@ struct RdosFutex
     char *Name;
 };
 
-struct RdosTimer
-{
-    char Resv[16];
-};
-
 struct RdosDirEntry
 {
     long long Inode;
