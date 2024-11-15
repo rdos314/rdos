@@ -803,8 +803,6 @@ start_us_timer    Proc near
 
 tf1:
     mov ebp,12345678h
-    mov ecx,[ebp].us_active_count
-    mov [ebp].us_active_count,1
 ;
     mov al,1
     xchg al,[ebp].us_started
