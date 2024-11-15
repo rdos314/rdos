@@ -801,7 +801,7 @@ start_us_timer    Proc near
     push ecx
     push ebp
 
-t1:
+tf1:
     mov ebp,12345678h
     mov ecx,[ebp].us_active_count
     mov [ebp].us_active_count,1
@@ -819,10 +819,21 @@ sutRunning:
     ret
 start_us_timer    Endp
 
+update_us_timer     Proc near
+    push ecx
+
+tf2:
+    mov ecx,12345678h
+
+;
+    pop ecx
+    ret
+update_us_timer     Endp
+
 stop_us_timer     Proc near
     push ecx
 
-t2:
+tf3:
     mov ecx,12345678h
 
 ;
@@ -972,11 +983,15 @@ CreateUserFunc  Proc near
     pop ds
 ;
     mov edi,esi
-    add edi,OFFSET t1 + 1
+    add edi,OFFSET tf1 + 1
     mov es:[edi],edx
 ;
     mov edi,esi
-    add edi,OFFSET t2 + 1
+    add edi,OFFSET tf2 + 1
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET tf3 + 1
     mov es:[edi],edx
 ;
     pop edi
@@ -1061,6 +1076,9 @@ spOk:
 ;
     cmp ax,start_user_timer_nr
     je spStartTimer
+;
+    cmp ax,update_user_timer_nr
+    je spUpdateTimer
 ;
     cmp ax,stop_user_timer_nr
     je spStopTimer
@@ -1193,6 +1211,49 @@ spStartTimer:
     mov cr0,ecx
 ;
     mov eax,gs:ppr_start_timer_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spUpdateTimer:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_update_timer_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]

@@ -155,6 +155,7 @@ ppr_section_linear              DD ?
 ppr_get_system_time_proc        DD ?
 ppr_get_time_proc               DD ?
 ppr_start_timer_proc            DD ?
+ppr_update_timer_proc           DD ?
 ppr_stop_timer_proc             DD ?
 ppr_create_section_proc         DD ?
 ppr_create_named_section_proc   DD ?

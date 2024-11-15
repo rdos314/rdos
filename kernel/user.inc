@@ -584,6 +584,13 @@ StartUserTimer       MACRO
                                                 ENDM
 
 ; IN  EBX       Handle
+; IN  EDX:EAX   Timeout
+; OUT NC        Success
+UpdateUserTimer       MACRO
+        UserGate update_user_timer_nr
+                                                ENDM
+
+; IN  EBX       Handle
 StopUserTimer       MACRO
         UserGate stop_user_timer_nr
                                                 ENDM

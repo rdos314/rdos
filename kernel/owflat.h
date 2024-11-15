@@ -2257,6 +2257,12 @@
     CallGate_start_user_timer \
     __parm [__edi] [__esi] [__ebx] [__edx __eax]
 
+#pragma aux RdosUpdateTimer = \
+    CallGate_update_user_timer \
+    CarryToBool \
+    __parm [__ebx] [__edx __eax] \
+    __value [__eax]
+
 #pragma aux RdosStopTimer = \
     CallGate_stop_user_timer \
     __parm [__ebx]
