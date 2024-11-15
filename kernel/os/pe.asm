@@ -797,45 +797,80 @@ gutRetry:
     ret
 get_us_time    Endp
 
+
+; EBP   Timer struc
+
+CheckTimerStarted  Proc near
+    push eax
+;
+    mov al,1
+    xchg al,[ebp].us_started
+    or al,al
+    jnz csRunning
+;
+    UserGateApp init_user_timer_nr
+
+csRunning:
+    pop eax
+    ret
+CheckTimerStarted   Endp
+
 start_us_timer    Proc near
     push ecx
     push ebp
 
 tf1:
     mov ebp,12345678h
+    call CheckTimerStarted
 ;
-    mov al,1
-    xchg al,[ebp].us_started
-    or al,al
-    jnz sutRunning
-;
-    UserGateApp init_user_timer_nr
-
-sutRunning:
     pop ebp
     pop ecx
     ret
 start_us_timer    Endp
 
-update_us_timer     Proc near
+start_us_timeout    Proc near
     push ecx
+    push ebp
 
 tf2:
-    mov ecx,12345678h
+    mov ebp,12345678h
+    call CheckTimerStarted
+;
+    pop ebp
+    pop ecx
+    ret
+start_us_timeout    Endp
+
+update_us_timer     Proc near
+    push ebp
+
+tf3:
+    mov ebp,12345678h
 
 ;
-    pop ecx
+    pop ebp
     ret
 update_us_timer     Endp
 
-stop_us_timer     Proc near
-    push ecx
+update_us_timeout     Proc near
+    push ebp
 
-tf3:
-    mov ecx,12345678h
+tf4:
+    mov ebp,12345678h
 
 ;
-    pop ecx
+    pop ebp
+    ret
+update_us_timeout     Endp
+
+stop_us_timer     Proc near
+    push ebp
+
+tf5:
+    mov ebp,12345678h
+
+;
+    pop ebp
     ret
 stop_us_timer     Endp
 
@@ -874,6 +909,22 @@ CreateUserFunc  Proc near
     mov edi,edx
     add edi,OFFSET start_us_timer
     mov gs:ppr_start_timer_proc,edi
+;    
+    mov edi,edx
+    add edi,OFFSET start_us_timeout
+    mov gs:ppr_start_timeout_proc,edi
+;    
+    mov edi,edx
+    add edi,OFFSET update_us_timer
+    mov gs:ppr_update_timer_proc,edi
+;    
+    mov edi,edx
+    add edi,OFFSET update_us_timer
+    mov gs:ppr_update_timer_proc,edi
+;    
+    mov edi,edx
+    add edi,OFFSET update_us_timeout
+    mov gs:ppr_update_timeout_proc,edi
 ;    
     mov edi,edx
     add edi,OFFSET stop_us_timer
@@ -992,6 +1043,14 @@ CreateUserFunc  Proc near
     add edi,OFFSET tf3 + 1
     mov es:[edi],edx
 ;
+    mov edi,esi
+    add edi,OFFSET tf4 + 1
+    mov es:[edi],edx
+;
+    mov edi,esi
+    add edi,OFFSET tf5 + 1
+    mov es:[edi],edx
+;
     pop edi
     pop esi
     pop edx
@@ -1075,8 +1134,14 @@ spOk:
     cmp ax,start_user_timer_nr
     je spStartTimer
 ;
+    cmp ax,start_user_timeout_nr
+    je spStartTimeout
+;
     cmp ax,update_user_timer_nr
     je spUpdateTimer
+;
+    cmp ax,update_user_timeout_nr
+    je spUpdateTimeout
 ;
     cmp ax,stop_user_timer_nr
     je spStopTimer
@@ -1230,6 +1295,49 @@ spStartTimer:
     pop es
     ret
 
+spStartTimeout:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_start_timeout_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
 spUpdateTimer:
     push es
     push edx
@@ -1252,6 +1360,49 @@ spUpdateTimer:
     mov cr0,ecx
 ;
     mov eax,gs:ppr_update_timer_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spUpdateTimeout:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_update_timeout_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]

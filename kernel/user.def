@@ -1026,8 +1026,10 @@ update_handle_nr                  = 850
 delete_handle_nr                  = 851
 
 start_user_timer_nr               = 852
-update_user_timer_nr              = 853
-stop_user_timer_nr                = 854
-init_user_timer_nr                = 855
+start_user_timeout_nr             = 853
+update_user_timer_nr              = 854
+update_user_timeout_nr            = 855
+stop_user_timer_nr                = 856
+init_user_timer_nr                = 857
 
 usergate_entries                  = 880

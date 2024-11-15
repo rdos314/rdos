@@ -584,6 +584,14 @@ StartUserTimer       MACRO
                                                 ENDM
 
 ; IN  EBX       Handle
+; IN  EAX       Timeout in milliseconds
+; IN  ES:EDI    Callback
+; IN  DS:ESI    Param
+StartUserTimeout       MACRO
+        UserGate start_user_timeout_nr
+                                                ENDM
+
+; IN  EBX       Handle
 ; IN  EDX:EAX   Timeout
 ; OUT NC        Success
 UpdateUserTimer       MACRO
