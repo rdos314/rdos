@@ -85,6 +85,108 @@ _TEXT    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AllocateUserTimer
+;
+;           DESCRIPTION:    Allocate user timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateUserTimer
+
+AllocateUserTimer    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,flat_sel
+    mov es,eax
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+;
+    mov eax,2000h
+    AllocateLocalLinear
+;
+    mov edi,edx
+    mov ecx,800h
+    xor eax,eax
+    rep stosd
+;
+    add edx,1000h
+    GetPageEntry
+    and ax,0F000h
+    or ax,865h
+    SetPageEntry
+    sub edx,1000h
+;
+    mov cx,system_data_sel
+    mov es,ecx
+    sub edx,es:flat_base
+    mov ds:pf_timer_linear,edx
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    and ax,0F000h
+    or ax,63h
+    SetPageEntry
+;
+    push ds
+    AllocateLdt
+    pop ds
+;
+    or bx,4
+    mov ecx,1000h
+    CreateDataSelector32
+    mov ds:pf_active_timer_sel,bx
+;
+    popad
+    pop es
+    pop ds
+    ret
+AllocateUserTimer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeUserTimer
+;
+;           DESCRIPTION:    Free user timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeUserTimer
+
+FreeUserTimer    Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+;
+    GetThread
+    mov es,eax
+    mov es,es:p_proc_sel
+;
+    mov edx,es:pf_timer_linear
+    mov ecx,2000h
+    FreeLinear
+;
+    mov es,es:pf_active_timer_sel
+    FreeMem
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+FreeUserTimer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SetFocus
 ;
 ;           DESCRIPTION:    Set input focus
@@ -1771,6 +1873,7 @@ spawn_startup:
     pop es
     pop ds
 ;
+    call AllocateUserTimer
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
  
@@ -2061,6 +2164,7 @@ fork_startup:
     pop es
     pop ds
 ;
+    call AllocateUserTimer
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
 ;
@@ -2196,6 +2300,7 @@ lpEnvDone:
 
 lpForkExec:
     ExecCloseProcHandle
+    call FreeUserTimer
     ResetLdt
     mov ds,es:p_proc_sel
 
@@ -2231,6 +2336,7 @@ lpForkModOk:
 ;
     InitProcess    
     ExecUpdateProcHandle
+    call AllocateUserTimer
 ;
     mov ds,gs:pr_name_sel
     xor esi,esi
@@ -2665,6 +2771,7 @@ ukConsoleDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnloadProcess:
+    call FreeUserTimer
     DeleteProcHandle
     GetThread
     mov es,ax
@@ -6411,6 +6518,7 @@ exec_serv:
     pop es
     pop ds
 ;
+    call AllocateUserTimer
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
 ;

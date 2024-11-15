@@ -203,7 +203,10 @@ pf_exit_code         DW ?
 pf_cur_dir_sel       DW ?
 pf_env_sel           DW ?
 
+pf_active_timer_sel  DW ?
+
 pf_handle_linear     DD ?
+pf_timer_linear      DD ?
 
 pf_virt_flags        DW ?
 pf_wait_sti          DW ?
@@ -415,3 +418,36 @@ debug_event_size        DW ?
 debug_event_code        DB ?
 
 debug_event_struc ENDS
+
+user_fifo_timer_entry    STRUC
+
+ufte_timeout      DD ?,?
+ufte_callback     DD ?
+ufte_param        DD ?
+ufte_id           DD ?
+
+user_fifo_timer_entry    ENDS
+
+user_active_timer_entry    STRUC
+
+uate_timeout      DD ?,?
+uate_id           DD ?
+
+user_active_timer_entry    ENDS
+
+MAX_USER_FIFO_TIMERS  = 200
+MAX_USER_ACTIVE_TIMERS = 340
+
+user_timer     STRUC
+
+us_started      DB ?
+us_resv         DB ?
+us_fifo_count   DW ?
+us_futex        futex_struc <>
+us_fifo_arr     DB MAX_USER_FIFO_TIMERS * SIZE user_fifo_timer_entry DUP(?)
+us_pad          DB 1000h -MAX_USER_FIFO_TIMERS * SIZE user_fifo_timer_entry - SIZE futex_struc - 4 DUP(?)
+
+us_active_count DD ?
+us_active_arr   DB MAX_USER_ACTIVE_TIMERS * SIZE user_active_timer_entry DUP(?)
+
+user_timer     ENDS
