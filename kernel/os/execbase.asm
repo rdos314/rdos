@@ -6552,16 +6552,7 @@ esFail:
 init_user_timer_name DB 'Init User Timer',0
     
 init_user_timer   Proc far
-    push ds
-    push eax
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_loader   
-    call fword ptr ds:loader_init_timer_proc
-;
-    pop eax
-    pop ds
+    int 3
     ret
 init_user_timer   Endp
 
