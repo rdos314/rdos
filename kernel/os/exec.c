@@ -74,6 +74,7 @@ struct TProcess ProcessArr[MAX_PROCESSES];
 struct TExit ExitArr[MAX_EXIT_CODES];
 
 extern void InitExec();
+extern void InitTimer();
 
 /*##########################################################################
 #
@@ -619,4 +620,5 @@ int main()
     InitGates();
     RdosInitKernelSection(&ModuleSection);
     InitExec();
+    InitTimer();
 }
