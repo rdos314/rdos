@@ -11,8 +11,9 @@
 #include "videodev.h"
 #include "table.h"
 
-void TimeoutCallback(void *param)
+long long TimeoutCallback(void *param, long long expire)
 {
+    return 0;
 }
 
 void main()
