@@ -2701,6 +2701,101 @@ dkoInc:
 DupKernelObj Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetKernelObjSize
+;
+;           DESCRIPTION:    Get kernel file size
+;
+;           PARAMETERS:     DS              Kernel interface
+;                   
+;           RETURNS:        EDX:EAX         Size
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetKernelObjSize Proc far
+    push ds
+;
+    mov ds,ds:hki_file_sel
+    EnterReadSection ds:file_size_section
+    mov eax,ds:file_size
+    xor edx,edx
+    LeaveReadSection ds:file_size_section
+    clc
+;
+    pop ds
+    retf32
+GetKernelObjSize Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetKernelObjSize
+;
+;           DESCRIPTION:    Set kernel file size
+;
+;           PARAMETERS:     DS              Kernel interface
+;                           EDX:EAX         New size
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetKernelObjSize Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    or edx,edx
+    stc
+    jnz skosDone
+;
+    mov edx,eax
+    mov ds,ds:hki_file_sel
+    mov ds,bx
+    mov al,ds:file_drive
+    EnterWriteSection ds:file_size_section
+    CallFileSystem fs_set_file_size_proc
+    LeaveWriteSection ds:file_size_section
+
+skosDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+SetKernelObjSize Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetKernelObjTime
+;
+;           DESCRIPTION:    Get kernel file time & date
+;
+;           PARAMETERS:     DS              Kernel interface
+;               
+;           RETURNS:        EDX:EAX     File time
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetKernelObjTime Proc far
+    push ds
+    push es
+;
+    mov ds,ds:hki_file_sel
+    mov dx,flat_sel
+    mov es,dx
+    mov edx,ds:file_dir_entry
+    mov eax,es:[edx].de_time
+    mov edx,es:[edx].de_time+4
+    clc
+;
+    pop es
+    pop ds
+    retf32
+GetKernelObjTime Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           FreeKernelObj
@@ -2770,6 +2865,15 @@ CreateKernelObj   Proc near
 ;
     mov es:hki_dup_proc,OFFSET DupKernelObj
     mov es:hki_dup_proc+4,cs
+;
+    mov es:hki_get_size_proc,OFFSET GetKernelObjSize
+    mov es:hki_get_size_proc+4,cs
+;
+    mov es:hki_set_size_proc,OFFSET SetKernelObjSize
+    mov es:hki_set_size_proc+4,cs
+;
+    mov es:hki_get_time_proc,OFFSET GetKernelObjTime
+    mov es:hki_get_time_proc+4,cs
 ;
     mov es:hki_free_proc,OFFSET FreeKernelObj
     mov es:hki_free_proc+4,cs
