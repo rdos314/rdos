@@ -744,7 +744,7 @@ int RdosReadKernelHandle(int Handle, void *Buf, int Size, long long Pos);
 int RdosWriteKernelHandle(int Handle, const void *Buf, int Size, long long Pos);
 long long RdosGetKernelHandleSize(int Handle);
 void RdosSetKernelHandleSize(int Handle, long long Size);
-long long RdosGetKernelHandleTime(int Handle, int *Msb, int *Lsb);
+long long RdosGetKernelHandleTime(int Handle, unsigned long *Msb, unsigned long *Lsb);
 
 char RdosReadPciByte(char bus, char dev, char func, char reg);
 short int RdosReadPciWord(char bus, char dev, char func, char reg);
