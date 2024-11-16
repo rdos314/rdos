@@ -2654,6 +2654,24 @@ CloseKernelHandle MACRO
     OsGate close_kernel_handle_nr
                     ENDM
 
+; IN  BX        Handle
+; OUT EDX:EAX   Size
+GetKernelHandleSize MACRO
+    OsGate get_kernel_handle_size_nr
+                    ENDM
+
+; IN  BX        Handle
+; IN  EDX:EAX   Size
+SetKernelHandleSize MACRO
+    OsGate set_kernel_handle_size_nr
+                    ENDM
+
+; IN  BX        Handle
+; OUT EDX:EAX   Time
+GetKernelHandleTime MACRO
+    OsGate get_kernel_handle_time_nr
+                    ENDM
+
 ; OUT BX       Console selector
 GetFocusConsole MACRO
     OsGate get_focus_console_nr

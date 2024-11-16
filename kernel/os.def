@@ -918,4 +918,8 @@ reset_ldt_nr                = 853
 exec_close_proc_handle_nr   = 854
 exec_update_proc_handle_nr  = 855
 
+get_kernel_handle_size_nr   = 856
+set_kernel_handle_size_nr   = 857
+get_kernel_handle_time_nr   = 858
+
 osgate_entries              = 860

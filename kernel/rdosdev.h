@@ -738,10 +738,13 @@ int RdosCacheDir(int dir_sel, int dir_entry);
 void RdosInsertDirEntry(int dir_sel, int dir_entry);
 void RdosInsertFileEntry(int dir_sel, int file_entry);
 
-int RdosOpenKernelFile(const char *FileName, int Mode);
-void RdosCloseKernelFile(int Handle);
-int RdosReadKernelFile(int Handle, void *Buf, int Size, long Pos);
-int RdosWriteKernelFile(int Handle, const void *Buf, int Size, long Pos);
+int RdosOpenKernelHandle(const char *FileName, int Mode);
+void RdosCloseKernelHandle(int Handle);
+int RdosReadKernelHandle(int Handle, void *Buf, int Size, long long Pos);
+int RdosWriteKernelHandle(int Handle, const void *Buf, int Size, long long Pos);
+long long RdosGetKernelHandleSize(int Handle);
+void RdosSetKernelHandleSize(int Handle, long long Size);
+long long RdosGetKernelHandleTime(int Handle);
 
 char RdosReadPciByte(char bus, char dev, char func, char reg);
 short int RdosReadPciWord(char bus, char dev, char func, char reg);
@@ -1852,6 +1855,39 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosInsertFileEntry = \
     OsGate_insert_file_entry \
     __parm [__ebx] [__edx]
+
+#pragma aux RdosOpenKernelHandle = \
+    OsGate_open_kernel_handle \
+    __parm [__es __edi] [__ecx] \
+    __value [__ebx]
+
+#pragma aux RdosCloseKernelHandle = \
+    OsGate_close_kernel_handle \
+    __parm [__ebx]
+
+#pragma aux RdosReadKernelHandle = \
+    OsGate_read_kernel_handle \
+    __parm [__ebx] [__es __edi] [__ecx] [__edx __eax] \
+    __value [__ecx]
+
+#pragma aux RdosWriteKernelHandle = \
+    OsGate_write_kernel_handle \
+    __parm [__ebx] [__es __edi] [__ecx] [__edx __eax] \
+    __value [__ecx]
+
+#pragma aux RdosGetKernelHandleSize = \
+    OsGate_get_kernel_handle_size \
+    __parm [__ebx] \
+    __value [__edx __eax]
+
+#pragma aux RdosSetKernelHandleSize = \
+    OsGate_set_kernel_handle_size \
+    __parm [__ebx] [__edx __eax]
+
+#pragma aux RdosGetKernelHandleTime = \
+    OsGate_get_kernel_handle_time \
+    __parm [__ebx] \
+    __value [__edx __eax]
 
 #pragma aux RdosReadPciByte = \
     OsGate_read_pci_byte \

@@ -913,6 +913,15 @@
 #define osgate_init_kernel_handle 850
 #define osgate_open_legacy_kernel 851
 
+#define osgate_clone_ldt 852
+#define osgate_reset_ldt 853
+#define osgate_exec_close_proc_handle 854
+#define osgate_exec_update_proc_handle 855
+
+#define osgate_get_kernel_handle_size 856
+#define osgate_set_kernel_handle_size 857
+#define osgate_get_kernel_handle_time 858
+
 
 
 
@@ -1829,4 +1838,13 @@
 #define OsGate_open_legacy_handle 0x3E 0x67 0x9a 81 3 0 0 2 0
 #define OsGate_init_kernel_handle 0x3E 0x67 0x9a 82 3 0 0 2 0
 #define OsGate_open_legacy_kernel 0x3E 0x67 0x9a 83 3 0 0 2 0
+
+#define OsGate_clone_ldt 0x3E 0x67 0x9a 84 3 0 0 2 0
+#define OsGate_reset_ldt 0x3E 0x67 0x9a 85 3 0 0 2 0
+#define OsGate_exec_close_proc_handle 0x3E 0x67 0x9a 86 3 0 0 2 0
+#define OsGate_exec_update_proc_handle 0x3E 0x67 0x9a 87 3 0 0 2 0
+
+#define OsGate_get_kernel_handle_size 0x3E 0x67 0x9a 88 3 0 0 2 0
+#define OsGate_set_kernel_handle_size 0x3E 0x67 0x9a 89 3 0 0 2 0
+#define OsGate_get_kernel_handle_time 0x3E 0x67 0x9a 90 3 0 0 2 0
 
