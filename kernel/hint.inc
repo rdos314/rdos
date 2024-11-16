@@ -172,6 +172,18 @@ hki_write_proc            DD ?,?
 ;  OUT  AX                New user handle interface
 hki_dup_proc              DD ?,?
 
+;  IN	DS                Handle entry interface
+;  OUT  EDX:EAX           Size
+hki_get_size_proc         DD ?,?
+
+;  IN	DS                Handle entry interface
+;  IN   EDX:EAX           Size
+hki_set_size_proc         DD ?,?
+
+;  IN	DS                Handle entry interface
+;  OUT  EDX:EAX           Time
+hki_get_time_proc         DD ?,?
+
 ;  IN	DS                Handle kernel interface
 hki_free_proc             DD ?,?
 

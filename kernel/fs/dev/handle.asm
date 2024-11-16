@@ -2467,6 +2467,15 @@ InitKernelObj    Proc near
     mov es:hki_dup_proc,OFFSET crk_fail
     mov es:hki_dup_proc+4,cs
 ;
+    mov es:hki_get_size_proc,OFFSET crk_fail
+    mov es:hki_get_size_proc+4,cs
+;
+    mov es:hki_set_size_proc,OFFSET crk_fail
+    mov es:hki_set_size_proc+4,cs
+;
+    mov es:hki_get_time_proc,OFFSET crk_fail
+    mov es:hki_get_time_proc+4,cs
+;
     mov es:hki_free_proc,OFFSET fk_proc_fail
     mov es:hki_free_proc+4,cs
 ;
@@ -2736,6 +2745,153 @@ dkhDone:
     pop ds
     ret
 dupl_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetKernelHandleSize
+;
+;           DESCRIPTION:    Get kernel handle size
+;
+;           PARAMETERS:     BX        Handle
+;
+;           RETURNS:        EDX:EAX   Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_kernel_handle_size_name DB 'Get Kernel Handle Size', 0
+
+get_kernel_handle_size Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,SEG data
+    mov ds,esi
+;
+    movzx ebx,bx
+    cmp ebx,KERNEL_HANDLE_COUNT
+    ja gkhsFail
+;
+    sub ebx,1
+    jc gkhsFail
+;
+    mov si,ds:[2*ebx].kh_arr
+    or si,si
+    jz gkhsFail
+;
+    mov ds,esi
+    call fword ptr ds:hki_get_size_proc
+    jnc gkhsDone
+
+gkhsFail:
+    xor edx,edx
+    xor eax,eax
+    stc
+
+gkhsDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+get_kernel_handle_size Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetKernelHandleSize
+;
+;           DESCRIPTION:    Set kernel handle size
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_kernel_handle_size_name DB 'Set Kernel Handle Size', 0
+
+set_kernel_handle_size Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,SEG data
+    mov ds,esi
+;
+    movzx ebx,bx
+    cmp ebx,KERNEL_HANDLE_COUNT
+    ja skhsFail
+;
+    sub ebx,1
+    jc skhsFail
+;
+    mov si,ds:[2*ebx].kh_arr
+    or si,si
+    jz skhsFail
+;
+    mov ds,esi
+    call fword ptr ds:hki_set_size_proc
+    jnc skhsDone
+
+skhsFail:
+    stc
+
+skhsDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+set_kernel_handle_size Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetKernelHandleTime
+;
+;           DESCRIPTION:    Get kernel handle time
+;
+;           PARAMETERS:     BX        Handle
+;
+;           RETURNS:        EDX:EAX   Time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_kernel_handle_time_name DB 'Get Kernel Handle Time', 0
+
+get_kernel_handle_time Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,SEG data
+    mov ds,esi
+;
+    movzx ebx,bx
+    cmp ebx,KERNEL_HANDLE_COUNT
+    ja gkhtFail
+;
+    sub ebx,1
+    jc gkhtFail
+;
+    mov si,ds:[2*ebx].kh_arr
+    or si,si
+    jz gkhtFail
+;
+    mov ds,esi
+    call fword ptr ds:hki_get_time_proc
+    jnc gkhtDone
+
+gkhtFail:
+    xor edx,edx
+    xor eax,eax
+    stc
+
+gkhtDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+get_kernel_handle_time Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3343,6 +3499,24 @@ init_sys_handle     PROC near
     mov edi,OFFSET dupl_kernel_handle_name
     xor cl,cl
     mov ax,dupl_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_kernel_handle_size
+    mov edi,OFFSET get_kernel_handle_size_name
+    xor cl,cl
+    mov ax,get_kernel_handle_size_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_kernel_handle_size
+    mov edi,OFFSET set_kernel_handle_size_name
+    xor cl,cl
+    mov ax,set_kernel_handle_size_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_kernel_handle_time
+    mov edi,OFFSET get_kernel_handle_time_name
+    xor cl,cl
+    mov ax,get_kernel_handle_time_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16
