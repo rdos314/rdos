@@ -744,7 +744,7 @@ int RdosReadKernelHandle(int Handle, void *Buf, int Size, long long Pos);
 int RdosWriteKernelHandle(int Handle, const void *Buf, int Size, long long Pos);
 long long RdosGetKernelHandleSize(int Handle);
 void RdosSetKernelHandleSize(int Handle, long long Size);
-long long RdosGetKernelHandleTime(int Handle);
+long long RdosGetKernelHandleTime(int Handle, int *Msb, int *Lsb);
 
 char RdosReadPciByte(char bus, char dev, char func, char reg);
 short int RdosReadPciWord(char bus, char dev, char func, char reg);
@@ -1886,8 +1886,9 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 
 #pragma aux RdosGetKernelHandleTime = \
     OsGate_get_kernel_handle_time \
-    __parm [__ebx] \
-    __value [__edx __eax]
+    "mov fs:[esi],edx" \
+    "mov es:[edi],eax" \
+    __parm [__ebx] [__fs __esi] [__es __edi] \
 
 #pragma aux RdosReadPciByte = \
     OsGate_read_pci_byte \
