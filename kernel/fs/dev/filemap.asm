@@ -6465,6 +6465,98 @@ DupKernelObj Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetKernelSizeObj
+;
+;       DESCRIPTION:    Get kernel handle size
+;
+;       PARAMETERS:     DS              Kernel interface
+;
+;       RETURNS:        EDX:EAX         Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetKernelSizeObj    Proc far
+    push ds
+    push edi
+;
+    mov ds,ds:hki_file_sel
+    mov edi,ds:kf_info_linear
+    mov ax,flat_sel
+    mov ds,eax
+    mov eax,ds:[edi].fi_size
+    mov edx,ds:[edi].fi_size+4       
+;
+    pop edi
+    pop ds
+    ret
+GetKernelSizeObj  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetKernelSizeObj
+;
+;       DESCRIPTION:    Set kernel file size
+;
+;       PARAMETERS:     DS              Kernel interface
+;                       EDX:EAX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetKernelSizeObj    Proc far
+    push ds
+    push ebx
+    push ecx
+;
+    mov ds,ds:hki_file_sel
+    push eax
+    GetThreadHandle
+    movzx ecx,ax
+    pop eax
+;
+    mov ebx,REQ_SIZE
+    call AddReq
+;
+    WaitForSignal
+;
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+SetKernelSizeObj    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetKernelTimeObj
+;
+;       DESCRIPTION:    Get kernel handle time
+;
+;       PARAMETERS:     DS              Kernel interface
+;
+;       RETURNS:        EDX:EAX         Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetKernelTimeObj    Proc far
+    push ds
+    push edi
+;
+    mov ds,ds:hki_file_sel
+    mov edi,ds:kf_info_linear
+    mov ax,flat_sel
+    mov ds,eax
+    mov eax,ds:[edi].fi_modify
+    mov edx,ds:[edi].fi_modify+4       
+;
+    pop edi
+    pop ds
+    ret
+GetKernelTimeObj  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CloseKernelSel
 ;
 ;       DESCRIPTION:    Close kernel sel
@@ -6654,6 +6746,15 @@ ckmiLoop:
 ;
     mov es:hki_dup_proc,OFFSET DupKernelObj
     mov es:hki_dup_proc+4,cs
+;
+    mov es:hki_get_size_proc, OFFSET GetKernelSizeObj
+    mov es:hki_get_size_proc+4,cs
+;
+    mov es:hki_set_size_proc, OFFSET SetKernelSizeObj
+    mov es:hki_set_size_proc+4,cs
+;
+    mov es:hki_get_time_proc, OFFSET GetKernelTimeObj
+    mov es:hki_get_time_proc+4,cs
 ;
     mov es:hki_free_proc,OFFSET CloseKernelObj
     mov es:hki_free_proc+4,cs
