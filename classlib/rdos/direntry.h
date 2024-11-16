@@ -38,12 +38,14 @@ class TDirEntryData : public TShareObjectData
 public:
     TDirEntryData();
     ~TDirEntryData();
-    
+
     TPathName PathName;
     TString EntryName;
-    long FileSize;
+    long long FileSize;
     int Attribute;
-    TDateTime Time;
+    TDateTime CreateTime;
+    TDateTime ModifyTime;
+    TDateTime AccessTime;
 };
 
 class TDirEntry : public TShareObject
@@ -51,6 +53,7 @@ class TDirEntry : public TShareObject
 friend class TDirListNode;
 public:
     TDirEntry();
+    TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &CreateTime, const TDateTime &ModifyTime, const TDateTime &AccessTime, long long FileSize, int Attribute);
     TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute);
     TDirEntry(const TDirEntry &src);
     virtual ~TDirEntry();
@@ -61,9 +64,11 @@ public:
 
     const TPathName &GetPathName() const;
     const TString &GetEntryName() const;
-    long GetFileSize() const;
+    long long GetFileSize() const;
     int GetAttribute() const;
-    const TDateTime &GetTime() const;
+    const TDateTime &GetCreateTime() const;
+    const TDateTime &GetModifyTime() const;
+    const TDateTime &GetAccessTime() const;
 
 protected:
     virtual int Compare(const TDirEntry &str) const;
@@ -97,10 +102,10 @@ protected:
     virtual int Compare(const TListBaseNode &n2) const;
     virtual void Load(const TDirListNode &src);
     virtual void Load(const TListBaseNode &src);
-	
+
     TDirEntry *FEntry;
 };
-    
+
 class TDirList : public TListBase
 {
 public:
@@ -119,13 +124,13 @@ public:
     void AddSortBySize();
     void AddSortByTime();
     void AddSortByName();
-    void AddSortByExt();    
+    void AddSortByExt();
     void AddReverseSortBySize();
     void AddReverseSortByTime();
     void AddReverseSortByName();
-    void AddReverseSortByExt();    
+    void AddReverseSortByExt();
     void Sort();
-    
+
     int operator==(const TDirList &dest) const;
     int operator!=(const TDirList &dest) const;
     int operator>(const TDirList &dest) const;
@@ -156,6 +161,7 @@ protected:
     int CheckAttrib(int attrib);
     int IsMatch(const char *FileName);
     void Add(const char *Name, unsigned long msb, unsigned long lsb, long FileSize, int Attrib);
+    void Add(const char *Name, unsigned long long CreateTime, unsigned long long ModifyTime, unsigned long long AccessTime, long long FileSize, int Attrib);
     void DoSearch();
 
     int FAttribIgnored;

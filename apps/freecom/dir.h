@@ -35,8 +35,8 @@
 class TDirFactory : public TCommandFactory
 {
 public:
-	TDirFactory();
-	virtual TCommand *Create(TSession *session, const char *param);
+        TDirFactory();
+        virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,47 +44,47 @@ protected:
 class TDirCommand : public TCommand
 {
 public:
-	TDirCommand(TSession *session, const char *param);
-	virtual ~TDirCommand();
+        TDirCommand(TSession *session, const char *param);
+        virtual ~TDirCommand();
 
-	virtual int Execute(char *param);
+        virtual int Execute(char *param);
 
 protected:
-	int ScanAttr(const char *p);
-	int ScanOrder(const char *p);
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+        int ScanAttr(const char *p);
+        int ScanOrder(const char *p);
+        virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
     void InitOptions();
 
-	void WriteHeader(TString &str);
-	void WriteFooter();
+        void WriteHeader(TString &str);
+        void WriteFooter();
 
-	void Add(TString &path);
-	void WriteDetailed(const TDirEntryData &entry);
-	void WriteDetailed();
-	void WriteWide(const TDirEntryData &entry);
-	void WriteWide();
+        void Add(TString &path);
+        void WriteDetailed(const TDirEntryData &entry);
+        void WriteDetailed();
+        void WriteWide(const TDirEntryData &entry);
+        void WriteWide();
 
-	TDirList FFileList;
-	TDirList FDirList;
+        TDirList FFileList;
+        TDirList FDirList;
 
-	int FCurrentRow;
-	int FCurrentCol;
+        int FCurrentRow;
+        int FCurrentCol;
     int FWidth;
 
-	int FRequired;
+        int FRequired;
     int FIgnored;
-	int FOptS;
-	int FOptP;
-	int FOptW;
-	int FOptB;
-	int FOptL;
+        int FOptS;
+        int FOptP;
+        int FOptW;
+        int FOptB;
+        int FOptL;
     int FOptDirFirst;
     int FOptDirLast;
 
-	int FFileCount;
-	int FDirCount;
-	long FTotalSize;
-	int FDrive;
+        int FFileCount;
+        int FDirCount;
+        long long FTotalSize;
+        int FDrive;
 };
 
 #endif

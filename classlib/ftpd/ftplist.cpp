@@ -114,14 +114,14 @@ TFtpListCommand::~TFtpListCommand()
 void TFtpListCommand::WriteEntry(const TDirEntryData &entry)
 {
     TDateTime CurrTime;
-        char str[31];
-        int size;
+    char str[31];
+    long long size;
 
         if (entry.Attribute & FILE_ATTRIBUTE_DIRECTORY)
         {
         FServer->Write("drw-rw-rw- ");
                 FDirCount++;
-		}
+                }
         else
         {
         FServer->Write("-rw-rw-rw- ");
@@ -140,7 +140,7 @@ void TFtpListCommand::WriteEntry(const TDirEntryData &entry)
                 FServer->Write(str);
         }
 
-        switch (entry.Time.GetMonth())
+        switch (entry.ModifyTime.GetMonth())
         {
                 case 1:
                         FServer->Write(" Jan ");
@@ -151,7 +151,7 @@ void TFtpListCommand::WriteEntry(const TDirEntryData &entry)
                         break;
 
                 case 3:
-						FServer->Write(" Mar ");
+                                                FServer->Write(" Mar ");
                         break;
 
                 case 4:
@@ -191,15 +191,15 @@ void TFtpListCommand::WriteEntry(const TDirEntryData &entry)
             break;
     }
 
-    if (CurrTime.GetYear() == entry.Time.GetYear())
+    if (CurrTime.GetYear() == entry.ModifyTime.GetYear())
         sprintf(str, "%02d %02d:%02d ",
-                                        entry.Time.GetDay(),
-                                        entry.Time.GetHour(),
-                                        entry.Time.GetMin());
+                                        entry.ModifyTime.GetDay(),
+                                        entry.ModifyTime.GetHour(),
+                                        entry.ModifyTime.GetMin());
         else
                 sprintf(str, "%02d %04d ",
-                                        entry.Time.GetDay(),
-                                        entry.Time.GetYear());
+                                        entry.ModifyTime.GetDay(),
+                                        entry.ModifyTime.GetYear());
 
         FServer->Write(str);
 
@@ -227,18 +227,18 @@ void TFtpListCommand::WriteEntry()
         int ok;
 
     ok = FDirList.GotoFirst();
-    while (ok)        
+    while (ok)
     {
         WriteEntry(FDirList.Get().Get());
         ok = FDirList.GotoNext();
     }
 
-	ok = FFileList.GotoFirst();
-	while (ok)
-	{
-		WriteEntry(FFileList.Get().Get());
-		ok = FFileList.GotoNext();
-	}
+        ok = FFileList.GotoFirst();
+        while (ok)
+        {
+                WriteEntry(FFileList.Get().Get());
+                ok = FFileList.GotoNext();
+        }
 }
 
 /*##########################################################################
@@ -254,73 +254,73 @@ void TFtpListCommand::WriteEntry()
 ##########################################################################*/
 void TFtpListCommand::Execute(char *param)
 {
-	TFtpArg *arg;
-	int ArgCount;
-	TFtpLangString msg;
-	int ok;
-	TPathName path(FServer->RootDir);
+        TFtpArg *arg;
+        int ArgCount;
+        TFtpLangString msg;
+        int ok;
+        TPathName path(FServer->RootDir);
 
-	path += FServer->CurrDir;
+        path += FServer->CurrDir;
 
-	if (FServer->VerifyUser())
-	{
-		ok = ScanCmdLine(param, 0);
-		if (ok)
-		{
-			ArgCount = 0;
-			arg = FArgList;
-			while (arg)
-			{
-				ArgCount++;
-				arg = arg->FList;
-			}
+        if (FServer->VerifyUser())
+        {
+                ok = ScanCmdLine(param, 0);
+                if (ok)
+                {
+                        ArgCount = 0;
+                        arg = FArgList;
+                        while (arg)
+                        {
+                                ArgCount++;
+                                arg = arg->FList;
+                        }
 
-			FFileCount = 0;
-			FDirCount = 0;
-			FTotalSize = 0;
+                        FFileCount = 0;
+                        FDirCount = 0;
+                        FTotalSize = 0;
 
-			arg = FArgList;
+                        arg = FArgList;
 
-			FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY);
-			FDirList.SetRequiredAttributes(FILE_ATTRIBUTE_DIRECTORY);
-			FDirList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
+                        FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY);
+                        FDirList.SetRequiredAttributes(FILE_ATTRIBUTE_DIRECTORY);
+                        FDirList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
 
-			if (arg)
-			{
-				while (arg)
-				{
-					FFileList.Add(path + arg->FName);
-					FDirList.Add(path + arg->FName);
-					arg = arg->FList;
-				}
-			}
-			else
-			{
-				FFileList.Add(path + "*");
-				FDirList.Add(path + "*");
-			}
+                        if (arg)
+                        {
+                                while (arg)
+                                {
+                                        FFileList.Add(path + arg->FName);
+                                        FDirList.Add(path + arg->FName);
+                                        arg = arg->FList;
+                                }
+                        }
+                        else
+                        {
+                                FFileList.Add(path + "*");
+                                FDirList.Add(path + "*");
+                        }
 
-			FFileList.RemoveDuplicates();
-			FDirList.RemoveDuplicates();
+                        FFileList.RemoveDuplicates();
+                        FDirList.RemoveDuplicates();
 
-			FFileList.Sort();
-			FDirList.Sort();
+                        FFileList.Sort();
+                        FDirList.Sort();
 
-			msg.Load(150);
-			FServer->Reply(&msg);
+                        msg.Load(150);
+                        FServer->Reply(&msg);
 
-			WriteEntry();
+                        WriteEntry();
 
-			FServer->Push();
+                        FServer->Push();
 
-			msg.Load(226);
-		}
-		else
-			msg.Load(501);
-	}
-	else
-		msg.Load(530);
+                        msg.Load(226);
+                }
+                else
+                        msg.Load(501);
+        }
+        else
+                msg.Load(530);
 
-	FServer->Reply(&msg);
+        FServer->Reply(&msg);
 
 }

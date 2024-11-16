@@ -66,73 +66,73 @@ TSection FDirSortSection("DirSort");
 ##########################################################################*/
 static int QSORTAPI SortCompare(const void *e1, const void *e2)
 {
-	TDirListNode **tmp;
-	TDirEntryData dir1;
-	TDirEntryData dir2;
-	int opt;
-	const char *x1;
-	const char *x2;
-	int rv;
-	int i;
+        TDirListNode **tmp;
+        TDirEntryData dir1;
+        TDirEntryData dir2;
+        int opt;
+        const char *x1;
+        const char *x2;
+        int rv;
+        int i;
 
-	tmp = (TDirListNode **)e1;
-	dir1 = (*tmp)->Get().Get();
+        tmp = (TDirListNode **)e1;
+        dir1 = (*tmp)->Get().Get();
 
-	tmp = (TDirListNode **)e2;
-	dir2 = (*tmp)->Get().Get();
+        tmp = (TDirListNode **)e2;
+        dir2 = (*tmp)->Get().Get();
 
-	rv = 0;
+        rv = 0;
 
-	for (i = 0; rv == 0; i++)
-	{
-		opt = FOrderby[i];
+        for (i = 0; rv == 0; i++)
+        {
+                opt = FOrderby[i];
 
-		switch (opt & ORDER_BY_MASK)
-		{
-			case 0:
-				return 0;
+                switch (opt & ORDER_BY_MASK)
+                {
+                        case 0:
+                                return 0;
 
-			case ORDER_BY_SIZE:
-				if (dir1.FileSize > dir2.FileSize)
-					rv = 1;
+                        case ORDER_BY_SIZE:
+                                if (dir1.FileSize > dir2.FileSize)
+                                        rv = 1;
 
-				if (dir1.FileSize < dir2.FileSize)
-					rv = -1;
-				break;
+                                if (dir1.FileSize < dir2.FileSize)
+                                        rv = -1;
+                                break;
 
-			case ORDER_BY_DATE:
-				if (dir1.Time > dir2.Time)
-					rv = 1;
+                        case ORDER_BY_DATE:
+                                if (dir1.ModifyTime > dir2.ModifyTime)
+                                        rv = 1;
 
-				if (dir1.Time < dir2.Time)
-					rv = -1;
-				break;
+                                if (dir1.ModifyTime < dir2.ModifyTime)
+                                        rv = -1;
+                                break;
 
-			case ORDER_BY_EXT:
-				x1 = strchr(dir1.EntryName.GetData(), '.');
-				x2 = strchr(dir2.EntryName.GetData(), '.');
+                        case ORDER_BY_EXT:
+                                x1 = strchr(dir1.EntryName.GetData(), '.');
+                                x2 = strchr(dir2.EntryName.GetData(), '.');
 
-				if (x1 && x2)
-					rv = strcmp(x1, x2);
+                                if (x1 && x2)
+                                        rv = strcmp(x1, x2);
 
-				if (!x1 && x2)
-					rv = -1;
+                                if (!x1 && x2)
+                                        rv = -1;
 
-				if (x1 && !x2)
-					rv = 1;
+                                if (x1 && !x2)
+                                        rv = 1;
 
-				break;
+                                break;
 
-			case ORDER_BY_NAME:
-				rv = strcmp(dir1.EntryName.GetData(),dir2.EntryName.GetData());
-				break;
-		}
-		
-		if (opt & ORDER_BY_INV)
-			rv = -rv;
+                        case ORDER_BY_NAME:
+                                rv = strcmp(dir1.EntryName.GetData(),dir2.EntryName.GetData());
+                                break;
+                }
 
-	}
-	return rv;
+                if (opt & ORDER_BY_INV)
+                        rv = -rv;
+
+        }
+        return rv;
 }
 
 /*##########################################################################
@@ -148,7 +148,7 @@ static int QSORTAPI SortCompare(const void *e1, const void *e2)
 ##########################################################################*/
 TShareObjectData *CreateDirEntry(TShareObject *obj, int size)
 {
-	return new TDirEntryData();
+        return new TDirEntryData();
 }
 
 /*##########################################################################
@@ -194,9 +194,9 @@ TDirEntryData::~TDirEntryData()
 #   Returns....: *
 #
 ##########################################################################*/
-TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute)
+TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &CreateTime, const TDateTime &ModifyTime, const TDateTime &AccessTime, long long FileSize, int Attribute)
 {
-	OnCreate = CreateDirEntry;
+    OnCreate = CreateDirEntry;
     AllocBuffer(sizeof(TDirEntryData));
     FEntry = (TDirEntryData *)FData;
 
@@ -204,7 +204,35 @@ TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const 
     FEntry->EntryName = EntryName;
     FEntry->FileSize = FileSize;
     FEntry->Attribute = Attribute;
-    FEntry->Time = Time;
+    FEntry->CreateTime = CreateTime;
+    FEntry->ModifyTime = ModifyTime;
+    FEntry->AccessTime = AccessTime;
+}
+
+/*##########################################################################
+#
+#   Name       : TDirEntry::TDirEntry
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute)
+{
+    OnCreate = CreateDirEntry;
+    AllocBuffer(sizeof(TDirEntryData));
+    FEntry = (TDirEntryData *)FData;
+
+    FEntry->PathName = PathName;
+    FEntry->EntryName = EntryName;
+    FEntry->FileSize = FileSize;
+    FEntry->Attribute = Attribute;
+    FEntry->CreateTime = Time;
+    FEntry->ModifyTime = Time;
+    FEntry->AccessTime = Time;
 }
 
 /*##########################################################################
@@ -278,8 +306,8 @@ TDirEntry::~TDirEntry()
 ##########################################################################*/
 void TDirEntry::Destroy(TShareObjectData *obj)
 {
-	TDirEntryData *dirent = (TDirEntryData *)obj;
-	delete dirent;
+        TDirEntryData *dirent = (TDirEntryData *)obj;
+        delete dirent;
 }
 
 /*##########################################################################
@@ -297,7 +325,7 @@ const TDirEntry &TDirEntry::operator=(const TDirEntry &src)
 {
     Load(src);
     FEntry = src.FEntry;
-	return *this;
+        return *this;
 }
 
 /*##########################################################################
@@ -359,7 +387,7 @@ const TString &TDirEntry::GetEntryName() const
 #   Returns....: *
 #
 ##########################################################################*/
-long TDirEntry::GetFileSize() const
+long long TDirEntry::GetFileSize() const
 {
     return FEntry->FileSize;
 }
@@ -382,18 +410,50 @@ int TDirEntry::GetAttribute() const
 
 /*##########################################################################
 #
-#   Name       : TDirEntry::GetTime
+#   Name       : TDirEntry::GetCreateTime
 #
-#   Purpose....: Get entry time
+#   Purpose....: Get create time
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-const TDateTime &TDirEntry::GetTime() const
+const TDateTime &TDirEntry::GetCreateTime() const
 {
-    return FEntry->Time;
+    return FEntry->CreateTime;
+}
+
+/*##########################################################################
+#
+#   Name       : TDirEntry::GetModifyTime
+#
+#   Purpose....: Get modify time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TDateTime &TDirEntry::GetModifyTime() const
+{
+    return FEntry->ModifyTime;
+}
+
+/*##########################################################################
+#
+#   Name       : TDirEntry::GetAccessTime
+#
+#   Purpose....: Get access time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TDateTime &TDirEntry::GetAccessTime() const
+{
+    return FEntry->AccessTime;
 }
 
 /*##########################################################################
@@ -441,9 +501,9 @@ TDirListNode::TDirListNode()
 ##########################################################################*/
 TDirListNode::TDirListNode(const TDirEntry &entry)
 {
- 	FEntry = new TDirEntry(entry);
-	FData = FEntry;
-	FValid = TRUE;
+        FEntry = new TDirEntry(entry);
+        FData = FEntry;
+        FValid = TRUE;
 }
 
 /*##########################################################################
@@ -459,9 +519,9 @@ TDirListNode::TDirListNode(const TDirEntry &entry)
 ##########################################################################*/
 TDirListNode::TDirListNode(const TDirListNode &src)
 {
-	FEntry = new TDirEntry(*src.FEntry);
-	FData = FEntry;
-	FValid = TRUE;
+        FEntry = new TDirEntry(*src.FEntry);
+        FData = FEntry;
+        FValid = TRUE;
 }
 
 /*##########################################################################
@@ -492,20 +552,20 @@ TDirListNode::~TDirListNode()
 ##########################################################################*/
 int TDirListNode::Compare(const TDirListNode &n2) const
 {
-	if (FEntry && n2.FEntry)
-		return FEntry->Compare(*n2.FEntry);
-	else
-	{
-		if (FEntry || n2.FEntry)
-		{
-			if (FEntry)
-				return 1;
-			else
-				return -1;
-		}
-		else
-			return 0;
-	}
+        if (FEntry && n2.FEntry)
+                return FEntry->Compare(*n2.FEntry);
+        else
+        {
+                if (FEntry || n2.FEntry)
+                {
+                        if (FEntry)
+                                return 1;
+                        else
+                                return -1;
+                }
+                else
+                        return 0;
+        }
 }
 
 /*##########################################################################
@@ -522,7 +582,7 @@ int TDirListNode::Compare(const TDirListNode &n2) const
 int TDirListNode::Compare(const TListBaseNode &n2) const
 {
     TDirListNode *p = (TDirListNode *)&n2;
-    return Compare(*p);    
+    return Compare(*p);
 }
 
 /*##########################################################################
@@ -538,15 +598,15 @@ int TDirListNode::Compare(const TListBaseNode &n2) const
 ##########################################################################*/
 void TDirListNode::Load(const TDirListNode &src)
 {
-	if (FEntry)
-		*FEntry = *src.FEntry;
-	else
-	{
-		if (src.FEntry)
-			FEntry = new TDirEntry(*src.FEntry);
-	}
-	FData = FEntry;
-	FValid = src.FValid;
+        if (FEntry)
+                *FEntry = *src.FEntry;
+        else
+        {
+                if (src.FEntry)
+                        FEntry = new TDirEntry(*src.FEntry);
+        }
+        FData = FEntry;
+        FValid = src.FValid;
 }
 
 /*##########################################################################
@@ -562,8 +622,8 @@ void TDirListNode::Load(const TDirListNode &src)
 ##########################################################################*/
 void TDirListNode::Load(const TListBaseNode &src)
 {
-	TDirListNode *p = (TDirListNode *)&src;
-	Load(*p);
+        TDirListNode *p = (TDirListNode *)&src;
+        Load(*p);
 }
 
 /*##########################################################################
@@ -579,8 +639,8 @@ void TDirListNode::Load(const TListBaseNode &src)
 ##########################################################################*/
 const TDirListNode &TDirListNode::operator=(const TDirListNode &src)
 {
-	Load(src);
-	return *this;
+        Load(src);
+        return *this;
 }
 
 /*##########################################################################
@@ -596,10 +656,10 @@ const TDirListNode &TDirListNode::operator=(const TDirListNode &src)
 ##########################################################################*/
 int TDirListNode::operator==(const TDirListNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(ln) == 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -615,10 +675,10 @@ int TDirListNode::operator==(const TDirListNode &ln) const
 ##########################################################################*/
 int TDirListNode::operator!=(const TDirListNode &ln) const
 {
-	if (Compare(ln) == 0)
-		return FALSE;
-	else
-		return TRUE;
+        if (Compare(ln) == 0)
+                return FALSE;
+        else
+                return TRUE;
 }
 
 /*##########################################################################
@@ -634,10 +694,10 @@ int TDirListNode::operator!=(const TDirListNode &ln) const
 ##########################################################################*/
 int TDirListNode::operator>(const TDirListNode &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) > 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -653,10 +713,10 @@ int TDirListNode::operator>(const TDirListNode &dest) const
 ##########################################################################*/
 int TDirListNode::operator<(const TDirListNode &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) < 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -672,10 +732,10 @@ int TDirListNode::operator<(const TDirListNode &dest) const
 ##########################################################################*/
 int TDirListNode::operator>=(const TDirListNode &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) >= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -691,10 +751,10 @@ int TDirListNode::operator>=(const TDirListNode &dest) const
 ##########################################################################*/
 int TDirListNode::operator<=(const TDirListNode &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) <= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -710,7 +770,7 @@ int TDirListNode::operator<=(const TDirListNode &dest) const
 ##########################################################################*/
 TDirEntry &TDirListNode::Get() const
 {
-	return *FEntry;
+        return *FEntry;
 }
 
 /*##########################################################################
@@ -726,14 +786,14 @@ TDirEntry &TDirListNode::Get() const
 ##########################################################################*/
 void TDirListNode::Set(TDirEntry &entry)
 {
-	if (FEntry)
-		*FEntry = entry;
-	else
-	{
-		FEntry = new TDirEntry(entry);
-		FData = FEntry;
-	} 
-	FValid = TRUE;
+        if (FEntry)
+                *FEntry = entry;
+        else
+        {
+                FEntry = new TDirEntry(entry);
+                FData = FEntry;
+        }
+        FValid = TRUE;
 }
 
 /*##########################################################################
@@ -751,7 +811,7 @@ TDirList::TDirList()
   : FPathName("")
 {
     ClearSort();
-	SetDefaultAttributes();
+        SetDefaultAttributes();
 }
 
 /*##########################################################################
@@ -769,8 +829,8 @@ TDirList::TDirList(const char *PathName)
   : FPathName(PathName)
 {
     ClearSort();
-	SetDefaultAttributes();
-	DoSearch();
+        SetDefaultAttributes();
+        DoSearch();
 }
 
 /*##########################################################################
@@ -788,8 +848,8 @@ TDirList::TDirList(const TString &PathName)
   : FPathName(PathName)
 {
     ClearSort();
-	SetDefaultAttributes();
-	DoSearch();
+        SetDefaultAttributes();
+        DoSearch();
 }
 
 /*##########################################################################
@@ -807,8 +867,8 @@ TDirList::TDirList(const TPathName &PathName)
   : FPathName(PathName.Get())
 {
     ClearSort();
-	SetDefaultAttributes();
-	DoSearch();
+        SetDefaultAttributes();
+        DoSearch();
 }
 
 /*##########################################################################
@@ -859,12 +919,12 @@ TDirList::~TDirList()
 ##########################################################################*/
 TDirEntry &TDirList::Get() const
 {
-	TDirListNode *p = (TDirListNode *)FCurrPos;
+        TDirListNode *p = (TDirListNode *)FCurrPos;
 
-	if (p && p->IsValid())
-	    return p->Get();
-	else
-    	return EmptyDir;
+        if (p && p->IsValid())
+            return p->Get();
+        else
+        return EmptyDir;
 }
 
 /*##########################################################################
@@ -930,7 +990,7 @@ void TDirList::SetIgnoredAttributes(int attrib)
 void TDirList::ClearSort()
 {
     int i;
-    
+
     FSortCount = 0;
 
     for (i = 0; i < 5; i++)
@@ -1110,7 +1170,7 @@ void TDirList::AddReverseSortByExt()
 ##########################################################################*/
 void TDirList::Add(const char *PathName)
 {
-	FPathName = TString(PathName);
+        FPathName = TString(PathName);
     DoSearch();
 }
 
@@ -1183,103 +1243,103 @@ int TDirList::CheckAttrib(int attrib)
 ##########################################################################*/
 int TDirList::IsMatch(const char *FileName)
 {
-	TString FileStr(FileName);
-	TString SearchStr(FSearchString);
-	const char *FilePtr;
-	const char *SearchPtr;
-	char ch;
-	const char *LastFilePtr = 0;
-	const char *LastSearchPtr = 0;
+        TString FileStr(FileName);
+        TString SearchStr(FSearchString);
+        const char *FilePtr;
+        const char *SearchPtr;
+        char ch;
+        const char *LastFilePtr = 0;
+        const char *LastSearchPtr = 0;
 
-	FileStr.Upper();
-	SearchStr.Upper();
+        FileStr.Upper();
+        SearchStr.Upper();
 
-	if (SearchStr.GetSize() == 0)
-		return TRUE;
+        if (SearchStr.GetSize() == 0)
+                return TRUE;
 
-	FilePtr = FileStr.GetData();
-	SearchPtr = SearchStr.GetData();
+        FilePtr = FileStr.GetData();
+        SearchPtr = SearchStr.GetData();
 
-	if (!strcmp(SearchPtr, "*.*"))
-		return TRUE;
+        if (!strcmp(SearchPtr, "*.*"))
+                return TRUE;
 
-	if (!strcmp(SearchPtr, "*."))
-	{
-		if (strchr(FilePtr, '.'))
-			return FALSE;
-		else
-			return TRUE;
-	}
+        if (!strcmp(SearchPtr, "*."))
+        {
+                if (strchr(FilePtr, '.'))
+                        return FALSE;
+                else
+                        return TRUE;
+        }
 
-	for (;;)
-	{
-		while (*SearchPtr && *FilePtr)
-		{
-			switch (*SearchPtr)
-			{
-				case '*':
-					ch = *(SearchPtr + 1);
-					if (ch)
-					{
-						if (ch == *FilePtr)
-						{
-							LastSearchPtr = SearchPtr;
-							SearchPtr += 2;
-							FilePtr++;
-							LastFilePtr = FilePtr;
-						}
-						else
-							FilePtr++;
-					}
-					else
-						FilePtr++;
-					break;
-	
-				case '?':
-					SearchPtr++;
-					FilePtr++;
-					break;
+        for (;;)
+        {
+                while (*SearchPtr && *FilePtr)
+                {
+                        switch (*SearchPtr)
+                        {
+                                case '*':
+                                        ch = *(SearchPtr + 1);
+                                        if (ch)
+                                        {
+                                                if (ch == *FilePtr)
+                                                {
+                                                        LastSearchPtr = SearchPtr;
+                                                        SearchPtr += 2;
+                                                        FilePtr++;
+                                                        LastFilePtr = FilePtr;
+                                                }
+                                                else
+                                                        FilePtr++;
+                                        }
+                                        else
+                                                FilePtr++;
+                                        break;
 
-				default:
-					if (*SearchPtr == *FilePtr)
-					{
-						SearchPtr++;
-						FilePtr++;
-					}
-					else
-					{
-						if (LastFilePtr)
-						{
-							FilePtr = LastFilePtr;
-							SearchPtr = LastSearchPtr;
-							LastFilePtr = 0;
-							LastSearchPtr = 0;
-						}
-						else
-							return FALSE;
-					}
-					break;
-			}
-		}
+                                case '?':
+                                        SearchPtr++;
+                                        FilePtr++;
+                                        break;
 
-		if (*SearchPtr == 0 && *FilePtr == 0)
-			return TRUE;
-		else
-		{
-			if (*SearchPtr == '*' && *(SearchPtr+1) == 0)
-				return TRUE;
+                                default:
+                                        if (*SearchPtr == *FilePtr)
+                                        {
+                                                SearchPtr++;
+                                                FilePtr++;
+                                        }
+                                        else
+                                        {
+                                                if (LastFilePtr)
+                                                {
+                                                        FilePtr = LastFilePtr;
+                                                        SearchPtr = LastSearchPtr;
+                                                        LastFilePtr = 0;
+                                                        LastSearchPtr = 0;
+                                                }
+                                                else
+                                                        return FALSE;
+                                        }
+                                        break;
+                        }
+                }
 
-			if (LastFilePtr)
-			{
-				FilePtr = LastFilePtr;
-				SearchPtr = LastSearchPtr;
-				LastFilePtr = 0;
-				LastSearchPtr = 0;
-			}
-			else
-				return FALSE;
-		}
-	}
+                if (*SearchPtr == 0 && *FilePtr == 0)
+                        return TRUE;
+                else
+                {
+                        if (*SearchPtr == '*' && *(SearchPtr+1) == 0)
+                                return TRUE;
+
+                        if (LastFilePtr)
+                        {
+                                FilePtr = LastFilePtr;
+                                SearchPtr = LastSearchPtr;
+                                LastFilePtr = 0;
+                                LastSearchPtr = 0;
+                        }
+                        else
+                                return FALSE;
+                }
+        }
 }
 
 /*##########################################################################
@@ -1296,12 +1356,36 @@ int TDirList::IsMatch(const char *FileName)
 void TDirList::Add(const char *Name, unsigned long msb, unsigned long lsb, long FileSize, int Attrib)
 {
     TString Entry(Name);
-	TPathName Path(FBaseString);
-	Path += Entry;
+        TPathName Path(FBaseString);
+        Path += Entry;
     TDateTime Time(msb, lsb);
     TDirEntry entry(Path, Entry, Time, FileSize, Attrib);
-	TDirListNode *p = new TDirListNode(entry);
-	TListBase::AddFirst(p);
+        TDirListNode *p = new TDirListNode(entry);
+        TListBase::AddFirst(p);
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::Add
+#
+#   Purpose....: Add entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::Add(const char *Name, unsigned long long CreateTime, unsigned long long ModifyTime, unsigned long long AccessTime, long long FileSize, int Attrib)
+{
+    TString Entry(Name);
+    TPathName Path(FBaseString);
+    Path += Entry;
+    TDateTime Created(CreateTime);
+    TDateTime Modified(ModifyTime);
+    TDateTime Accessed(AccessTime);
+    TDirEntry entry(Path, Entry, Created, Modified, Accessed, FileSize, Attrib);
+    TDirListNode *p = new TDirListNode(entry);
+    TListBase::AddFirst(p);
 }
 
 /*##########################################################################
@@ -1330,7 +1414,7 @@ void TDirList::DoSearch()
     char *ptr;
     int i;
     long long time;
-	
+
     if (FPathName.IsDir())
     {
         FBaseString = FPathName.Get();
@@ -1364,7 +1448,7 @@ void TDirList::DoSearch()
                 memcpy(&lsb, &time, 4);
                 time = time >> 32;
                 memcpy(&msb, &time, 4);
-                Add(entry->PathName, msb, lsb, entry->Size, entry->Attrib);
+                Add(entry->PathName, (unsigned long long)entry->CreateTime, (unsigned long long)entry->ModifyTime, (unsigned long long)entry->AccessTime, entry->Size, entry->Attrib);
             }
 
             ptr += info.HeaderSize;
@@ -1413,42 +1497,42 @@ void TDirList::DoSearch()
 ##########################################################################*/
 void TDirList::Sort()
 {
-	int count;
-	TDirListNode **EntryArr;
-	int ok;
-	int i;
+        int count;
+        TDirListNode **EntryArr;
+        int ok;
+        int i;
 
-	count = GetSize();
+        count = GetSize();
 
-	if (count && FSortCount)
-	{
-		FDirSortSection.Enter();
+        if (count && FSortCount)
+        {
+                FDirSortSection.Enter();
 
-		EntryArr = new TDirListNode*[count];
+                EntryArr = new TDirListNode*[count];
 
-		i = 0;
-		ok = GotoFirst();
-		while (ok)
-		{
-			EntryArr[i] = Clone((TDirListNode *)FCurrPos);
-			i++;
-			ok = GotoNext();
-		}
+                i = 0;
+                ok = GotoFirst();
+                while (ok)
+                {
+                        EntryArr[i] = Clone((TDirListNode *)FCurrPos);
+                        i++;
+                        ok = GotoNext();
+                }
 
-		Clear();
+                Clear();
 
-		for (i = 0; i < 5; i++)
-			FOrderby[i] = FSortArr[i];
+                for (i = 0; i < 5; i++)
+                        FOrderby[i] = FSortArr[i];
 
-		qsort(EntryArr, count, sizeof(TDirListNode *), SortCompare);
+                qsort(EntryArr, count, sizeof(TDirListNode *), SortCompare);
 
-		for (i = count - 1; i >= 0; i--)
-			AddFirst(EntryArr[i]);
+                for (i = count - 1; i >= 0; i--)
+                        AddFirst(EntryArr[i]);
 
-		delete EntryArr;
+                delete EntryArr;
 
-		FDirSortSection.Leave();
-	}
+                FDirSortSection.Leave();
+        }
 }
 
 /*##########################################################################
@@ -1487,7 +1571,7 @@ int TDirList::operator!= (const TDirList &l) const
         return TRUE;
     else
         return FALSE;
-}    
+}
 
 /*##########################################################################
 #
@@ -1502,10 +1586,10 @@ int TDirList::operator!= (const TDirList &l) const
 ##########################################################################*/
 int TDirList::operator>(const TDirList &dest) const
 {
-	if (Compare(dest) > 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) > 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -1521,10 +1605,10 @@ int TDirList::operator>(const TDirList &dest) const
 ##########################################################################*/
 int TDirList::operator<(const TDirList &dest) const
 {
-	if (Compare(dest) < 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) < 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -1540,10 +1624,10 @@ int TDirList::operator<(const TDirList &dest) const
 ##########################################################################*/
 int TDirList::operator>=(const TDirList &dest) const
 {
-	if (Compare(dest) >= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) >= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -1559,10 +1643,10 @@ int TDirList::operator>=(const TDirList &dest) const
 ##########################################################################*/
 int TDirList::operator<=(const TDirList &dest) const
 {
-	if (Compare(dest) <= 0)
-		return TRUE;
-	else
-		return FALSE;
+        if (Compare(dest) <= 0)
+                return TRUE;
+        else
+                return FALSE;
 }
 
 /*##########################################################################
@@ -1578,11 +1662,11 @@ int TDirList::operator<=(const TDirList &dest) const
 ##########################################################################*/
 TDirList &TDirList::operator=(const TDirList &src)
 {
-	Load(src);
-	FPathName = src.FPathName;
-	FAttribIgnored = src.FAttribIgnored;
+        Load(src);
+        FPathName = src.FPathName;
+        FAttribIgnored = src.FAttribIgnored;
     FAttribRequired = src.FAttribRequired;
-    
+
     return *this;
 }
 
@@ -1599,9 +1683,9 @@ TDirList &TDirList::operator=(const TDirList &src)
 ##########################################################################*/
 TDirList &TDirList::operator+=(const TDirList &l)
 {
-	TDirList list;
-	list.Concat(*this, l);
-	*this = list;
+        TDirList list;
+        list.Concat(*this, l);
+        *this = list;
     return *this;
 }
 
@@ -1618,9 +1702,9 @@ TDirList &TDirList::operator+=(const TDirList &l)
 ##########################################################################*/
 TDirList &TDirList::operator&=(const TDirList &l)
 {
-	TDirList list;
-	list.Intersect(*this, l);
-	*this = list;
+        TDirList list;
+        list.Intersect(*this, l);
+        *this = list;
     return *this;
 }
 
@@ -1637,9 +1721,9 @@ TDirList &TDirList::operator&=(const TDirList &l)
 ##########################################################################*/
 TDirList &TDirList::operator|=(const TDirList &l)
 {
-	TDirList list;
-	list.Union(*this, l);
-	*this = list;
+        TDirList list;
+        list.Union(*this, l);
+        *this = list;
     return *this;
 }
 
@@ -1656,9 +1740,9 @@ TDirList &TDirList::operator|=(const TDirList &l)
 ##########################################################################*/
 TDirList &TDirList::operator^=(const TDirList &l)
 {
-	TDirList list;
-	list.Difference(*this, l);
-	*this = list;
+        TDirList list;
+        list.Difference(*this, l);
+        *this = list;
     return *this;
 }
 
@@ -1675,12 +1759,12 @@ TDirList &TDirList::operator^=(const TDirList &l)
 ##########################################################################*/
 TDirEntry &TDirList::operator[](int pos)
 {
-	TDirListNode *p = (TDirListNode *)TListBase::Get(pos);
+        TDirListNode *p = (TDirListNode *)TListBase::Get(pos);
 
-	if (p->IsValid())
-		return p->Get();
-	else
-		return EmptyDir;
+        if (p->IsValid())
+                return p->Get();
+        else
+                return EmptyDir;
 }
 
 /*##########################################################################
@@ -1696,7 +1780,7 @@ TDirEntry &TDirList::operator[](int pos)
 ##########################################################################*/
 TDirListNode *TDirList::Clone(const TDirListNode *ln) const
 {
-	return new TDirListNode(*ln);
+        return new TDirListNode(*ln);
 }
 
 /*##########################################################################
@@ -1713,7 +1797,7 @@ TDirListNode *TDirList::Clone(const TDirListNode *ln) const
 TListBaseNode *TDirList::Clone(const TListBaseNode *ln) const
 {
     TDirListNode *p = (TDirListNode *)ln;
-	return new TDirListNode(*p);
+        return new TDirListNode(*p);
 }
 
 /*##########################################################################
@@ -1729,7 +1813,7 @@ TListBaseNode *TDirList::Clone(const TListBaseNode *ln) const
 ##########################################################################*/
 TDirList operator+(const TDirList &list1, const TDirList& list2)
 {
-	TDirList list;
+        TDirList list;
     list.Concat(list1, list2);
     return list;
 }
@@ -1747,7 +1831,7 @@ TDirList operator+(const TDirList &list1, const TDirList& list2)
 ##########################################################################*/
 TDirList operator&(const TDirList &list1, const TDirList& list2)
 {
-	TDirList list;
+        TDirList list;
     list.Intersect(list1, list2);
     return list;
 }
@@ -1765,7 +1849,7 @@ TDirList operator&(const TDirList &list1, const TDirList& list2)
 ##########################################################################*/
 TDirList operator|(const TDirList &list1, const TDirList& list2)
 {
-	TDirList list;
+        TDirList list;
     list.Union(list1, list2);
     return list;
 }
@@ -1783,7 +1867,7 @@ TDirList operator|(const TDirList &list1, const TDirList& list2)
 ##########################################################################*/
 TDirList operator^(const TDirList &list1, const TDirList& list2)
 {
-	TDirList list;
+        TDirList list;
     list.Difference(list1, list2);
     return list;
 }

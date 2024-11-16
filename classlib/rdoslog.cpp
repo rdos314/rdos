@@ -35,9 +35,9 @@
 static TRdosLogThread *LogThread = 0;
 static TSection Section("Log Section");
 
-#define FALSE	0
-#define TRUE	!FALSE
-#define MAX_STR_SIZE	0x10000
+#define FALSE   0
+#define TRUE    !FALSE
+#define MAX_STR_SIZE    0x10000
 
 /*##########################################################################
 #
@@ -264,7 +264,7 @@ void TRdosLogThread::Add(int level, TString &str)
 {
     bool logit = false;
 
-    if (level >= FLogLevel) 
+    if (level >= FLogLevel)
         logit = true;
 
     if (logit)
@@ -383,12 +383,12 @@ void TRdosLogThread::InitFiles()
             if (ptr)
                 *ptr = 0;
 
-            index = atoi(file);            
+            index = atoi(file);
 
             if (index > FCurrId)
             {
                 FCurrId = index;
-                FLastTime = entry.GetTime();
+                FLastTime = entry.GetModifyTime();
             }
         }
         else
@@ -396,11 +396,11 @@ void TRdosLogThread::InitFiles()
             path = entry.GetPathName();
             path.DeleteFile();
         }
-            
-        ok = FileList.GotoNext();
-    }    
 
-    
+        ok = FileList.GotoNext();
+    }
+
+
     if (FAdjustTime)
     {
         if (FWasEmpty)
@@ -478,7 +478,7 @@ void TRdosLogThread::CheckFileCount()
 
         count--;
         FileList.GotoNext();
-    }    
+    }
 }
 
 /*##########################################################################
@@ -492,7 +492,7 @@ void TRdosLogThread::CheckFileCount()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLogThread::SwitchFile() 
+void TRdosLogThread::SwitchFile()
 {
     TString str;
 
@@ -503,7 +503,7 @@ void TRdosLogThread::SwitchFile()
     str.printf("%s/%d.log", FLogPath.GetData(), FCurrId);
     FCurrFile = new TFile(str.GetData(), 0);
 
-    CheckFileCount();        
+    CheckFileCount();
 }
 
 /*##########################################################################
@@ -523,10 +523,10 @@ void TRdosLogThread::Execute()
     TPathName path(FLogPath);
 
     if (path.MakeDir())
-    {        
+    {
         InitFiles();
 
-        while (FInstalled) 
+        while (FInstalled)
         {
             while (FInstalled && FList.GotoFirst())
             {
@@ -558,7 +558,7 @@ void TRdosLogThread::Execute()
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosLog::TRdosLog(TRdosLogThread *logdev, const char *cl) 
+TRdosLog::TRdosLog(TRdosLogThread *logdev, const char *cl)
   : FClass(cl)
 {
     FDev = logdev;
@@ -575,7 +575,7 @@ TRdosLog::TRdosLog(TRdosLogThread *logdev, const char *cl)
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosLog::TRdosLog(const char *cl) 
+TRdosLog::TRdosLog(const char *cl)
   : FClass(cl)
 {
     Section.Enter();
@@ -599,7 +599,7 @@ TRdosLog::TRdosLog(const char *cl)
 #   Returns....: *
 #
 ##########################################################################*/
-TRdosLog::~TRdosLog() 
+TRdosLog::~TRdosLog()
 {
 }
 
@@ -719,13 +719,13 @@ TDateTime TRdosLog::GetLastTime()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLog::Log(int level, const char *label, const char *msg) 
+void TRdosLog::Log(int level, const char *label, const char *msg)
 {
     TString str;
     TDateTime time;
 
-    str.printf("%04d-%02d-%02d %02d.%02d.%02d,%03d  ", 
-                       time.GetYear(), time.GetMonth(), time.GetDay(), 
+    str.printf("%04d-%02d-%02d %02d.%02d.%02d,%03d  ",
+                       time.GetYear(), time.GetMonth(), time.GetDay(),
                        time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
 
     if (level >= 0 && level < MAX_LOG_LEVELS)
@@ -775,7 +775,7 @@ void TRdosLog::Log(int level, const char *label, const char *msg)
 #   Returns....: *
 #
 ##########################################################################*/
-void TRdosLog::printf(int level, const char *label, const char *msg, ...) 
+void TRdosLog::printf(int level, const char *label, const char *msg, ...)
 {
     va_list args;
     TString str;
@@ -1043,9 +1043,9 @@ void TRdosEventLog::CheckFileCount()
                     path.DeleteFile();
             }
         }
-            
+
         ok = FileList.GotoPrev();
-    }    
+    }
 
     delete file;
 }
@@ -1102,15 +1102,15 @@ void TRdosEventLog::InitFiles()
                 if (ptr)
                     *ptr = 0;
 
-                index = atoi(file);            
+                index = atoi(file);
 
                 if (index > FCurrId)
                     FCurrId = index;
             }
         }
-            
+
         ok = FileList.GotoNext();
-    }    
+    }
 
     delete file;
 
@@ -1118,7 +1118,7 @@ void TRdosEventLog::InitFiles()
     str.printf("%s/%d.ldd", FLogPath.GetData(), FCurrId);
     FCurrFile = new TFile(str.GetData(), 0);
 
-    CheckFileCount();        
+    CheckFileCount();
 }
 
 /*##################  TRdosEventLog::DumpOne  #######################
@@ -1161,7 +1161,7 @@ void TRdosEventLog::Execute()
     TPathName path(FLogPath);
 
     if (path.MakeDir())
-    {        
+    {
         InitFiles();
 
         DumpArr = new TString *[FEntryCount];
@@ -1175,10 +1175,10 @@ void TRdosEventLog::Execute()
                 DumpArr[i] = new TString(*FEntryArr[i]);
             else
                 DumpArr[i] = 0;
-        
+
         FEventSection.Leave();
-        
-        for (i = pos; i < FEntryCount; i++) 
+
+        for (i = pos; i < FEntryCount; i++)
             if (DumpArr[i])
                 DumpOne(DumpArr[i]);
 
