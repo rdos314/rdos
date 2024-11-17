@@ -54,11 +54,11 @@
 #define LonNiOffLine        0x80        /* Downlink: Ask node go offline  */
 #define LonNiFlush          0x90        /* Downlink                       */
 #define LonNiFlushIgnore    0xA0        /* Downlink                       */
-#define LonNiSleep          0xB0        /* Not supported by ShortStack Micro Server   */    
+#define LonNiSleep          0xB0        /* Not supported by ShortStack Micro Server   */
 #define LonIsiNack          0xBC        /* Uplink: ISI Nack in response to a downlink RPC */
 #define LonIsiAck           0xBD        /* Uplink: ISI Ack in response to a downlink RPC */
 #define LonIsiCmd           0xBE        /* Downlink: ISI Downlink RPC */
-                                        /* Uplink: ISI Uplink RPC */    
+                                        /* Uplink: ISI Uplink RPC */
 #define LonNiNv             0xC0        /* Special case for downlink NV updates and polls.
                                        Least significant 6 bits contain NV index. */
 
@@ -107,10 +107,10 @@
 #define LonUsopNvIsBound            0x02        /* Is Bound Nv   */
 #define LonUsopMtIsBound            0x03        /* Is Bound Mt   */
 #define LonUsopGoUcfg               0x04        /* Go Unconfigured   */
-#define LonUsopGoCfg                0x05        /* Go Configured   */    
-#define LonUsopQueryAppSignature    0x06        /* Query App Signature  */    
+#define LonUsopGoCfg                0x05        /* Go Configured   */
+#define LonUsopQueryAppSignature    0x06        /* Query App Signature  */
 #define LonUsopVersion              0x07        /* Query Micro Server version details */
-#define LonUsopEcho                 0x0A        /* Request Echo */      
+#define LonUsopEcho                 0x0A        /* Request Echo */
 
 #define LonAddressUnassigned    0
 #define LonAddressSubnetNode    1
@@ -157,7 +157,7 @@ static void StartLonDump(void *ptr)
 #
 #   Name       : TLonDevice::TLonDevice
 #
-#   Purpose....: Constructor for TLonDevice                                    
+#   Purpose....: Constructor for TLonDevice
 #
 #   In params..: Height         requested font height
 #   Out params.: *
@@ -183,7 +183,7 @@ TLonDevice::TLonDevice(int lonid)
     FDumpFiles = 0;
     FResponseCounter = 0;
     FResetLimit = 0;
-    
+
     FLonId = lonid;
     FLonHandle = RdosOpenLonModule(lonid, 20, 10);
 
@@ -198,7 +198,7 @@ TLonDevice::TLonDevice(int lonid)
 #
 #   Name       : TLonDevice::~TLonDevice
 #
-#   Purpose....: Destructor for TLonDevice                                     
+#   Purpose....: Destructor for TLonDevice
 #
 #   In params..: *
 #   Out params.: *
@@ -213,7 +213,7 @@ TLonDevice::~TLonDevice()
 
         while (IsRunning())
             RdosWaitMilli(25);
-            
+
         RdosCloseLonModule(FLonHandle);
     }
 }
@@ -270,7 +270,7 @@ void TLonDevice::UpdateDomainConfig(unsigned char Index, TLonDomain *Domain)
 
     FDomainReq = FALSE;
 
-    FSection.Leave();    
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -295,7 +295,7 @@ void TLonDevice::GoConfigured()
 
     FGoConfiguredReq = FALSE;
 
-    FSection.Leave();    
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -326,12 +326,12 @@ void TLonDevice::SendMsg(const char *msg, int size, int timeout)
     if (FDumpFiles && FEntryCount)
     {
         FDumpSection.Enter();
-        
+
         if (size > 118)
             dumpsize = 118;
         else
             dumpsize = size;
-    
+
         FEntryArr[FNextPos].Time = RdosGetLongTime();
         FEntryArr[FNextPos].Src = 'T';
         FEntryArr[FNextPos].Len = (unsigned char)size;
@@ -366,12 +366,12 @@ void TLonDevice::SendMsgNoWait(const char *msg, int size)
     if (FDumpFiles && FEntryCount)
     {
         FDumpSection.Enter();
-        
+
         if (size > 118)
             dumpsize = 118;
         else
             dumpsize = size;
-    
+
         FEntryArr[FNextPos].Time = RdosGetLongTime();
         FEntryArr[FNextPos].Src = 'T';
         FEntryArr[FNextPos].Len = (unsigned char)size;
@@ -398,7 +398,7 @@ void TLonDevice::SendMsgNoWait(const char *msg, int size)
 #                Service    Service field
 #                Tag        Tag field
 #                Auth       Authentication field
-#                RepeatTimer 
+#                RepeatTimer
 #                Retries
 #                TransmitTimer
 #                Code       Lon message code
@@ -427,7 +427,7 @@ char *TLonDevice::CreateExplicitMsg(char *Buffer,
 
     expl->Attributes_1 = 0;
     expl->Attributes_1 |= (Service << 5) & 0x60;
-    expl->Attributes_1 |= Tag & 0xF;  
+    expl->Attributes_1 |= Tag & 0xF;
     expl->Attributes_1 |= (Auth << 4) & 0x10;
 
     expl->Attributes_2 = 8;
@@ -438,9 +438,9 @@ char *TLonDevice::CreateExplicitMsg(char *Buffer,
     dest->DomainNode |= (Domain << 7) & 0x80;
     dest->RepeatRetry = Retries & 0xF;
     dest->RepeatRetry |= (RepeatTimer << 4) & 0xF0;
-    dest->RsvdTransmit = TransmitTimer & 0xF; 
+    dest->RsvdTransmit = TransmitTimer & 0xF;
 
-    expl->Code = Code;    
+    expl->Code = Code;
     expl->Length = Size;
 
     return (char *)&expl->Data;
@@ -456,7 +456,7 @@ char *TLonDevice::CreateExplicitMsg(char *Buffer,
 #                Service    Service field
 #                Tag        Tag field
 #                Auth       Authentication field
-#                RepeatTimer 
+#                RepeatTimer
 #                Retries
 #                TransmitTimer
 #                Code       Lon message code
@@ -488,7 +488,7 @@ char *TLonDevice::CreateBroadcastMsg(char *Buffer,
     expl->Address[9] = 0;
     expl->Address[10] = 0;
 
-    expl->Code = Code;    
+    expl->Code = Code;
     expl->Length = Size;
 
     return (char *)&expl->Data;
@@ -714,19 +714,19 @@ void TLonDevice::HandleIncomingExpMsg(const char *msg, int size)
         case LonNmSetNodeMode:
             HandleNmSetNodeMode(Data, Len);
             break;
-            
+
         case LonNmNvFetch:
             HandleNmNvFetch(Data, Len);
-            break;                            
+            break;
 
         case LonNmReadMemory:
             HandleNmReadMemory(Data, Len);
             break;
-                            
+
         case LonNmWriteMemory:
             HandleNmWriteMemory(Data, Len);
             break;
-                            
+
         case LonNmQuerySiData:
             HandleNmQuerySiData(Data, Len);
             break;
@@ -928,24 +928,24 @@ void TLonDevice::HandleResponseExpMsg(const char *msg, int size)
                 case LonNmQueryDomain:
                     HandleNmQueryDomainResponse(Data, Len);
                     break;
-                    
+
                 case LonNmQueryNvConfig:
                     HandleNmQueryNvConfigResponse(Data, Len);
                     break;
-                    
+
                 case LonNmQueryAddr:
                     HandleNmQueryAddrResponse(Data, Len);
                     break;
-                    
+
                 case LonNmReadMemory:
                     HandleNmReadMemoryResponse(Data, Len);
                     break;
-                    
+
                 default:
                     break;
             }
         }
-        
+
         if (FNdPending)
         {
             switch ((Expl->Code & 0xF) | 0x50)
@@ -953,11 +953,11 @@ void TLonDevice::HandleResponseExpMsg(const char *msg, int size)
                 case LonNdQueryStatus:
                     HandleNdQueryStatusResponse(Data, Len);
                     break;
-                    
+
                 case LonNdQueryXcvr:
                     HandleNdQueryXcvrResponse(Data, Len);
                     break;
-                    
+
                 default:
                     break;
             }
@@ -968,14 +968,14 @@ void TLonDevice::HandleResponseExpMsg(const char *msg, int size)
             FDomainReq = FALSE;
             FSignal.Signal();
         }
-        
+
         FNmPending = FALSE;
         FNdPending = FALSE;
     }
     else
     {
         HandleResponseMsg(  (const char *)Expl->Address,
-                            Tag, 
+                            Tag,
                             Expl->Code,
                             Data,
                             Len);
@@ -1032,11 +1032,11 @@ void TLonDevice::HandleIsiCmd(const char *msg, int size)
 #   Name       : TLonDevice::HandlePingReceived
 #
 #  The ShortStack Micro Server has sent a ping command.
-# 
+#
 #  Remarks:
 #  The ShortStack Micro Server has sent a ping command. This command can be
 #  a response to the ping command sent by the host application
-#  to the Micro Server. This callback is part of the optional 
+#  to the Micro Server. This callback is part of the optional
 #  utility API.
 #
 ##########################################################################*/
@@ -1052,12 +1052,12 @@ void TLonDevice::HandlePingReceived()
 #
 #   Parameters:
 #    index - index of the network variable
-#    bound - indicates whether the network variable is bound 
+#    bound - indicates whether the network variable is bound
 #
 #  Remarks:
 #  The Micro Server has responded to the <LonNvIsBound> request. The boolean
 #  variable *bound* tells whether the network variable identified by index
-#  is bound. This callback is part of the optional 
+#  is bound. This callback is part of the optional
 #  utility API.
 #
 ##########################################################################*/
@@ -1078,7 +1078,7 @@ void TLonDevice::HandleNvIsBoundReceived(unsigned char index, unsigned char boun
 #  Remarks:
 #  The Micro Server has responded to the <LonMtIsBound> request. The boolean
 #  variable *bound* tells whether the message tag identified by index
-#  is bound. This callback is part of the optional 
+#  is bound. This callback is part of the optional
 #  utility API.
 #
 ##########################################################################*/
@@ -1093,9 +1093,9 @@ void TLonDevice::HandleMtIsBoundReceived(unsigned char index, unsigned char boun
 #   Callback following a call to <LonGoUnconfigured>.
 #
 #   Remarks:
-#   The Micro Server has responded to the <LonGoUnconfigured> request. 
-#   If the Micro Server was in a configured state before the <LonGoUnconfigured> 
-#   request was sent, it will reset after going to the unconfigured state. 
+#   The Micro Server has responded to the <LonGoUnconfigured> request.
+#   If the Micro Server was in a configured state before the <LonGoUnconfigured>
+#   request was sent, it will reset after going to the unconfigured state.
 #   This callback is part of the optional utility API.
 #
 ##########################################################################*/
@@ -1110,7 +1110,7 @@ void TLonDevice::HandleGoUnconfiguredReceived()
 #   Callback following a call to <LonGoConfigured>.
 #
 #   Remarks:
-#   The Micro Server has responded to the <LonGoConfigured> request. 
+#   The Micro Server has responded to the <LonGoConfigured> request.
 #   The Micro Server will not reset after going into the configured state unless
 #   some serious error, such as an application checksum error, is detected in the
 #   process.
@@ -1137,12 +1137,12 @@ void TLonDevice::HandleGoConfiguredReceived()
 #
 #   Parameter:
 #   appSignature - Micro Server's copy of the host's application signature
-# 
+#
 #   Remarks:
-#   The Micro Server has responded to the <LonQueryAppSignature> request. 
-#   If the *bInvalidate* flag was set to TRUE in the <LonQueryAppSignature> 
-#   request, the Micro Server has already invalidated the signature by the time 
-#   this callback is called. 
+#   The Micro Server has responded to the <LonQueryAppSignature> request.
+#   If the *bInvalidate* flag was set to TRUE in the <LonQueryAppSignature>
+#   request, the Micro Server has already invalidated the signature by the time
+#   this callback is called.
 #   This callback is part of the optional utility API.
 #
 ##########################################################################*/
@@ -1165,7 +1165,7 @@ void TLonDevice::HandleAppSignatureReceived(short int AppSignature)
 #    coreBuild - the build number for the Micro Server core library, 0..255
 #
 #   Remarks:
-#   The Micro Server has responded to a <LonQueryVersion> request. 
+#   The Micro Server has responded to a <LonQueryVersion> request.
 #   This callback is part of the optional utility API.
 #
 ##########################################################################*/
@@ -1226,7 +1226,7 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
             else
                 HandleIncomingExpMsg(msg, size);
             break;
-            
+
         case LonNiComm | LonNiResponse:
             NvMsg = (Expl->Attributes_1 & 0x80) >> 7;
             CompletionCode = (Expl->Attributes_2 & 0x30) >> 6;
@@ -1251,7 +1251,7 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
                     HandleResponseExpMsg(msg, size);
             }
             break;
-            
+
         case LonNiReset:
             HandleReset(msg, size);
             break;
@@ -1270,23 +1270,23 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
                 case LonUsopPing:
                     HandlePingReceived();
                     break;
-                        
+
                 case LonUsopNvIsBound:
                     HandleNvIsBoundReceived(msg[2], msg[3]);
                     break;
-                        
+
                 case LonUsopMtIsBound:
                     HandleMtIsBoundReceived(msg[2], msg[3]);
                     break;
-                        
+
                 case LonUsopGoUcfg:
                     HandleGoUnconfiguredReceived();
                     break;
-                        
+
                 case LonUsopGoCfg:
                     HandleGoConfiguredReceived();
                     break;
-                        
+
                 case LonUsopQueryAppSignature:
                     short int appSignature = RdosSwapShort((short int)msg[1]);
                     HandleAppSignatureReceived(appSignature);
@@ -1296,13 +1296,13 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
                     HandleVersionReceived(msg[2], msg[3], msg[4],
                                           msg[5], msg[6], msg[7]);
                     break;
-                    
+
                 case LonUsopEcho:
-                    HandleEchoReceived(&msg[2]);                    
+                    HandleEchoReceived(&msg[2]);
                     break;
             }
             break;
-            
+
         case LonIsiNack:
             HandleIsiNack(msg, size);
             break;
@@ -1314,7 +1314,7 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
         case LonIsiCmd:
             HandleIsiCmd(msg, size);
             break;
-    }                       
+    }
 }
 
 /*##########################################################################
@@ -1332,23 +1332,17 @@ int TLonDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCo
 {
     int i;
     char str[256];
-    int dir = RdosOpenDir(LogPath);
-
-    if (!dir)
-        return FALSE;
-
-    RdosCloseDir(dir);
 
     // make sure there are the correct number of file stumps
-    for (i = 1; i < DumpFiles; i++) 
+    for (i = 1; i < DumpFiles; i++)
     {
         sprintf(str, "%s/%d.sdd", LogPath, i);
 
         int fileHandle = RdosOpenHandle(str, O_RDWR);
-        if (fileHandle <= 0) 
+        if (fileHandle <= 0)
             fileHandle = RdosOpenHandle(str, O_CREAT | O_RDWR);
-        
-        if (fileHandle <= 0) 
+
+        if (fileHandle <= 0)
             return FALSE;
         else
             RdosCloseHandle(fileHandle);
@@ -1361,7 +1355,7 @@ int TLonDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCo
     FEntryArr = new struct TLonDebug[EntryCount];
 
     // initialize cache to empty
-    for (i = 0; i < EntryCount; i++) 
+    for (i = 0; i < EntryCount; i++)
     {
         FEntryArr[i].Time = 0;
         FEntryArr[i].Src = 0;
@@ -1401,7 +1395,7 @@ int TLonDevice::DumpEvents()
 
         FDumpSection.Leave();
         return TRUE;
-    
+
     }
     else
         return FALSE;
@@ -1447,7 +1441,7 @@ int TLonDevice::GetNextDumpFile()
 
     dir = RdosOpenDir(FLogPath.GetData());
 
-    if (dir) 
+    if (dir)
     {
         OldestName[0] = 0;
 
@@ -1456,12 +1450,12 @@ int TLonDevice::GetNextDumpFile()
             time = RdosReadLongDir(dir, idx, 255, filename, &filesize, &attributes);
             idx++;
             if (time >= 0 && OldestTime > time && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
-            { 
+            {
                 OldestTime = time;
                 strcpy(OldestName, filename);
             }
         } while (time >= 0);
-        
+
         RdosCloseDir(dir);
 
         sprintf(filename, "%s/%s", FLogPath.GetData(), OldestName);
@@ -1482,7 +1476,7 @@ void TLonDevice::DumpOnce()
     int pos;
     int fileHandle = GetNextDumpFile();
     struct TLonDebug *DumpArr;
-    
+
     if (fileHandle)
     {
         DumpArr = new struct TLonDebug[FEntryCount];
@@ -1493,12 +1487,12 @@ void TLonDevice::DumpOnce()
 
         for (int i = 0; i < FEntryCount; i++)
             DumpArr[i] = FEntryArr[i];
-        
+
         FEventSection.Leave();
-        
+
         RdosSetHandleSize(fileHandle, 0);
 
-        for (int i = pos; i < FEntryCount; i++) 
+        for (int i = pos; i < FEntryCount; i++)
             if (FEntryArr[i].Time)
                 RdosWriteHandle(fileHandle, &DumpArr[i], sizeof(struct TLonDebug));
 
@@ -1534,7 +1528,7 @@ void TLonDevice::Execute()
     RdosAddWaitForLonModule(wait, FLonHandle, (int)this);
 
     while (FInstalled && !IsOpen())
-        RdosWaitMilli(100);    
+        RdosWaitMilli(100);
 
     if (IsOpen())
         NotifyStarted();
@@ -1551,7 +1545,7 @@ void TLonDevice::Execute()
                     FResponseCounter = 0;
                 }
             }
-        
+
             if (FResetReq)
             {
                 NotifyLonReset();
@@ -1568,7 +1562,7 @@ void TLonDevice::Execute()
 
                 FResetReq = FALSE;
             }
-        
+
             RdosWaitTimeout(wait, 1000);
 
             if (RdosHasLonModuleMsg(FLonHandle))
@@ -1581,12 +1575,12 @@ void TLonDevice::Execute()
                 if (FDumpFiles && FEntryCount)
                 {
                     FDumpSection.Enter();
-        
+
                     if (size > 118)
                         dumpsize = 118;
                     else
                         dumpsize = size;
-    
+
                     FEntryArr[FNextPos].Time = RdosGetLongTime();
                     FEntryArr[FNextPos].Src = 'R';
                     FEntryArr[FNextPos].Len = (unsigned char)size;
