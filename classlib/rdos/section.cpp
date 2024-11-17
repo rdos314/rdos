@@ -27,7 +27,6 @@
 
 #include <string.h>
 #include "section.h"
-#include "rdos.h"
 
 #define     FALSE   0
 #define     TRUE    !FALSE
@@ -47,8 +46,8 @@ TSection::TSection(const char *Name)
 {
     strncpy(FName, Name, 32);
     FName[32] = 0;
-    
-    InitFutex(&Futex, FName);
+
+    RdosInitFutex(&Futex, FName);
 }
 
 /*##########################################################################
@@ -64,7 +63,7 @@ TSection::TSection(const char *Name)
 ##########################################################################*/
 TSection::~TSection()
 {
-    ResetFutex(&Futex);
+    RdosResetFutex(&Futex);
 }
 
 /*##########################################################################
@@ -80,7 +79,7 @@ TSection::~TSection()
 ##########################################################################*/
 void TSection::Enter() const
 {
-    EnterFutex(&Futex);
+    RdosEnterFutex(&Futex);
 }
 
 /*##########################################################################
@@ -96,5 +95,5 @@ void TSection::Enter() const
 ##########################################################################*/
 void TSection::Leave() const
 {
-    LeaveFutex(&Futex);
+    RdosLeaveFutex(&Futex);
 }

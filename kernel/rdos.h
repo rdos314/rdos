@@ -799,6 +799,11 @@ void RDOSAPI RdosEnterSection(int Handle);
 void RDOSAPI RdosLeaveSection(int Handle);
 int RDOSAPI RdosUsedSections();
 
+void RDOSAPI RdosInitFutex(struct RdosFutex *f, const char *n);
+void RDOSAPI RdosEnterFutex(const struct RdosFutex *f);
+void RDOSAPI RdosLeaveFutex(const struct RdosFutex *f);
+void RDOSAPI RdosResetFutex(struct RdosFutex *f);
+
 int RDOSAPI RdosCreateWait(void);
 void RDOSAPI RdosCloseWait(int Handle);
 int RDOSAPI RdosCheckWait(int Handle);

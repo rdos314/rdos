@@ -27,7 +27,6 @@
 
 #include <string.h>
 #include "file.h"
-#include "futex.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -508,7 +507,7 @@ int TFile::VfsRead(void *Buf, int Size)
     if (Size < 0)
         Size = 0;
 
-    EnterFutex(&FMap->Handle->Futex);
+    RdosEnterFutex(&FMap->Handle->Futex);
 
     if (FLastIndex < 0)
         FLastIndex = VfsFind(Pos);
@@ -528,11 +527,11 @@ int TFile::VfsRead(void *Buf, int Size)
         {
             for (i = 0; i < 10; i++)
             {
-                LeaveFutex(&FMap->Handle->Futex);
+                RdosLeaveFutex(&FMap->Handle->Futex);
 
                 RdosMapHandle(FHandle, Pos, Size);
 
-                EnterFutex(&FMap->Handle->Futex);
+                RdosEnterFutex(&FMap->Handle->Futex);
                 FLastIndex = VfsFind(Pos);
                 if (FLastIndex >= 0)
                     break;
@@ -543,7 +542,7 @@ int TFile::VfsRead(void *Buf, int Size)
         }
     }
 
-    LeaveFutex(&FMap->Handle->Futex);
+    RdosLeaveFutex(&FMap->Handle->Futex);
 
     SetPos(Pos);
     return ret;
@@ -662,7 +661,7 @@ int TFile::VfsWrite(const void *Buf, int Size)
     if (Grow > 0)
         RdosGrowHandle(FHandle, info->DiscSize, Grow);
 
-    EnterFutex(&FMap->Handle->Futex);
+    RdosEnterFutex(&FMap->Handle->Futex);
 
     if (FLastIndex < 0 || Grow > 0)
         FLastIndex = VfsFind(Pos);
@@ -682,7 +681,7 @@ int TFile::VfsWrite(const void *Buf, int Size)
         {
             for (i = 0; i < 10; i++)
             {
-                LeaveFutex(&FMap->Handle->Futex);
+                RdosLeaveFutex(&FMap->Handle->Futex);
 
                 Grow = Pos + Size - info->DiscSize;
 
@@ -691,7 +690,7 @@ int TFile::VfsWrite(const void *Buf, int Size)
                 else
                     RdosMapHandle(FHandle, Pos, Size);
 
-                EnterFutex(&FMap->Handle->Futex);
+                RdosEnterFutex(&FMap->Handle->Futex);
                 FLastIndex = VfsFind(Pos);
                 if (FLastIndex >= 0)
                     break;
@@ -702,7 +701,7 @@ int TFile::VfsWrite(const void *Buf, int Size)
         }
     }
 
-    LeaveFutex(&FMap->Handle->Futex);
+    RdosLeaveFutex(&FMap->Handle->Futex);
 
     SetPos(Pos);
     return ret;

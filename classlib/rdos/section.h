@@ -28,7 +28,7 @@
 #ifndef _SECTION_H
 #define _SECTION_H
 
-#include "futex.h"
+#include "rdos.h"
 
 class TSection
 {

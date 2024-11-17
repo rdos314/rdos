@@ -2656,6 +2656,66 @@
     __parm [__edx] \
     __value [__eax]
 
+#pragma aux RdosInitFutex = \
+    "xor eax,eax" \
+    "mov [ebx],eax" \
+    "mov word ptr [ebx+8],-1" \
+    "mov [ebx+4],eax" \
+    "mov [ebx+10],ax" \
+    "mov [ebx+12],edi" \
+    __parm [__ebx] [__edi]
+
+#pragma aux RdosEnterFutex = \
+    "str ax" \
+    "cmp ax,[ebx+10]" \
+    "jne efLock" \
+    "inc dword ptr [ebx+4]" \
+    "jmp efDone" \
+    "efLock: "\
+    "lock add word ptr [ebx+8],1" \
+    "jc efTake" \
+    "mov eax,1" \
+    "xchg ax,[ebx+8]" \
+    "cmp ax,-1" \
+    "jne efBlock" \
+    "efTake: "\
+    "str ax" \
+    "mov [ebx+10],ax" \
+    "mov dword ptr [ebx+4],1" \
+    "jmp efDone" \
+    "efBlock: " \
+    "push edi" \
+    "mov edi,[ebx+12]" \
+    CallGate_acquire_named_futex  \
+    "pop edi" \
+    "efDone: " \
+    __parm [__ebx] \
+    __modify [__eax]
+
+#pragma aux RdosLeaveFutex = \
+    "str ax" \
+    "cmp ax,[ebx+10]" \
+    "jne lfDone" \
+    "sub dword ptr [ebx+4],1" \
+    "jnz lfDone" \
+    "mov word ptr [ebx+10],0" \
+    "lock sub word ptr [ebx+8],1" \
+    "jc lfDone" \
+    "mov word ptr [ebx+8],-1" \
+    CallGate_release_futex  \
+    "lfDone: " \
+    __parm [__ebx] \
+    __modify [__eax]
+
+#pragma aux RdosResetFutex = \
+    "mov eax,[ebx]" \
+    "or eax,eax" \
+    "jz rfDone" \
+    CallGate_cleanup_futex  \
+    "rfDone: " \
+    __parm [__ebx] \
+    __modify [__eax]
+
 #pragma aux RdosUsedSections = \
     CallGate_used_user_sections  \
     ValidateEax \
