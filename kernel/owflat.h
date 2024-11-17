@@ -2663,7 +2663,8 @@
     "mov [ebx+4],eax" \
     "mov [ebx+10],ax" \
     "mov [ebx+12],edi" \
-    __parm [__ebx] [__edi]
+    __parm [__ebx] [__edi] \
+    __modify [__eax]
 
 #pragma aux RdosEnterFutex = \
     "str ax" \
