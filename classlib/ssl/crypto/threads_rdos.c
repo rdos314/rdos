@@ -16,44 +16,44 @@
 CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void)
 {
     CRYPTO_RWLOCK *lock;
-    int *hptr;
+    struct RdosFutex *hptr;
 
-    lock = OPENSSL_zalloc(sizeof(int));
-    hptr = (int *)lock;
-    *hptr = RdosCreateSection("SSL");    
+    lock = OPENSSL_zalloc(sizeof(struct RdosFutex));
+    hptr = (struct RdosFutex *)lock;
+    RdosInitFutex(hptr, "SSL");
 
     return lock;
 }
 
 int CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *lock)
 {
-    int *hptr = (int *)lock;
-    RdosEnterSection(*hptr);
+    struct RdosFutex *hptr = (struct RdosFutex *)lock;
+    RdosEnterFutex(hptr);
     return 1;
 }
 
 int CRYPTO_THREAD_write_lock(CRYPTO_RWLOCK *lock)
 {
-    int *hptr = (int *)lock;
-    RdosEnterSection(*hptr);
+    struct RdosFutex *hptr = (struct RdosFutex *)lock;
+    RdosEnterFutex(hptr);
     return 1;
 }
 
 int CRYPTO_THREAD_unlock(CRYPTO_RWLOCK *lock)
 {
-    int *hptr = (int *)lock;
-    RdosLeaveSection(*hptr);
+    struct RdosFutex *hptr = (struct RdosFutex *)lock;
+    RdosLeaveFutex(hptr);
     return 1;
 }
 
 void CRYPTO_THREAD_lock_free(CRYPTO_RWLOCK *lock)
 {
-    int *hptr = (int *)lock;
+    struct RdosFutex *hptr = (struct RdosFutex *)lock;
 
     if (lock == NULL)
         return;
 
-    RdosDeleteSection(*hptr);
+    RdosResetFutex(hptr);
     OPENSSL_free(lock);
 
     return;
@@ -70,10 +70,10 @@ int CRYPTO_THREAD_run_once(CRYPTO_ONCE *once, void (*init)(void))
     if (once->state == ONCE_DONE)
         return 1;
 
-    do 
+    do
     {
         result = RdosXchg(&once->state, ONCE_ININIT);
-        if (result == ONCE_UNINITED) 
+        if (result == ONCE_UNINITED)
         {
             once->thread = RdosGetThreadHandle();
             init();
