@@ -48,7 +48,6 @@
 #include <openssl/ct.h>
 
 #include "rdos.h"
-#include "futex.h"
 #include "serv.h"
 #include "apps.h"
 #include "s_apps.h"
@@ -264,7 +263,7 @@ void CloseSession(int index)
     if (ctx)
         SSL_CTX_free(ctx);
 }
-       
+
 /*##########################################################################
 #
 #   Name       : FreeConnection
@@ -299,8 +298,8 @@ static void FreeConnection(struct TConnection *Conn)
         ServDeleteSslConnection(Conn->Index);
     }
 
-    LeaveFutex(&Conn->Futex);
-    ResetFutex(&Conn->Futex);
+    RdosLeaveFutex(&Conn->Futex);
+    RdosResetFutex(&Conn->Futex);
     free(Conn);
 }
 
@@ -333,10 +332,10 @@ static void ShowCert(SSL *con)
     BIO_set_mem_buf(bio, mb, BIO_NOCLOSE);
 
 //    sk = SSL_get_peer_cert_chain(con);
-//    if (sk != NULL) 
+//    if (sk != NULL)
 //    {
 //        BIO_printf(bio_s_out, "---\nCertificate chain\n");
-//        for (i = 0; i < sk_X509_num(sk); i++) 
+//        for (i = 0; i < sk_X509_num(sk); i++)
 //        {
 //            BIO_printf(bio_s_out, "%2d s:", i);
 //            X509_NAME_print_ex(bio_s_out, X509_get_subject_name(sk_X509_value(sk, i)), 0, get_nameopt());
@@ -350,13 +349,13 @@ static void ShowCert(SSL *con)
 
     BIO_printf(bio, "---\n");
     peer = SSL_get_peer_certificate(con);
-    if (peer != NULL) 
+    if (peer != NULL)
     {
         BIO_printf(bio, "Server certificate\n");
 
         PEM_write_bio_X509(bio, peer);
         dump_cert_text(bio, peer);
-    } 
+    }
 
     BIO_free(bio);
 
@@ -534,12 +533,12 @@ static void ClientHandler(void *par)
     ServSslStop(index, handle);
     free(buf);
 
-    EnterFutex(&Conn->Futex);
+    RdosEnterFutex(&Conn->Futex);
     Conn->Active = false;
     if (Conn->Closed)
         FreeConnection(Conn);
     else
-        LeaveFutex(&Conn->Futex);
+        RdosLeaveFutex(&Conn->Futex);
 }
 
 /*##########################################################################
@@ -593,7 +592,7 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
         Conn->Active = true;
         Conn->Closed = false;
         sprintf(str, "Conn.%d", Conn->Index);
-        InitFutex(&Conn->Futex, str);
+        RdosInitFutex(&Conn->Futex, str);
 
         printf("Open connection %d\r\n", Conn->Index);
 
@@ -716,7 +715,7 @@ int GetCertJson(const char *filename, char *buf, int maxsize)
         doc = X509_get_json(x);
         size = GetJsonText(doc, buf, maxsize);
         DeleteJson(doc);
-        
+
         X509_free(x);
     }
 
@@ -747,10 +746,10 @@ void CloseConnection(int index)
 
     if (Conn)
     {
-        EnterFutex(&Conn->Futex);
+        RdosEnterFutex(&Conn->Futex);
         Conn->Closed = true;
         if (Conn->Active)
-            LeaveFutex(&Conn->Futex);
+            RdosLeaveFutex(&Conn->Futex);
         else
             FreeConnection(Conn);
      }
@@ -809,8 +808,8 @@ static void ListenHandler(void *par)
                 Conn->Con = 0;
                 Conn->Active = true;
                 Conn->Closed = false;
-                sprintf(str, "Conn%d:%d", Server->Index, index);   
-                InitFutex(&Conn->Futex, str);
+                sprintf(str, "Conn%d:%d", Server->Index, index);
+                RdosInitFutex(&Conn->Futex, str);
 
                 Server->ConnectionArr[index] = Conn;
 
@@ -1057,12 +1056,12 @@ static void ServerHandler(void *par)
     ServSslStop(index, handle);
     free(buf);
 
-    EnterFutex(&Conn->Futex);
+    RdosEnterFutex(&Conn->Futex);
     Conn->Active = false;
     if (Conn->Closed)
         FreeConnection(Conn);
     else
-        LeaveFutex(&Conn->Futex);
+        RdosLeaveFutex(&Conn->Futex);
 }
 
 /*##########################################################################
@@ -1114,7 +1113,7 @@ int AcceptServer(int index, int entry)
         {
             RdosCloseTcpConnection(sock);
             RdosDeleteTcpConnection(sock);
-            ResetFutex(&Conn->Futex);
+            RdosResetFutex(&Conn->Futex);
             free(Conn);
             Conn = 0;
             Server->ConnectionArr[entry - 1] = 0;
@@ -1230,7 +1229,7 @@ int main(int argc, char **argv)
 
     if (!RdosSetCurDir("d:/ssl"))
     {
-        RdosDeleteFile("d:/ssl/log.txt");    
+        RdosDeleteFile("d:/ssl/log.txt");
         RdosMakeDir("d:/ssl");
     }
 
