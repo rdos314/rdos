@@ -839,6 +839,7 @@ svcdDone:
     ret
 set_vfs_cur_dir   Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -846,15 +847,13 @@ set_vfs_cur_dir   Endp
 ;
 ;       DESCRIPTION:    Open VFS dir
 ;
-;       PARAMETERS:     ES:(E)DI       Pathname
-;                       DS:(E)SI       Info
+;       PARAMETERS:     ES:EDI         Pathname
+;                       DS:ESI         Info
 ;
 ;       RETURNS:        NC
 ;                         BX           Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_vfs_dir_name       DB 'Open VFS Dir',0
 
 open_vfs_dir    Proc near
     push es
@@ -958,12 +957,68 @@ ovdDone:
     ret
 open_vfs_dir    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenLegacyDir
+;
+;       DESCRIPTION:    Open legacy dir
+;
+;       PARAMETERS:     ES:EDI         Pathname
+;                       DS:ESI         Info
+;
+;       RETURNS:        NC
+;                         BX           Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenLegacyDir    Proc near
+    OpenDir
+    jc oldDone
+;
+    mov eax,1000h
+    AllocateLocalLinear
+;
+    mov ax,flat_sel
+    mov es,eax
+
+    mov ds:[esi].dis_linear,edx
+    mov ds:[esi].dis_header_size,eax
+    mov ds:[esi].dis_count,ecx
+
+
+oldDone:
+    ret
+OpenLegacyDir    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenVfsDir
+;
+;       DESCRIPTION:    Open VFS dir
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;                       DS:(E)SI       Info
+;
+;       RETURNS:        NC
+;                         BX           Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_vfs_dir_name       DB 'Open VFS Dir',0
+
 open_vfs_dir16  Proc far
     push esi
     push edi
     movzx esi,si
     movzx edi,di
     call open_vfs_dir
+    jnc ovfDone16
+;
+    call OpenLegacyDir
+
+ovfDone16:
     pop edi
     pop esi
     ret
@@ -971,6 +1026,11 @@ open_vfs_dir16  Endp
 
 open_vfs_dir32  Proc far
     call open_vfs_dir
+    jnc ovfDone32
+;
+    call OpenLegacyDir
+
+ovfDone32:
     ret
 open_vfs_dir32  Endp
 
