@@ -192,6 +192,12 @@ TImageControl::~TImageControl()
 {
     int i;
 
+    while (FLoadActive)
+    {
+        FAborted = TRUE;
+        RdosWaitMilli(25);
+    }
+
     FDeleted = TRUE;
     FAborted = TRUE;
 
