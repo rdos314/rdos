@@ -64,6 +64,7 @@ dh_linear        DD ?
 dh_user          DD ?
 dh_count         DD ?
 dh_header_size   DD ?
+dh_size          DD ?
 
 dir_handle_seg  ENDS
 
@@ -74,6 +75,23 @@ dis_header_size  DD ?
 dis_count        DD ?
 
 dir_info_struc  ENDS
+
+dir_entry_struc  STRUC
+
+des_inode         DD ?,?
+des_size          DD ?,?
+des_cr_time       DD ?,?
+des_acc_time      DD ?,?
+des_mod_time      DD ?,?
+des_attrib        DD ?
+des_flags         DD ?
+des_uid           DD ?
+des_gid           DD ?
+des_pos           DD ?
+des_name_size     DW ?
+des_name          DB ?
+
+dir_entry_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -843,9 +861,9 @@ set_vfs_cur_dir   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           OpenVfsDir
+;       NAME:           ReadVfsDir
 ;
-;       DESCRIPTION:    Open VFS dir
+;       DESCRIPTION:    Read VFS dir
 ;
 ;       PARAMETERS:     ES:EDI         Pathname
 ;                       DS:ESI         Info
@@ -855,7 +873,7 @@ set_vfs_cur_dir   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_vfs_dir    Proc near
+ReadVfsDir    Proc near
     push es
     push fs
     push gs
@@ -871,51 +889,52 @@ open_vfs_dir    Proc near
     mov gs,eax
 ;
     call GetPathDrive
-    jc ovdFail
+    jc rvdFail
 ;
     call GetDrivePart
     or bx,bx
-    jz ovdFail
+    jz rvdFail
 ;
     mov ah,es:[edi]
     cmp ah,'/'
-    je ovdRoot
+    je rvdRoot
 ;
     cmp ah,'\'
-    je ovdRoot
+    je rvdRoot
 
-ovdRel:
+rvdRel:
     call GetRelDir
-    jmp ovdHasStart
+    jmp rvdHasStart
 
-ovdRoot:
+rvdRoot:
     inc edi
     xor ax,ax
 
-ovdHasStart:
+rvdHasStart:
     mov esi,edi
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
     movzx eax,ax
     call AllocateMsg
-    jc ovdFail
+    jc rvdFail
 
-ovdCopyPath:
+rvdCopyPath:
     lods byte ptr gs:[esi]
     stosb
     or al,al
-    jnz ovdCopyPath
+    jnz rvdCopyPath
 ;
     mov eax,VFS_GET_DIR
     call RunMsg
-    jc ovdFail
+    jc rvdFail
 ;
     push ecx
     mov cx,SIZE dir_handle_seg
     AllocateHandle
     pop ecx
 ;
+    mov [ebx].dh_size,0
     mov [ebx].dh_linear,ebp
     mov [ebx].dh_count,ecx
     mov [ebx].dh_header_size,eax
@@ -935,18 +954,14 @@ ovdCopyPath:
     mov ds:[esi].dis_header_size,eax
     mov ds:[esi].dis_count,ecx
     clc
-    jmp ovdDone
+    jmp rvdDone
 
-ovdFail:
+rvdFail:
     pop esi
     pop ds
-;
-    mov ds:[esi].dis_linear,0
-    mov ds:[esi].dis_header_size,0
-    mov ds:[esi].dis_count,0
     stc
 
-ovdDone:
+rvdDone:
     pop ebp
     pop edi
     pop ecx
@@ -955,41 +970,184 @@ ovdDone:
     pop fs
     pop es
     ret
-open_vfs_dir    Endp
+ReadVfsDir    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           OpenLegacyDir
+;       NAME:           ReadLegacyDir
 ;
-;       DESCRIPTION:    Open legacy dir
+;       DESCRIPTION:    Read legacy dir
 ;
 ;       PARAMETERS:     ES:EDI         Pathname
 ;                       DS:ESI         Info
 ;
-;       RETURNS:        NC
+;       RETURNS:        NC             OK
 ;                         BX           Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-OpenLegacyDir    Proc near
-    OpenDir
-    jc oldDone
+
+ReadLegacyDir    Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
 ;
-    mov eax,1000h
+    OpenDir
+    jc rldDone
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+;
+    mov ds:[esi].dis_linear,0
+    mov ds:[esi].dis_header_size,SIZE dir_entry_struc
+    mov ds:[esi].dis_count,0
+;
+    xor dx,dx
+
+rldSizeLoop:
+    push ebx
+    push edx
+;
+    xor edi,edi
+    mov ecx,100h
+    ReadDir
+;
+    pop edx
+    pop ebx
+    jc rldSizeDone
+;
+    add ds:[esi].dis_linear,SIZE dir_entry_struc
+
+rldSizeOne:
+    mov al,es:[edi]
+    or al,al
+    jz rldSizeFound
+;
+    inc ds:[esi].dis_linear
+    inc edi
+    jmp rldSizeOne
+
+rldSizeFound:
+    inc ds:[esi].dis_count
+    inc dx
+    jmp rldSizeLoop
+
+rldSizeDone:
+    FreeMem
+;
+    mov eax,ds:[esi].dis_linear
     AllocateLocalLinear
+    mov edi,edx
+;
+    mov ax,system_data_sel
+    mov es,eax
+    sub edx,es:flat_base
+    mov ds:[esi].dis_linear,edx
 ;
     mov ax,flat_sel
     mov es,eax
+    xor edx,edx
+    mov ebp,edi
+    add edi,OFFSET des_name
 
-    mov ds:[esi].dis_linear,edx
-    mov ds:[esi].dis_header_size,eax
-    mov ds:[esi].dis_count,ecx
+rldGetLoop:
+    cmp edx,ds:[esi].dis_count
+    je rldGetDone
+;
+    push ebx
+    push edx
+;
+    lea edi,[ebp].des_name
+    mov ecx,100h
+    ReadDir
+;
+    mov es:[ebp].des_cr_time,eax
+    mov es:[ebp].des_cr_time+4,edx
+;
+    mov es:[ebp].des_acc_time,eax
+    mov es:[ebp].des_acc_time+4,edx
+;
+    mov es:[ebp].des_mod_time,eax
+    mov es:[ebp].des_mod_time+4,edx
+;
+    movzx ebx,bx
+    mov es:[ebp].des_attrib,ebx
+;
+    pop edx
+    pop ebx
+    jc rldGetDone
+;
+    mov es:[ebp].des_inode,edx
+    mov es:[ebp].des_inode+4,0
+;
+    mov es:[ebp].des_size,ecx
+    mov es:[ebp].des_size+4,0
+;
+    mov es:[ebp].des_flags,0
+    mov es:[ebp].des_uid,0
+    mov es:[ebp].des_gid,0
+    mov es:[ebp].des_pos,0
+;
+    mov es:[ebp].des_name_size,0
 
+rldGetSize:
+    mov al,es:[edi]
+    or al,al
+    jz rldGetSizeFound
+;
+    inc es:[ebp].des_name_size
+    inc edi
+    jmp rldGetSize
 
-oldDone:
+rldGetSizeFound:
+    inc edx
+    movzx eax,es:[ebp].des_name_size
+    add ebp,eax
+    add ebp,SIZE dir_entry_struc
+    jmp rldGetLoop
+
+rldGetDone:
+    CloseDir
+;
+    mov edx,ebp
+    mov ebp,ds:[esi].dis_linear
+    sub edx,ebp
+    mov ecx,ds:[esi].dis_count
+;
+    push ds
+    push esi
+;
+    mov cx,SIZE dir_handle_seg
+    AllocateHandle
+;
+    mov [ebx].dh_size,edx
+    mov [ebx].dh_user,0
+    mov [ebx].dh_linear,ebp
+    mov [ebx].dh_count,ecx
+    mov [ebx].dh_header_size,eax
+    mov [ebx].hh_sign,VFS_DIR_HANDLE
+;
+    mov bx,[ebx].hh_handle
+;
+    pop esi
+    pop ds
+    clc
+
+rldDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
     ret
-OpenLegacyDir    Endp
+ReadLegacyDir    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1013,10 +1171,15 @@ open_vfs_dir16  Proc far
     push edi
     movzx esi,si
     movzx edi,di
-    call open_vfs_dir
+;
+    mov ds:[esi].dis_linear,0
+    mov ds:[esi].dis_header_size,0
+    mov ds:[esi].dis_count,0
+;
+    call ReadVfsDir
     jnc ovfDone16
 ;
-    call OpenLegacyDir
+    call ReadLegacyDir
 
 ovfDone16:
     pop edi
@@ -1025,10 +1188,14 @@ ovfDone16:
 open_vfs_dir16  Endp
 
 open_vfs_dir32  Proc far
-    call open_vfs_dir
+    mov ds:[esi].dis_linear,0
+    mov ds:[esi].dis_header_size,0
+    mov ds:[esi].dis_count,0
+;
+    call ReadVfsDir
     jnc ovfDone32
 ;
-    call OpenLegacyDir
+    call ReadLegacyDir
 
 ovfDone32:
     ret
@@ -1049,27 +1216,44 @@ close_vfs_dir_name       DB 'Close VFS Dir',0
 
 close_vfs_dir    Proc far
     push ds
-    push ax
+    push es
+    push eax
     push ebx
+    push ecx
     push edx
 ;
     mov ax,VFS_DIR_HANDLE
     DerefHandle
     jc ccdDone
 ;
+    mov ecx,ds:[ebx].dh_size
+    or ecx,ecx
+    jz ccdVfs
+;
+    mov edx,ds:[ebx].dh_user
+    mov ax,system_data_sel
+    mov es,eax
+    add edx,es:flat_base
+    FreeLinear
+    jmp ccdHandle
+
+ccdVfs:
     mov edx,ds:[ebx].dh_user
     call FreeUserBlock
 ;
     mov edx,ds:[ebx].dh_linear
     call FreeBlock
-;
+
+ccdHandle:
     FreeHandle
     clc
 
 ccdDone:
+    pop edx
+    pop ecx
     pop ebx
-    pop ebx
-    pop ax
+    pop eax
+    pop es
     pop ds
     ret
 close_vfs_dir  Endp

@@ -1432,7 +1432,8 @@ void TDirList::DoSearch()
             FSearchString = "*";
     }
 
-    if (RdosIsVfsPath(FBaseString.GetData()))
+    if (true)
+//    if (RdosIsVfsPath(FBaseString.GetData()))
     {
         DirHandle = RdosOpenVfsDir(FBaseString.GetData(), &info);
 
