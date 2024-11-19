@@ -658,10 +658,6 @@ int RDOSAPI RdosRenameFile(const char *ToName, const char *FromName);
 int RDOSAPI RdosDeleteFile(const char *PathName);
 int RDOSAPI RdosGetFileAttribute(const char *PathName, int *Attribute);
 int RDOSAPI RdosSetFileAttribute(const char *PathName, int Attribute);
-int RDOSAPI RdosOpenDir(const char *PathName);
-void RDOSAPI RdosCloseDir(int Handle);
-int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
-long long RDOSAPI RdosReadLongDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute);
 
 int RDOSAPI RdosCreateVfsDiscCmd(int DiscNr, const char *Cmd);
 void RDOSAPI RdosCloseVfsCmd(int Handle);
@@ -991,8 +987,9 @@ long long RDOSAPI RdosGetVfsDriveStart(int DriveNr);
 long long RDOSAPI RdosGetVfsDriveSize(int DriveNr);
 long long RDOSAPI RdosGetVfsDriveFree(int DriveNr);
 int RDOSAPI RdosIsVfsPath(const char *PathName);
-int RDOSAPI RdosOpenVfsDir(const char *PathName, struct RdosDirInfo *Info);
-void RDOSAPI RdosCloseVfsDir(int Handle);
+
+int RDOSAPI RdosOpenDir(const char *PathName, struct RdosDirInfo *Info);
+void RDOSAPI RdosCloseDir(int Handle);
 
 int RDOSAPI RdosCreateCrc(unsigned short int CrcPoly);
 void RDOSAPI RdosCloseCrc(int Handle);

@@ -220,32 +220,6 @@ TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const 
 #   Returns....: *
 #
 ##########################################################################*/
-TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute)
-{
-    OnCreate = CreateDirEntry;
-    AllocBuffer(sizeof(TDirEntryData));
-    FEntry = (TDirEntryData *)FData;
-
-    FEntry->PathName = PathName;
-    FEntry->EntryName = EntryName;
-    FEntry->FileSize = FileSize;
-    FEntry->Attribute = Attribute;
-    FEntry->CreateTime = Time;
-    FEntry->ModifyTime = Time;
-    FEntry->AccessTime = Time;
-}
-
-/*##########################################################################
-#
-#   Name       : TDirEntry::TDirEntry
-#
-#   Purpose....: constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 TDirEntry::TDirEntry()
 {
     OnCreate = CreateDirEntry;
@@ -1353,28 +1327,6 @@ int TDirList::IsMatch(const char *FileName)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDirList::Add(const char *Name, unsigned long msb, unsigned long lsb, long FileSize, int Attrib)
-{
-    TString Entry(Name);
-        TPathName Path(FBaseString);
-        Path += Entry;
-    TDateTime Time(msb, lsb);
-    TDirEntry entry(Path, Entry, Time, FileSize, Attrib);
-        TDirListNode *p = new TDirListNode(entry);
-        TListBase::AddFirst(p);
-}
-
-/*##########################################################################
-#
-#   Name       : TDirList::Add
-#
-#   Purpose....: Add entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TDirList::Add(const char *Name, unsigned long long CreateTime, unsigned long long ModifyTime, unsigned long long AccessTime, long long FileSize, int Attrib)
 {
     TString Entry(Name);
@@ -1401,14 +1353,10 @@ void TDirList::Add(const char *Name, unsigned long long CreateTime, unsigned lon
 ##########################################################################*/
 void TDirList::DoSearch()
 {
-    char *Name;
-    long FileSize;
-    int Attrib;
     unsigned long msb;
     unsigned long lsb;
     int ok;
     int DirHandle;
-    int Index;
     struct RdosDirInfo info;
     struct RdosDirEntry *entry;
     char *ptr;
@@ -1432,57 +1380,28 @@ void TDirList::DoSearch()
             FSearchString = "*";
     }
 
-    if (true)
-//    if (RdosIsVfsPath(FBaseString.GetData()))
+    DirHandle = RdosOpenDir(FBaseString.GetData(), &info);
+
+    ptr = (char *)info.Entry;
+
+    for (i = 0; i < info.Count; i++)
     {
-        DirHandle = RdosOpenVfsDir(FBaseString.GetData(), &info);
+        entry = (struct RdosDirEntry *)ptr;
 
-        ptr = (char *)info.Entry;
-
-        for (i = 0; i < info.Count; i++)
+        if (CheckAttrib(entry->Attrib) && IsMatch(entry->PathName))
         {
-            entry = (struct RdosDirEntry *)ptr;
-
-            if (CheckAttrib(entry->Attrib) && IsMatch(entry->PathName))
-            {
-                time = entry->ModifyTime;
-                memcpy(&lsb, &time, 4);
-                time = time >> 32;
-                memcpy(&msb, &time, 4);
-                Add(entry->PathName, (unsigned long long)entry->CreateTime, (unsigned long long)entry->ModifyTime, (unsigned long long)entry->AccessTime, entry->Size, entry->Attrib);
-            }
-
-            ptr += info.HeaderSize;
-            ptr += entry->PathNameSize;
+            time = entry->ModifyTime;
+            memcpy(&lsb, &time, 4);
+            time = time >> 32;
+            memcpy(&msb, &time, 4);
+            Add(entry->PathName, (unsigned long long)entry->CreateTime, (unsigned long long)entry->ModifyTime, (unsigned long long)entry->AccessTime, entry->Size, entry->Attrib);
         }
 
-        RdosCloseVfsDir(DirHandle);
+        ptr += info.HeaderSize;
+        ptr += entry->PathNameSize;
     }
-    else
-    {
-        DirHandle = RdosOpenDir(FBaseString.GetData());
-        Index = 0;
 
-        if (DirHandle)
-        {
-            Name = new char[512];
-
-            ok = TRUE;
-            while (ok)
-            {
-                ok = RdosReadDir(DirHandle, Index, 512, Name, &FileSize, &Attrib, &msb, &lsb);
-                if (ok)
-                {
-                    Index++;
-                    if (CheckAttrib(Attrib) && IsMatch(Name))
-                        Add(Name, msb, lsb, FileSize, Attrib);
-                }
-            }
-            delete Name;
-
-            RdosCloseDir(DirHandle);
-        }
-    }
+    RdosCloseDir(DirHandle);
 }
 
 /*##########################################################################

@@ -1043,6 +1043,7 @@ int TUnzipFile::NeedUpdate(const char *filename)
     char *buf;
     int size;
     unsigned long old_crc;
+    RdosDirInfo dinf;
 
     handle = RdosOpenHandle(filename, O_RDWR);
 
@@ -1100,7 +1101,7 @@ int TUnzipFile::NeedUpdate(const char *filename)
                 return FALSE;
             else
             {
-                handle = RdosOpenDir(filename);
+                handle = RdosOpenDir(filename, &dinf);
                 if (handle)
                 {
                     RdosCloseDir(handle);

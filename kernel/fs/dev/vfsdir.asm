@@ -861,7 +861,7 @@ set_vfs_cur_dir   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadVfsDir
+;       NAME:           ReadVfs
 ;
 ;       DESCRIPTION:    Read VFS dir
 ;
@@ -873,7 +873,7 @@ set_vfs_cur_dir   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadVfsDir    Proc near
+ReadVfs    Proc near
     push es
     push fs
     push gs
@@ -970,12 +970,12 @@ rvdDone:
     pop fs
     pop es
     ret
-ReadVfsDir    Endp
+ReadVfs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadLegacyDir
+;       NAME:           ReadLegacy
 ;
 ;       DESCRIPTION:    Read legacy dir
 ;
@@ -988,7 +988,7 @@ ReadVfsDir    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-ReadLegacyDir    Proc near
+ReadLegacy    Proc near
     push es
     push eax
     push ecx
@@ -997,7 +997,7 @@ ReadLegacyDir    Proc near
     push edi
     push ebp
 ;
-    OpenDir
+    OpenLegacyDir
     jc rldDone
 ;
     mov eax,100h
@@ -1015,7 +1015,7 @@ rldSizeLoop:
 ;
     xor edi,edi
     mov ecx,100h
-    ReadDir
+    ReadLegacyDir
 ;
     pop edx
     pop ebx
@@ -1067,7 +1067,7 @@ rldGetLoop:
 ;
     lea edi,[ebp].des_name
     mov ecx,100h
-    ReadDir
+    ReadLegacyDir
 ;
     mov es:[ebp].des_cr_time,eax
     mov es:[ebp].des_cr_time+4,edx
@@ -1115,7 +1115,7 @@ rldGetSizeFound:
     jmp rldGetLoop
 
 rldGetDone:
-    CloseDir
+    CloseLegacyDir
 ;
     pop edx
     pop ebp
@@ -1148,14 +1148,14 @@ rldDone:
     pop eax
     pop es
     ret
-ReadLegacyDir    Endp
+ReadLegacy    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           OpenVfsDir
+;       NAME:           OpenDir
 ;
-;       DESCRIPTION:    Open VFS dir
+;       DESCRIPTION:    Open dir
 ;
 ;       PARAMETERS:     ES:(E)DI       Pathname
 ;                       DS:(E)SI       Info
@@ -1165,9 +1165,9 @@ ReadLegacyDir    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_vfs_dir_name       DB 'Open VFS Dir',0
+open_dir_name       DB 'Open Dir',0
 
-open_vfs_dir16  Proc far
+open_dir16  Proc far
     push esi
     push edi
     movzx esi,si
@@ -1177,45 +1177,45 @@ open_vfs_dir16  Proc far
     mov ds:[esi].dis_header_size,0
     mov ds:[esi].dis_count,0
 ;
-    call ReadVfsDir
+    call ReadVfs
     jnc ovfDone16
 ;
-    call ReadLegacyDir
+    call ReadLegacy
 
 ovfDone16:
     pop edi
     pop esi
     ret
-open_vfs_dir16  Endp
+open_dir16  Endp
 
-open_vfs_dir32  Proc far
+open_dir32  Proc far
     mov ds:[esi].dis_linear,0
     mov ds:[esi].dis_header_size,0
     mov ds:[esi].dis_count,0
 ;
-    call ReadVfsDir
+    call ReadVfs
     jnc ovfDone32
 ;
-    call ReadLegacyDir
+    call ReadLegacy
 
 ovfDone32:
     ret
-open_vfs_dir32  Endp
+open_dir32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CloseVfsDir
+;       NAME:           CloseDir
 ;
-;       DESCRIPTION:    Close VFS dir
+;       DESCRIPTION:    Close dir
 ;
 ;       PARAMETERS:     BX           Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_vfs_dir_name       DB 'Close VFS Dir',0
+close_dir_name       DB 'Close Dir',0
 
-close_vfs_dir    Proc far
+close_dir    Proc far
     push ds
     push eax
     push ebx
@@ -1252,7 +1252,7 @@ ccdDone:
     pop eax
     pop ds
     ret
-close_vfs_dir  Endp
+close_dir  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1446,17 +1446,17 @@ init_dir    Proc near
     mov ax,is_vfs_path_nr
     RegisterUserGate
 ;
-    mov ebx,OFFSET open_vfs_dir16
-    mov esi,OFFSET open_vfs_dir32
-    mov edi,OFFSET open_vfs_dir_name
+    mov ebx,OFFSET open_dir16
+    mov esi,OFFSET open_dir32
+    mov edi,OFFSET open_dir_name
     mov dx,virt_es_in
-    mov ax,open_vfs_dir_nr
+    mov ax,open_dir_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET close_vfs_dir
-    mov edi,OFFSET close_vfs_dir_name
+    mov esi,OFFSET close_dir
+    mov edi,OFFSET close_dir_name
     xor dx,dx
-    mov ax,close_vfs_dir_nr
+    mov ax,close_dir_nr
     RegisterBimodalUserGate
     ret
 init_dir    Endp

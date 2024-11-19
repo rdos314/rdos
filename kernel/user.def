@@ -131,9 +131,9 @@ rename_file_nr                          = 116
 delete_file_nr                          = 117
 get_file_attribute_nr           = 118
 set_file_attribute_nr           = 119
-open_dir_nr                                     = 120
-close_dir_nr                            = 121
-read_dir_nr                                     = 122
+open_legacy_dir_nr                      = 120
+close_legacy_dir_nr                     = 121
+read_legacy_dir_nr                      = 122
 
 open_file_nr                            = 123
 create_file_nr                          = 124
@@ -941,8 +941,8 @@ get_vfs_drive_start_nr            = 776
 get_vfs_drive_size_nr             = 777
 get_vfs_drive_free_nr             = 778
 is_vfs_path_nr                    = 779
-open_vfs_dir_nr                   = 780
-close_vfs_dir_nr                  = 781
+open_dir_nr                       = 780
+close_dir_nr                      = 781
 
 create_thread_block_nr            = 782
 wait_thread_block_nr              = 783

@@ -1016,7 +1016,7 @@ ofsDirLoop:
     mov ax,cs
     mov es,ax
     mov di,OFFSET default_dir
-    OpenDir
+    OpenLegacyDir
     jmp ofsDone
 
 ofsDirFound:
@@ -1041,7 +1041,7 @@ ofsDirNotRoot:
     xor al,al
     stosb
     xor di,di
-    Opendir
+    OpenLegacydir
     pop eax
     pushf
     inc esi
@@ -1192,7 +1192,7 @@ gmfLoop:
     mov [bp].gmfEntry,dx
     mov cx,14
     mov di,[bp].gmfCurrBase
-    ReadDir
+    ReadLegacyDir
     jc gmfDone
 ;
     mov [bp].gmfFileAttrib,bx
@@ -1342,7 +1342,7 @@ gafLoop:
     push bx
     push cx
     mov cx,14
-    ReadDir
+    ReadLegacyDir
     mov dx,si
     mov dh,bl
     pop cx
@@ -1419,7 +1419,7 @@ cscLoop:
     mov dx,ax
     add edi,OFFSET dc_name
     mov ecx,12
-    UserGateForce32 read_dir_nr
+    UserGateForce32 read_legacy_dir_nr
     mov byte ptr es:[edi+12],0
     pop edi
 ;
@@ -1446,7 +1446,7 @@ cscLoop:
     pop bx
     loop cscLoop
 ;
-    UserGate close_dir_nr
+    UserGate close_legacy_dir_nr
     push es
     mov ax,ds
     mov es,ax
@@ -1494,7 +1494,7 @@ find_first_file PROC near
     mov ax,ds
     mov es,ax
     mov edi,esi
-;       UserGateForce32 open_dir_nr
+;       UserGateForce32 open_legacy_dir_nr
 ;       jc fffSearch
 ;
 ;       call GetAllFiles
@@ -1539,7 +1539,7 @@ fffFirst:
 
 fffNoMatch:
     FreeMem
-    CloseDir
+    CloseLegacyDir
     pop edi
     pop esi
     pop es

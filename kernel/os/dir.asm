@@ -2981,7 +2981,7 @@ init_dir    PROC near
     mov edi,OFFSET open_dir_name
     mov dx,virt_es_in
     mov ecx,UG_SYSCALL_WR_PAR_ES_EDI
-    mov ax,open_dir_nr
+    mov ax,open_legacy_dir_nr
     RegisterSyscall
 ;
     mov ebx,OFFSET read_dir16
@@ -2989,14 +2989,14 @@ init_dir    PROC near
     mov edi,OFFSET read_dir_name
     mov dx,virt_es_in
     mov ecx,UG_SYSCALL_WR_PAR_ES_EDI
-    mov ax,read_dir_nr
+    mov ax,read_legacy_dir_nr
     RegisterSyscall
 ;
     mov esi,OFFSET close_dir
     mov edi,OFFSET close_dir_name
     xor dx,dx
     xor ecx,ecx
-    mov ax,close_dir_nr
+    mov ax,close_legacy_dir_nr
     RegisterBimodalSyscall
 ;
     ret

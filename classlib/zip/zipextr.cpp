@@ -74,6 +74,7 @@ TUnzipExtractor::TUnzipExtractor(int InputFileHandle, TUnzipFile *File, const ch
     FInBuf = new char[INBUFSIZ + 4];    /* 4 extra for hold[] (below) */
     FOutBuf = new char[WSIZE + 1];
     FTmpOutBuf = 0;
+    RdosDirInfo dinf;
 
     FCurrCrcVal = 0;
 
@@ -85,7 +86,7 @@ TUnzipExtractor::TUnzipExtractor(int InputFileHandle, TUnzipFile *File, const ch
         if (*srcptr == '\\' || *srcptr == '/')
         {
             *destptr = 0;
-            dirhandle = RdosOpenDir(filename);
+            dirhandle = RdosOpenDir(filename, &dinf);
             if (dirhandle)
                 RdosCloseDir(dirhandle);
             else

@@ -1919,33 +1919,6 @@
     __parm [__edi] [__ecx] \
     __value [__eax]
 
-#pragma aux RdosOpenDir = \
-    CallGate_open_dir  \
-    ValidateHandle \
-    __parm [__edi]  \
-    __value [__ebx]
-
-#pragma aux RdosCloseDir = \
-    CallGate_close_dir  \
-    __parm [__ebx]
-
-// ReadDir here
-
-#pragma aux RdosReadLongDir = \
-    "push eax" \
-    CallGate_read_dir  \
-    "pop edi" \
-    "jc fail" \
-    "mov [esi],ecx" \
-    "movzx ebx,bx" \
-    "mov [edi],ebx" \
-    "jmp done" \
-    "fail:"\
-    "mov eax,-1" \
-    "mov edx,eax" \
-    "done:" \
-    __parm [__ebx] [__edx] [__ecx] [__edi] [__esi] [__eax]
-
 #pragma aux RdosCreateVfsDiscCmd = \
     CallGate_create_vfs_disc_cmd  \
    "jc fail" \
@@ -3738,14 +3711,14 @@
     __parm [__edi] \
     __value [__eax]
 
-#pragma aux RdosOpenVfsDir = \
-    CallGate_open_vfs_dir  \
+#pragma aux RdosOpenDir = \
+    CallGate_open_dir  \
     ValidateHandle \
     __parm [__edi] [__esi]  \
     __value [__ebx]
 
-#pragma aux RdosCloseVfsDir = \
-    CallGate_close_vfs_dir  \
+#pragma aux RdosCloseDir = \
+    CallGate_close_dir  \
     __parm [__ebx]
 
 #pragma aux RdosCreateCrc = \

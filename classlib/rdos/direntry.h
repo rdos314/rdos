@@ -54,7 +54,6 @@ friend class TDirListNode;
 public:
     TDirEntry();
     TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &CreateTime, const TDateTime &ModifyTime, const TDateTime &AccessTime, long long FileSize, int Attribute);
-    TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute);
     TDirEntry(const TDirEntry &src);
     virtual ~TDirEntry();
 
@@ -160,7 +159,6 @@ protected:
 
     int CheckAttrib(int attrib);
     int IsMatch(const char *FileName);
-    void Add(const char *Name, unsigned long msb, unsigned long lsb, long FileSize, int Attrib);
     void Add(const char *Name, unsigned long long CreateTime, unsigned long long ModifyTime, unsigned long long AccessTime, long long FileSize, int Attrib);
     void DoSearch();
 

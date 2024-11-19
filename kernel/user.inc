@@ -2650,13 +2650,13 @@ IsVfsPath     MACRO
 ; IN  ES:(E)DI        Pathname
 ; IN  DS:(E)SI        Dir info     
 ; OUT BX              Handle
-OpenVfsDir   MACRO
-        UserGate open_vfs_dir_nr
+OpenDir   MACRO
+        UserGate open_dir_nr
                                                 ENDM
 
 ; IN  BX              Handle
-CloseVfsDir   MACRO
-        UserGate close_vfs_dir_nr
+CloseDir   MACRO
+        UserGate close_dir_nr
                                                 ENDM
 
 ;;;;;;;;;;;;;; DIRECTORY ;;;;;;;;;;;;;
@@ -2719,13 +2719,13 @@ SetFileAttribute        MACRO
 
 ;       IN      ES:(E)DI                Pathname
 ;       OUT     BX                              Handle
-OpenDir   MACRO
-        UserGate open_dir_nr
+OpenLegacyDir   MACRO
+        UserGate open_legacy_dir_nr
                                                 ENDM
 
 ;       IN      BX                              Handle
-CloseDir   MACRO
-        UserGate close_dir_nr
+CloseLegacyDir   MACRO
+        UserGate close_legacy_dir_nr
                                                 ENDM
 
 ;       IN      BX                              Handle
@@ -2735,8 +2735,8 @@ CloseDir   MACRO
 ;       OUT     ECX                             Filesize
 ;       OUT     BX                              File attribute
 ;       OUT     EDX:EAX                 File systemtime
-ReadDir        MACRO
-        UserGate read_dir_nr
+ReadLegacyDir        MACRO
+        UserGate read_legacy_dir_nr
                                                 ENDM
 
 ;;;;;;;;;;;;;; FILES ;;;;;;;;;;;;;

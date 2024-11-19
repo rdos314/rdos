@@ -1430,38 +1430,10 @@ void TLonDevice::DumpThread()
 *##########################################################################*/
 int TLonDevice::GetNextDumpFile()
 {
-    char OldestName[256];
     char filename[256];
-    int dir;
-    unsigned long long OldestTime = 0xFFFFFFFFFFFFFFFF;
-    long long time;
-    int idx = 0;
-    long filesize;
-    int attributes;
 
-    dir = RdosOpenDir(FLogPath.GetData());
-
-    if (dir)
-    {
-        OldestName[0] = 0;
-
-        // now loop over all files to find the oldest file
-        do {
-            time = RdosReadLongDir(dir, idx, 255, filename, &filesize, &attributes);
-            idx++;
-            if (time >= 0 && OldestTime > time && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
-            {
-                OldestTime = time;
-                strcpy(OldestName, filename);
-            }
-        } while (time >= 0);
-
-        RdosCloseDir(dir);
-
-        sprintf(filename, "%s/%s", FLogPath.GetData(), OldestName);
-        return RdosOpenHandle(filename, O_RDWR);
-    }
-    return 0;
+    sprintf(filename, "%s/%s", FLogPath.GetData(), "1");
+    return RdosOpenHandle(filename, O_RDWR);
 }
 
 /*##################  TLonDevice::DumpOnce  #######################
