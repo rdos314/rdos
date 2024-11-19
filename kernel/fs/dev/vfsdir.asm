@@ -1044,6 +1044,9 @@ rldSizeDone:
     AllocateLocalLinear
     mov edi,edx
 ;
+    push eax
+    push edx
+;
     mov ax,system_data_sel
     mov es,eax
     sub edx,es:flat_base
@@ -1114,10 +1117,8 @@ rldGetSizeFound:
 rldGetDone:
     CloseDir
 ;
-    mov edx,ebp
-    mov ebp,ds:[esi].dis_linear
-    sub edx,ebp
-    mov ecx,ds:[esi].dis_count
+    pop edx
+    pop ebp
 ;
     push ds
     push esi
@@ -1125,10 +1126,10 @@ rldGetDone:
     mov cx,SIZE dir_handle_seg
     AllocateHandle
 ;
-    mov [ebx].dh_size,edx
+    mov [ebx].dh_size,ebp
+    mov [ebx].dh_linear,edx
     mov [ebx].dh_user,0
-    mov [ebx].dh_linear,ebp
-    mov [ebx].dh_count,ecx
+    mov [ebx].dh_count,0
     mov [ebx].dh_header_size,eax
     mov [ebx].hh_sign,VFS_DIR_HANDLE
 ;
@@ -1216,7 +1217,6 @@ close_vfs_dir_name       DB 'Close VFS Dir',0
 
 close_vfs_dir    Proc far
     push ds
-    push es
     push eax
     push ebx
     push ecx
@@ -1230,10 +1230,7 @@ close_vfs_dir    Proc far
     or ecx,ecx
     jz ccdVfs
 ;
-    mov edx,ds:[ebx].dh_user
-    mov ax,system_data_sel
-    mov es,eax
-    add edx,es:flat_base
+    mov edx,ds:[ebx].dh_linear
     FreeLinear
     jmp ccdHandle
 
@@ -1253,7 +1250,6 @@ ccdDone:
     pop ecx
     pop ebx
     pop eax
-    pop es
     pop ds
     ret
 close_vfs_dir  Endp
