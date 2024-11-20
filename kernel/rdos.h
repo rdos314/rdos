@@ -153,9 +153,9 @@ struct RdosDirEntry
 {
     long long Inode;
     long long Size;
-    long long CreateTime;
-    long long AccessTime;
-    long long ModifyTime;
+    unsigned long long CreateTime;
+    unsigned long long AccessTime;
+    unsigned long long ModifyTime;
     int Attrib;
     int Flags;
     int Uid;
