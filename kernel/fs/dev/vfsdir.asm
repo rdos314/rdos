@@ -1041,6 +1041,9 @@ rldSizeDone:
     FreeMem
 ;
     mov eax,ds:[esi].dis_linear
+    shr eax,12
+    inc eax
+    shl eax,12
     AllocateLocalLinear
     mov edi,edx
 ;
