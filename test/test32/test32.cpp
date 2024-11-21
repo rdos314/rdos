@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 #include "rdos.h"
 #include "keyboard.h"
@@ -18,6 +19,11 @@ long long TimeoutCallback(void *param, long long expire)
 
 void main()
 {
+    int res;
+    struct stat state;
+
+    res = stat("e:./test.txt", &state);
+
 
 /*    TFile file("e:/test.bin");
     char *buf = new char[1024];
@@ -128,11 +134,6 @@ void main()
 
 */
 
-    long long timeout = RdosUserGetLongSysTime();
-
-    RdosStartTimer(TimeoutCallback, 0, 1234, timeout);
-
-    printf("Hello world\r\n");
 }
 
 
