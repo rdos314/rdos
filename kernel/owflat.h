@@ -1545,6 +1545,9 @@
 
 #pragma aux RdosGetHandleCount = \
     CallGate_get_handle_count  \
+    "jnc ok" \
+    "mov ecx,256" \
+    "ok: " \ 
     __value [__ecx]
 
 #pragma aux RdosOpenHandle = \
