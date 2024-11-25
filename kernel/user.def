@@ -1025,11 +1025,6 @@ get_cert_json_nr                  = 849
 update_handle_nr                  = 850
 delete_handle_nr                  = 851
 
-start_user_timer_nr               = 852
-start_user_timeout_nr             = 853
-update_user_timer_nr              = 854
-update_user_timeout_nr            = 855
-stop_user_timer_nr                = 856
-init_user_timer_nr                = 857
+get_handle_count_nr               = 852
 
 usergate_entries                  = 880

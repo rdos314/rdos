@@ -1313,38 +1313,43 @@ GetProcessModuleUsage       MACRO
 
 ;;;;;;;;;;;; C Handles ;;;;;;;;;;;;;;;;
 
+; OUT ECX           Handle count
+GetHandleCount      MACRO
+        UserGate get_handle_count_nr
+                                        ENDM
+
 ; IN  ES:(E)DI      Name
 ; IN  CX            Mode
-; OUT EBX           C handle
+; OUT EBX           Handle
 OpenHandle      MACRO
         UserGate open_handle_nr
                                         ENDM
 
-; IN  BX            C handle
+; IN  BX            Handle
 CloseHandle     MACRO
         UserGate close_handle_nr
                                         ENDM
 
-; IN  BX            C handle
-; OUT EAX           Handle #
+; IN  BX            Handle
+; OUT EAX           Index
 ; OUT EDI           Flat address of file info
 GetHandleMap        MACRO
         UserGate get_handle_map_nr
                                                 ENDM
 
-; IN  BX            C handle
+; IN  BX            Handle
 ; IN  EDX:EAX       File position
 ; IN  ECX           Size
 MapHandle        MACRO
         UserGate map_handle_nr
                                                 ENDM
 
-; IN  BX            C handle
+; IN  BX            Handle
 UpdateHandle        MACRO
         UserGate update_handle_nr
                                                 ENDM
 
-; IN  BX            C handle
+; IN  BX            Handle
 ; IN  EDX:EAX       File position
 ; IN  ECX           Size
 GrowHandle        MACRO

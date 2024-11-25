@@ -592,6 +592,7 @@ int RDOSAPI RdosGetCanBridgeVersion(int *MajorVersion, int *MinorVersion, int *S
 int RDOSAPI RdosProgramCanBridge(const char *ProgramName);
 int RDOSAPI RdosWaitForCanBridgeProgramming(int *ErrorCode, int *Position);
 
+int RDOSAPI RdosGetHandleCount();
 int RDOSAPI RdosOpenHandle(const char *Name, int Mode);
 int RDOSAPI RdosCloseHandle(int Handle);
 int RDOSAPI RdosDeleteHandle(int Handle);

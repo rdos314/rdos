@@ -19,10 +19,19 @@ long long TimeoutCallback(void *param, long long expire)
 
 void main()
 {
-    int res;
-    struct stat state;
+    int handle = open("e:/test.txt", O_RDWR);
+    int count;
+    char buf[10];
 
-    res = stat("e:./test.txt", &state);
+    count = read(handle, buf, 10);
+
+    while (count)
+        count = read(handle, buf, 10);
+
+    close(handle);
+
+    
+
 
 
 /*    TFile file("e:/test.bin");
