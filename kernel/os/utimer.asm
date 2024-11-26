@@ -189,8 +189,8 @@ InitTimer_    Proc near
     mov esi,OFFSET init_user_timer
     mov edi,OFFSET init_user_timer_name
     xor dx,dx
-    mov ax,init_user_timer_nr
-    RegisterBimodalUserGate
+;    mov ax,init_user_timer_nr
+;    RegisterBimodalUserGate
     ret
 InitTimer_    Endp
 

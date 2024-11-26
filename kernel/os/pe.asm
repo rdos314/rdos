@@ -808,7 +808,7 @@ CheckTimerStarted  Proc near
     or al,al
     jnz csRunning
 ;
-    UserGateApp init_user_timer_nr
+;    UserGateApp init_user_timer_nr
 
 csRunning:
     pop eax
@@ -1131,20 +1131,20 @@ spOk:
     cmp ax,user_get_time_nr
     je spGetTime
 ;
-    cmp ax,start_user_timer_nr
-    je spStartTimer
+;    cmp ax,start_user_timer_nr
+;    je spStartTimer
 ;
-    cmp ax,start_user_timeout_nr
-    je spStartTimeout
+;    cmp ax,start_user_timeout_nr
+;    je spStartTimeout
 ;
-    cmp ax,update_user_timer_nr
-    je spUpdateTimer
+;    cmp ax,update_user_timer_nr
+;    je spUpdateTimer
 ;
-    cmp ax,update_user_timeout_nr
-    je spUpdateTimeout
+;    cmp ax,update_user_timeout_nr
+;    je spUpdateTimeout
 ;
-    cmp ax,stop_user_timer_nr
-    je spStopTimer
+;    cmp ax,stop_user_timer_nr
+;    je spStopTimer
 ;
     cmp ax,create_user_section_nr
     je spCreate

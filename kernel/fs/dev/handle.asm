@@ -1797,6 +1797,26 @@ ihdDone:
     ret
 IsHandleDeviceObj     Endp        
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandleCount
+;
+;           DESCRIPTION:    Get handle count
+;
+;           RETURNS:        ECX       Handle count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_count_name  DB 'Get Handle Count', 0
+
+get_handle_count     Proc far
+    mov ecx,USER_HANDLE_COUNT
+    stc
+    ret
+get_handle_count     Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3518,6 +3538,12 @@ init_sys_handle     PROC near
     xor cl,cl
     mov ax,get_kernel_handle_time_nr
     RegisterOsGate
+;
+    mov esi,OFFSET get_handle_count
+    mov edi,OFFSET get_handle_count_name
+    xor cl,cl
+    mov ax,get_handle_count_nr
+    RegisterBimodalUserGate
 ;
     mov ebx,OFFSET open_handle16
     mov esi,OFFSET open_handle32
