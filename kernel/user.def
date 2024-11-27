@@ -1026,5 +1026,6 @@ update_handle_nr                  = 850
 delete_handle_nr                  = 851
 
 get_handle_count_nr               = 852
+create_timer_thread_nr            = 853
 
 usergate_entries                  = 880

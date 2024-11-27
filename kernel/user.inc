@@ -571,6 +571,16 @@ HasGlobalTimer       MACRO
         UserGate has_global_timer_nr
                                                 ENDM
 
+
+; IN  EBX         Passed to thread
+; IN  EDX         Passed to thread
+; IN  ES:EDI      Startup of thread
+; OUT NC          Thread started
+;     CY          Thread already running
+CreateTimerThread       MACRO
+        UserGate create_timer_thread_nr
+                                                ENDM
+
 InitUserTimer       MACRO
         UserGate init_user_timer_nr
                                                 ENDM
