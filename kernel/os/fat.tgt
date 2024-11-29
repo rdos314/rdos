@@ -1,4 +1,4 @@
-40
+42
 targetIdent
 0
 MProject
@@ -41,14 +41,14 @@ WString
 RDEVLINK
 11
 WString
-19
-rk???Code selector:
+21
+rk???WLINK_op_codesel
 1
+0
 12
 WString
 5
 0x420
-0
 13
 MCState
 14
@@ -57,8 +57,8 @@ WString
 RDEVLINK
 15
 WString
-29
-?????Line numbers in map file
+22
+?????WLINK_op_maplines
 1
 1
 16
@@ -69,8 +69,8 @@ WString
 RDEVLINK
 18
 WString
-21
-?????Verbose map file
+15
+?????WLINK_op_v
 1
 1
 19
@@ -81,8 +81,8 @@ WString
 RDEVLINK
 21
 WString
-10
-?????Quiet
+15
+?????WLINK_op_q
 1
 0
 22

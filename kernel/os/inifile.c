@@ -753,7 +753,6 @@ struct TIni *CreateIniSel(char *FileName)
     int NameSize;
     long FileSize = 0;
     int Size;
-    int BaseSize = 0;
     int sel;
     int DriveNr;
     char Path[260];
@@ -987,8 +986,6 @@ void DeleteHandle(int Handle)
 {
     struct TIniHandle *IniHandle = (struct TIniHandle *)RdosDerefHandle(INI_HANDLE, Handle);
     struct TIni *Ini;
-    struct TIni *prev;
-    struct TIni *curr;
     int sel;
 
     if (IniHandle)
@@ -1947,4 +1944,5 @@ int main()
     RdosRegisterSegUserGate(usergate_get_curr_inivar, GATE_ES_IN, (__rdos_gate_callback *)&ImplGetCurrVar16, (__rdos_gate_callback *)&ImplGetCurrVar32, "Get Current Inivar");
     RdosRegisterHandle(INI_HANDLE, &ImplDeleteHandle);
     RdosHookInitTasking(&InitTasking);
+    return 0;
 }

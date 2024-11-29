@@ -1,11 +1,11 @@
-40
+42
 projectIdent
 0
 VpeMain
 1
 WRect
-912
-273
+816
+170
 8320
 9216
 2
@@ -145,7 +145,7 @@ VComponent
 36
 WRect
 192
-529
+512
 5504
 3584
 0
@@ -331,7 +331,7 @@ WFileName
 11
 inifile.tgt
 0
-3
+2
 71
 VComponent
 72
@@ -483,7 +483,7 @@ WRect
 864
 768
 5680
-4181
+4164
 0
 0
 100
@@ -491,15 +491,15 @@ WFileName
 8
 exec.tgt
 0
-0
+3
 101
 VComponent
 102
 WRect
 176
-85
+68
 5680
-4241
+4224
 0
 0
 103
@@ -515,7 +515,7 @@ WRect
 560
 512
 5680
-4249
+4232
 0
 0
 106
@@ -540,4 +540,4 @@ WFileName
 sma.tgt
 0
 0
-98
+86

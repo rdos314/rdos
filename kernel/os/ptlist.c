@@ -53,7 +53,7 @@ int Suspend = FALSE;
 #   Returns....: *
 #
 ##########################################################################*/
-void WriteEmpty(int Row)
+static void WriteEmpty()
 {
     int i;
 
@@ -293,7 +293,7 @@ void ProcessHandler()
         Suspend = FALSE;
 
         for (i = lastrow + 1; i < MaxRows; i++)
-            WriteEmpty(i);
+            WriteEmpty();
 
         RdosWaitTimeout(WaitHandle, 100);
 
@@ -346,4 +346,5 @@ void ProcessHandler()
 int main()
 {
     RdosHookInitTasking(&InitTasking);
+    return 0;
 }

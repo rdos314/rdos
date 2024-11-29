@@ -621,4 +621,5 @@ int main()
     RdosInitKernelSection(&ModuleSection);
     InitExec();
     InitTimer();
+    return 0;
 }

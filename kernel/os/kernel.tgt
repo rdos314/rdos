@@ -1,4 +1,4 @@
-40
+42
 targetIdent
 0
 MProject
@@ -43,8 +43,8 @@ WString
 WLINK
 11
 WString
-29
-?????Line numbers in map file
+22
+?????WLINK_op_maplines
 1
 1
 12
@@ -76,8 +76,8 @@ WString
 WASM
 19
 WString
-21
-?????Compiler default
+14
+?????WASM_def1
 1
 0
 20
@@ -88,8 +88,8 @@ WString
 WASM
 22
 WString
-30
-?????Inline 80387 instructions
+13
+?????WASM_fp3
 1
 1
 23
@@ -100,8 +100,8 @@ WString
 WASM
 25
 WString
-21
-?????Compiler default
+14
+?????WASM_def1
 1
 0
 26
@@ -112,8 +112,8 @@ WString
 WASM
 28
 WString
-28
-?????Inline with coprocessor
+15
+?????WASM_fpi87
 1
 1
 29

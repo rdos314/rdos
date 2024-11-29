@@ -1,4 +1,4 @@
-40
+42
 targetIdent
 0
 MProject
@@ -41,14 +41,14 @@ WString
 WINLINK
 11
 WString
-19
-rk???Code selector:
+21
+rk???WLINK_op_codesel
 1
+0
 12
 WString
 5
 0xA70
-0
 13
 MVState
 14
@@ -57,14 +57,14 @@ WString
 WINLINK
 15
 WString
-19
-rk???Data selector:
+21
+rk???WLINK_op_datasel
 1
+0
 16
 WString
 5
 0xA78
-0
 17
 MCState
 18
@@ -73,8 +73,8 @@ WString
 WINLINK
 19
 WString
-29
-?????Line numbers in map file
+22
+?????WLINK_op_maplines
 1
 1
 20
@@ -85,8 +85,8 @@ WString
 WINLINK
 22
 WString
-21
-?????Verbose map file
+15
+?????WLINK_op_v
 1
 1
 23
@@ -97,8 +97,8 @@ WString
 WINLINK
 25
 WString
-12
-?????Default
+15
+?????WLINK_def1
 1
 0
 26
@@ -109,8 +109,8 @@ WString
 WINLINK
 28
 WString
-10
-?????Quiet
+15
+?????WLINK_op_q
 1
 0
 29
@@ -142,8 +142,8 @@ WString
 WASM
 36
 WString
-21
-?????Compiler default
+14
+?????WASM_def1
 1
 0
 37
@@ -154,8 +154,8 @@ WString
 WASM
 39
 WString
-30
-?????Inline 80387 instructions
+13
+?????WASM_fp3
 1
 1
 40
@@ -166,8 +166,8 @@ WString
 WASM
 42
 WString
-21
-?????Compiler default
+14
+?????WASM_def1
 1
 0
 43
@@ -178,8 +178,8 @@ WString
 WASM
 45
 WString
-28
-?????Inline with coprocessor
+15
+?????WASM_fpi87
 1
 1
 46
