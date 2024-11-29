@@ -231,7 +231,7 @@ int TYModem::SendFile(TFile *File)
         int Size;
         int i;
 
-        Remaining = File->GetSize();
+        Remaining = (int)File->GetSize();
 
         if (Remaining == 0)
                 return FALSE;

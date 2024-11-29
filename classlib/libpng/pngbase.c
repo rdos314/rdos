@@ -90,7 +90,6 @@ int LoadPngBase(const char *FileName)
     int iheight;
     int depth;
     unsigned char *ptr;
-    char buf[8];
     unsigned char **row_pointers;
 
     FileHandle = RdosOpenHandle(FileName, O_RDWR);
@@ -207,7 +206,6 @@ int SavePngBase(const char *FileName, int Bitmap)
     int bpp;
     int width;
     int height;
-    int ok;
     unsigned char **row_pointers;
     unsigned char *ptr;
 
@@ -259,7 +257,7 @@ int SavePngBase(const char *FileName, int Bitmap)
             png_destroy_write_struct(&write_ptr, &write_info_ptr);
         }
         RdosCloseHandle(FileHandle);
-        return ok;
+        return TRUE;
     }
 
     return FALSE;

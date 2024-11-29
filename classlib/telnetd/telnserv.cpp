@@ -107,13 +107,8 @@ void TTelnetSocketServer::HandleSocket()
 
                 for (InPos = 0; InPos < count; InPos++)
                 {
-                    switch (Buf[InPos])
-                    {
-                        default:
-                            Msg[OutPos] = Buf[InPos];
-                            OutPos++;
-                            break;
-                    }
+                    Msg[OutPos] = Buf[InPos];
+                    OutPos++;
                 }
                 Msg[OutPos] = 0;
 
