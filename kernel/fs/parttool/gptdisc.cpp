@@ -116,7 +116,7 @@ TGptPartition::TGptPartition(struct TGptPartEntry *entry, const char *guid)
   : TPartition(entry->FirstLba, entry->LastLba - entry->FirstLba + 1)
 {
     memcpy(&Entry, entry, sizeof(struct TGptPartEntry));
-    memcpy(&Guid, guid, 40);
+    memcpy(Guid, guid, 40);
 }
 
 /*##########################################################################

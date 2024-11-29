@@ -1135,7 +1135,6 @@ void TFile::HandleFreeReq(int req)
 ##########################################################################*/
 void TFile::HandleCompletedReq(int req)
 {
-    int i;
     char str[80];
 
     sprintf(str, "Completed %d.%d\r\n", Index, req);
