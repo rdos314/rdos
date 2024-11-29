@@ -365,7 +365,7 @@ void *AllocateSelector(ACPI_SIZE Size)
     long linear;
     char *ptr;
 
-    if (Size <= 0 || Size > 0x100000)
+    if (Size > 0x100000)
         return 0;
     
     ptr = (char *)RdosAllocateBigGlobalMem(Size);
@@ -1713,6 +1713,7 @@ int GetDsdArr(ACPI_OBJECT *obj, int *Arr, int MaxEntries)
             }
         }
     }
+    return res;
 }
 
 /*##########################################################################
@@ -3420,4 +3421,5 @@ int main()
     RdosRegisterOsGate(osgate_update_freq, (__rdos_gate_callback *)&ImplUpdateFreq, "Update Frequency");
 
 //    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
+    return 0;
 }
