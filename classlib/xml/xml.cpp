@@ -282,7 +282,7 @@ void Base64Decoder<InIter, OutIter>::DecodeCurr4(OutIter& out)
  * QpEncoder
  ******************************************************************************/
 
-static const char cBasisHex[] = "0123456789ABCDEF";
+// static const char cBasisHex[] = "0123456789ABCDEF";
 
 template <class InIter, class OutIter>
 OutIter QpEncoder<InIter, OutIter>::Filter(
@@ -354,6 +354,7 @@ OutIter QpEncoder<InIter, OutIter>::Finish(OutIter out)
  * QpDecoder
  ******************************************************************************/
 
+/*
 static const unsigned char cIndexHex[256] = {
 	XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 	XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
@@ -372,6 +373,7 @@ static const unsigned char cIndexHex[256] = {
 	XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 	XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
+*/
 
 template <class InIter, class OutIter>
 OutIter QpDecoder<InIter, OutIter>::Filter(
@@ -5497,7 +5499,6 @@ int XMLVariable :: GetValueHex()
 TString XMLVariable :: GetValueString()
         {
         int count = 0;
-        int val;
         int len = GetValue(0);
         char *str = new char[len + 1];
         GetValue(str);
