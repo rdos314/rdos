@@ -352,4 +352,5 @@ void __far InitTasking()
 int main()
 {
     RdosHookInitTasking(&InitTasking);
+    return 0;
 }
