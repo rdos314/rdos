@@ -226,12 +226,12 @@ void x86_mad_registers::Read(TDebugThread *t)
     cpu.cr0 = 0;
     cpu.cr2 = 0;
     cpu.cr3 = t->Cr3;
-    cpu.ds = t->Ds;
-    cpu.es = t->Es;
-    cpu.ss = t->Ss;
-    cpu.cs = t->Cs;
-    cpu.fs = t->Fs;
-    cpu.gs = t->Gs;
+    cpu.ds = (short)t->Ds;
+    cpu.es = (short)t->Es;
+    cpu.ss = (short)t->Ss;
+    cpu.cs = (short)t->Cs;
+    cpu.fs = (short)t->Fs;
+    cpu.gs = (short)t->Gs;
 
     fpu.cw = t->MathControl;
     fpu.sw = t->MathStatus;
@@ -284,9 +284,9 @@ void x86_mad_registers::Write(TDebugThread *t)
     t->MathTag = fpu.tag;
 
     t->MathDataOffs = fpu.ip_err.offset;
-    t->MathDataSel = fpu.ip_err.segment;
+    t->MathDataSel = (short)fpu.ip_err.segment;
     t->MathEip = fpu.op_err.offset;
-    t->MathCs = fpu.op_err.segment;
+    t->MathCs = (short)fpu.op_err.segment;
 
     for (i = 0; i < 8; i++)
         t->St[i] = fpu.reg[i];

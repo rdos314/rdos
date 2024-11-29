@@ -686,11 +686,11 @@ void TDebugThread::WriteRegs()
     tss.ebp = Ebp;
     tss.esi = Esi;
     tss.edi = Edi;
-    tss.es = Es;
-    tss.ss = Ss;
-    tss.ds = Ds;
-    tss.fs = Fs;
-    tss.gs = Gs;
+    tss.es = (short)Es;
+    tss.ss = (short)Ss;
+    tss.ds = (short)Ds;
+    tss.fs = (short)Fs;
+    tss.gs = (short)Gs;
 
     tss.MathControl = MathControl;
     tss.MathStatus = MathStatus;
@@ -1920,7 +1920,6 @@ void TDebug::LogBreaks()
 void TDebug::AddBreak(TDebugBreak *b)
 {
     char brinstr = 0xCC;
-    char str[256];
 
     if (ThreadList)
     {
@@ -1946,8 +1945,6 @@ void TDebug::AddBreak(TDebugBreak *b)
 ##########################################################################*/
 void TDebug::RemoveBreak(TDebugBreak *b)
 {
-    char str[256];
-
     if (ThreadList)
     {
         if (b->IsActive)
@@ -2139,7 +2136,6 @@ void TDebug::ClearBreak(int Sel, long Offset)
 {
     TDebugBreak *b;
     TDebugBreak *delbr;
-    TDebugThread *mthread;
 
     char str[128];
 
@@ -2511,7 +2507,6 @@ int TDebug::PickNewThread()
 ##########################################################################*/
 void TDebug::FixupAfterTimeout(TDebugBreak *Bp)
 {
-    char str[80];
     unsigned char ch = 0xCC;
     TDebugThread *Thread;
     TWaitDevice *wait;
@@ -2583,7 +2578,6 @@ int TDebug::AsyncGo(int Timeout)
 ##########################################################################*/
 int TDebug::AsyncTrace(int Timeout)
 {
-    int ok;
     TWaitDevice *wait;
     TDebugBreak *bp;
 

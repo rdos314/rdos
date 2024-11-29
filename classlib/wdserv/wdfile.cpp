@@ -198,14 +198,14 @@ void TWdFileService::ReqSeek()
 			break;
 
 		case 1:
-			pos += RdosGetHandlePos(handle);
+			pos += (int)RdosGetHandlePos(handle);
 			RdosSetHandlePos(handle, pos);
 			PutDword(0);
 			PutDword(pos);
 			break;
 
 		case 2:
-			pos += RdosGetHandleSize(handle);
+			pos += (int)RdosGetHandleSize(handle);
 			RdosSetHandlePos(handle, pos);
 			PutDword(0);
 			PutDword(pos);
@@ -382,7 +382,6 @@ int TWdFileService::GetServer(char *name)
 ##########################################################################*/
 void TWdFileService::ReqStrToFullPath()
 {
-    int ok;
     int handle;
     char FileType;
     char FileName[256];
