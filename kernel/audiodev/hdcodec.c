@@ -866,7 +866,6 @@ void ProcessCodec(struct TCodec *codec)
     int node;
     int type;
     int channels;
-    int verb;
 
     codec->VendorID = Query(codec, 0, 0xF0000);
     codec->DeviceID = codec->VendorID & 0xFFFF;
@@ -3032,6 +3031,41 @@ void __far ImplSetAudioOutputVolume(int l, int r)
 
 /*##########################################################################
 #
+#   Name       : TurnOnOutput
+#
+#   Purpose....: Turn on output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TurnOnOutput(struct TPinComplex *widget)
+{
+    int hp = FALSE;
+    int verb;
+
+    if (widget->PinCap & 0x10)
+        if (widget->PinCap & 0x8)
+            hp = TRUE;
+
+    verb = 0x70700;
+    if (hp)
+        verb |= 0xC0;
+    else
+        verb |= 0x40;
+
+    QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+
+    if (widget->PinCap & 0x10000)
+    {
+        verb = 0x70C02;
+        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : AssignOutput
 #
 #   Purpose....: Assign output
@@ -3069,41 +3103,6 @@ void DeassignOutput(struct TWidget *widget)
 {
     FreeOutputVolumeControls();
     DeactivateOutput(widget);
-}
-
-/*##########################################################################
-#
-#   Name       : TurnOnOutput
-#
-#   Purpose....: Turn on output
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TurnOnOutput(struct TPinComplex *widget)
-{
-    int hp = FALSE;
-    int verb;
-
-    if (widget->PinCap & 0x10)
-        if (widget->PinCap & 0x8)
-            hp = TRUE;
-
-    verb = 0x70700;
-    if (hp)
-        verb |= 0xC0;
-    else
-        verb |= 0x40;
-
-    QueryCodec(widget->Id, widget->Address, widget->Node, verb);
-
-    if (widget->PinCap & 0x10000)
-    {
-        verb = 0x70C02;
-        QueryCodec(widget->Id, widget->Address, widget->Node, verb);
-    }
 }
 
 /*##########################################################################
@@ -3337,4 +3336,5 @@ int main()
     RdosRegisterBimodalUserGate(usergate_set_output_volume, (__rdos_gate_callback *)&ImplSetAudioOutputVolume, "Set Audio Output Volume");
 
 //    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate"); 
+    return 0;
 }
