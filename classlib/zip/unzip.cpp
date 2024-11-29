@@ -602,7 +602,6 @@ TUnzipFile::~TUnzipFile()
 ##########################################################################*/
 int TUnzipFile::ProcessDirEntry()
 {
-    int error;
     unsigned short filename_length;
     unsigned short extra_field_length;
     unsigned short file_comment_length;
@@ -843,7 +842,7 @@ int TUnzipFile::ProcessFileHeader()
     }
 
     RdosSetHandlePos(FUnzip->FInputHandle, bufstart);
-    FUnzip->FBufStart = RdosGetHandlePos(FUnzip->FInputHandle);
+    FUnzip->FBufStart = (int)RdosGetHandlePos(FUnzip->FInputHandle);
     RdosReadHandle(FUnzip->FInputHandle, FUnzip->FInBuf, INBUFSIZ);  /* been here before... */
     FUnzip->FInPtr = inptr;
     FUnzip->FInCount = incnt;
@@ -1151,7 +1150,6 @@ void TUnzipFile::CreateTimeStr(char *str)
 ##########################################################################*/
 void TUnzipFile::ShowVerbose()
 {
-    int  error;
     unsigned  extnum, extver, methid, methnum, xattr;
     char workspace[12], attribs[22];
     const char *varmsg_str;
@@ -1420,7 +1418,8 @@ void TUnzipFile::ShowCompact()
 {
     int         k;
     unsigned    methid, methnum, xattr;
-    char        *p, workspace[12], attribs[16];
+    char        *p;
+    char        workspace[12], attribs[16];
     char        methbuf[5];
     static const char dtype[5]="NXFS"; /* normal, maximum, fast, superfast */
     static const char os[NUM_HOSTS+1][4] = {
@@ -1690,8 +1689,6 @@ TUnzip::TUnzip(const char *filename)
 ##########################################################################*/
 TUnzip::~TUnzip()
 {
-    int i;
-    
     delete FInBuf;
 
     Close();
@@ -1745,7 +1742,7 @@ int TUnzip::Open(const char *filename)
         return FALSE;
     }
 
-    FZipLen = RdosGetHandleSize(FInputHandle);
+    FZipLen = (int)RdosGetHandleSize(FInputHandle);
 
     ok = ProcessFiles(filename, TRUE);
 
@@ -1783,7 +1780,7 @@ int TUnzip::OpenNoHeader(const char *filename)
         return FALSE;
     }
 
-    FZipLen = RdosGetHandleSize(FInputHandle);
+    FZipLen = (int)RdosGetHandleSize(FInputHandle);
 
     ok = ProcessFiles(filename, FALSE);
 
@@ -1843,7 +1840,6 @@ void TUnzip::Close()
 void TUnzip::Trace(const char *format, ...)
 {
     va_list ap;
-    slib_callback_t *tmp;
     int len;
 
     va_start(ap, format);
@@ -1870,7 +1866,6 @@ void TUnzip::Trace(const char *format, ...)
 void TUnzip::Info(int code, const char *format, ...)
 {
     va_list ap;
-    slib_callback_t *tmp;
     int len;
 
     va_start(ap, format);
@@ -1988,7 +1983,7 @@ int TUnzip::FindRec(long searchlen, char* signature, int rec_size)
 
     if ((tail_len = FZipLen % INBUFSIZ) > rec_size) {
         RdosSetHandlePos(FInputHandle, FZipLen-tail_len);
-        FBufStart = RdosGetHandlePos(FInputHandle);
+        FBufStart = (int)RdosGetHandlePos(FInputHandle);
         if ((FInCount = RdosReadHandle(FInputHandle, FInBuf,
             (unsigned int)tail_len)) != (int)tail_len)
             return 2;      /* it's expedient... */
@@ -2054,8 +2049,6 @@ int TUnzip::FindRec(long searchlen, char* signature, int rec_size)
 int TUnzip::GetCentralHeader(const char *filename, long searchlen, int verbose)
 {
     int found = FALSE;
-    int ok;
-    int result;
     unsigned char byterec[ECREC_SIZE+4];
     static char end_central_sig[4]   = {0x50, 0x4B, 0x05, 0x06};
 
@@ -2211,7 +2204,7 @@ int TUnzip::Seek(long abs_offset)
     
     if (bufstart != FBufStart) {
         RdosSetHandlePos(FInputHandle, bufstart);
-        FBufStart = RdosGetHandlePos(FInputHandle);
+        FBufStart = (int)RdosGetHandlePos(FInputHandle);
         FInCount = RdosReadHandle(FInputHandle, FInBuf, INBUFSIZ);
         if (FInCount <= 0)
             return FALSE;
@@ -2355,7 +2348,7 @@ int TUnzip::SeekFile(TUnzipFile *file)
 
     if (bufstart != FBufStart) {
         RdosSetHandlePos(FInputHandle, bufstart);
-        FBufStart = RdosGetHandlePos(FInputHandle);
+        FBufStart = (int)RdosGetHandlePos(FInputHandle);
         FInCount = RdosReadHandle(FInputHandle, FInBuf, INBUFSIZ);
         if (FInCount <= 0)
         {

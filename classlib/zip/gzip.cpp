@@ -105,8 +105,8 @@ static void put(tally_t *t, void const *dat, int len)
 static void put2(tally_t *t, unsigned n) 
 {
     unsigned char dat[2];
-    dat[0] = n;
-    dat[1] = n >> 8;
+    dat[0] = (unsigned char)n;
+    dat[1] = (unsigned char)(n >> 8);
     put(t, dat, 2);
 }
 
