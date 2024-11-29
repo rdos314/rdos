@@ -441,7 +441,6 @@ void TFormControl::Remove(TFormControlEntry *entry)
 TControl *TFormControl::GetControl(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 
@@ -477,7 +476,6 @@ TControl *TFormControl::GetControl(const char *name)
 TLabelControl *TFormControl::GetLabel(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 
@@ -513,7 +511,6 @@ TLabelControl *TFormControl::GetLabel(const char *name)
 TButtonControl *TFormControl::GetButton(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 
@@ -549,7 +546,6 @@ TButtonControl *TFormControl::GetButton(const char *name)
 TPanelControl *TFormControl::GetPanel(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 
@@ -585,7 +581,6 @@ TPanelControl *TFormControl::GetPanel(const char *name)
 TFileViewControl *TFormControl::GetFileView(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 
@@ -621,7 +616,6 @@ TFileViewControl *TFormControl::GetFileView(const char *name)
 TListControl *TFormControl::GetList(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 
@@ -657,7 +651,6 @@ TListControl *TFormControl::GetList(const char *name)
 TVerScrollControl *TFormControl::GetVerScroll(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 
@@ -693,7 +686,6 @@ TVerScrollControl *TFormControl::GetVerScroll(const char *name)
 THorScrollControl *TFormControl::GetHorScroll(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 
@@ -729,7 +721,6 @@ THorScrollControl *TFormControl::GetHorScroll(const char *name)
 TImageControl *TFormControl::GetImage(const char *name)
 {
     TFormControlEntry *p;
-    TControl *control;
 
     FSection.Enter();
 

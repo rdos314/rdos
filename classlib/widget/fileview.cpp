@@ -664,7 +664,7 @@ void TFileViewControl::Load(int pos)
         buf = new char[4097];
         dbuf = new char[17000];
 
-        fsize = FFile->GetSize();
+        fsize = (int)FFile->GetSize();
         if (fsize < pos)
             pos = fsize;
 

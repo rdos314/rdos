@@ -1326,7 +1326,6 @@ void TPanelControl::DisableHorScroll()
 void TPanelControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
-    int val;
     int HasWidth;
 
     Ini->GotoSection(IniSection);

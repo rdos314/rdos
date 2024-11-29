@@ -213,9 +213,6 @@ void TFixedTextControl::SetSize(int rows, int cols)
 {
     int row;
     int col;
-    int xoffs, yoffs;
-    int xdiff, ydiff;
-    int xsize, ysize;
     int height;
     int width;
     char str[2] = {' ', 0};
@@ -354,8 +351,6 @@ int TFixedTextControl::GetChar(int Row, int Col, char *ForeColor, char *BackColo
 void TFixedTextControl::GetTextArea(int *x, int *y, int *width, int *height)
 {
 
-    int xstart;
-    int ystart;
     int xsize;
     int ysize;
     int xmin, ymin;
@@ -524,10 +519,6 @@ void TFixedTextControl::ConvColor(char color, int *r, int *g, int *b)
 ##########################################################################*/
 void TFixedTextControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
-    int xstart;
-    int ystart;
-    int xsize;
-    int ysize;
     int xmax, ymax;
     int xoffs, yoffs;
     int xdiff, ydiff;
