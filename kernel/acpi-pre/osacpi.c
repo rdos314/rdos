@@ -251,7 +251,7 @@ void *AcpiOsAllocate(ACPI_SIZE Size)
 {
     long linear;
 
-    if (Size <= 0 || Size > 0x100000)
+    if (Size > 0x100000)
         return 0;
     
     if (Size < 0x1000)
@@ -637,11 +637,13 @@ ACPI_STATUS AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS Address, UINT32 *Value, UINT3
     switch (Width)
     {
         case 8:
-            (char)res = *(char *)ptr;
+            res = *(char *)ptr;
+            res = res & 0xFF;
             break;
 
         case 16:
-            (short int)res = *(short int *)ptr;
+            res = *(short int *)ptr;
+            res = res & 0xFFFF;
             break;
 
         case 32:
@@ -709,11 +711,13 @@ ACPI_STATUS AcpiOsReadPort(ACPI_IO_ADDRESS Address, UINT32 *Value, UINT32 Width)
     switch (Width)
     {
         case 8:
-            (char)res = ReadBytePort(Address);
+            res = ReadBytePort(Address);
+            res = res & 0xFF;
             break;
 
         case 16:
-            (short int)res = ReadWordPort(Address);
+            res = ReadWordPort(Address);
+            res = res & 0xFFFF;
             break;
 
         case 32:
@@ -763,11 +767,13 @@ ACPI_STATUS AcpiOsReadPciConfiguration(ACPI_PCI_ID *PciId, UINT32 Reg, UINT64 *V
     switch (Width)
     {
         case 8:
-            (char)res = RdosReadPciByte(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            res = RdosReadPciByte(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            res = res & 0xFF;
             break;
 
         case 16:
-            (short int)res = RdosReadPciWord(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            res = RdosReadPciWord(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            res = res & 0xFFFF;
             break;
 
         case 32:
