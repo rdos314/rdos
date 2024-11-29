@@ -569,7 +569,6 @@ void TCrashInfo::GetCrashInfo(int Core)
 ##########################################################################*/
 void TCrashInfo::InsertLog(TCrashLogInfo *log)
 {
-    TCrashLogInfo *temp;
     int pos;
     int i;
 

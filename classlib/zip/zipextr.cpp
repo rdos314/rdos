@@ -233,7 +233,7 @@ int TUnzipExtractor::Seek(long abs_offset)
 int TUnzipExtractor::Decrypt()
 {
     unsigned short b;
-    int n, r;
+    int n;
     unsigned char h[RAND_HEAD_LEN];
 
     /* get header once (turn off "encrypted" flag temporarily so we don't

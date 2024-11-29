@@ -55,8 +55,6 @@ TDrive *TDrive::AllocateFixed(int DriveNr)
 *##########################################################################*/
 TDrive::TDrive(int Drive)
 {
-    long StartSector;
-    long TotalSectors;
     long long DiscSectors;
     int SectorsPerCyl;
     int Heads;

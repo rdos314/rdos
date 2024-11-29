@@ -102,7 +102,7 @@ TDateTime::TDateTime(unsigned long long Raw)
 {
     unsigned long Val[2];
 
-    memcpy(&Val, &Raw, 8);
+    memcpy(Val, &Raw, 8);
 
     FMsb = Val[1];
     FLsb = Val[0];

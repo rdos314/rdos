@@ -1355,7 +1355,6 @@ void TDirList::DoSearch()
 {
     unsigned long msb;
     unsigned long lsb;
-    int ok;
     int DirHandle;
     struct RdosDirInfo info;
     struct RdosDirEntry *entry;

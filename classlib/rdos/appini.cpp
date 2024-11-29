@@ -595,8 +595,9 @@ TAppIniFile::TAppIniFile(const char *IniName)
   : FName(IniName)
 {
     int FileHandle;
-    int FileSize = 0;
+    long long FileSize = 0;
     char *buf;
+    int size;
 
     FModified = false;
     FCurrSection = 0;
@@ -608,12 +609,17 @@ TAppIniFile::TAppIniFile(const char *IniName)
     if (FileHandle > 0)
         FileSize = RdosGetHandleSize(FileHandle);
 
-    if (FileSize)
+    if (FileSize > 0x10000000)
+        size = 0x10000000;
+    else
+        size = (int)FileSize;
+
+    if (size)
     {
-        buf = new char[FileSize + 2];
-        RdosReadHandle(FileHandle, buf, FileSize);
-        buf[FileSize] = 0;
-        buf[FileSize + 1] = 0;
+        buf = new char[size + 2];
+        RdosReadHandle(FileHandle, buf, size);
+        buf[size] = 0;
+        buf[size + 1] = 0;
         Parse(buf);
         delete buf;
     }
@@ -637,8 +643,9 @@ TAppIniFile::TAppIniFile(const TAppIniFile &ini)
   : FName(ini.FName)
 {
     int FileHandle;
-    int FileSize = 0;
+    long long FileSize = 0;
     char *buf;
+    int size;
 
     FModified = false;
     FCurrSection = 0;
@@ -650,12 +657,17 @@ TAppIniFile::TAppIniFile(const TAppIniFile &ini)
     if (FileHandle > 0)
         FileSize = RdosGetHandleSize(FileHandle);
 
-    if (FileSize)
+    if (FileSize > 0x10000000)
+        size = 0x10000000;
+    else
+        size = (int)FileSize;
+
+    if (size)
     {
-        buf = new char[FileSize + 2];
-        RdosReadHandle(FileHandle, buf, FileSize);
-        buf[FileSize] = 0;
-        buf[FileSize + 1] = 0;
+        buf = new char[size + 2];
+        RdosReadHandle(FileHandle, buf, size);
+        buf[size] = 0;
+        buf[size + 1] = 0;
         Parse(buf);
         delete buf;
     }
@@ -869,7 +881,7 @@ void TAppIniFile::Update()
     int handle;
     TAppIniSection *sect;
     int size;
-    int orgsize;
+    long long orgsize;
     char *buf;
     char *ptr;
 

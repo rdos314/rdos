@@ -87,7 +87,6 @@ TUnzipStoreExtractor::~TUnzipStoreExtractor()
 void TUnzipStoreExtractor::Execute()
 {
     int b;
-    int r;
     
     FOutPtr = FOutBuf;
     FOutCount = 0;

@@ -449,7 +449,6 @@ TString TBigNum::GetHex(int digits)
 {
     int size;
     char *buf;
-    char *ptr;
 
     size = digits + 1;
     buf = new char[size]; 
