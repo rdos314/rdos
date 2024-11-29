@@ -1038,7 +1038,7 @@ int TPathName::AppendFile(const TPathName &NewName) const
     int ok;
     char *buf;
     int size;
-    long fsize;
+    long long fsize;
 
     ok = FALSE;
     dst = 0;

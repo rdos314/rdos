@@ -437,7 +437,7 @@ int TFile::VfsFind(long long Pos)
 ##########################################################################*/
 int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
 {
-    int diff;
+    long long diff;
     int count = 0;
     char *src;
     struct RdosFileMapEntry *entry;
@@ -456,13 +456,13 @@ int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
         }
         else
         {
-            if (entry->Base && diff >= 0)
+            if (entry->Base && diff >= 0 && diff < 0x10000000)
             {
-                count = entry->Size - diff;
+                count = entry->Size - (int)diff;
 
                 if (count > 0)
                 {
-                    src = entry->Base + diff;
+                    src = entry->Base + (int)diff;
                     if (count > size)
                         count = size;
 
@@ -492,8 +492,8 @@ int TFile::VfsRead(void *Buf, int Size)
 {
     long long Pos = GetPos();
     long long TotalSize = GetSize();
+    long long ldiff;
     int count;
-    int diff;
     int i;
     int ret = 0;
     char *ptr = (char *)Buf;
@@ -502,7 +502,13 @@ int TFile::VfsRead(void *Buf, int Size)
         RdosUpdateHandle(FHandle);
 
     if (Pos + Size > TotalSize)
-        Size = TotalSize - Pos;
+    {
+        ldiff = TotalSize - Pos;
+        if (ldiff > 0x10000000)
+            Size = 0x10000000;
+        else
+            Size = (int)ldiff;
+    }
 
     if (Size < 0)
         Size = 0;
@@ -585,7 +591,7 @@ int TFile::Read(void *Buf, int Size)
 ##########################################################################*/
 int TFile::VfsWriteOne(int index, char *buf, long long pos, int size)
 {
-    int diff;
+    long long diff;
     int count = 0;
     char *dst;
     struct RdosFileMapEntry *entry;
@@ -605,13 +611,13 @@ int TFile::VfsWriteOne(int index, char *buf, long long pos, int size)
         }
         else
         {
-            if (entry->Base && diff >= 0)
+            if (entry->Base && diff >= 0 && diff < 0x10000000)
             {
-                count = entry->Size - diff;
+                count = entry->Size - (int)diff;
 
                 if (count > 0)
                 {
-                    dst = entry->Base + diff;
+                    dst = entry->Base + (int)diff;
                     if (count > size)
                         count = size;
 
@@ -646,7 +652,6 @@ int TFile::VfsWrite(const void *Buf, int Size)
     long long Pos = GetPos();
     long long TotalSize = GetSize();
     int count;
-    int diff;
     int i;
     int ret = 0;
     char *ptr = (char *)Buf;
@@ -657,9 +662,11 @@ int TFile::VfsWrite(const void *Buf, int Size)
         RdosUpdateHandle(FHandle);
 
     Grow = Pos + Size - info->DiscSize;
+    if (Grow > 0x10000000)
+        Grow = 0x10000000;
 
     if (Grow > 0)
-        RdosGrowHandle(FHandle, info->DiscSize, Grow);
+        RdosGrowHandle(FHandle, info->DiscSize, (int)Grow);
 
     RdosEnterFutex(&FMap->Handle->Futex);
 
@@ -684,9 +691,11 @@ int TFile::VfsWrite(const void *Buf, int Size)
                 RdosLeaveFutex(&FMap->Handle->Futex);
 
                 Grow = Pos + Size - info->DiscSize;
+                if (Grow > 0x10000000)
+                    Grow = 0x10000000;
 
                 if (Grow > 0)
-                    RdosGrowHandle(FHandle, info->DiscSize, Grow);
+                    RdosGrowHandle(FHandle, info->DiscSize, (int)Grow);
                 else
                     RdosMapHandle(FHandle, Pos, Size);
 

@@ -1216,6 +1216,7 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
     unsigned char Tag;
     unsigned char CompletionCode;
     unsigned char NvMsg;
+    short int appSignature;
 
     switch (msg[0])
     {
@@ -1288,7 +1289,7 @@ void TLonDevice::NotifyMsg(const char *msg, int size)
                     break;
 
                 case LonUsopQueryAppSignature:
-                    short int appSignature = RdosSwapShort((short int)msg[1]);
+                    appSignature = RdosSwapShort((short int)msg[1]);
                     HandleAppSignatureReceived(appSignature);
                     break;
 

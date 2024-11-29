@@ -343,7 +343,7 @@ void TMp3Player::Load(const char *FileName)
 
     if (FFileHandle)
     {
-        FFileSize = RdosGetFileSize(FFileHandle);
+        FFileSize = (int)RdosGetFileSize(FFileHandle);
         size = FFileSize;
         size--;
         size = size & 0xFFFFF000;
@@ -500,9 +500,9 @@ void TMp3Player::Play()
 
         size = synth->pcm.length;
         if (synth->pcm.channels >= 2)
-            RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[1]);
+            RdosWriteAudio(FAudioHandle, size, (int *)synth->pcm.samples, (int *)(synth->pcm.samples+1));
         else
-            RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[0]);
+            RdosWriteAudio(FAudioHandle, size, (int *)synth->pcm.samples, (int *)synth->pcm.samples);
 
     }
 
@@ -552,9 +552,9 @@ void TMp3Player::Thread()
 
         size = synth->pcm.length;
         if (synth->pcm.channels >= 2)
-            RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[1]);
+            RdosWriteAudio(FAudioHandle, size, (int *)synth->pcm.samples, (int *)(synth->pcm.samples+1));
         else
-            RdosWriteAudio(FAudioHandle, size, (int *)&synth->pcm.samples[0], (int *)&synth->pcm.samples[0]);
+            RdosWriteAudio(FAudioHandle, size, (int *)synth->pcm.samples, (int *)synth->pcm.samples);
     }
 
     RdosCloseAudioOutChannel(FAudioHandle);

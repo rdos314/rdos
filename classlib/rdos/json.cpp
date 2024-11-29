@@ -2538,11 +2538,6 @@ void TJsonStringArray::Add(const char *str)
 void TJsonStringArray::Write(TJsonDocument *doc, int indent, TString &str)
 {
     int i;
-    double temp;
-    int digits;
-    bool done = false;
-    char buf[80];
-    char format[20];
 
     AddIndent(doc, indent, str);
     str += "\"";
@@ -4001,7 +3996,6 @@ void TJsonArrayCollection::Write(TJsonDocument *doc, int indent, TString &str)
     int a;
     int i;
     int size;
-    int arrays;
     TJsonObject *obj;
 
     AddIndent(doc, indent, str);
@@ -5744,8 +5738,6 @@ int TJsonStackEntry::HandleCommentEnd(TJsonDocument *doc)
 int TJsonStackEntry::HandleString(TJsonDocument *doc)
 {
     const char *case_start = FDataPtr;
-    char *val_str;
-    int size;
 
     for (;;)
     {

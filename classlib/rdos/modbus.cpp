@@ -677,7 +677,6 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
 ##########################################################################*/
 int TModbus::ReqHoldingRegisters(int Reg, int Count)
 {
-    int len;
     short int temp;
     char msg[256];
     int datalen;
@@ -1332,7 +1331,6 @@ int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *d
     char crc[2];
     char ch;
     int pos;
-    int i;
     int ok = FALSE;
 
     FSection.Enter();
