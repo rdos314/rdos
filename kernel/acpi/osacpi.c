@@ -722,10 +722,12 @@ ACPI_STATUS AcpiOsReadPort(ACPI_IO_ADDRESS Address, UINT32 *Value, UINT32 Width)
     {
         case 8:
             res = ReadBytePort(Address);
+            res = res & 0xFF;
             break;
 
         case 16:
             res = ReadWordPort(Address);
+            res = res & 0xFFFF;
             break;
 
         case 32:
@@ -776,10 +778,12 @@ ACPI_STATUS AcpiOsReadPciConfiguration(ACPI_PCI_ID *PciId, UINT32 Reg, UINT64 *V
     {
         case 8:
             res = RdosReadPciByte(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            res = res & 0xFF;
             break;
 
         case 16:
             res = RdosReadPciWord(PciId->Bus, PciId->Device, PciId->Function, Reg);
+            res = res & 0xFFFF;
             break;
 
         case 32:
