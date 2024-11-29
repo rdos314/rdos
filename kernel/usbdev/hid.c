@@ -3243,17 +3243,6 @@ int GetHidPort(int device)
 
 /*##########################################################################
 #
-#   Name       : Test gate
-#
-##########################################################################*/
-
-#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
-void __far ImplTestGate(const char *msg)
-{
-}
-
-/*##########################################################################
-#
 #   Name       : main
 #
 #   Purpose....: Initialization

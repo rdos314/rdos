@@ -1087,6 +1087,7 @@ void RDOSAPI RdosStopCanCapture();
 void RDOSAPI RdosStartLonCapture(long FileHandle);
 void RDOSAPI RdosStopLonCapture();
 
+int RDOSAPI RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
 int RDOSAPI RdosHasUsbCardReaderError();
 int RDOSAPI RdosHasUsbCardDevReset();
 int RDOSAPI RdosHasUsbCardUsbReset();
