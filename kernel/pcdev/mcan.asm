@@ -986,7 +986,7 @@ scbAdd:
     jmp scbDone
 
 scbFail:
-    int 3
+;    int 3
     stc
 
 scbDone:
