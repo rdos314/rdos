@@ -911,7 +911,7 @@ ReadPhy8169	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WritePhy8169g    Proc near
-    int 3
+;    int 3
     ret
 WritePhy8169g   Endp
 
@@ -929,7 +929,7 @@ WritePhy8169g   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadPhy8169g    Proc near
-    int 3
+;    int 3
     ret
 ReadPhy8169g    Endp
 
@@ -2857,6 +2857,7 @@ mniLoop:
     test ax,IR_RDU OR IR_FOVW
     jz mniNotOv
 ;
+    CrashGate
     and di,NOT (IR_RDU OR IR_ROK OR IR_FOVW)
     mov bx,ds:SuperThread
     Signal
@@ -2908,6 +2909,7 @@ ioniLoop:
     test ax,IR_RDU OR IR_FOVW
     jz ioniNotOv
 ;
+    CrashGate
     and di,NOT (IR_RDU OR IR_ROK OR IR_FOVW)
     mov bx,ds:SuperThread
     Signal

@@ -19,13 +19,17 @@ long long TimeoutCallback(void *param, long long expire)
 
 void main()
 {
-//    char *buf = new char[1024];
+    int count;
 
-//    RdosTestGate(buf);
+    for (;;)
+    {
+        RdosWaitMilli(250);
+        count = RdosGetFreeGdt();
+        printf("GDT: %d\r\n", count);
+    }
 
-    RdosCreateTimerThread();
 
-
+/*
     int handle = open("e:/test.txt", O_RDWR);
     int count;
     char buf[10];
@@ -37,7 +41,7 @@ void main()
 
     close(handle);
 
-
+*/    
 
 
 
