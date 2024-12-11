@@ -9831,7 +9831,7 @@ create_thread32 Endp
 ;
 ;           DESCRIPTION:    Create timer thread
 ;
-;           PARAMETERS:     EBX         Passed to thread
+;           PARAMETERS:     EBX         TLS sel
 ;                           EDX         Passed to thread
 ;                           ES:EDI      Startup of thread
 ;
@@ -9878,7 +9878,7 @@ create_timer_thread   Proc far
     stc
     jz cttDone
 ;
-    push esi
+    mov [ebp].cr_edi,esi
 ;
     mov eax,50
     AllocateSmallGlobalMem
@@ -9933,7 +9933,7 @@ cttNameDone:
     pop es
     FreeMem
 ;
-    pop eax
+    mov eax,1
     clc
 
 cttDone:
