@@ -572,7 +572,7 @@ HasGlobalTimer       MACRO
                                                 ENDM
 
 
-; IN  EBX         Passed to thread
+; IN  EBX         TLS sel passed to thread
 ; IN  EDX         Passed to thread
 ; IN  ES:EDI      Startup of thread
 ; OUT NC          Thread started
@@ -581,8 +581,10 @@ CreateTimerThread       MACRO
         UserGate create_timer_thread_nr
                                                 ENDM
 
-InitUserTimer       MACRO
-        UserGate init_user_timer_nr
+; OUT NC          Has event
+;     CY          Terminate thread
+WaitUserTimerEvent       MACRO
+        UserGate wait_timer_event_nr
                                                 ENDM
 
 ; IN  EBX       Handle
