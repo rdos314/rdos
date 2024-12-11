@@ -151,107 +151,6 @@ FreeUserTimer    Proc near
     pop es
     ret
 FreeUserTimer   Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CREATE_TIMER_THREAD
-;
-;           DESCRIPTION:    Create timer thread
-;
-;           PARAMETERS:     EBX         Passed to thread
-;                           EDX         Passed to thread
-;                           ES:EDI      Startup of thread
-;
-;           RETURNS:        NC          Thread started
-;                           CY          Thread already running
-;                           EAX         Timer object address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_timer_thread_name DB 'Create Timer Thread',0
-
-;    AL              Priority
-;                           AH              Mode, 0=PM, 1=VM, 2=long
-;                           
-;     ECX             Stack size
-;                           DS:(E)SI    Start address
-;                           ES:(E)DI    Thread name
-    
-create_timer_thread   Proc far
-    push ds
-    push fs
-    push esi
-    int 3
-;
-    GetThread
-    mov ds,eax
-    mov fs,ds:p_prog_sel
-    mov ds,ds:p_proc_sel
-    mov esi,ds:pf_timer_linear
-    mov eax,flat_data_sel
-    mov ds,eax
-    mov al,1
-    xchg al,ds:[esi].us_started
-    or al,al
-    stc
-    jnz cttDone
-;
-    push es
-    push esi
-    push edi
-;
-    mov eax,50
-    AllocateSmallGlobalMem
-;
-    push edi
-    mov fs,fs:pr_name_sel
-    xor esi,esi
-    xor edi,edi
-    mov ecx,32
-
-cttNameLoop:
-    lods byte ptr fs:[esi]
-    or al,al
-    jz cttNamePad
-;
-    stosb
-    loop cttNameLoop
-
-cttNamePad:
-    cmp ecx,1
-    jne cttNameTerm
-;
-    dec edi
-
-cttNameTerm:
-    mov al,'@'
-    stosb
-
-cttNameDone:
-    xor al,al
-    stosb
-;
-    pop esi
-;
-    mov ax,3
-    xor edi,edi
-    mov ecx,4000h
-    CreateThread
-;
-    pop edi
-    pop esi
-    pop es
-    clc
-
-cttDone:
-    mov eax,esi
-;
-    pop esi
-    pop fs
-    pop ds
-    ret
-create_timer_thread   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -270,12 +169,6 @@ InitTimer_    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET create_timer_thread
-    mov edi,OFFSET create_timer_thread_name
-    xor dx,dx
-    mov ax,create_timer_thread_nr
-    RegisterBimodalUserGate
     ret
 InitTimer_    Endp
 

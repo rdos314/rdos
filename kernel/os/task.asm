@@ -9823,6 +9823,135 @@ create_thread32 Proc far
     call create_thread
     retf32
 create_thread32 Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CREATE_TIMER_THREAD
+;
+;           DESCRIPTION:    Create timer thread
+;
+;           PARAMETERS:     EBX         Passed to thread
+;                           EDX         Passed to thread
+;                           ES:EDI      Startup of thread
+;
+;           RETURNS:        NC          Thread started
+;                           CY          Thread already running
+;                           EAX         Timer object address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_timer_thread_name DB 'Create Timer Thread',0
+    
+create_timer_thread   Proc far
+    sub esp,32
+    push ebp
+    mov ebp,esp
+    pushf
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov [ebp].cr_seg,es
+    mov [ebp].cr_offs,edi
+    mov word ptr [ebp].cr_prio,3
+    mov dword ptr [ebp].cr_stack,4000h
+    mov word ptr [ebp].cr_mode,0
+;
+    GetThread
+    mov ds,eax
+    mov fs,ds:p_prog_sel
+    mov ds,ds:p_proc_sel
+    mov esi,ds:pf_timer_linear
+    mov eax,flat_data_sel
+    mov ds,eax
+    mov eax,1
+    xchg al,ds:[esi].us_started
+    sub eax,1
+    stc
+    jz cttDone
+;
+    push esi
+;
+    mov eax,50
+    AllocateSmallGlobalMem
+;
+    mov fs,fs:pr_name_sel
+    xor esi,esi
+    xor di,di
+    mov cx,32
+
+cttNameLoop:
+    lods byte ptr fs:[esi]
+    or al,al
+    jz cttNamePad
+;
+    stosb
+    loop cttNameLoop
+
+cttNamePad:
+    cmp cx,1
+    jne cttNameTerm
+;
+    dec di
+
+cttNameTerm:
+    mov al,'@'
+    stosb
+
+cttNameDone:
+    xor al,al
+    stosb
+;
+    push es
+;
+    mov dword ptr [ebp].cr_name,0
+    mov [ebp+4].cr_name,es
+;
+    call allocate_thread_block
+;
+    mov dx,[ebp].cr_prio
+    call init_thread_block
+    mov ax,es
+    mov ds,ax
+    call create_tss32
+    call init_default_regs
+    call add_process_thread
+    call init_prot_thread
+    call init_prot_tss
+;
+    or es:p_flags,THREAD_FLAG_CREATE
+    call wake_new
+;
+    pop es
+    FreeMem
+;
+    pop eax
+    clc
+
+cttDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    add esp,4
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    add esp,2
+    pop ebp
+    add esp,32
+    retf32
+create_timer_thread   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -11790,6 +11919,12 @@ timer_free_list_create:
     mov edi,OFFSET terminate_thread_name
     xor dx,dx
     mov ax,terminate_thread_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET create_timer_thread
+    mov edi,OFFSET create_timer_thread_name
+    xor dx,dx
+    mov ax,create_timer_thread_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET create_process
