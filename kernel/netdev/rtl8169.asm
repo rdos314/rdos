@@ -930,7 +930,7 @@ IoWritePhy8169g    Proc near
     ror eax,16
 ;    
     mov dx,ds:IoBase
-    add dx,REG_PHYAR
+    add dx,REG_GPHY_OCP
 ;
     out dx,eax
     xor cx,cx
@@ -1009,9 +1009,8 @@ MemWritePhy8169g    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WritePhy8169g    Proc near
-    int 3
     cmp dl,1Fh
-    je WritePhy8169gNorm
+    jne WritePhy8169gNorm
 ;
     or ax,ax
     jnz WritePhy8169gSpec
@@ -1022,6 +1021,7 @@ WritePhy8169g    Proc near
 
 WritePhy8169gSpec:
     shl ax,4
+    sub ax,10h
     mov ds:Gphy,ax
     ret
 
@@ -1138,9 +1138,8 @@ MemReadPhy8169g    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadPhy8169g    Proc near
-    int 3
     cmp dl,1Fh
-    je ReadPhy8169gNorm
+    jne ReadPhy8169gNorm
 ;
     mov ax,ds:Gphy
     cmp ax,0A400h
@@ -1151,6 +1150,7 @@ ReadPhy8169g    Proc near
 
 ReadPhy8169gSpec:
     shr ax,4
+    add ax,10h
     ret
 
 ReadPhy8169gNorm:
@@ -2162,19 +2162,13 @@ Config8168h2:
   DW 214h,  0000Ah,  0003Fh
   DW 01Fh,  00000h
 
-  DW 01Fh,  00A43h
+  DW 01Fh,  00A44h
   DW 013h,  00811h
   DW 214h,  00800h,  00000h
-  DW 01Fh,  00A42h
-  DW 216h,  00002h,  00000h
-  DW 01Fh,  00000h
 
-  DW 01Fh,  00A44h
-  DW 211h,  00800h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A44h
-  DW 214h,  00000h,  00080h
+  DW 01Fh,  00A43h
+  DW 013h,  00016h
+  DW 214h,  00002h,  00000h
   DW 01Fh,  00000h
   DW -1
 
@@ -4816,6 +4810,7 @@ io_pci1:
     test eax,IR_SWInt
     jz ioinit_pci1_int_ok
 ;
+    jmp ioinit_pci1_int_ok
     int 3
 ;    
     GetSystemTime    
