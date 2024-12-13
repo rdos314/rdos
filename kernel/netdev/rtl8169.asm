@@ -4217,6 +4217,13 @@ SetSpeed  Proc near
     and ax,NOT (ADV_1000_HALF OR ADV_1000_FULL)
     or di,ax
 ;
+    mov dx,ds:HwId
+    cmp dx,46
+    jne ssUpdate
+;
+    xor di,di
+
+ssUpdate:
     mov dl,4
     mov ax,si
     call ds:WritePhyProc
