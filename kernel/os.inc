@@ -1426,6 +1426,11 @@ GetProcessId    MACRO
     OsGate get_process_id_nr
                     ENDM
 
+;  IN  DS       Timer sel
+InitUserTimer    MACRO
+    OsGate init_user_timer_nr
+                    ENDM
+
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
 ClearSignal     MACRO

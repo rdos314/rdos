@@ -922,4 +922,6 @@ get_kernel_handle_size_nr   = 856
 set_kernel_handle_size_nr   = 857
 get_kernel_handle_time_nr   = 858
 
+init_user_timer_nr          = 859
+
 osgate_entries              = 860

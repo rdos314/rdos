@@ -19,7 +19,9 @@ long long TimeoutCallback(void *param, long long expire)
 
 void main()
 {
-//    RdosCreateTimerThread();
+    RdosCreateTimerThread();
+
+/*
     int count;
 
     for (;;)
@@ -29,6 +31,7 @@ void main()
         printf("GDT: %d\r\n", count);
     }
 
+*/
 
 /*
     int handle = open("e:/test.txt", O_RDWR);
@@ -42,7 +45,7 @@ void main()
 
     close(handle);
 
-*/    
+*/
 
 
 

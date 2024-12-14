@@ -9869,15 +9869,16 @@ create_timer_thread   Proc far
     mov ds,eax
     mov fs,ds:p_prog_sel
     mov ds,ds:p_proc_sel
-    mov esi,ds:pf_timer_linear
-    mov eax,flat_data_sel
-    mov ds,eax
+    mov ds,ds:pf_timer_sel
     mov eax,1
-    xchg al,ds:[esi].us_started
+    xchg al,ds:kt_started
     sub eax,1
     stc
     jz cttDone
 ;
+    InitUserTimer
+    mov esi,ds:kt_user_ptr
+    add esi,1000h
     mov [ebp].cr_edi,esi
 ;
     mov eax,50

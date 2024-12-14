@@ -73,43 +73,27 @@ AllocateUserTimer    Proc near
     mov ds,eax
     mov ds,ds:p_proc_sel
 ;
-    mov eax,2000h
-    AllocateLocalLinear
+    mov eax,kernel_timer_struc
+    AllocateSmallGlobalMem
 ;
-    mov edi,edx
-    mov ecx,800h
-    xor eax,eax
-    rep stosd
+    mov es:kt_kernel_ptr,0
+    mov es:kt_user_ptr,0
+    InitSection es:kt_section
+    mov es:kt_started,0
+    mov es:kt_flags,0
+    mov es:kt_kernel_head,0
+    mov es:kt_user_head,0
 ;
-    add edx,1000h
-    GetPageEntry
-    and ax,0F000h
-    or ax,865h
-    SetPageEntry
-    sub edx,1000h
+    mov edi,OFFSET kt_kernel_list
+    mov ecx,TIMER_ENTRIES
+    xor ax,ax
+    rep stosw
 ;
-    mov cx,system_data_sel
-    mov es,ecx
-    sub edx,es:flat_base
-    mov ds:pf_timer_linear,edx
-;
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-;
-    and ax,0F000h
-    or ax,63h
-    SetPageEntry
-;
-    push ds
-    AllocateLdt
-    pop ds
-;
-    or bx,4
-    mov ecx,1000h
-    CreateDataSelector32
-    mov ds:pf_active_timer_sel,bx
+    mov edi,OFFSET kt_user_list
+    mov ecx,TIMER_ENTRIES
+    xor ax,ax
+    rep stosw
+    mov ds:pf_timer_sel,es
 ;
     popad
     pop es
@@ -137,12 +121,8 @@ FreeUserTimer    Proc near
     GetThread
     mov es,eax
     mov es,es:p_proc_sel
+    mov es,es:pf_timer_sel
 ;
-    mov edx,es:pf_timer_linear
-    mov ecx,2000h
-    FreeLinear
-;
-    mov es,es:pf_active_timer_sel
     FreeMem
 ;
     pop edx
@@ -151,6 +131,93 @@ FreeUserTimer    Proc near
     pop es
     ret
 FreeUserTimer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateUserTimer
+;
+;       DESCRIPTION:    Allocate user timer
+;
+;       PARAMETERS:     DS      Kernel timer struc
+;
+;       RETURN VALUE:   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_user_timer_name  DB 'Init User Timer' ,0
+
+init_user_timer   Proc far
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov ax,flat_sel
+    mov es,eax
+;
+    EnterSection ds:kt_section
+    mov eax,ds:kt_user_ptr
+    or eax,eax
+    jnz iutLeave
+;
+    mov eax,3000h
+    AllocateLocalLinear
+;
+    lea edi,[edx].ut_rw_active.uat_pending_map
+    mov eax,0Fh
+    stosd
+;
+    xor eax,eax
+    mov ecx,7
+    rep stosd
+;
+    lea edi,[edx].ut_rw_active.uat_completed_map
+    mov ecx,8
+    rep stosd
+;
+    lea edi,[edx].ut_rw_active.uat_entries
+    mov ecx,4 * TIMER_ENTRIES
+    rep stosd
+;
+    lea edi,[edx].ut_req.urt_req_map
+    mov ecx,8
+    rep stosd
+;
+    lea edi,[edx].ut_req.urt_done_map
+    mov ecx,8
+    rep stosd
+;
+    lea edi,[edx].ut_req.urt_entries
+    mov ecx,4 * TIMER_ENTRIES
+    rep stosd
+;
+    GetPageEntry
+    and ax,0F000h
+    or ax,863h
+    SetPageEntry
+;
+    add edx,2000h
+    and ax,0F000h
+    or ax,865h
+    SetPageEntry
+    sub edx,2000h
+;
+    mov ax,system_data_sel
+    mov es,eax
+    sub edx,es:flat_base
+;
+    mov ds:kt_user_ptr,edx
+
+iutLeave:
+    LeaveSection ds:kt_section
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+init_user_timer   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -169,6 +236,10 @@ InitTimer_    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+    mov esi,OFFSET init_user_timer
+    mov edi,OFFSET init_user_timer_name
+    mov ax,init_user_timer_nr
+    RegisterOsGate
     ret
 InitTimer_    Endp
 

@@ -203,10 +203,9 @@ pf_exit_code         DW ?
 pf_cur_dir_sel       DW ?
 pf_env_sel           DW ?
 
-pf_active_timer_sel  DW ?
+pf_timer_sel         DW ?
 
 pf_handle_linear     DD ?
-pf_timer_linear      DD ?
 
 pf_virt_flags        DW ?
 pf_wait_sti          DW ?
@@ -417,35 +416,80 @@ debug_event_code        DB ?
 
 debug_event_struc ENDS
 
-user_fifo_timer_entry    STRUC
+kernel_timer_entry       STRUC
 
-ufte_timeout      DD ?,?
-ufte_callback     DD ?
-ufte_param        DD ?
-ufte_id           DD ?
+kte_timeout       DD ?,?
+kte_callback      DD ?,?
 
-user_fifo_timer_entry    ENDS
+kernel_timer_entry       ENDS
 
-user_active_timer_entry    STRUC
+user_timer_entry         STRUC
 
-uate_timeout      DD ?,?
-uate_id           DD ?
+ute_timeout       DD ?,?
+ute_callback      DD ?
+ute_param         DD ?
 
-user_active_timer_entry    ENDS
+user_timer_entry         ENDS
 
-MAX_USER_FIFO_TIMERS  = 200
-MAX_USER_ACTIVE_TIMERS = 340
+TIMER_ENTRIES   = 252
 
-user_timer     STRUC
+kernel_timer_struc  STRUC
 
-us_started      DB ?
-us_resv         DB ?
-us_fifo_count   DW ?
-us_futex        futex_struc <>
-us_fifo_arr     DB MAX_USER_FIFO_TIMERS * SIZE user_fifo_timer_entry DUP(?)
-us_pad          DB 1000h -MAX_USER_FIFO_TIMERS * SIZE user_fifo_timer_entry - SIZE futex_struc - 4 DUP(?)
+kt_kernel_ptr       DD ?
+kt_user_ptr         DD ?
+kt_started          DB ?
+kt_flags            DB ?
+kt_section          section_typ <>
+kt_kernel_head      DW ?
+kt_user_head        DW ?
+kt_kernel_list      DW TIMER_ENTRIES DUP(?)
+kt_user_list        DW TIMER_ENTRIES DUP(?)
 
-us_active_count DD ?
-us_active_arr   DB MAX_USER_ACTIVE_TIMERS * SIZE user_active_timer_entry DUP(?)
+kernel_timer_struc  ENDS
 
-user_timer     ENDS
+kernel_active_timer STRUC
+
+kat_pending_map     DD 8 DUP(?)
+kat_completed_map   DD 8 DUP(?)
+kat_entries         DB 16 * TIMER_ENTRIES DUP(?)
+
+kernel_active_timer ENDS
+
+kernel_req_timer    STRUC
+
+krt_req_map         DD 8 DUP(?)
+krt_done_map        DD 8 DUP(?)
+krt_entries         DB 16 * TIMER_ENTRIES DUP(?)
+
+kernel_req_timer    ENDS
+
+user_active_timer   STRUC
+
+uat_pending_map     DD 8 DUP(?)
+uat_completed_map   DD 8 DUP(?)
+uat_entries         DB 16 * TIMER_ENTRIES DUP(?)
+
+user_active_timer   ENDS
+
+user_req_timer      STRUC
+
+urt_req_map         DD 8 DUP(?)
+urt_done_map        DD 8 DUP(?)
+urt_entries         DB 16 * TIMER_ENTRIES DUP(?)
+
+user_req_timer      ENDS
+
+kernel_timer        STRUC
+
+kt_req              kernel_req_timer <>
+kt_active           kernel_active_timer <>
+
+kernel_timer        ENDS
+
+user_timer          STRUC
+
+ut_rw_active        user_active_timer <>
+ut_req              user_req_timer <>
+ut_ro_active        user_active_timer <>
+
+user_timer          ENDS
