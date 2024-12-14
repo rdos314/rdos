@@ -724,7 +724,8 @@ void RDOSAPI RdosTerminateThread();
 int RDOSAPI RdosGetThreadHandle(void);
 int RDOSAPI RdosGetProcessHandle(void);
 
-void RDOSAPI RdosCreateTimerThread(void);
+int RDOSAPI RdosStartAppTimer(void (*Start)(void *Param), void *Param, long long Timeout);
+int RDOSAPI RdosStopAppTimer(int index);
 
 int RDOSAPI RdosHasGlobalTimer();
 int RDOSAPI RdosGetActiveCores();

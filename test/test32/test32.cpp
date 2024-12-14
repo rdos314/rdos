@@ -12,14 +12,16 @@
 #include "videodev.h"
 #include "table.h"
 
-long long TimeoutCallback(void *param, long long expire)
+void TimeoutCallback(void *param)
 {
-    return 0;
 }
 
 void main()
 {
-    RdosCreateTimerThread();
+    int timer;
+    long long timeout = RdosGetLongSysTime();
+    timer = RdosStartAppTimer(TimeoutCallback, 0, timeout);
+    RdosStopAppTimer(timer);
 
 /*
     int count;
