@@ -1028,5 +1028,6 @@ delete_handle_nr                  = 851
 get_handle_count_nr               = 852
 create_timer_thread_nr            = 853
 wait_timer_event_nr               = 854
+signal_timer_nr                   = 855
 
 usergate_entries                  = 880

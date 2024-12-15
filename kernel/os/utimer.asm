@@ -222,6 +222,159 @@ init_user_timer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddReq
+;
+;       DESCRIPTION:    Add request
+;
+;       PARAMETERS:     DS      Kernel timer struc
+;                       ES:ESI  User timer data
+;                       EBX     Timer #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddReq   Proc near
+    ret
+AddReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartReq
+;
+;       DESCRIPTION:    Start request
+;
+;       PARAMETERS:     DS      Kernel timer struc
+;                       ES:EDX  User timer
+;                       EBX     Timer #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartReq   Proc near
+    pushad
+;
+    mov ecx,ebx
+    shl ecx,4
+    lea esi,[edx].ut_req
+    lea edi,[edx].ut_rw_active
+;
+    GetSystemTime
+    sub eax,es:[esi+ecx].ute_timeout
+    sbb edx,es:[esi+ecx+4].ute_timeout
+    jc srActive
+
+srDone:
+    bts es:[edi].uat_completed_map,ebx
+    lock btc es:[esi].urt_req_map,ebx
+;
+    add esi,ecx
+    add edi,ecx
+    jmp srCopy
+
+srActive:    
+    bts es:[edi].uat_pending_map,ebx
+    lock btc es:[esi].urt_req_map,ebx
+;
+    add esi,ecx
+    add edi,ecx
+    call AddReq
+
+srCopy:
+    mov ecx,4
+    rep movs dword ptr es:[edi],es:[esi]
+;
+    popad
+    ret
+StartReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateReq
+;
+;       DESCRIPTION:    Update requests
+;
+;       PARAMETERS:     DS      Kernel timer struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateReq   Proc near
+    push es
+    pushad
+;
+    mov ax,flat_data_sel
+    mov es,eax
+    mov edx,ds:kt_user_ptr
+    lea esi,[edx].ut_req.urt_req_map
+    mov ecx,8
+    xor ebx,ebx
+
+urLoop:
+    lods dword ptr es:[esi]
+    or eax,eax
+    jz urNext
+;
+    push ecx
+    mov ecx,32
+
+urBitLoop:
+    test al,1
+    jz urBitNext
+;
+    call StartReq
+
+urBitNext:
+    shr eax,1
+    inc ebx
+    loop urBitLoop
+;
+    pop ecx
+    jmp urNextSkip
+
+urNext:
+    add ebx,32
+
+urNextSkip:
+    loop urLoop
+;
+    popad
+    pop es
+    ret
+UpdateReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WaitTimerEvent
+;
+;       DESCRIPTION:    Wait for timer event
+;
+;       RETURN VALUE:   NC          Has event
+;                       CY          Terminate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_timer_event_name  DB 'Wait User Timer Event' ,0
+
+wait_timer_event   Proc far
+    push ds
+    push eax
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_timer_sel
+
+wteLoop:
+    call UpdateReq
+;
+    pop eax
+    pop ds
+    ret
+wait_timer_event   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitTimer
 ;
 ;           DESCRIPTION:    init module
@@ -240,6 +393,12 @@ InitTimer_    Proc near
     mov edi,OFFSET init_user_timer_name
     mov ax,init_user_timer_nr
     RegisterOsGate
+;
+    mov esi,OFFSET wait_timer_event
+    mov edi,OFFSET wait_timer_event_name
+    xor dx,dx
+    mov ax,wait_timer_event_nr
+    RegisterBimodalUserGate
     ret
 InitTimer_    Endp
 

@@ -19,8 +19,7 @@ void TimeoutCallback(void *param)
 void main()
 {
     int timer;
-    long long timeout = RdosGetLongSysTime();
-    timer = RdosStartAppTimer(TimeoutCallback, 0, timeout);
+    timer = RdosStartAppTimer(TimeoutCallback, 0, 1000);
     RdosStopAppTimer(timer);
 
 /*
