@@ -34,7 +34,7 @@ class TLowFuzzySet : public TFuzzyBaseSet
 {
 public:
     TLowFuzzySet(long double Mid, long double High);
-    ~TLowFuzzySet();
+    virtual ~TLowFuzzySet();
 
     virtual long double GetValue(long double val);
     virtual long double GetCenter();

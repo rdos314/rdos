@@ -33,8 +33,8 @@
 class TMidFuzzySet : public TFuzzyBaseSet
 {
 public:
-	TMidFuzzySet(long double Low, long double Mid, long double High);
-    ~TMidFuzzySet();
+    TMidFuzzySet(long double Low, long double Mid, long double High);
+    virtual ~TMidFuzzySet();
 
     virtual long double GetValue(long double val);
     virtual long double GetCenter();

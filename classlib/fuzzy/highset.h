@@ -34,7 +34,7 @@ class THighFuzzySet : public TFuzzyBaseSet
 {
 public:
     THighFuzzySet(long double Low, long double Mid);
-    ~THighFuzzySet();
+    virtual ~THighFuzzySet();
 
     virtual long double GetValue(long double val);
     virtual long double GetCenter();
