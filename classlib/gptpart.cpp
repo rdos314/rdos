@@ -375,7 +375,6 @@ void TGptDiscPartition::ReadOtherGpt()
     struct TPartHeader *PartHeader;
     unsigned int Crc32;
     unsigned int ThisCrc32;
-    struct TPartEntry *EntryData;
     int Valid = FALSE;
     long long Lba = FPartHeader->OtherLba;
 
@@ -891,9 +890,9 @@ int TGptDiscPartition::Add(const char *FsName, long Size, const char *BootCode, 
                 WriteBootSector(Lba, ReqSize, BootCode, BootSize);
 
                 if (!strcmp(FsName, "EFI"))
-                    return RdosFormatDrive(FDisc->GetDiscNr(), Lba, ReqSize, "FAT32");
+                    return RdosFormatDrive(FDisc->GetDiscNr(), (int)Lba, ReqSize, "FAT32");
                 else
-                    return RdosFormatDrive(FDisc->GetDiscNr(), Lba, ReqSize, FsName);
+                    return RdosFormatDrive(FDisc->GetDiscNr(), (int)Lba, ReqSize, FsName);
             }
         }
     }
