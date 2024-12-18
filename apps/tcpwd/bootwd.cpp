@@ -29,10 +29,10 @@
 #include <string.h>
 #include <stdio.h>
 
-void main()
+int main()
 {
     int thread;
-        
+
     RdosSpawn("z:\\tcpwd.exe", "", "d:\\fnm", "", &thread);
 
     for (;;)

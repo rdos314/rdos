@@ -54,7 +54,7 @@ void WriteCommand(TTelnetSocketServer *server, const char *str)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void cdecl main()
+int cdecl main()
 {
     TTelnetSocketServerFactory *Factory = new TTelnetSocketServerFactory(23, 50, 0x4000);
     TWait *Wait = new TWait;

@@ -73,7 +73,7 @@ long GetIwsIp()
         IwsSocket.Push();
 
         startok = FALSE;
-            
+
         while (IwsSocket.WaitForData(2500) && !startok)
         {
             ch = IwsSocket.Read();
@@ -106,9 +106,9 @@ long GetIwsIp()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void cdecl main()
+int cdecl main()
 {
-//    long IwsIp = GetIwsIp();    
+//    long IwsIp = GetIwsIp();
 
     TFtpSocketServerFactory Factory(21, 50, 0x4000);
 
