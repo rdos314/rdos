@@ -50,7 +50,7 @@ TDiscStorage::TDiscStorage(TDisc *Disc)
     {
         FDisc = Disc;
         FStartSector = 0;
-        FSectorCount = Disc->GetTotalSectors();
+        FSectorCount = (int)Disc->GetTotalSectors();
     }
     else
         FSectorCount = 0;
@@ -84,7 +84,7 @@ TDiscStorage::TDiscStorage(TDisc *Disc, long long StartSector, int SectorCount)
             if (Sectors > SectorCount)
                 FSectorCount = SectorCount;
             else
-                FSectorCount = Sectors;
+                FSectorCount = (int)Sectors;
         }
         else
             FSectorCount = 0;

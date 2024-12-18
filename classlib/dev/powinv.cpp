@@ -508,7 +508,6 @@ void TSmartPowInverter::HandleTable(char *str)
 ##########################################################################*/
 void TSmartPowInverter::Execute()
 {
-    char ch;
     int size;
     char *ptr;
     struct hostent *host;

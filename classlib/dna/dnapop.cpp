@@ -368,7 +368,6 @@ void TDnaPopulation::Pairbond(int tries)
     int max;
     int p;
     int score;
-    int ok;
 
     if (FPairArr)
     {
@@ -434,15 +433,11 @@ void TDnaPopulation::Pairbond(int tries)
 void TDnaPopulation::CreateChildren()
 {
     TDnaIndividual **ChildArr;
-    TDnaIndividual *child;
     int NewSize;
     int c;
     int p;
-    int ok;
-    int val;
     int *IndArr;
     int pc;
-    int ind;
 
     NewSize = FSize;
     ChildArr = new TDnaIndividual* [NewSize];
@@ -512,11 +507,9 @@ void TDnaPopulation::CreateChildren()
 void TDnaPopulation::CreateChildren(TDnaEvaluator *eval)
 {
     TDnaIndividual **ChildArr;
-    TDnaIndividual *child;
     int NewSize;
     int c;
     int p;
-    int ok;
     int score1;
     int score2;
     int val;

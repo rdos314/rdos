@@ -53,7 +53,7 @@ TDnaSequence::TDnaSequence(int size)
 	 FSize = size;
 
 	 for (i = 0; i < size; i++)
-		FSeq[i] = Random(4);
+		FSeq[i] = (char)Random(4);
 }
 
 /*##########################################################################

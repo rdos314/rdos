@@ -324,7 +324,6 @@ void TMisolWeather::DecodeData(const char *str, int size)
 {
     const char *ptr = str;
     unsigned char uch;
-    long double dval;
     int val;
     int year, month, day, hour;
     unsigned long msb, lsb;
@@ -466,11 +465,9 @@ void TMisolWeather::DecodeData(const char *str, int size)
 ##########################################################################*/
 void TMisolWeather::Execute()
 {
-    char ch;
     int size;
     int count;
     char buf[40];
-    char *ptr;
     struct hostent *host;
 
     FOnline = false;

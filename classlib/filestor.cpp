@@ -121,7 +121,7 @@ TFileStorage::~TFileStorage()
 ##########################################################################*/
 long TFileStorage::Size()
 {
-	return FFile.GetSize();
+	return (long)FFile.GetSize();
 }
 
 /*##########################################################################

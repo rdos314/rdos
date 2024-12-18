@@ -46,8 +46,6 @@
 ##########################################################################*/
 TDnaMutator::TDnaMutator(int size, long double rate)
 {
-	int i;
-
 	if (rate > 1.0)
 		rate = 1.0;
 
@@ -87,7 +85,6 @@ void TDnaMutator::Mutate(char *seq, int size)
 {
 	int len;
 	int i;
-	long odds;
 	char *baseptr;
 
 	baseptr = seq;
@@ -119,7 +116,7 @@ void TDnaMutator::Mutate(char *seq, int size)
 ##########################################################################*/
 char TDnaMutator::MutateBase(int index, char base)
 {
-	base += Random(3);
+	base += (char)Random(3);
 	if (base >= 4)
 		base -= 4;
 

@@ -467,10 +467,6 @@ void THhcRelay::HandleData()
 ##########################################################################*/
 void THhcRelay::Execute()
 {
-    char ch;
-    int size;
-    char *ptr;
-    int i;
     struct hostent *host;
 
     FOnline = false;

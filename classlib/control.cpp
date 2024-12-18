@@ -1799,7 +1799,6 @@ void TControl::HandleUpdate()
 {
     TDateTime currtime;
     TControl *control;
-    TControl *dcontrol;
     int redrawn;
 
     Protect();
@@ -3510,7 +3509,6 @@ void TDisplayControlThread::DefaultRedraw(TControl *control)
 void TDisplayControlThread::HandleUpdate()
 {
     TControl *control;
-    TControl *dcontrol;
     TDateTime currtime;
 
     Protect();

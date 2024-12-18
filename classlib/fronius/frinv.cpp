@@ -338,7 +338,6 @@ void TFroniusInverter::HandleJson(const char *str)
 ##########################################################################*/
 void TFroniusInverter::Execute()
 {
-    char ch;
     int size;
     char *ptr;
     char *tempptr;
