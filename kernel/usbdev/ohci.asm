@@ -3958,7 +3958,7 @@ bhDone:
     mov ax,5
     WaitMilliSec
     mov eax,fs:HcControl
-    and al,NOT 0C0h
+    and al,3Fh   ; NOT 0C0h
     or al,40h
     mov fs:HcControl,eax
 ;

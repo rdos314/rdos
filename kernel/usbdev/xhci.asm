@@ -5095,19 +5095,19 @@ bhLoop:
     jne bhNext
 ;
     add ebx,edx
-    test ds:[ebx+2],1
+    test byte ptr ds:[ebx+2],1
     jz bhDone
 
 bhRetry:
-    or ds:[ebx+3],1
+    or byte ptr ds:[ebx+3],1
 ;
     mov ax,25
     WaitMilliSec
 ;
-    test ds:[ebx+2],1
+    test byte ptr ds:[ebx+2],1
     jnz bhRetry
 ;
-    test ds:[ebx+3],1
+    test byte ptr ds:[ebx+3],1
     jz bhRetry
     jmp bhDone
 

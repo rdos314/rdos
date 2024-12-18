@@ -348,7 +348,7 @@ mrlPae:
     mov ebx,edx
     and ebx,1FF000h
     or eax,ebx
-    and al,NOT 80h
+    and al,7Fh  ; NOT 80h
     jmp mrlMapFinal
 
 mrlNot2M:
@@ -558,7 +558,7 @@ mwlPae:
     mov ebx,edx
     and ebx,1FF000h
     or eax,ebx
-    and al,NOT 80h
+    and al,7Fh   ; NOT 80h
     jmp mwlMapFinal
 
 mwlNot2M:
