@@ -134,7 +134,7 @@ int is_comment_ml2 (char *buf)
            return (strlen(hi_light[FILE_TYPE].comment_ml2));
       }
    }
-   
+
    return 0;
 }  /* is_comment_ml2 */
 
@@ -150,7 +150,7 @@ int is_comment_sl (char *buf)
            return (strlen(hi_light[FILE_TYPE].comment_sl));
       }
    }
-      
+
    return 0;
 }  /* is_comment_sl */
 
@@ -164,7 +164,7 @@ int ii, jj, rows;
    printf ("loaded syntax file  : \"%s\" \015\012", str_synt);
    printf ("   filetype: extension(s) \015\012");
    rows = 3;
-   
+
    for (jj = 0 ; jj < ACTUAL_NUMBER_FILETYPES ; jj++)
    {
       printf ("         %2d: ", jj);
@@ -181,29 +181,29 @@ int ii, jj, rows;
 
 /* -FF-  */
 
-static reduce_delimiters (int file_index, char *string)
+static void reduce_delimiters (int file_index, char *string)
 {
 size_t ii, jj;
 
    for (ii = 0; ii < strlen(hi_light[file_index].e_delimit); ii++)
    {
-	   for (jj = 0; jj < strlen(string); jj++)
-	   {
-		   if (hi_light[file_index].e_delimit[ii] == string[jj])
-		   {
-			   /* remove this character from the delimiter set */
-			   memcpy(      &hi_light[file_index].e_delimit[ii],
-				            &hi_light[file_index].e_delimit[ii+1],
-					  strlen(hi_light[file_index].e_delimit) - ii);
-		   }
-	   }  /* for jj */
+           for (jj = 0; jj < strlen(string); jj++)
+           {
+                   if (hi_light[file_index].e_delimit[ii] == string[jj])
+                   {
+                           /* remove this character from the delimiter set */
+                           memcpy(      &hi_light[file_index].e_delimit[ii],
+                                            &hi_light[file_index].e_delimit[ii+1],
+                                          strlen(hi_light[file_index].e_delimit) - ii);
+                   }
+           }  /* for jj */
    }  /* for ii */
 }  /* reduce_delimiters */
 
 
 char *get_hi_light_delimiters (int file_index)
 {
-	return hi_light[file_index].e_delimit;
+        return hi_light[file_index].e_delimit;
 }  /* get_hi_light_delimiters */
 
 /* -FF-  */
@@ -268,7 +268,7 @@ long filpos = 0;
    rewind (fp);     /* back to start */
 
    /* create buffer and clear it */
-	hi_light = (HiLight *)malloc (counter * sizeof(HiLight));
+        hi_light = (HiLight *)malloc (counter * sizeof(HiLight));
    if (hi_light != NULL)
    {
       memset (hi_light, 0, (counter * sizeof(HiLight)));
@@ -310,13 +310,13 @@ long filpos = 0;
             counter++;
          }  /* for ;; */
 
-      /* restore the old file position */ 
+      /* restore the old file position */
          fseek(fp, filpos, SEEK_SET);
          fgets (parse_line, sizeof(parse_line), fp);
          strtok(parse_line, " \015\012\011");  /* skip entry */
 
          /* this is the array for the file extension pointer */
-			buffer = (char *)malloc(sizeof(char *) * max(1, counter));
+                        buffer = (char *)malloc(sizeof(char *) * max(1, counter));
          if (buffer != NULL)
          {
             hi_light[FTI].file_ext = (char ***)buffer;
@@ -328,7 +328,7 @@ long filpos = 0;
                if (string == NULL) break;   /* end of line */
                if (*string == ';') break;   /* comment */
 
-					buffer = (char *)malloc(strlen(string) + 1);
+                                        buffer = (char *)malloc(strlen(string) + 1);
                if (buffer != NULL) strcpy (buffer, string);
                hi_light[FTI].file_ext[hi_light[FTI].num_file_ext] =
                                                        (char **)buffer;
@@ -366,7 +366,7 @@ long filpos = 0;
          string = strtok(NULL, " \015\012\011");
          if (string)
          {
-				buffer = (char *)malloc(strlen(string) + 1);
+                                buffer = (char *)malloc(strlen(string) + 1);
             if (buffer != NULL) strcpy (buffer, string);
             hi_light[FTI].comment_ml1 = buffer;
          }
@@ -374,7 +374,7 @@ long filpos = 0;
          string = strtok(NULL, " \015\012\011");
          if (string)
          {
-				buffer = (char *)malloc(strlen(string) + 1);
+                                buffer = (char *)malloc(strlen(string) + 1);
             if (buffer != NULL) strcpy (buffer, string);
             hi_light[FTI].comment_ml2 = buffer;
          }
@@ -386,7 +386,7 @@ long filpos = 0;
          string = strtok(NULL, " \015\012\011");
          if (string)
          {
-				buffer = (char *)malloc(strlen(string) + 1);
+                                buffer = (char *)malloc(strlen(string) + 1);
             if (buffer != NULL) strcpy (buffer, string);
             hi_light[FTI].comment_sl = buffer;
          }
@@ -398,7 +398,7 @@ long filpos = 0;
          string = strtok(NULL, " \015\012\011");
          if (string)
          {
-				buffer = (char *)malloc(strlen(string) + 1);
+                                buffer = (char *)malloc(strlen(string) + 1);
             if (buffer != NULL) strcpy (buffer, string);
             hi_light[FTI].comment_fc = buffer;
          }
@@ -411,7 +411,7 @@ long filpos = 0;
          if (hi_light[FTI].keywords == NULL)    /* 1st time only */
          {
             /* count the total number of keywords for this file_type */
-   
+
             /* get all lines with 'K' until next file_type or EOF */
             counter = 0;
             for (;;)
@@ -428,7 +428,7 @@ long filpos = 0;
                      string = strtok(NULL, " \015\012\011");
                      if (string == NULL) break;   /* end of line */
                      if (*string == ';') break;   /* comment */
-      
+
                      counter++;
                   }  /* for ;; */
                }  /* if 'K' */
@@ -436,17 +436,17 @@ long filpos = 0;
                if (fgets (parse_line, sizeof(parse_line), fp) == NULL)
                   break;  /* EOF */
 
-               strtok(parse_line, " \015\012\011");  /* skip entry */   
+               strtok(parse_line, " \015\012\011");  /* skip entry */
             }  /* for ;; */
-   
-   
-         /* restore the old file position */ 
+
+
+         /* restore the old file position */
             fseek(fp, filpos, SEEK_SET);
             fgets (parse_line, sizeof(parse_line), fp);
             strtok(parse_line, " \015\012\011");  /* skip entry */
 
          /* this is the array for the keyword pointer */
-				buffer = (char *)malloc(sizeof(char *) * max(1, counter));
+                                buffer = (char *)malloc(sizeof(char *) * max(1, counter));
             if (buffer != NULL) hi_light[FTI].keywords = (char ***)buffer;
             hi_light[FTI].num_keywords = 0;
          }  /* 1st time only */
@@ -464,7 +464,7 @@ long filpos = 0;
                if (buffer != NULL) strcpy (buffer, string);
                hi_light[FTI].keywords[hi_light[FTI].num_keywords] =
                                                        (char **)buffer;
-			   reduce_delimiters (FTI, string);
+                           reduce_delimiters (FTI, string);
             }  /* for num_keywords */
          }  /* if buffer */
          else
@@ -680,8 +680,8 @@ struct UPDATE {long start_index;
                int  first_row;
                int  last_row;
                };
-               
-static struct UPDATE update = { 0x7fffffff, 
+
+static struct UPDATE update = { 0x7fffffff,
                                INIT_ROWS,
                                -1 };
 
@@ -720,7 +720,7 @@ void update_entire_window (long top_left)
 }  /* update_entire_window */
 
 
-void perform_update (char FA_HU * buff_0, long byte_anz, 
+void perform_update (char FA_HU * buff_0, long byte_anz,
                      int left_col)
 {
 
@@ -972,7 +972,7 @@ char *nam_ptr;
    len1 = strlen (text1);
 
    sprintf (text3, ",row:%2d,col:%2d,line:%4ld(%4ld),char%s%5ld(%5ld) ",
-                    (fc0->lrow + LINE_OFFSET), fc0->column, 
+                    (fc0->lrow + LINE_OFFSET), fc0->column,
                     (fc0->line_index + LINE_OFFSET), fc0->line_anz+1,
                     chartext, fc0->byte_index, fc0->byte_anz);
    len3 = strlen (text3);
@@ -985,7 +985,7 @@ char *nam_ptr;
    nam_ptr = &filename [nam_ind];
 
 /* form2 = z.B.: "%-20s" */
-   sprintf (text2, form2, nam_ptr); 
+   sprintf (text2, form2, nam_ptr);
 
 /* zusammensetzen */
    assert ((strlen(text1) + strlen(text2)) < sizeof(text1));
@@ -1038,7 +1038,7 @@ char text [LIMIT_COLUMNS];
    push_cursor ();
 
 /* constant string */
-   sprintf (form4, " - %s%s%s - %s - M.Braun ", 
+   sprintf (form4, " - %s%s%s - %s - M.Braun ",
             VERSION_TEXT_1, VERSION_TEXT_2, VERSION_TEXT_3, VERSION_DATE);
    len4 = strlen(form4);
    max_txt_len = max(0,(COLUMNS - len4 - 1));
@@ -1282,17 +1282,17 @@ int delta, start_index0;
    if (delim1)
    {
       /* isolate the token from the text buffer */
-	  memset (token, 0, sizeof(token));
+          memset (token, 0, sizeof(token));
       strncpy(token, buf, min((sizeof(token) - 1),
-		                      (index_2 - index_1)));
+                                      (index_2 - index_1)));
       strtok (token, fc->e_delimit);
-      strtok (token, " \011\015\012");	/* <space>, <tab>, <cr>, <lf> */
-	  len2 = strlen(token);
+      strtok (token, " \011\015\012");  /* <space>, <tab>, <cr>, <lf> */
+          len2 = strlen(token);
 
 #if (SEARCH_HIGH_SPEED)
       start_index0 = start_index (hi_light[FILE_TYPE].num_keywords + 1);
       delta = start_index0;
-   
+
       for (ii = delta-1 ; delta > 0 ;  /* */ )
       {
          if (ii >= hi_light[FILE_TYPE].num_keywords)
@@ -1302,14 +1302,14 @@ int delta, start_index0;
          else
          {
             len1 = hi_light[FILE_TYPE].key_len[ii];
-			len1 = max(len1, len2);
-			len1 = min(len1, (index_2 - index_1));
-			
+                        len1 = max(len1, len2);
+                        len1 = min(len1, (index_2 - index_1));
+
             if (hi_light[FILE_TYPE].case_sensitive)
                help = strncmp (token, (char *)hi_light[FILE_TYPE].keywords[ii], len1);
             else
                help = strnicmp(token, (char *)hi_light[FILE_TYPE].keywords[ii], len1);
-         
+
             if (help == 0)
             {
                return (len1);
@@ -1317,7 +1317,7 @@ int delta, start_index0;
          }
 
          delta >>= 1;           /* shift right 1 bit */
-   
+
          if (help >= 0)         /* successive approximation */
             ii += delta;
          else
@@ -1328,10 +1328,10 @@ int delta, start_index0;
       for (ii = 0 ; ii < hi_light[FILE_TYPE].num_keywords ; ii++)
       {
          len1 = hi_light[FILE_TYPE].key_len[ii];
-		 len1 = max(len1, len2);
-		 len1 = min(len1, (index_2 - index_1));
-      
-		 if (hi_light[FILE_TYPE].case_sensitive)
+                 len1 = max(len1, len2);
+                 len1 = min(len1, (index_2 - index_1));
+
+                 if (hi_light[FILE_TYPE].case_sensitive)
             help = strncmp (token, (char *)hi_light[FILE_TYPE].keywords[ii], len1);
          else
             help = strnicmp(token, (char *)hi_light[FILE_TYPE].keywords[ii], len1);
@@ -1359,11 +1359,11 @@ static int inside_s1, inside_s2, inside_sl, inside_fc, inside_ml;
 
    /* new line in backward direction ? */
    if ((direction == -1) &&
-	   (start_index < max_index))	/* avoid segmentation violation */
+           (start_index < max_index))   /* avoid segmentation violation */
    {
-	   if ((buff[start_index + 1] == 0x0d) ||
-		   (buff[start_index + 1] == 0x0a))
-	      first = 1;
+           if ((buff[start_index + 1] == 0x0d) ||
+                   (buff[start_index + 1] == 0x0a))
+              first = 1;
    }
 
    /* or first call of this ^K command */
@@ -1381,9 +1381,9 @@ static int inside_s1, inside_s2, inside_sl, inside_fc, inside_ml;
       }
       inside_s1 = 0;
       inside_s2 = 0;
-	  inside_sl = 0;
-	  inside_fc = 0;
-	  inside_ml = 0;
+          inside_sl = 0;
+          inside_fc = 0;
+          inside_ml = 0;
 
 
    /* check for inside string */
@@ -1396,22 +1396,22 @@ static int inside_s1, inside_s2, inside_sl, inside_fc, inside_ml;
          if ((is_string_character(buff, ii, max_index) == 2) && (!inside_s1))
             inside_s2 = (inside_s2 + 1) & 0x01;    /* toggle each time */
 
-		 if ((inside_s1 == 0) && (inside_s2 == 0))
-		 {
-		    if (hi_light[FILE_TYPE].comment_sl != NULL)
-		    {
+                 if ((inside_s1 == 0) && (inside_s2 == 0))
+                 {
+                    if (hi_light[FILE_TYPE].comment_sl != NULL)
+                    {
                if (strnicmp(&buff[ii],
-			  	          hi_light[FILE_TYPE].comment_sl,
+                                          hi_light[FILE_TYPE].comment_sl,
                    strlen(hi_light[FILE_TYPE].comment_sl)) == 0)
                {
-			      inside_sl = 1;
+                              inside_sl = 1;
                }
-			}
+                        }
 
-		    if (hi_light[FILE_TYPE].comment_fc != NULL)
-		    {
+                    if (hi_light[FILE_TYPE].comment_fc != NULL)
+                    {
                if (strnicmp(&buff[ii],
-			  	          hi_light[FILE_TYPE].comment_fc,
+                                          hi_light[FILE_TYPE].comment_fc,
                    strlen(hi_light[FILE_TYPE].comment_fc)) == 0)
                {
                   if (start_index == 0)
@@ -1423,44 +1423,44 @@ static int inside_s1, inside_s2, inside_sl, inside_fc, inside_ml;
                      inside_fc = 1;
                   }
                }
-			}
+                        }
 
-		    if (hi_light[FILE_TYPE].comment_ml1 != NULL)
-		    {
+                    if (hi_light[FILE_TYPE].comment_ml1 != NULL)
+                    {
                if (strnicmp(&buff[ii],
-			  	          hi_light[FILE_TYPE].comment_ml1,
+                                          hi_light[FILE_TYPE].comment_ml1,
                    strlen(hi_light[FILE_TYPE].comment_ml1)) == 0)
                {
-			      inside_ml = 1;
+                              inside_ml = 1;
                }
-			}
+                        }
 
-		    if (hi_light[FILE_TYPE].comment_ml2 != NULL)
-		    {
+                    if (hi_light[FILE_TYPE].comment_ml2 != NULL)
+                    {
                if (strnicmp(&buff[ii],
-			  	          hi_light[FILE_TYPE].comment_ml2,
+                                          hi_light[FILE_TYPE].comment_ml2,
                    strlen(hi_light[FILE_TYPE].comment_ml2)) == 0)
                {
-			      inside_ml = 0;
+                              inside_ml = 0;
                }
-		    }
-		 }
-	  }
+                    }
+                 }
+          }
    }  /* if first */
    else
    {
       if ((is_string_character(buff, start_index, max_index) == 1) && (!inside_s2))
          inside_s1 = (inside_s1 + 1) & 0x01;    /* toggle each time */
-      
+
       if ((is_string_character(buff, start_index, max_index) == 2) && (!inside_s1))
          inside_s2 = (inside_s2 + 1) & 0x01;    /* toggle each time */
 
-	  if ((inside_s1 == 0) && (inside_s2 == 0))
-	  {
-	     if (hi_light[FILE_TYPE].comment_sl != NULL)
-	     { 
+          if ((inside_s1 == 0) && (inside_s2 == 0))
+          {
+             if (hi_light[FILE_TYPE].comment_sl != NULL)
+             {
             if (strnicmp(&buff[start_index],
-			           hi_light[FILE_TYPE].comment_sl,
+                                   hi_light[FILE_TYPE].comment_sl,
                 strlen(hi_light[FILE_TYPE].comment_sl)) == 0)
             {
                inside_sl = (direction == 1) ? 1 : 0;
@@ -1468,9 +1468,9 @@ static int inside_s1, inside_s2, inside_sl, inside_fc, inside_ml;
          }
 
          if (hi_light[FILE_TYPE].comment_fc != NULL)
-		 {
+                 {
             if (strnicmp(&buff[start_index],
-			           hi_light[FILE_TYPE].comment_fc,
+                                   hi_light[FILE_TYPE].comment_fc,
                 strlen(hi_light[FILE_TYPE].comment_fc)) == 0)
             {
                if (start_index == 0)
@@ -1482,36 +1482,36 @@ static int inside_s1, inside_s2, inside_sl, inside_fc, inside_ml;
                   inside_fc = 1;
                }
             }
-		 }
+                 }
 
-	     if (hi_light[FILE_TYPE].comment_ml1 != NULL)
-		 {
+             if (hi_light[FILE_TYPE].comment_ml1 != NULL)
+                 {
             if (strnicmp(&buff[start_index],
-			           hi_light[FILE_TYPE].comment_ml1,
+                                   hi_light[FILE_TYPE].comment_ml1,
                 strlen(hi_light[FILE_TYPE].comment_ml1)) == 0)
             {
-				inside_ml = (direction == 1) ? 1 : 0;
+                                inside_ml = (direction == 1) ? 1 : 0;
             }
-	     }
+             }
 
-	     if (hi_light[FILE_TYPE].comment_ml2 != NULL)
-		 {
+             if (hi_light[FILE_TYPE].comment_ml2 != NULL)
+                 {
             if (strnicmp(&buff[start_index],
-			           hi_light[FILE_TYPE].comment_ml2,
+                                   hi_light[FILE_TYPE].comment_ml2,
                 strlen(hi_light[FILE_TYPE].comment_ml2)) == 0)
             {
-				inside_ml = (direction == 1) ? 0 : 1;
+                                inside_ml = (direction == 1) ? 0 : 1;
             }
-	     }
-	  }
+             }
+          }
 
       if ((buff[start_index] == 0x0d) || (buff[start_index] == 0x0a))
       {
          inside_s1 = 0;
          inside_s2 = 0;
-	     inside_sl = 0;
-	     inside_fc = 0;
-	     inside_ml = 0;
+             inside_sl = 0;
+             inside_fc = 0;
+             inside_ml = 0;
       }
    }
 
@@ -1536,8 +1536,8 @@ int ii;
    if (first)
    {
       is_comment = 0;   /* off */
-	  inside_s1  = 0;
-	  inside_s2  = 0;
+          inside_s1  = 0;
+          inside_s2  = 0;
 
       for (ii = start_index; ii >= 0; ii--)
       {
@@ -1547,23 +1547,23 @@ int ii;
          if ((is_string_character(buff_0, ii, max_index) == 2) && (!inside_s1))
             inside_s2 = (inside_s2 + 1) & 0x01;    /* toggle each time */
 
-		 if ((inside_s1 == 0) && (inside_s2 == 0))
-		 {
+                 if ((inside_s1 == 0) && (inside_s2 == 0))
+                 {
             if (strnicmp(&buff_0[ii], hi_light[FILE_TYPE].comment_ml1,
                                strlen(hi_light[FILE_TYPE].comment_ml1)) == 0)
-			{
+                        {
                is_comment = 1;   /* on */
                break;
-			}
+                        }
 
             if((strnicmp(&buff_0[ii],  hi_light[FILE_TYPE].comment_ml2,
                                 strlen(hi_light[FILE_TYPE].comment_ml2)) == 0) &&
                (strnicmp(&buff_0[ii-1],hi_light[FILE_TYPE].comment_ml1,
                                 strlen(hi_light[FILE_TYPE].comment_ml1)) != 0))
-			{
+                        {
                is_comment = 0;   /* off */
                break;
-			}
+                        }
          }
       }  /* for buf */
    }
@@ -1576,21 +1576,21 @@ int ii;
          inside_s2 = (inside_s2 + 1) & 0x01;    /* toggle each time */
 
       if ((inside_s1 == 0) && (inside_s2 == 0))
-	  {
+          {
          if (strnicmp(&buff_0 [start_index],  hi_light[FILE_TYPE].comment_ml1,
                                        strlen(hi_light[FILE_TYPE].comment_ml1)) == 0)
-		 {
+                 {
             is_comment = ((direction == 1) ? 1 : 0);
-		 }
+                 }
 
          if((strnicmp(&buff_0 [start_index],  hi_light[FILE_TYPE].comment_ml2,
                                        strlen(hi_light[FILE_TYPE].comment_ml2)) == 0) &&
             (strnicmp(&buff_0 [start_index-1],hi_light[FILE_TYPE].comment_ml1,
                                        strlen(hi_light[FILE_TYPE].comment_ml1)) != 0))
-		 {
-            is_comment = ((direction == 1) ? 0 : 1); 
-		 }
-	  }
+                 {
+            is_comment = ((direction == 1) ? 0 : 1);
+                 }
+          }
    }
 
    return is_comment;
@@ -1662,7 +1662,7 @@ int single_quote_string;
    {
       if (strnicmp("'",   hi_light[FILE_TYPE].comment_sl,
                    strlen(hi_light[FILE_TYPE].comment_sl)) == 0)
-		  single_quote_string = 0;
+                  single_quote_string = 0;
    }
 
    return single_quote_string;
@@ -1746,7 +1746,7 @@ int len, comment_count_1, comment_count_2;
          attr [min (max (REL_COL, 0), COLUMNS)] |= END_INVERS;
       }
 
-      
+
 #if (WITH_SYNTAX_HIGHLIGHTING)
       if (!comment_type && !inside_keyword)
          is_string = is_string_character(buff_0, index, byte_anz);
@@ -1774,26 +1774,26 @@ int len, comment_count_1, comment_count_2;
       /* check for keyword */
          if ((len = is_keyword (buffer, index, byte_anz)) != 0)
          {
-			if (is_keyword_active ())
-			{
+                        if (is_keyword_active ())
+                        {
                attr [min (max ( REL_COL     , 0), COLUMNS)] |= BEG_KEYWORD;
                attr [min (max ((REL_COL+len), 0), COLUMNS)] |= END_KEYWORD;
-			}
-			inside_keyword = len + 1;
+                        }
+                        inside_keyword = len + 1;
          }
       }
-#endif      
+#endif
 
    /* get character */
       ckey = *buffer;
 
 
 #if (WITH_SYNTAX_HIGHLIGHTING)
-	  /* count down keyword length */
-	  if (inside_keyword)
-	  {
-		 inside_keyword--;
-	  }
+          /* count down keyword length */
+          if (inside_keyword)
+          {
+                 inside_keyword--;
+          }
 
 
       if (!inside_str && !inside_keyword)
@@ -1809,15 +1809,15 @@ int len, comment_count_1, comment_count_2;
                comment_count_2--;
                if (comment_count_2 == 0)
                {
-				  if (is_comment_active ())
-				  {
+                                  if (is_comment_active ())
+                                  {
                      attr [min (max (REL_COL, 0), COLUMNS)] |=  END_COMMENT;
                      attr [min (max (REL_COL, 0), COLUMNS)] &= ~BEG_COMMENT;
-				  }
+                                  }
                   comment_type = 0;
                }
             }
-            
+
          /* c style */
             if (comment_count_1)     /* bugfix 24.04.03 */  /*/ this is now a comment */
             {
@@ -1835,7 +1835,7 @@ int len, comment_count_1, comment_count_2;
                   }
                }
             }
-         }   
+         }
 
          if (comment_type == 2)
          {
@@ -1843,13 +1843,13 @@ int len, comment_count_1, comment_count_2;
             if (ckey == EOLN_LOW)
             {
                if (is_comment_active ())
-			   {
+                           {
                   attr [min (max (REL_COL, 0), COLUMNS)] |=  END_COMMENT;
                   attr [min (max (REL_COL, 0), COLUMNS)] &= ~BEG_COMMENT;
-			   }
+                           }
                comment_type = 0;
             }
-         }   
+         }
 
       /* begin of comment ? */
          if (comment_type == 0)
@@ -1861,10 +1861,10 @@ int len, comment_count_1, comment_count_2;
                             strlen(hi_light[FILE_TYPE].comment_ml1)) == 0)
                {
                   if (is_comment_active ())
-				  {
+                                  {
                      attr [min (max (REL_COL, 0), COLUMNS)] |=  BEG_COMMENT;
                      attr [min (max (REL_COL, 0), COLUMNS)] &= ~END_COMMENT;
-				  }
+                                  }
                   comment_type = 1;
                   comment_count_1 = strlen(hi_light[FILE_TYPE].comment_ml1);
                }
@@ -1877,10 +1877,10 @@ int len, comment_count_1, comment_count_2;
                             strlen(hi_light[FILE_TYPE].comment_sl)) == 0)
                {
                   if (is_comment_active ())
-				  {
+                                  {
                      attr [min (max (REL_COL, 0), COLUMNS)] |=  BEG_COMMENT;
                      attr [min (max (REL_COL, 0), COLUMNS)] &= ~END_COMMENT;
-				  }
+                                  }
                   comment_type = 2;
                }
             }
@@ -1890,26 +1890,26 @@ int len, comment_count_1, comment_count_2;
             {
                if (strnicmp(buffer,hi_light[FILE_TYPE].comment_fc,
                             strlen(hi_light[FILE_TYPE].comment_fc)) == 0)
-			   {
-				  if (buffer == buff_0)
-				  {
+                           {
+                                  if (buffer == buff_0)
+                                  {
                      if (is_comment_active ())
-					 {
+                                         {
                         attr [min (max (REL_COL, 0), COLUMNS)] |=  BEG_COMMENT;
                         attr [min (max (REL_COL, 0), COLUMNS)] &= ~END_COMMENT;
-					 }
+                                         }
                      comment_type = 2;
-				  }
-				  else if ((buffer[-1] == 0x0d) || (buffer[-1] == 0x0a))
-				  {
+                                  }
+                                  else if ((buffer[-1] == 0x0d) || (buffer[-1] == 0x0a))
+                                  {
                      if (is_comment_active ())
-					 {
+                                         {
                         attr [min (max (REL_COL, 0), COLUMNS)] |=  BEG_COMMENT;
                         attr [min (max (REL_COL, 0), COLUMNS)] &= ~END_COMMENT;
-					 }
+                                         }
                      comment_type = 2;
-				  }
-			   }
+                                  }
+                           }
             }
          }
       }
@@ -1940,7 +1940,7 @@ int len, comment_count_1, comment_count_2;
       }
 
    /* is this char '@' mark 0 for Buffer/Delete ? */
-      if ((save_d.toggle) && 
+      if ((save_d.toggle) &&
           (index == save_d.index0))
          mark_0_flag = 1;
       else
@@ -1966,7 +1966,7 @@ int len, comment_count_1, comment_count_2;
          if ((REL_COL >= 0) && (REL_COL < COLUMNS))   /* @@ vorher: -1 */
          {
          /* '@' mark for Buffer/Delete */
-            if ((mark_0_flag) && 
+            if ((mark_0_flag) &&
                 (char_cnt == 0))
             {
                text [REL_COL] = '@';        /* buffer, mark 0 */
@@ -1975,12 +1975,12 @@ int len, comment_count_1, comment_count_2;
             {
                if ((mb_isprint (ckey)) ||    /* normal printable */
                    (ckey & 0x80))            /* umlaute, usw */
-                  text [REL_COL] = ckey;   
+                  text [REL_COL] = ckey;
                else
                   text [REL_COL] = '?';      /* control char */
             }
          }
-   
+
          column++;
       }  /* for char_cnt */
 
@@ -2001,7 +2001,7 @@ int len, comment_count_1, comment_count_2;
       text [COLUMNS-1] = '!';
 
 /* buffer, mark 1 ? */
-   if ((save_d.toggle) && 
+   if ((save_d.toggle) &&
        (row == fc->lrow))
    {
       col_diff = fc->column - left_col;
@@ -2055,7 +2055,7 @@ char l_text [80];
    while (return_value == -1)
    {
       *key = get_1_key (1);
-   
+
       if (mb_isdigit (*key))
       {
          help = 10 * new_value + (*key - '0');
@@ -2166,17 +2166,17 @@ int ii, jj;
                new_len = strlen (R_TAB);
                memcpy (str_mod, R_TAB, new_len);
                break;
-   
+
             case 0x03:   /* ^C */
                new_len = strlen (R_CTLC);
                memcpy (str_mod, R_CTLC, new_len);
                break;
-   
+
             case '\0':   /* end of string */
                new_len  = 1;
                *str_mod = *str_buf;
                break;
-   
+
             default:
                if ((mb_isprint  (*str_buf)) ||
                    ((*str_buf) & 0x80))
@@ -2210,7 +2210,7 @@ int ii, jj;
    help [BUF_256 - 1] = '\0';
 
    return help;
-   
+
 }  /* build_modified_string */
 
 /* -FF-  */
@@ -2256,7 +2256,7 @@ char *hist_adr;
 
    /* take original buffer in temp */
       memcpy (tmp_buf, str_buf, sizeof(tmp_buf));
-   
+
    /* laenge von "text" ueberpruefen */
       str_len_1 = strlen (text);
       if (str_len_1 >= (TEXT_RESERVE - 1 - EXTRA_CHARS))
@@ -2264,7 +2264,7 @@ char *hist_adr;
          err_message (STRING_TOO_LONG);
          text [0] = '\0';    /* clear text string */
       }
-      
+
    /* get new string */
       last_key = 0;
       for (/* hier nicht: index1 = 0 !! */ ;
@@ -2281,38 +2281,38 @@ char *hist_adr;
          }
 
          sprintf (l_text, "%s\"%s\"", text, str_mod);
-   
+
          if (index1 == 0)
             justify = 2;
          else
             justify = 0;
-         
-         show_status_line_2 (l_text, justify, 
+
+         show_status_line_2 (l_text, justify,
                              (str_len_1 + EXTRA_CHARS + index2), 0);
-   
+
       /* get command */
          key = get_1_key (1);
-   
+
       /* abort function ? */
          if (key == 0x03)               /* ^C                           */
          {
             return_val = 0;             /* invalid, don't use result    */
             break;
          }
-   
+
       /* input finished ? */
          if (key == 0x1b)               /* <esc> */
          {
             break;                      /* take whole line */
          }
-   
+
          if ((key == end_char) &&
              (end_char == C_R))          /* <cr> */
          {
             tmp_buf [index1] = '\0';     /* take line up to cursor position */
             break;
          }
-   
+
       /* keep old string ? */
          if (first == 0)
          {
@@ -2336,7 +2336,7 @@ char *hist_adr;
                tmp_buf [1] = '\0';
             }
          }
-   
+
       /* handle inputs */
          if ((key >= 0) &&
              (mb_isprint (key) || (key & 0x80)))
@@ -2348,7 +2348,7 @@ char *hist_adr;
             else
             {
                help = strlen (tmp_buf) - index1 + 1;
-               memcpy_rev ((char FA_HU *)(&tmp_buf[index1+1]), 
+               memcpy_rev ((char FA_HU *)(&tmp_buf[index1+1]),
                            (char FA_HU *) &tmp_buf[index1],
                            (long)         help);
                tmp_buf [index1] = (char) key;
@@ -2364,12 +2364,12 @@ char *hist_adr;
                   if ((hist_adr = get_history_buffer (id)) != NULL)
                   {
                      memcpy (tmp_buf, hist_adr, BUF_256);
-   
+
                   /* forced end of string */
                      tmp_buf [BUF_256 - 1] = '\0';
                      index1 = strlen (tmp_buf);
                   }
-   
+
                /* clean space of history window */
 #if 0
                   perform_view ();
@@ -2377,7 +2377,7 @@ char *hist_adr;
                   refresh_whole_screen ();
 #endif
                   break;
-   
+
                case KEY_LEFT:
                   last_key = 1;
                   byte_num = 1;
@@ -2389,7 +2389,7 @@ char *hist_adr;
                   if (index1 > (byte_num - 1))
                      index1 -= byte_num;
                   break;
-   
+
                case KEY_RIGHT:
                   last_key = 2;
                   byte_num = 1;
@@ -2420,7 +2420,7 @@ char *hist_adr;
                   index1 = strlen(tmp_buf);
                   break;
 #endif
-   
+
                case 0x04:          /* ^D    */
                   if (index1 > 0)
                   {
@@ -2429,7 +2429,7 @@ char *hist_adr;
                      index1++;
                   }
                   break;
-   
+
                case 0x08:          /* backspace */
 #if (ACT_OP_SYSTEM != SCO_UNIX)
                case KEY_RUBOUT:    /* rubout */
@@ -2447,7 +2447,7 @@ char *hist_adr;
                      memcpy ((&tmp_buf[index1]), &tmp_buf[index1+byte_num], help);
                   }
                   break;
-   
+
                case 0x06:          /* ^F */
                case KEY_DEL:       /* delete */
 #if (ACT_OP_SYSTEM == SCO_UNIX)
@@ -2462,36 +2462,36 @@ char *hist_adr;
                   help = strlen (tmp_buf) - index1 - (byte_num - 1);
                   memcpy ((&tmp_buf[index1]), &tmp_buf[index1+byte_num], help);
                   break;
-   
+
                case 0x18:          /* ^X */
                   memcpy (sav_buf, tmp_buf, BUF_256);
                   sav_index = index1;
-   
+
                   help = strlen (tmp_buf) - index1 + 1;
                   memcpy ((&tmp_buf[0]), &tmp_buf[index1], help);
                   index1 = 0;
                   break;
-         
+
                case 0x01:          /* ^A */
                   memcpy (sav_buf, tmp_buf, BUF_256);
                   sav_index = index1;
-   
+
                   tmp_buf [index1] = '\0';
                   break;
-   
+
                case 0x1a:          /* ^Z */
                   memcpy (sav_buf, tmp_buf, BUF_256);
                   sav_index = index1;
-   
+
                   index1 = 0;
                   tmp_buf [index1] = '\0';
                   break;
-   
+
                case 0x15:          /* ^U */
                   memcpy (tmp_buf, sav_buf, BUF_256);
                   index1 = sav_index;
                   break;
-   
+
                case 0x0d0a:        /* <cr><lf> */
                   help = strlen (tmp_buf) - index1 + 1;
                   memcpy_rev ((char FA_HU *)(&tmp_buf[index1 + 2]),  /* 2 new */
@@ -2513,7 +2513,7 @@ char *hist_adr;
                   tmp_buf [index1] = (char) key;
                   index1++;
                   break;
-   
+
                case 0x12:          /* ^R */
                   key_1 = get_hex_value ();
                   if ((key_1 == TILDE_7E) && (set.tilde_home))
@@ -2525,7 +2525,7 @@ char *hist_adr;
                      if (key_1 >= 0)
                      {
                         help = strlen (tmp_buf) - index1 + 1;
-                        memcpy_rev ((char FA_HU *)(&tmp_buf[index1+1]), 
+                        memcpy_rev ((char FA_HU *)(&tmp_buf[index1+1]),
                                     (char FA_HU *) &tmp_buf[index1],
                                     (long)         help);
                         tmp_buf [index1] = (char) key_1;
@@ -2538,7 +2538,7 @@ char *hist_adr;
                      }
                   }
                   break;
-   
+
                case 0x0e:          /* ^N */
                case 0x13:          /* ^S */
                case 0x16:          /* ^V */
@@ -2548,7 +2548,7 @@ char *hist_adr;
                case KEY_DO_NOTHING:
                case SEQU_EM:          /* new ! 25.10.96 */
                   break;
-   
+
                default:
                   str_hlp = key_2_string (key);
                   len_hlp = strlen (str_hlp);
@@ -2567,7 +2567,7 @@ char *hist_adr;
                   break;
             }  /* switch key */
          }
-   
+
       /* new end of string */
          help = strlen (tmp_buf);
          tmp_buf [help+1] = '\0';
@@ -2576,13 +2576,13 @@ char *hist_adr;
       if (return_val)
       {
       /* end of input or reached max. string length */
-      
+
       /* copy temp buffer to original */
          memcpy (str_buf, tmp_buf, sizeof(tmp_buf));
          save_history_string (id, str_buf);
-      
+
 #if (!WILD_NAMES)
-         return_val = 1;      
+         return_val = 1;
 #else
          if (id != ID_FILE)
          {
@@ -2592,7 +2592,7 @@ char *hist_adr;
          {
             if ((wildcard_filename (str_buf)) == 0)
                return_val = 1;
-   
+
             index1 = strlen (str_buf);
          }
 #endif
@@ -2637,7 +2637,7 @@ int row, column;
       if (mb_isxdigit (key_1))
       {
          value *= 0x10;
-   
+
          if (mb_isdigit (key_1))
             value += (key_1 - '0');                /* ziffer */
          else
@@ -2730,7 +2730,7 @@ int  temp_radix, ii, byte_1;
             {
                case ERROR :
                   break;
-                 
+
                case VALUE :
                   value = calc_result.item.val;
                   if (mode_flag)
@@ -2742,7 +2742,7 @@ int  temp_radix, ii, byte_1;
                      temp_radix = 'D';
                      value = labs (value);
                   }
-  
+
                   switch (temp_radix)
                   {
                      case 'A':
@@ -2750,7 +2750,7 @@ int  temp_radix, ii, byte_1;
                         {
                            byte_1 = (int) (value & 0xff);
                            if ((byte_1 == 0) && (ii > 0)) break;
-  
+
                            if (mode_flag == 1)
                               perform_key_insert   (byte_1, 0);
                            else
@@ -2760,12 +2760,12 @@ int  temp_radix, ii, byte_1;
                         }
                         fc->change_flag = 1;
                         return 1;
-  
+
                      case 'B': ltoa (value, string,  2); break;
                      case 'D': ltoa (value, string, 10); break;
                      case 'H': ltoa (value, string, 16); break;
                      case 'O': ltoa (value, string,  8); break;
-  
+
                      default:  break;
                   }
                   set_string_buff (string, strlen (string));
@@ -2795,7 +2795,7 @@ int  temp_radix, ii, byte_1;
 
          key_1 = get_1_key (1);
          key_1 = toupper (key_1);
-         switch (key_1) 
+         switch (key_1)
          {
             case 'B':    /* Block Buffer */
                str_ptr = get_save_buffer ();    /* in blocks.c */
@@ -2803,7 +2803,7 @@ int  temp_radix, ii, byte_1;
                break;
 
             case 'E':    /* Edit <filename> */
-               str_ptr = fc->filename; 
+               str_ptr = fc->filename;
                str_len = strlen (str_ptr);
                break;
 
@@ -2868,14 +2868,14 @@ int  temp_radix, ii, byte_1;
                {
                   case ERROR :
                      break;
-                 
+
                   case STRING :
                      str_ptr = calc_result.item.str;
                      str_len = strlen (str_ptr);
                      break;
                }
                break;
-               
+
             default:
                str_ptr = "";
                str_len = 0;
@@ -2943,7 +2943,7 @@ static int attr_save;                           /* bugfix 1 - 06.08.02 */
    }
    else
    {
-	   attribute &= ~(BEG_KEYWORD | BEG_STRING);    /* switch OFF some attributes */
+           attribute &= ~(BEG_KEYWORD | BEG_STRING);    /* switch OFF some attributes */
    }
 
 /* convert attr from slope indication to static flags */
@@ -3009,18 +3009,18 @@ static int attr_save;                           /* bugfix 1 - 06.08.02 */
    {                                         /* yes */
    /* move cursor to begin of modified area */
       set_cursor_to (row, (column + i1));
-   
+
    /* save new string in buffer */
       strncpy (text_buff [index], text, sizeof (text_buff [index]));
       memcpy  (attr_buff [index], attr, sizeof (attr_buff [index]));
-   
+
    /* set end of string */
       text [i2+1] = '\0';
-   
+
    /* string output */
       out_string_attr (&text [i1], &attr [i1], attr_save);
       attr_save = attr_mode;
-   
+
    /* restore end of string */
       text [i2+1] = text_buff [index][i2+1];
    }
@@ -3186,7 +3186,7 @@ int  dummy;
 
    if (find_count == 0)
    {
-      sprintf (line, "not found: \"%s\"", 
+      sprintf (line, "not found: \"%s\"",
                       build_modified_string (string, 0, &dummy, &dummy));
    }
    else
@@ -3218,14 +3218,14 @@ char empty_line [3];
 /* first call ? */
    if (first_call)
       local_row = 0;
-      
+
 /* display full screen ? */
    if (((command == '?') && (!all_flag)) ||    /* ?Replace or */
        (last_call && first_call))              /* single call */
    {
       if (get_video_active (0))
          set_cursor_to (fc->lrow, fc->column);
-   
+
       switch (toupper (command))
       {
          case 'F':      /* Find */
@@ -3235,7 +3235,7 @@ char empty_line [3];
                if (set.wildcards)
                   update_entire_window (fc->top_left);
             break;
-   
+
          case '-':      /* -Find */
             if (fc->lrow <= MIN_ROW)
                perform_view ();
@@ -3243,7 +3243,7 @@ char empty_line [3];
                if (set.wildcards)
                   update_entire_window (fc->top_left);
             break;
-   
+
          case '?':      /* ?Replace */
             show_status_line_1 (get_line_1_text (), fc);
             /* fall through */
@@ -3253,14 +3253,14 @@ char empty_line [3];
                update_entire_window (fc->top_left);
             else
                update_this_line (fc->lin_left, fc->lrow);
-   
+
             if (fc->lrow >= MAX_ROW)
                perform_view ();
             else
                perform_update (fc->buff_0, fc->byte_anz,
                                fc->left_col);
             break;
-   
+
          default:
             break;
       }
@@ -3367,7 +3367,7 @@ byte char1;
    /* adress */
       sprintf (&line[1], "%06lX", i1);
       line [7] = ' ';
-   
+
    /* data */
       for (ii = i1 ; ii < min (i2, i1+16) ; ii++)
       {
@@ -3421,7 +3421,7 @@ int row;
    set_cursor_to (MIN_ROW, 0);
    set_invers_mode ();
 /*               " 000000   00 00 00 00  00 00 00 00  00 00 00 00  00 00 00 00   0000000000000000 " */
-   sprintf (line," Adress   ----------------------Hex Data--------------------   ---ASCII Data--- "); 
+   sprintf (line," Adress   ----------------------Hex Data--------------------   ---ASCII Data--- ");
 
 /* forced limitation of line */
    if (COLUMNS < LINE_LEN)
@@ -3492,7 +3492,7 @@ back_again:
       if (line_2_flag >= 1)
          line_2_flag--;
 
-   
+
       push_cursor ();
 
    /* check limits */
@@ -3509,7 +3509,7 @@ back_again:
          if (start_ind != old_start_ind)
             hex_one_screen (start_ind, fc->byte_anz);
          old_start_ind = start_ind;
-   
+
       /* cursor to position action_flag */
          set_cursor_to ((BOT_ROW - 1), 0);
       }
@@ -3593,7 +3593,7 @@ back_again:
             old_start_ind = -1;
             break;
 
-         case 'Y':    /* File Compare A/B */  
+         case 'Y':    /* File Compare A/B */
             perform_file_compare ();
             line_2_flag = 2;
             start_ind = fc->byte_index;
@@ -3656,7 +3656,7 @@ byte value;
       {
          perform_move (act_ind);
          show_status_line_1 (get_line_1_text (), fc);
-   
+
       /* display screen new, if modified */
 #if 0
       /* das geht immer, ist aber zu langsam */
@@ -3676,13 +3676,13 @@ byte value;
             char_modified = 0;
          }
 #endif
-   
+
          old_start_ind = start_ind;
-   
+
       /* cursor to act_ind position */
          delt_ind = (int)(act_ind - start_ind);
          row = START_ROW + (delt_ind >> 4);
-   
+
          help_ind = delt_ind & 0x0f;
          if (side)
             col = 63 + help_ind;                                 /* ASCII side */

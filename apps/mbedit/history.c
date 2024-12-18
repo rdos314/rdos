@@ -55,7 +55,7 @@
 
 struct HIST {char delete_protected;
              char text [BUFFER_SIZE];
-			};
+                        };
 
 static struct HIST hist [HIST_NUM] [HIST_SIZE];
 
@@ -75,7 +75,7 @@ static const char semi_grafik [] [4]      /* 2. index = 0 : ASCII  */
                                           /*          = 3 : ANSI   */
                 = {  /*  0           1     2    3   */
    /* DEL_PROT_CHAR */  '*',  (char)254,  '*', '*',   /* 0xfe */
-                                               
+
    /* GR_TOP_LEFT   */  '+',  (char)218,  'l', 'Z',   /* 0xda */
    /* GR_TOP_RIGHT  */  '+',  (char)191,  'k', '?',   /* 0xbf */
    /* GR_BOT_LEFT   */  '+',  (char)192,  'm', '@',   /* 0xc0 */
@@ -85,7 +85,7 @@ static const char semi_grafik [] [4]      /* 2. index = 0 : ASCII  */
    /* GR_TICK_LEFT  */  '+',  (char)180,  'u', 'C',   /* 0xb4 */
    /* GR_TICK_DOWN  */  '+',  (char)194,  'w', 'B',   /* 0xc2 */
    /* GR_TICK_UP    */  '+',  (char)193,  'v', 'A',   /* 0xc1 */
-                                                     
+
    /* GR_VERTICAL   */  '|',  (char)179,  'x', '3',   /* 0xb3 */
    /* GR_HORIZONT   */  '-',  (char)196,  'q', 'D',   /* 0xc4 */
    /* GR_CROSS      */  '+',  (char)197,  'n', 'E'    /* 0xc5 */
@@ -105,7 +105,7 @@ enum SEMIGRAF_INDEX
          IND_GR_TICK_DOWN,
          IND_GR_TICK_UP,
 
-		 IND_GR_VERTICAL,
+                 IND_GR_VERTICAL,
          IND_GR_HORIZONT,
          IND_GR_CROSS
        };
@@ -117,12 +117,12 @@ enum SEMIGRAF_INDEX
 #define GR_TOP_RIGHT   (semi_grafik [IND_GR_TOP_RIGHT]  [graf_index])
 #define GR_BOT_LEFT    (semi_grafik [IND_GR_BOT_LEFT]   [graf_index])
 #define GR_BOT_RIGHT   (semi_grafik [IND_GR_BOT_RIGHT]  [graf_index])
-   
+
 #define GR_TICK_RIGHT  (semi_grafik [IND_GR_TICK_RIGHT] [graf_index])
 #define GR_TICK_LEFT   (semi_grafik [IND_GR_TICK_LEFT]  [graf_index])
 #define GR_TICK_DOWN   (semi_grafik [IND_GR_TICK_DOWN]  [graf_index])
 #define GR_TICK_UP     (semi_grafik [IND_GR_TICK_UP]    [graf_index])
-   
+
 #define GR_VERTICAL    (semi_grafik [IND_GR_VERTICAL]   [graf_index])
 #define GR_HORIZONT    (semi_grafik [IND_GR_HORIZONT]   [graf_index])
 #define GR_CROSS       (semi_grafik [IND_GR_CROSS]      [graf_index])
@@ -131,7 +131,7 @@ enum SEMIGRAF_INDEX
 static int graf_index = (ACT_SERVER == SERVER_VT_100);
 
 /* only one array for all functions: NEW !! 23.06.94 */
-static char pathname [BUF_256 + FILENAME_LEN]; 
+static char pathname [BUF_256 + FILENAME_LEN];
 
 
 /****************************************************************
@@ -146,7 +146,7 @@ static char pathname [BUF_256 + FILENAME_LEN];
 
    format of entries in (binary) history-file :
    ============================================
-   
+
    3 1:the quick brown fox ...'\0'<cr><lf>
    | |||                      |   |
    | |||                      |   +-- for possible editing with any text-editor
@@ -205,7 +205,7 @@ int row, col;
    out_1_char (GR_TOP_LEFT, 1);
    for (col = (left + 1) ; col < right ; col++)
    {
-	  out_1_char (GR_HORIZONT, 1);
+          out_1_char (GR_HORIZONT, 1);
    }
    out_1_char (GR_TOP_RIGHT, 1);
 
@@ -255,12 +255,12 @@ int row, col;
 #endif
 
    if (graf_index >= 2)
-	  set_grafik_off (graf_index-2);
+          set_grafik_off (graf_index-2);
 
    pop_cursor ();
 
    return;
-   
+
 }  /* plot_rectangle */
 
 /* -FF-  */
@@ -300,8 +300,8 @@ int  entry, max_len, dummy, len;
 
 /* begrenzen */
    max_len = max (max_len, HIST_MIN_LEN);
-   max_len = min (max_len, HIST_MAX_LEN);   
-   max_len = min (max_len, (COLUMNS - 5));  
+   max_len = min (max_len, HIST_MAX_LEN);
+   max_len = min (max_len, (COLUMNS - 5));
 
    window_length = max_len + 1;   /* 1 byte for DELETE_PROT_CHAR */
 
@@ -380,7 +380,7 @@ int ii;
 
 /* cursor to end of line */
    if (select_flag)
-	  set_cursor_to (row, right);
+          set_cursor_to (row, right);
 
    pop_cursor ();
 
@@ -430,7 +430,7 @@ char *return_text = NULL;
             break;
 
 #if (ACT_OP_SYSTEM == SCO_UNIX)
-		 case KEY_RUBOUT:    /* rubout */
+                 case KEY_RUBOUT:    /* rubout */
 #endif
          case KEY_DEL:
             if (hist [id][entry].delete_protected)
@@ -455,7 +455,7 @@ char *return_text = NULL;
                hist [id][entry].delete_protected++;   /* toggle protect mode */
                hist [id][entry].delete_protected &= 1;
                print_history_line (id, entry, 1, 0);
-			   write_history_file (0);
+                           write_history_file (0);
             }
             break;
 
@@ -561,7 +561,7 @@ char *str_ptr;
             err_flag = 1;  /* line to long */
             continue;
          }
-         
+
       /* line_buf auswerten */
          if (key == EOF)
          {
@@ -570,7 +570,7 @@ char *str_ptr;
          else
          {
             sscanf (line_buf, "%d %d", &id, &delete_prot);
-   
+
             if ((id >= 0) && (id < HIST_NUM))
             {
             /* search for begin of string (1.st char after ':') */
@@ -587,7 +587,7 @@ char *str_ptr;
                   continue;
                }
                str_ptr++;
-      
+
                if (id != old_id)    /* new id ? */
                {
                   old_id = id;
@@ -604,10 +604,10 @@ char *str_ptr;
             /* no errors occured */
                hist [id][entry].delete_protected = (char) delete_prot;
                memcpy (hist [id][entry].text, str_ptr, max_text);
-   
-			/* forced end of string */
+
+                        /* forced end of string */
                hist [id][entry].text [max_text - 1] = '\0';
-   
+
             /* count up */
                entry = (entry + 1) % HIST_SIZE;
             }
@@ -663,12 +663,12 @@ char *text_ptr;
       if (file_modified)
       {
          show_status_line_2 ("*** writing history file ***", 0, -2, 0);
-      
+
       /* build filename */
          strcpy (pathname, HOME_DIR);
          strcat (pathname, FILE_SEPARATOR);
          strcat (pathname, HISTO_FILENAME);
-      
+
       /* open file */
          fp = fopen (pathname, "wb");
          if (fp == NULL)           /* file doesn't exist */
@@ -680,7 +680,7 @@ char *text_ptr;
          /* write history entries */
             for (id = 0 ; id < HIST_NUM ; id++)
             {
-			   for (entry = 0 ; entry < HIST_SIZE ; entry++)
+                           for (entry = 0 ; entry < HIST_SIZE ; entry++)
                {
                   text_ptr = hist [id][entry].text;
                   if (*text_ptr)
@@ -705,10 +705,10 @@ char *text_ptr;
             show_status_line_2 ("*** history file written ***", 0, -2, 0);
          }
 
-		 file_modified = 0;  /* reset flag */
+                 file_modified = 0;  /* reset flag */
       }
    }
-   
+
    return 1;  /* o.k. */
 
 #endif
@@ -750,7 +750,7 @@ STATIC char line_buf [BUF_256];
       show_status_line_2 ("*** reading status file ***", 0, -2, 0);
 
    /* loop for all entries */
-      
+
       for (file = 0 ; file < MAX_FC_NUM ; file++)
       {
          if (fgets (line_buf, sizeof(line_buf), fp) == NULL)
@@ -780,7 +780,7 @@ STATIC char line_buf [BUF_256];
       }
       else
       {
-		 show_status_line_2 ("*** got status file ***", 0, -2, 0);
+                 show_status_line_2 ("*** got status file ***", 0, -2, 0);
          return 1;   /* o.k. */
       }
    }
@@ -830,13 +830,13 @@ FILE *fp;
                           file_control[file].filename,
                           file_control[file].byte_index);
 #endif
-		 }
+                 }
       }
 
       fclose (fp);
       show_status_line_2 ("*** history file written ***", 0, -2, 0);
    }
-   
+
    return 1;  /* o.k. */
 
 }  /* write_status_file */
@@ -880,7 +880,7 @@ char del_prot;
    /* then search for last entry without protection */
       for (entry = (HIST_SIZE-1) ; entry >= 0 ; entry--)
       {
-		 if (!hist [id][entry].delete_protected)
+                 if (!hist [id][entry].delete_protected)
          {
             start_ind = entry;
             modified = 1;
@@ -898,7 +898,7 @@ char del_prot;
       {
          memcpy (&hist [id][entry], &hist [id][entry-1], max_total);
       }
-   
+
    /* store new entry in buffer */
       memcpy (hist [id][0].text, string, max_text);
       hist [id][0].text [max_text - 1] = '\0';   /* forced end of string */
@@ -941,40 +941,40 @@ static char *path;
 #define DEFAULT_PATH "."
 
 #if (ACT_OP_SYSTEM == RDOS)
-	const char *exename;
-	char str[256];
-	int pos;
+        const char *exename;
+        static char str[256];
+        int pos;
 #endif
 
    path = getenv(":HOME:");
    if (path)
    {
-	  limit_at_1st_blank (path);
-	  if (*path)
-		 return path;
+          limit_at_1st_blank (path);
+          if (*path)
+                 return path;
    }
 
    path = getenv("HOME");
    if (path)
    {
-	  limit_at_1st_blank (path);
-	  if (*path)
-		 return path;
+          limit_at_1st_blank (path);
+          if (*path)
+                 return path;
    }
 
 #if (ACT_OP_SYSTEM == RDOS)
 
-	exename = RdosGetExeName();
+        exename = RdosGetExeName();
 
-	strcpy(str, exename);
-	pos = strlen(str) - 1;
-	while (pos && str[pos] != '\\')
-		pos--;
+        strcpy(str, exename);
+        pos = strlen(str) - 1;
+        while (pos && str[pos] != '\\')
+                pos--;
 
-	str[pos] = 0;
+        str[pos] = 0;
 
-	if (pos)
-		return str;
+        if (pos)
+                return str;
 
 #endif
 

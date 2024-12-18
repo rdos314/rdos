@@ -179,20 +179,20 @@ void init_file_control (struct FILE_CONTROL *fcl, int clear_flag)
    if (clear_flag)
    {
       *fcl->buffer       = EOF;
-   
+
       fcl->tag_index [0] = -1;
       fcl->tag_index [1] = -1;
       fcl->tag_index [2] = -1;
       fcl->tag_index [3] = -1;
-   
+
       fcl->find [0]      = -1;
       fcl->find [1]      = -1;
-   
+
       fcl->buff_no       = act_buff_no [act_window];
-   
+
       fcl->byte_anz      = 0L;
       fcl->line_anz      = 0L;
-   
+
       fcl->view_only     = 0;
       fcl->change_flag   = 0;
 
@@ -215,7 +215,7 @@ struct FILE_CONTROL *next_fc;
    next_fc = &file_control
              [(act_buff_no [act_window] + set.file_num + direction)
                                         % set.file_num];
-   
+
    if (next_fc->malloc_flag == 0)
    {
       next_fc->buff_0 = (char *)loc_malloc (INIT_FILESIZE);
@@ -254,7 +254,7 @@ struct FILE_CONTROL *next_fc;
 void set_highbit(void)
 {
    if (get_file_type(fc->filename) > 0)
-	  fc->highbit = (set.highbit_global != 0);
+          fc->highbit = (set.highbit_global != 0);
    else
       fc->highbit = (set.highbit_global == 1);
 }  /* set_highbit */
@@ -287,9 +287,9 @@ long file_length;
       }
 #endif
 
-   /* check buffer_size */   
+   /* check buffer_size */
       file_length = get_file_length (fc->filename, fc->view_only);
-   
+
       if (file_length >= 0)
       {
          if (fc->view_only)
@@ -298,7 +298,7 @@ long file_length;
          else
             ok_flag = (check_and_increase_buffer (fc, file_length,
                                                   FILE_RESERVE, 1) >= 0);
-      
+
       /* buffer large enough ? */
          if (ok_flag)
          {                /* read file */
@@ -314,9 +314,9 @@ long file_length;
       else
       {
          fc->byte_anz = -1;
-      } 
+      }
    }
-   
+
 /* read file o.k. ? */
    if (fc->byte_anz < 0)
    {                        /* error, set buffer + filename to 'empty' */
@@ -508,7 +508,7 @@ static int edit_version = 1;
       }
 
 #if (WITH_LAST_AGAIN)
-   /* last files again */  
+   /* last files again */
       if ((stricmp (argv[ii], "-")          == 0) ||
           (stricmp (argv[ii], "last_again") == 0))
       {
@@ -641,7 +641,7 @@ static int edit_version = 1;
    }  /* if last_again */
 #endif
 
-   
+
 /* get macro file(s) */
    if (read_macro)
    {
@@ -661,7 +661,7 @@ static int edit_version = 1;
    if (macro_ex != NULL)
    {
       push_macro_stack (macro_ex, MACRO_EXECUTE, 1L, mode_flag);
-   }   
+   }
 
 
 
@@ -722,7 +722,7 @@ static int edit_version = 1;
    write_status_file ();
 #endif
 
-   
+
 /* stop mouse driver */
 #if WITH_MOUSE
    if (mouse_driver_ok)
@@ -815,7 +815,7 @@ void resize_screen (void)
    {
       perform_view ();
    }
-   
+
    if (mode_flag >= 3)
    {
       show_status_line_1 (get_line_1_text (), fc);
@@ -860,7 +860,7 @@ static void main_loop (void)
 
 /*
 /     Hauptschleife: Endlosschleife zur Tastatur-Eingabe und Aufruf von
-/     switch_key_0 (in switches.c), von wo die notwendigen Aktionen 
+/     switch_key_0 (in switches.c), von wo die notwendigen Aktionen
 /     aufgerufen werden.
 /     Steuerung der Funktionen 'Again' und 'Repeat' (repeat_count, repeat_max).
 /
@@ -905,13 +905,13 @@ long repeat_count, repeat_max;
       if (auto_shift)
       {
          delta = 0;
-   
+
          if (REL_COLUMN > (COLUMNS-1))
             delta = REL_COLUMN - (COLUMNS-1);
-   
+
          if (REL_COLUMN < 0)
             delta = REL_COLUMN;
-   
+
          if (delta)
          {
             fc->left_col += delta;
@@ -1014,11 +1014,11 @@ long repeat_count, repeat_max;
 
    /* ggf. cursor-position korrigieren */
       old_special = new_special;
-      
-      new_special = ((key_0 == KEY_UP)   || 
-                     (key_0 == KEY_DOWN) || 
-                     (key_0 == KEY_HOME) || 
-                     (key_0 == KEY_PGUP) || 
+
+      new_special = ((key_0 == KEY_UP)   ||
+                     (key_0 == KEY_DOWN) ||
+                     (key_0 == KEY_HOME) ||
+                     (key_0 == KEY_PGUP) ||
                      (key_0 == KEY_PGDN) ||
                      (key_0 == KEY_TIMEOUT));
 
@@ -1124,9 +1124,9 @@ long repeat_count, repeat_max;
 
 #if ((WITH_WINCH) && (ACT_OP_SYSTEM == WIN_32))
       if (set_window_size ())
-	  {
+          {
          perform_view ();
-	  }
+          }
 #endif
 
    }  /* while end_of_edit */
@@ -1146,7 +1146,7 @@ char *search;
 
    search = search_string;   /* set to begin of search string */
    result = 0;
- 
+
    while ((c1 = fgetc (fd)) != EOF)         /* read 1 char */
    {
       if (c1 == *search)                    /* does it match ? */
@@ -1159,7 +1159,7 @@ char *search;
             {
                ;  /* empty loop */
             }
-            return (result);    
+            return (result);
          }
       }
       else
@@ -1188,7 +1188,7 @@ struct WINDOW {
                  char *str [STR_NUM];  /* search strings */
               };
 
-static struct WINDOW window [] = {"lines", "li#", "LINES=", 
+static struct WINDOW window [] = {"lines", "li#", "LINES=",
                                   "cols" , "co#", "COLUMNS="};
 
 
@@ -1287,7 +1287,7 @@ void cmd_winch (int sig_num)
 int set_window_size (void)
 {
 int new_lines, new_cols, change_flag = 0;
-FILE *fd;
+FILE *fd = 0;
 #define PATH_0   fileno(stdin)   /* standard input */
 
    fd;  /* wg. compiler warning */
@@ -1410,16 +1410,16 @@ FILE *fd;
       if (fd)
       {
          static char parse[255];
-         
+
          while (fgets(parse, sizeof(parse), fd))
          {
            sscanf(parse, "Columns=%d", &new_cols);
            sscanf(parse, "Spalten:%d", &new_cols);
            sscanf(parse, "Spalten (COLS)=%d", &new_cols);
 
-           sscanf(parse, "Lines=%d", &new_lines); 
-           sscanf(parse, "Zeilen:%d", &new_lines); 
-           sscanf(parse, "Zeilen (LINES)=%d", &new_lines); 
+           sscanf(parse, "Lines=%d", &new_lines);
+           sscanf(parse, "Zeilen:%d", &new_lines);
+           sscanf(parse, "Zeilen (LINES)=%d", &new_lines);
          }
          _pclose (fd);
       }
@@ -1429,7 +1429,7 @@ FILE *fd;
 
 #if (WITH_WINCH == 8)
    {
-	   get_screen_lin_col(&new_lines, &new_cols);
+           get_screen_lin_col(&new_lines, &new_cols);
    }
 #endif  /* 8 */
 
@@ -1466,9 +1466,9 @@ FILE *fd;
 
 /* settings changed ? */
    if ((COLUMNS != new_cols) ||
-	   (ROWS    != new_lines))
+           (ROWS    != new_lines))
    {
-	   change_flag = 1;
+           change_flag = 1;
    }
 
 /* take over */

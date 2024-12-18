@@ -123,8 +123,8 @@ struct WORK_AREA
 static struct WORK_AREA work_area [STACK_SIZE];
 static int stack_ind;
 
-static left_pressed = 0;
-static right_pressed = 0;
+static int left_pressed = 0;
+static int right_pressed = 0;
 
 /***********************************************************************
 *  Funktion         : update_mouse                    *
@@ -248,7 +248,7 @@ int mouse_event_handler_c (int repeat)
 
 #define SLOW_DOWN  1    /* 1: max. mouse speed */
                             /* 2: reduced "    "   */
-                            
+
    static int left_button_tab [] =
            {
               0x00,     /* 0: normal mode */
@@ -281,7 +281,7 @@ int mouse_event_handler_c (int repeat)
       {
          key = left_button_tab [disp_window_active];
       }
-   
+
       if ((disp_window_active <= 2) ||     /* history/filename window */
           (disp_window_active >= 4))       /* hex view/edit  */
       {
@@ -294,7 +294,7 @@ int mouse_event_handler_c (int repeat)
             }
             key = KEY_DOWN;
          }
-   
+
          if (mourow < old_win_row)
          {
             delta_line = old_win_row - mourow;
@@ -317,7 +317,7 @@ int mouse_event_handler_c (int repeat)
             }
             key = KEY_RIGHT;
          }
-   
+
          if (moucol < old_win_col)
          {
             delta_line = old_win_col - moucol;
@@ -408,7 +408,7 @@ int mouse_event_handler_c (int repeat)
 
                         if (mourow == (char) MAX_ROW)
             perform_key_down (1);
-   
+
          update_entire_window (fc->top_left);
          perform_update (fc->buff_0, fc->byte_anz, fc->left_col);
 
@@ -423,10 +423,10 @@ int mouse_event_handler_c (int repeat)
       {
                         if (moucol >= (char) (COLUMNS-1))
             fc->left_col++;
-   
+
          if (moucol <= 0)
             fc->left_col--;
-   
+
          fc->left_col = max (0, fc->left_col);
       }
       old_col = moucol;
@@ -505,7 +505,7 @@ void MouSetMoveArea( char x1, char y1, char x2, char y2, int window_flag )
 /*               4 : inside hex view/edit */
 /*              -1 : return to next lower level */
 
-/* handle display windows (history, wildname) */  
+/* handle display windows (history, wildname) */
    center_col = (char) ((x1 + x2) / 2);
    center_row = (char) ((y1 + y2) / 2);
 
@@ -560,7 +560,7 @@ void MouSetMoveArea( char x1, char y1, char x2, char y2, int window_flag )
    RdosSetMouseWindow(8 * x1, 8 * y1, 8 * x2, 8 * y2);
    RdosSetMousePosition(moucol, mourow);
 
-   return; 
+   return;
 }
 
 /***********************************************************************
@@ -586,7 +586,7 @@ void MouEnd( void )
 
 int MouStartup (int columns, int rows)
 {
-    RdosSetMouseWindow(0, 0, 8 * columns, 8 * rows); 
+    RdosSetMouseWindow(0, 0, 8 * columns, 8 * rows);
     RdosSetMouseMickey(8, 8);
         RdosSetMousePosition(columns / 2, rows / 2);
     mavail = TRUE;                        /* Maus ist installiert */

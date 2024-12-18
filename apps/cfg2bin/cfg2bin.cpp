@@ -32,9 +32,6 @@
 
 #include "rdosimg.h"
 
-#define FALSE 0
-#define TRUE !FALSE
-
 /*##################  main ##########################
 *   Purpose....: Program entry-point                                        #
 *   In params..: *                                                          #
@@ -51,7 +48,7 @@ int main(int argc, char **argv)
     {
         strcpy(FileName, argv[1]);
         strcat(FileName, ".cfg");
-            
+
         img.AddConfig(FileName);
 
         if (img.FObjectList)
@@ -64,6 +61,6 @@ int main(int argc, char **argv)
             printf("No objects in config-file or missing config file <%s>\r\n", FileName);
     }
     else
-        printf("usage: cfg2bin filename base\r\n");        
+        printf("usage: cfg2bin filename base\r\n");
 }
 
