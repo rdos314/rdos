@@ -14,6 +14,7 @@
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
 #include <openssl/asn1.h>
+#include "crypto/jsonc.h"
 
 #include "charmap.h"
 
@@ -577,14 +578,14 @@ int X509_NAME_json(JSON_COLL *c, const char *t, const X509_NAME *n)
     char objtmp[80];
     const char *objbuf;
     char *str;
-    
+
     JSON_COLL *coll;
 
     coll = AddJsonColl(c, t);
-    
+
     cnt = X509_NAME_entry_count(n);
 
-    for (i = 0; i < cnt; i++) 
+    for (i = 0; i < cnt; i++)
     {
         ent = X509_NAME_get_entry(n, i);
 
@@ -592,12 +593,12 @@ int X509_NAME_json(JSON_COLL *c, const char *t, const X509_NAME *n)
         val = X509_NAME_ENTRY_get_data(ent);
         fn_nid = OBJ_obj2nid(fn);
 
-        if (fn_nid == NID_undef) 
+        if (fn_nid == NID_undef)
         {
             OBJ_obj2txt(objtmp, sizeof(objtmp), fn, 1);
             objbuf = objtmp;
-        } 
-        else 
+        }
+        else
             objbuf = OBJ_nid2sn(fn_nid);
 
         str = (char *)malloc(val->length + 1);

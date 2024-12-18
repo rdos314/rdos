@@ -160,7 +160,7 @@ void bio_sock_cleanup_int(void)
 
 int BIO_socket_ioctl(int fd, long type, void *arg)
 {
-    int i;
+    int i = 0;
 
 #  ifdef __DJGPP__
     i = ioctlsocket(fd, type, (char *)arg);

@@ -13,6 +13,7 @@
 #include "internal/cryptlib.h"
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
+#include "crypto/jsonc.h"
 
 /* Extension printing routines */
 
@@ -76,7 +77,7 @@ void X509V3_EXT_val_json(JSON_COLL *coll, STACK_OF(CONF_VALUE) *val)
     if (!val)
         return;
 
-    for (i = 0; i < sk_CONF_VALUE_num(val); i++) 
+    for (i = 0; i < sk_CONF_VALUE_num(val); i++)
     {
         nval = sk_CONF_VALUE_value(val, i);
 
@@ -233,7 +234,7 @@ int X509V3_EXT_json(JSON_COLL *coll, const char *field, X509_EXTENSION *ext)
     else
         ext_str = method->d2i(NULL, &p, extlen);
 
-    if (method->i2v) 
+    if (method->i2v)
     {
         nval = method->i2v(method, ext_str, NULL);
 
@@ -258,7 +259,7 @@ int X509V3_extensions_json(JSON_COLL *coll, const STACK_OF(X509_EXTENSION) *exts
     int i, j;
     char name[128];
 
-    for (i = 0; i < sk_X509_EXTENSION_num(exts); i++) 
+    for (i = 0; i < sk_X509_EXTENSION_num(exts); i++)
     {
         ASN1_OBJECT *obj;
         X509_EXTENSION *ex;
