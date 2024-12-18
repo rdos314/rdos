@@ -73,7 +73,7 @@ AllocateUserTimer    Proc near
     mov ds,eax
     mov ds,ds:p_proc_sel
 ;
-    mov eax,kernel_timer_struc
+    mov eax,SIZE kernel_timer_struc
     AllocateSmallGlobalMem
 ;
     mov es:kt_kernel_ptr,0
