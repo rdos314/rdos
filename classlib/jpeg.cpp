@@ -30,9 +30,6 @@
 #include "jinclude.h"
 #include "jpeglib.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
-
 /*##########################################################################
 #
 #   Name       : TJpegBitmapDevice::TJpegBitmapDevice

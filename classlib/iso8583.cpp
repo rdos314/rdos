@@ -1144,8 +1144,6 @@ int TIso8583Bitmap::Decode(char *buf, int size)
 {
     int remsize;
     char *ptr;
-    int elem;
-    char str[10];
     TIso8583Element *e;
 
     if (size > 8)
@@ -1801,7 +1799,6 @@ int TIso8583::Decode(char *buf, int size)
 {
     int remsize;
     char *ptr;
-    int elem;
     char str[10];
     TIso8583Element *e;
 

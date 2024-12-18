@@ -1034,15 +1034,6 @@ jinit_memory_mgr (j_common_ptr cinfo)
 
   cinfo->mem = NULL;		/* for safety if init fails */
 
-  /* Check for configuration errors.
-   * SIZEOF(ALIGN_TYPE) should be a power of 2; otherwise, it probably
-   * doesn't reflect any real hardware alignment requirement.
-   * The test is a little tricky: for X>0, X and X-1 have no one-bits
-   * in common if and only if X is a power of 2, ie has only one one-bit.
-   * Some compilers may give an "unreachable code" warning here; ignore it.
-   */
-  if ((SIZEOF(ALIGN_TYPE) & (SIZEOF(ALIGN_TYPE)-1)) != 0)
-    ERREXIT(cinfo, JERR_BAD_ALIGN_TYPE);
   /* MAX_ALLOC_CHUNK must be representable as type size_t, and must be
    * a multiple of SIZEOF(ALIGN_TYPE).
    * Again, an "unreachable code" warning may be ignored here.
