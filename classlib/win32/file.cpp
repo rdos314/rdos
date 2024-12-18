@@ -29,9 +29,6 @@
 #include "file.h"
 #include "windows.h"
 
-#define FALSE 0
-#define TRUE !FALSE
-
 /*##########################################################################
 #
 #   Name       : TFile::TFile
@@ -232,9 +229,9 @@ TDateTime TFile::GetTime()
                 ft = &wfnd.ftLastWriteTime;
                 FileTimeToSystemTime(ft, &sft);
                 FindClose(hfind);
-                return TDateTime(   sft.wYear, sft.wMonth, sft.wDay, 
+                return TDateTime(   sft.wYear, sft.wMonth, sft.wDay,
                                     sft.wHour, sft.wMinute, sft.wSecond, sft.wMilliseconds);
-        }               
+        }
         }
     return TDateTime();
 }
@@ -323,7 +320,7 @@ void TFile::SetPos(long Pos)
 int TFile::Read(void *Buf, int Size)
 {
     DWORD read;
-    
+
         if (FHandle)
                 if (ReadFile(FHandle, Buf, Size, &read, 0))
                     return read;
@@ -345,11 +342,11 @@ int TFile::Read(void *Buf, int Size)
 int TFile::Write(const void *Buf, int Size)
 {
     DWORD written;
-    
+
         if (FHandle)
                 if (WriteFile(FHandle, Buf, Size, &written, 0))
                     return written;
-                    
+
         return 0;
 }
 
@@ -368,10 +365,10 @@ int TFile::Write(const char *str)
 {
     DWORD written;
     int size = strlen(str);
-    
+
         if (FHandle)
                 if (WriteFile(FHandle, str, size, &written, 0))
                     return written;
-                    
+
         return 0;
 }

@@ -29,9 +29,6 @@
 
 #include <windows.h>
 
-#define FALSE 0
-#define TRUE !FALSE
-
 /*##########################################################################
 #
 #   Name       : ThreadStartup
@@ -53,7 +50,7 @@ DWORD WINAPI ThreadStartup(void *ptr)
 #
 #   Name       : TThread::TThread
 #
-#   Purpose....: Constructor for TThread                                          
+#   Purpose....: Constructor for TThread
 #
 #   In params..: *
 #   Out params.: *
@@ -70,7 +67,7 @@ TThread::TThread()
 #
 #   Name       : TThread::TThread
 #
-#   Purpose....: Constructor for TThread                                          
+#   Purpose....: Constructor for TThread
 #
 #   In params..: *
 #   Out params.: *
@@ -81,7 +78,7 @@ TThread::TThread(const char *ThreadName, int StackSize)
 {
         FInstalled = TRUE;
         FThreadRunning = FALSE;
-        
+
         Start(ThreadName, StackSize);
 }
 
@@ -89,7 +86,7 @@ TThread::TThread(const char *ThreadName, int StackSize)
 #
 #   Name       : TThread::~TThread
 #
-#   Purpose....: Destructor for TThread                                   
+#   Purpose....: Destructor for TThread
 #
 #   In params..: *
 #   Out params.: *

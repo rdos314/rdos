@@ -29,14 +29,11 @@
 #include "device.h"
 #include "sigdev.h"
 
-#define FALSE 0
-#define TRUE !FALSE
-
 /*##########################################################################
 #
 #   Name       : TSignalDevice::TSignalDevice
 #
-#   Purpose....: Constructor for TSignalDevice                                    
+#   Purpose....: Constructor for TSignalDevice
 #
 #   In params..: *
 #   Out params.: *
@@ -52,7 +49,7 @@ TSignalDevice::TSignalDevice()
 #
 #   Name       : TSignalDevice::~TSignalDevice
 #
-#   Purpose....: Destructor for TSignalDevice                                     
+#   Purpose....: Destructor for TSignalDevice
 #
 #   In params..: *
 #   Out params.: *
@@ -81,7 +78,7 @@ void TSignalDevice::Init()
 #
 #   Name       : TSignalDevice::DeviceName
 #
-#   Purpose....: Device name                                      
+#   Purpose....: Device name
 #
 #   In params..: *
 #   Out params.: *

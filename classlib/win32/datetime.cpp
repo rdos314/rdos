@@ -31,9 +31,6 @@
 #include "win32.h"
 #include "datetime.h"
 
-#define FALSE 0
-#define TRUE !FALSE
-
 /*##########################################################################
 #
 #   Name       : TDateTime::TDateTime
@@ -84,7 +81,7 @@ TDateTime::TDateTime(unsigned long long Raw)
 {
     unsigned long Time[2];
 
-    memcpy(&Time, &Raw, 8);
+    memcpy(Time, &Raw, 8);
 
     FMsb = Time[1];
     FLsb = Time[0];

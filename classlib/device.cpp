@@ -34,10 +34,11 @@
 
 #if !defined(MSVC) && defined(__RDOS__)
 #include "rdos.h"
-#endif
 
 #define FALSE 0
 #define TRUE !FALSE
+
+#endif
 
 TSection TDevice::FListSection("Device.List");
 TDevice *TDevice::FDeviceList = 0;
@@ -46,7 +47,7 @@ TDevice *TDevice::FDeviceList = 0;
 #
 #   Name       : TDeviceDebug::TDeviceDebug
 #
-#   Purpose....: Virtual base class for device debugging                                           
+#   Purpose....: Virtual base class for device debugging
 #
 #   In params..: *
 #   Out params.: *
@@ -61,7 +62,7 @@ TDeviceDebug::TDeviceDebug()
 #
 #   Name       : TDeviceDebug::~TDeviceDebug
 #
-#   Purpose....: Destructor for device debugging                                           
+#   Purpose....: Destructor for device debugging
 #
 #   In params..: *
 #   Out params.: *
@@ -123,7 +124,7 @@ int TDeviceDebug::MaxFileSize()
 #
 #   Name       : TDeviceNotify::TDeviceNotify
 #
-#   Purpose....: Virtual base class for device notifications                                           
+#   Purpose....: Virtual base class for device notifications
 #
 #   In params..: *
 #   Out params.: *
@@ -138,7 +139,7 @@ TDeviceNotify::TDeviceNotify()
 #
 #   Name       : TDeviceNotify::~TDeviceNotify
 #
-#   Purpose....: Destructor for device notifications                                           
+#   Purpose....: Destructor for device notifications
 #
 #   In params..: *
 #   Out params.: *
@@ -323,7 +324,7 @@ void TDevice::InsertDevice()
 #
 #   Name       : TDevice::RemoveDevice
 #
-#   Purpose....: Remove device from m_DeviceList                   
+#   Purpose....: Remove device from m_DeviceList
 #                                Should only done in destructor
 #
 #   In params..: *
@@ -356,7 +357,7 @@ void TDevice::RemoveDevice()
 #
 #   Name       : TDevice::GetDevice
 #
-#   Purpose....: Get first device in list                                           
+#   Purpose....: Get first device in list
 #
 #   In params..: DeviceCallb
 #   Out params.: *
@@ -380,7 +381,7 @@ void TDevice::GetDevices(void (*DeviceCallb)(TDevice *Device))
 #
 #   Name       : TDevice::TDevice
 #
-#   Purpose....: Constructor for TDevice                                          
+#   Purpose....: Constructor for TDevice
 #
 #   In params..: *
 #   Out params.: *
@@ -397,7 +398,7 @@ TDevice::TDevice()
 #
 #   Name       : TDevice::~TDevice
 #
-#   Purpose....: Destructor for TDevice                                   
+#   Purpose....: Destructor for TDevice
 #
 #   In params..: *
 #   Out params.: *
@@ -408,7 +409,7 @@ TDevice::~TDevice()
 {
     if (FName)
         delete FName;
-        
+
     RemoveDevice();
 }
 
@@ -416,8 +417,8 @@ TDevice::~TDevice()
 #
 #   Name       : TDevice::Init
 #
-#   Purpose....: Init method for class. register persistent should              
-#                                done here.                                                                    
+#   Purpose....: Init method for class. register persistent should
+#                                done here.
 #
 #   In params..: *
 #   Out params.: *
@@ -482,7 +483,7 @@ void TDevice::AddNotify(TDeviceNotify *Notify)
         }
     }
 
-    FPropertySection.Leave(); 
+    FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -519,7 +520,7 @@ void TDevice::RemoveNotify(TDeviceNotify *Notify)
             NotifyCount--;
     }
 
-    FPropertySection.Leave(); 
+    FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -549,7 +550,7 @@ void TDevice::NotifyStateChange()
 #
 #   Name       : TDevice::NotifyReset
 #
-#   Purpose....: Notify of system reset                                             
+#   Purpose....: Notify of system reset
 #
 #   In params..: *
 #   Out params.: *
@@ -623,7 +624,7 @@ void TDevice::DeviceName(char *Name, int MaxLen) const
 #
 #   Name       : TDevice::NotifyOpen
 #
-#   Purpose....: Notify open                                                       
+#   Purpose....: Notify open
 #
 #   In params..: *
 #   Out params.: *
@@ -648,7 +649,7 @@ void TDevice::NotifyOpen()
 #
 #   Name       : TDevice::Open
 #
-#   Purpose....: Opens device                                                              
+#   Purpose....: Opens device
 #
 #   In params..: *
 #   Out params.: *
@@ -671,7 +672,7 @@ void TDevice::Open()
 #
 #   Name       : TDevice::NotifyClose
 #
-#   Purpose....: Notify close                                                      
+#   Purpose....: Notify close
 #
 #   In params..: *
 #   Out params.: *
@@ -696,7 +697,7 @@ void TDevice::NotifyClose()
 #
 #   Name       : TDevice::Close
 #
-#   Purpose....: Closes device                                                             
+#   Purpose....: Closes device
 #
 #   In params..: *
 #   Out params.: *
@@ -976,7 +977,7 @@ void TDevice::NotifyIdle()
     int i;
 
     FBusy = FALSE;
- 
+
     if (OnIdle)
         OnIdle(this);
 

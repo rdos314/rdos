@@ -34,12 +34,13 @@
 
 #ifdef __RDOS__
 #include "rdos.h"
-#endif
-
-#define RDOS_SIGN   0x5A1E75D4
 
 #define     FALSE   0
 #define     TRUE    !FALSE
+
+#endif
+
+#define RDOS_SIGN   0x5A1E75D4
 
 #pragma pack( push, 1 )
 
@@ -3560,7 +3561,7 @@ void TRdosImage::UpdateSetting(const char *name, const char *value)
 
         if (remove)
             Remove(obj);
-        else 
+        else
             obj = obj->FLink;
     }
 

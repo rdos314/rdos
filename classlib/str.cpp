@@ -805,6 +805,30 @@ void TString::RemoveCrLf()
     FSection.Leave();
 }
 
+#ifndef __RDOS__
+
+/*##########################################################################
+#
+#   Name       : skip_atoi
+#
+#   Purpose....: Skip atoi
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static int skip_atoi(const char **s)
+{
+    int i = 0;
+
+    while (isdigit(**s))
+        i = i*10 + *((*s)++) - '0';
+    return i;
+}
+
+#endif
+
 /*##########################################################################
 #
 #   Name       : TString::Append
@@ -1143,6 +1167,7 @@ int TString::prtf(const char *fmt, va_list args)
     unsigned long num;
     int i, base;
     const char *s;
+    int len;
 
     int flags;              /* flags to number() */
 
@@ -1153,7 +1178,7 @@ int TString::prtf(const char *fmt, va_list args)
                                 /* 'z' support added 23/7/1999 S.H.    */
                                 /* 'z' changed to 'Z' --davidm 1/25/99 */
 
-        
+
     for (n = 0 ; *fmt ; ++fmt) {
         if (*fmt != '%')
         {
@@ -1161,7 +1186,7 @@ int TString::prtf(const char *fmt, va_list args)
             n++;
             continue;
         }
-                        
+
         /* process flags */
         flags = 0;
         repeat:
@@ -1174,7 +1199,7 @@ int TString::prtf(const char *fmt, va_list args)
             case '#': flags |= SPECIAL; goto repeat;
             case '0': flags |= ZEROPAD; goto repeat;
         }
-                
+
         /* get field width */
         field_width = -1;
         if (isdigit(*fmt))
@@ -1197,7 +1222,7 @@ int TString::prtf(const char *fmt, va_list args)
             precision = -1;
             if (*fmt == '.')
             {
-                ++fmt;  
+                ++fmt;
                 if (isdigit(*fmt))
                     precision = skip_atoi(&fmt);
                 else if (*fmt == '*')
@@ -1231,7 +1256,7 @@ int TString::prtf(const char *fmt, va_list args)
                             Append(' ');
                             n++;
                         }
-                
+
                         Append((unsigned char) va_arg(args, int));
                         n++;
                         while (--field_width > 0)
@@ -1256,7 +1281,7 @@ int TString::prtf(const char *fmt, va_list args)
                             Append(' ');
                             n++;
                         }
-                
+
                     for (i = 0; i < len; ++i)
                     {
                         Append(*s++);
@@ -1292,7 +1317,7 @@ int TString::prtf(const char *fmt, va_list args)
                             size_t * ip = va_arg(args, size_t *);
                             *ip = n;
                         }
-                        else 
+                        else
                         {
                             int * ip = va_arg(args, int *);
                             *ip = n;
@@ -1382,7 +1407,7 @@ int TString::prtf(const char *fmt, va_list args)
 #endif
 
     FSection.Leave();
-        
+
     return n;
 }
 

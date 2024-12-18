@@ -7,9 +7,6 @@
 #include "section.h"
 #include <windows.h>
 
-#define     FALSE	0
-#define     TRUE	!FALSE
-
 /*##################  TSection::TSection  ####################################
 *   Purpose....: Constructor for TSection
 *   In params..: *
@@ -55,10 +52,10 @@ TSection::~TSection()
 *##########################################################################*/
 void TSection::Enter() const
 {
-	LPCRITICAL_SECTION Section = (LPCRITICAL_SECTION)&FData;
+        LPCRITICAL_SECTION Section = (LPCRITICAL_SECTION)&FData;
 
-	if (Section)
-		EnterCriticalSection(Section);
+        if (Section)
+                EnterCriticalSection(Section);
 }
 
 /*##################  TSection::Leave  ####################################
@@ -70,9 +67,9 @@ void TSection::Enter() const
 *##########################################################################*/
 void TSection::Leave() const
 {
-	LPCRITICAL_SECTION Section = (LPCRITICAL_SECTION)&FData;
+        LPCRITICAL_SECTION Section = (LPCRITICAL_SECTION)&FData;
 
-	if (Section)
-	    LeaveCriticalSection(Section);
+        if (Section)
+            LeaveCriticalSection(Section);
 }
 

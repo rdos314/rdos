@@ -34,21 +34,21 @@ class TThread
 {
 public:
     TThread();
-	TThread(const char *ThreadName, int StackSize);
-	~TThread();
+    TThread(const char *ThreadName, int StackSize);
+    virtual ~TThread();
 
-	virtual void Run();
-	void Stop();
+    virtual void Run();
+    void Stop();
 
 protected:
 
-	void Start(const char *ThreadName, int StackSize);
-	virtual void Execute();
+    void Start(const char *ThreadName, int StackSize);
+    virtual void Execute();
 
     int FInstalled;
 
 private:
-	int FThreadRunning;
+    int FThreadRunning;
 };
 
 #endif
