@@ -151,7 +151,7 @@ demand_load_file_system Proc far
     FreeMem
 
 demand_load_old_freed:
-    mov ds:[bx],-1
+    mov word ptr ds:[bx],-1
 ;
     pop si
     pop bx
