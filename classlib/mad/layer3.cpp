@@ -2151,7 +2151,8 @@ void III_imdct_l(mad_fixed_t const X[18], mad_fixed_t z[36],
 static
 void III_imdct_s(mad_fixed_t X[18], mad_fixed_t z[36])
 {
-  mad_fixed_t y[36], *yptr;
+  mad_fixed_t y[36];
+  mad_fixed_t *yptr;
   mad_fixed_t const *wptr;
   int w, i;
   register mad_fixed64hi_t hi;

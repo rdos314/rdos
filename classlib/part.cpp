@@ -332,7 +332,7 @@ void TDiscPartition::AddFree()
     {
         PartArr[i] = new TFreePartition(FDisc);
         PartArr[i]->Start = Start;
-        PartArr[i]->Size = FDisc->GetTotalSectors() - Start;
+        PartArr[i]->Size = (int)FDisc->GetTotalSectors() - Start;
         PartCount++;
     }
 }
