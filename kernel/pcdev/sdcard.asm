@@ -703,7 +703,7 @@ spDo:
     mov ah,fs:REG_POWER
     or ah,al
     mov al,fs:REG_CONTROL
-    and al,NOT 9Fh
+    and al,60h  ; NOT 9Fh
     mov fs:REG_CONTROL,ax
 ;
     or ah,1
