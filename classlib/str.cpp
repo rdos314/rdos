@@ -807,26 +807,6 @@ void TString::RemoveCrLf()
 
 /*##########################################################################
 #
-#   Name       : skip_atoi
-#
-#   Purpose....: Skip atoi
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static int skip_atoi(const char **s)
-{
-    int i = 0;
-
-    while (isdigit(**s))
-        i = i*10 + *((*s)++) - '0';
-    return i;
-}
-
-/*##########################################################################
-#
 #   Name       : TString::Append
 #
 #   Purpose....: Append character
@@ -882,7 +862,6 @@ void TString::ReplaceOne(char *ptr, const char *src, const char *dest)
 {
     int srclen = strlen(src);
     int destlen = strlen(dest);
-    int newlen;
     int i;
     int pos;
     int count;
@@ -1151,7 +1130,7 @@ int TString::Number(long num, int base, int size, int precision, int type)
 ##########################################################################*/
 int TString::prtf(const char *fmt, va_list args)
 {
-    int len, n;
+    int n;
 
     FSection.Enter();
 

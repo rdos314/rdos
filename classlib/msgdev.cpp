@@ -263,67 +263,59 @@ void TDeviceVar::Init(const char *data, int size, int *count)
     data++;
     size--;
 
-        if (FType < 0)
+    switch (FType)
     {
-        FSize = FType & 0x7F;
-        terminate = TRUE;
-    }
-    else
-    {
-        switch (FType)
-        {
-            case DEVICE_DATA_NONE:
-                FSize = 0;
-                break;
+        case DEVICE_DATA_NONE:
+            FSize = 0;
+            break;
                 
-            case DEVICE_DATA_UNSIGNED8:
-            case DEVICE_DATA_SIGNED8:
-            case DEVICE_DATA_CHAR:
-            case DEVICE_DATA_BOOLEAN:
-                FSize = 1;
-                break;
+        case DEVICE_DATA_UNSIGNED8:
+        case DEVICE_DATA_SIGNED8:
+        case DEVICE_DATA_CHAR:
+        case DEVICE_DATA_BOOLEAN:
+            FSize = 1;
+            break;
 
-            case DEVICE_DATA_UNSIGNED16:
-            case DEVICE_DATA_SIGNED16:
-                FSize = 2;
-                break;
+        case DEVICE_DATA_UNSIGNED16:
+        case DEVICE_DATA_SIGNED16:
+            FSize = 2;
+            break;
 
-                        case DEVICE_DATA_UNSIGNED32:
-            case DEVICE_DATA_SIGNED32:
-            case DEVICE_DATA_FLOAT1:
-            case DEVICE_DATA_FLOAT2:
-            case DEVICE_DATA_FLOAT3:
-            case DEVICE_DATA_FLOAT4:
-            case DEVICE_DATA_JULIANDATE:
-                FSize = 4;
-                break;
+        case DEVICE_DATA_UNSIGNED32:
+        case DEVICE_DATA_SIGNED32:
+        case DEVICE_DATA_FLOAT1:
+        case DEVICE_DATA_FLOAT2:
+        case DEVICE_DATA_FLOAT3:
+        case DEVICE_DATA_FLOAT4:
+        case DEVICE_DATA_JULIANDATE:
+            FSize = 4;
+            break;
 
-            case DEVICE_DATA_STRING8:
-                terminate = TRUE;
+        case DEVICE_DATA_STRING8:
+            terminate = TRUE;
 
-            case DEVICE_DATA_BINARY8:
-            case DEVICE_DATA_BOOLARRAY:
-            case DEVICE_DATA_BYTEARRAY:
-                FSize = 0;
-                memcpy(&FSize, data, 1);
-                data++;
-                overhead++;
-                                break;
+        case DEVICE_DATA_BINARY8:
+        case DEVICE_DATA_BOOLARRAY:
+        case DEVICE_DATA_BYTEARRAY:
+            FSize = 0;
+            memcpy(&FSize, data, 1);
+            data++;
+            overhead++;
+            break;
 
-                        case DEVICE_DATA_STRING16:
-                                terminate = TRUE;
+        case DEVICE_DATA_STRING16:
+            terminate = TRUE;
 
-                        case DEVICE_DATA_BINARY16:
-                                FSize = 0;
-                                memcpy(&FSize, data, 2);
-                                data += 2;
-                                overhead += 2;
-                                break;
+        case DEVICE_DATA_BINARY16:
+            FSize = 0;
+            memcpy(&FSize, data, 2);
+            data += 2;
+            overhead += 2;
+            break;
 
-                        default:
-                                return;
-                }
-        }
+        default:
+            return;
+    }
 
         if (FSize <= size)
         {
@@ -1717,92 +1709,82 @@ const char *TDeviceVar::GetString()
     long rval;
     unsigned long uval;
     
-        if (FStr && FAlloc == 0)
+    if (FStr && FAlloc == 0)
         delete FStr;
     FStr = 0;
 
-        if (FType < 0)
+    switch (FType)
     {
-        FStr = Allocate(FSize + 1);
-        memcpy(FStr, FData, FSize);
-        *(FStr + FSize) = 0;
-        return FStr;
-    }
-    else
-    {
-        switch (FType)
-        {
-            case DEVICE_DATA_STRING8:
-                        case DEVICE_DATA_STRING16:
-                            FStr = Allocate(FSize + 1);
-                            memcpy(FStr, FData, FSize);
-                            *(FStr + FSize) = 0;
-                return FStr;
+        case DEVICE_DATA_STRING8:
+        case DEVICE_DATA_STRING16:
+            FStr = Allocate(FSize + 1);
+            memcpy(FStr, FData, FSize);
+            *(FStr + FSize) = 0;
+            return FStr;
 
-            case DEVICE_DATA_CHAR:
-            case DEVICE_DATA_BINARY8:
-            case DEVICE_DATA_BINARY16:
-            case DEVICE_DATA_BOOLEAN:
-            case DEVICE_DATA_BOOLARRAY:
-            case DEVICE_DATA_BYTEARRAY:
-            case DEVICE_DATA_SIGNED8:
-                        case DEVICE_DATA_SIGNED32:
-                sval = GetSigned32();
-                sprintf(tempstr, "%ld", sval);
-                FStr = Allocate(strlen(tempstr) + 1);
-                            strcpy(FStr, tempstr);
-                return FStr;
+        case DEVICE_DATA_CHAR:
+        case DEVICE_DATA_BINARY8:
+        case DEVICE_DATA_BINARY16:
+        case DEVICE_DATA_BOOLEAN:
+        case DEVICE_DATA_BOOLARRAY:
+        case DEVICE_DATA_BYTEARRAY:
+        case DEVICE_DATA_SIGNED8:
+        case DEVICE_DATA_SIGNED32:
+            sval = GetSigned32();
+            sprintf(tempstr, "%ld", sval);
+            FStr = Allocate(strlen(tempstr) + 1);
+            strcpy(FStr, tempstr);
+            return FStr;
 
-            case DEVICE_DATA_UNSIGNED8:
-            case DEVICE_DATA_UNSIGNED16:
-            case DEVICE_DATA_UNSIGNED32:
-                uval = GetUnsigned32();
-                sprintf(tempstr, "%lu", uval);
-                FStr = Allocate(strlen(tempstr) + 1);
-                            strcpy(FStr, tempstr);
-                return FStr;
+        case DEVICE_DATA_UNSIGNED8:
+        case DEVICE_DATA_UNSIGNED16:
+        case DEVICE_DATA_UNSIGNED32:
+            uval = GetUnsigned32();
+            sprintf(tempstr, "%lu", uval);
+            FStr = Allocate(strlen(tempstr) + 1);
+            strcpy(FStr, tempstr);
+            return FStr;
 
-            case DEVICE_DATA_FLOAT1:
-                memcpy(&sval, FData, 4);
-                rval = sval % 10;
-                sval = sval / 10;
+        case DEVICE_DATA_FLOAT1:
+            memcpy(&sval, FData, 4);
+            rval = sval % 10;
+            sval = sval / 10;
                 
-                sprintf(tempstr, "%ld.%01ld", sval, rval);
-                FStr = Allocate(strlen(tempstr) + 1);
-                            strcpy(FStr, tempstr);
-                return FStr;
+            sprintf(tempstr, "%ld.%01ld", sval, rval);
+            FStr = Allocate(strlen(tempstr) + 1);
+            strcpy(FStr, tempstr);
+            return FStr;
 
-            case DEVICE_DATA_FLOAT2:
-                memcpy(&sval, FData, 4);
-                rval = sval % 100;
-                sval = sval / 100;
+        case DEVICE_DATA_FLOAT2:
+            memcpy(&sval, FData, 4);
+            rval = sval % 100;
+            sval = sval / 100;
                 
-                sprintf(tempstr, "%ld.%02ld", sval, rval);
-                FStr = Allocate(strlen(tempstr) + 1);
-                            strcpy(FStr, tempstr);
-                return FStr;
+            sprintf(tempstr, "%ld.%02ld", sval, rval);
+            FStr = Allocate(strlen(tempstr) + 1);
+            strcpy(FStr, tempstr);
+            return FStr;
 
-            case DEVICE_DATA_FLOAT3:
-                memcpy(&sval, FData, 4);
-                rval = sval % 1000;
-                sval = sval / 1000;
+        case DEVICE_DATA_FLOAT3:
+            memcpy(&sval, FData, 4);
+            rval = sval % 1000;
+            sval = sval / 1000;
                 
-                sprintf(tempstr, "%ld.%03ld", sval, rval);
-                FStr = Allocate(strlen(tempstr) + 1);
-                            strcpy(FStr, tempstr);
-                return FStr;
+            sprintf(tempstr, "%ld.%03ld", sval, rval);
+            FStr = Allocate(strlen(tempstr) + 1);
+            strcpy(FStr, tempstr);
+            return FStr;
 
-            case DEVICE_DATA_FLOAT4:
-                memcpy(&sval, FData, 4);
-                rval = sval % 10000;
-                sval = sval / 10000;
+        case DEVICE_DATA_FLOAT4:
+            memcpy(&sval, FData, 4);
+            rval = sval % 10000;
+            sval = sval / 10000;
 
-                sprintf(tempstr, "%ld.%04ld", sval, rval);
-                FStr = Allocate(strlen(tempstr) + 1);
-                            strcpy(FStr, tempstr);
-                return FStr;
+            sprintf(tempstr, "%ld.%04ld", sval, rval);
+            FStr = Allocate(strlen(tempstr) + 1);
+            strcpy(FStr, tempstr);
+            return FStr;
 
-        }
     }
     return 0;
 }

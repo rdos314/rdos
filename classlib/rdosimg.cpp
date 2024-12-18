@@ -132,7 +132,7 @@ TRdosObject::TRdosObject(TFile *File, int Size)
     FType = 0;
     FData = new char[FSize];
     memset(FData, 0xFF, FSize);
-    FImageOffset = File->GetPos();
+    FImageOffset = (int)File->GetPos();
     File->Read(FData, FSize);
 }
 
@@ -300,7 +300,7 @@ void TRdosObject::LoadFile(TFile *File)
 
     if (File && File->IsOpen())
     {
-        FSize = File->GetSize();
+        FSize = (int)File->GetSize();
         FData = new char[FSize];
         memset(FData, 0xFF, FSize);
         File->Read(FData, FSize);
@@ -768,7 +768,6 @@ int TRdosDevice16BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
     TRdvHeader16 ExeHeader;
     TFile File(FileName);
     int HeaderSize;
-    int Size;
     char *ptr;
 
     if (FData)
@@ -932,7 +931,6 @@ int TRdosDevice32BaseObject::LoadDeviceFile(const char *FileName, const char *Pa
     TRdvHeader32 ExeHeader;
     TFile File(FileName);
     int HeaderSize;
-    int Size;
     char *ptr;
 
     if (FData)
@@ -1072,7 +1070,6 @@ int TRdosLongModeObject::LoadFile(const char *FileName)
     TBinLongModeHeader ExeHeader;
     TFile File(FileName);
     int HeaderSize;
-    int Size;
     char *ptr;
     long pos;
 
@@ -1096,7 +1093,7 @@ int TRdosLongModeObject::LoadFile(const char *FileName)
         pos = ExeHeader.ImageBase;
         File.SetPos(pos);
 
-        FDeviceSize = File.GetSize() - pos;
+        FDeviceSize = (int)File.GetSize() - pos;
         FSize = FDeviceSize + HeaderSize;
         FData = new char[FSize];
         memset(FData, 0xFF, FSize);
@@ -1235,8 +1232,6 @@ int TRdosRealTimeObject::LoadFile(const char *FileName)
     TBinRealTimeHeader ExeHeader;
     TFile File(FileName);
     int HeaderSize;
-    int Size;
-    char *ptr;
 
     if (FData)
         delete FData;
@@ -1253,7 +1248,7 @@ int TRdosRealTimeObject::LoadFile(const char *FileName)
 
         HeaderSize = sizeof(TRdosRealTimeHeader);
 
-        FDeviceSize = File.GetSize();
+        FDeviceSize = (int)File.GetSize();
         FSize = FDeviceSize + HeaderSize;
         FData = new char[FSize];
         memset(FData, 0xFF, FSize);
@@ -1284,7 +1279,6 @@ int TRdosRealTimeObject::LoadFile(const char *FileName)
 TString TRdosRealTimeObject::GetInfo()
 {
     char str[256];
-    char *ptr;
 
     strcpy(str, "RealTime");
 
@@ -2077,7 +2071,7 @@ void TRdosOldFileObject::LoadFileAndHeader(const char *FileName)
 
     if (File.IsOpen())
     {
-        FFileSize = File.GetSize();
+        FFileSize = (int)File.GetSize();
         FSize = FFileSize + sizeof(TRdosOldFileHeader);
         FData = new char[FSize];
         memset(FData, 0xFF, FSize);
@@ -2130,7 +2124,7 @@ void TRdosOldFileObject::LoadFileAndHeader(const char *FileName)
         FFileHeader->Attrib = 0;
         FFileHeader->Time = 0;
         FFileHeader->Date = 0;
-        FFileHeader->Size = File.GetSize();
+        FFileHeader->Size = (int)File.GetSize();
 
         File.Read(FFileData, FFileSize);
     }
@@ -2268,7 +2262,7 @@ void TRdosFileObject::LoadFileAndHeader(const char *FileName)
         HeaderSize = sizeof(TRdosFileHeader);
         HeaderSize += strlen(ptr);
 
-        FFileSize = File.GetSize();
+        FFileSize = (int)File.GetSize();
         FSize = FFileSize + HeaderSize;
         FData = new char[FSize];
         memset(FData, 0xFF, FSize);
@@ -2279,7 +2273,7 @@ void TRdosFileObject::LoadFileAndHeader(const char *FileName)
 
         FFileHeader->Size = HeaderSize;
         FFileHeader->Attrib = 0;
-        FFileHeader->FileSize = File.GetSize();
+        FFileHeader->FileSize = (int)File.GetSize();
 
         time = File.GetTime();
         FFileHeader->LsbTime = time.GetLsb();
@@ -2428,7 +2422,7 @@ void TRdosServerObject::LoadFileAndHeader(const char *FileName)
         HeaderSize = sizeof(TRdosServerHeader);
         HeaderSize += strlen(Name);
 
-        FFileSize = File.GetSize();
+        FFileSize = (int)File.GetSize();
         FSize = FFileSize + HeaderSize;
         FData = new char[FSize];
         memset(FData, 0xFF, FSize);
@@ -2438,7 +2432,7 @@ void TRdosServerObject::LoadFileAndHeader(const char *FileName)
         strcpy(&FServerHeader->FileName, Name);
 
         FServerHeader->Size = HeaderSize;
-        FServerHeader->FileSize = File.GetSize();
+        FServerHeader->FileSize = (int)File.GetSize();
 
         File.Read(FFileData, FFileSize);
     }

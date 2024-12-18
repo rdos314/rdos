@@ -561,10 +561,12 @@ void TMadSynth::Mute()
 void TMadSynth::FullSynth(TMadFrame const *frame, unsigned int nch, unsigned int ns)
 {
   unsigned int lphase, ch, s, sb, pe, po;
-  mad_fixed_t *pcm1, *pcm2, (*lfilter)[2][2][16][8];
+  mad_fixed_t *pcm1, *pcm2;
+  mad_fixed_t (*lfilter)[2][2][16][8];
   mad_fixed_t const (*sbsample)[36][32];
   register mad_fixed_t (*fe)[8], (*fx)[8], (*fo)[8];
-  register mad_fixed_t const (*Dptr)[32], *ptr;
+  register mad_fixed_t const (*Dptr)[32];
+  register mad_fixed_t const *ptr;
   register mad_fixed64hi_t hi;
   register mad_fixed64lo_t lo;
 
@@ -698,10 +700,12 @@ void TMadSynth::FullSynth(TMadFrame const *frame, unsigned int nch, unsigned int
 void TMadSynth::HalfSynth(TMadFrame const *frame, unsigned int nch, unsigned int ns)
 {
   unsigned int lphase, ch, s, sb, pe, po;
-  mad_fixed_t *pcm1, *pcm2, (*lfilter)[2][2][16][8];
+  mad_fixed_t *pcm1, *pcm2;
+  mad_fixed_t (*lfilter)[2][2][16][8];
   mad_fixed_t const (*sbsample)[36][32];
   register mad_fixed_t (*fe)[8], (*fx)[8], (*fo)[8];
-  register mad_fixed_t const (*Dptr)[32], *ptr;
+  register mad_fixed_t const (*Dptr)[32];
+  register mad_fixed_t const *ptr;
   register mad_fixed64hi_t hi;
   register mad_fixed64lo_t lo;
 
