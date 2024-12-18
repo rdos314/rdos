@@ -1,4 +1,4 @@
-40
+42
 targetIdent
 0
 MProject
@@ -62,14 +62,14 @@ WString
 WPP
 16
 WString
-25
-r????Include directories:
+12
+r????WLANG_i
 1
+0
 17
 WString
 85
 "\rdos\kernel;\rdos\classlib;\rdos\classlib\rdos;\rdos\classlib\widget;$(%watcom)/rh"
-0
 18
 WVList
 0

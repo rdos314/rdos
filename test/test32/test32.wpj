@@ -1,4 +1,4 @@
-40
+42
 projectIdent
 0
 VpeMain
@@ -23,7 +23,7 @@ WFileName
 test32.tgt
 6
 WVList
-2
+1
 7
 VComponent
 8
@@ -38,22 +38,6 @@ WRect
 WFileName
 10
 test32.tgt
-0
-0
-10
-VComponent
-11
-WRect
-208
-132
-5680
-4219
-1
-0
-12
-WFileName
-11
-testdll.tgt
 0
 0
 7
