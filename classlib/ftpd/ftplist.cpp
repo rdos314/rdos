@@ -126,7 +126,7 @@ void TFtpListCommand::WriteEntry(const TDirEntryData &entry)
         {
         FServer->Write("-rw-rw-rw- ");
                 FFileCount++;
-                FTotalSize += entry.FileSize;
+                FTotalSize += (int)entry.FileSize;
 
         }
 

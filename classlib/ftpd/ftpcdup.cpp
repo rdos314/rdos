@@ -113,8 +113,6 @@ TFtpCdupCommand::~TFtpCdupCommand()
 ##########################################################################*/
 void TFtpCdupCommand::Execute(char *param)
 {
-	TFtpArg *arg;
-	int ArgCount;
 	TFtpLangString msg;
 
 	if (FServer->VerifyUser())

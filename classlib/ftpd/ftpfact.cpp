@@ -172,7 +172,6 @@ TFtpCommand *TFtpCommandFactory::Parse(TFtpSocketServer *Server, const char *lin
          int done;
          TString Line;
         TFtpCommandFactory *factory = 0;
-        TFtpCommand *cmd;
 
         Line = TString(TFtpSocketServer::LTrim(line));
 

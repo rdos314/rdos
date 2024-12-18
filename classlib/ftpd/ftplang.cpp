@@ -115,7 +115,6 @@ void TFtpLangString::Load(int ID)
     char str[257];
     int start;
     int count;
-    int i;
     int size;
 
     FID = ID;
