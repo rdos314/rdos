@@ -103,7 +103,6 @@ int TRemoteCommand::Execute(char *param)
     int n0,n1,n2,n3;
     long Node;
     unsigned long Temp;
-    int i;
 
     if (!ScanCmdLine(param, 0))
         return 1;

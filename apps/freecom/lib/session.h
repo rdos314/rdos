@@ -43,14 +43,14 @@ class TSession : public TInteract
 public:
     TSession(TKeyboardDevice *Keyboard);
     TSession(const TSession &source);
-    ~TSession();
+    virtual ~TSession();
 
     virtual void DisplayPrompt();
     virtual void Run();
 
     void Run(const char *param);
     int Run(const char *name, TArg *ArgList);
- 
+
 protected:
     void WriteWelcome();
 

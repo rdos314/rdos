@@ -98,7 +98,6 @@ TPciCommand::TPciCommand(TSession *session, const char *param)
 ##########################################################################*/
 void TPciCommand::PrintBusDevices(int Bus)
 {
-    int ok;
     char AcpiName[128];
     char Str[100];
     int Device;

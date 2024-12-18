@@ -215,11 +215,6 @@ void THidCommand::ShowDevices()
 ##########################################################################*/
 int THidCommand::Execute(char *param)
 {
-    long AcpiStatus;
-    int error;
-    char SubSystem[80];
-    char Str[100];
-
     if (LeadOptions(&param, 0) != E_None)
         return 1;
 

@@ -117,9 +117,9 @@ int TAudioCommand::OptScan(const char *optstr, int ch, int bool, const char *str
 {
     switch (ch)
     {
-        case 'D': 
+        case 'D':
             return OptScanBool(optstr, bool, strarg, &FOptD);
-    }  
+    }
     OptError(optstr);
     return E_Useage;
 }
@@ -146,14 +146,14 @@ void TAudioCommand::WriteOutputAmp(int dev, int codec, int node, const char *ini
     long double r, l;
     int mr, ml;
     char str[40];
-    
+
     mute = RdosHasAudioOutputMute(dev, codec, node);
 
     RdosGetAudioOutputAmpCap(dev, codec, node, &min, &max);
     if (mute || min || max)
     {
         Write(init);
-        
+
         if (min || max)
         {
             val = RdosReadAudioOutputAmp(dev, codec, node, 0);
@@ -237,14 +237,14 @@ void TAudioCommand::WriteOutputAmp(int dev, int codec, int node, const char *ini
                     Write("Off");
                 else
                     Write("On");
-            
+
                 Write(", R=");
 
                 if (mr)
                     Write("Off");
                 else
                     Write("On");
-            
+
             }
         }
     }
@@ -270,7 +270,7 @@ void TAudioCommand::WriteInputAmp(int dev, int codec, int node, int input, const
     long double r, l;
     int mr, ml;
     char str[40];
-    
+
     mute = RdosHasAudioInputMute(dev, codec, node);
 
     RdosGetAudioInputAmpCap(dev, codec, node, &min, &max);
@@ -346,21 +346,21 @@ void TAudioCommand::WriteInputAmp(int dev, int codec, int node, int input, const
             else
             {
                 Write(init);
-                
+
                 Write("L=");
 
                 if (ml)
                     Write("Off");
                 else
                     Write("On");
-            
+
                 Write(", R=");
 
                 if (mr)
                     Write("Off");
                 else
                     Write("On");
-            
+
             }
         }
     }
@@ -413,7 +413,7 @@ int TAudioCommand::HasInputAmp(int dev, int codec, int node)
     int mute;
     int min;
     int max;
-    
+
     mute = RdosHasAudioInputMute(dev, codec, node);
 
     RdosGetAudioInputAmpCap(dev, codec, node, &min, &max);
@@ -496,7 +496,7 @@ void TAudioCommand::WriteSelectList(int dev, int codec, int node)
 
         if (CurrConn == i)
             Write("*");
-                                                    
+
         if (i == Count - 1)
             Write(")");
         else
@@ -602,19 +602,10 @@ void TAudioCommand::ShowFull()
     int i;
     int j;
     int k;
-    int l;
     int FunctionCount;
     int CodecCount;
-    int Count;
     char Info[512];
-    int ConnectionList[256];
-    int CurrConn;
     char Type;
-    int min;
-    int max;
-    long double lmin;
-    long double lmax;
-    int mute;
     char str[256];
     char *ptr;
     int VendorId;
@@ -626,7 +617,7 @@ void TAudioCommand::ShowFull()
     {
         sprintf(str, "Audio device: %d\r\n", i);
         Write(str);
-        
+
         CodecCount = RdosGetAudioCodecCount(i);
 
         for (j = 0; j < CodecCount; j++)
@@ -657,20 +648,20 @@ void TAudioCommand::ShowFull()
                         Write(str);
                         break;
                 }
-            }            
+            }
 
-            
+
             for (k = 0; k < 128; k++)
             {
                 Type = RdosGetAudioWidgetInfo(i, j, k, Info);
 
                 if (Type)
                 {
-                    sprintf(str, "%3d: ", k); 
+                    sprintf(str, "%3d: ", k);
                     Write(str);
                     Write(Info);
                 }
-                
+
                 switch (Type)
                 {
                     case AUDIO_WIDGET_TYPE_OUTPUT:
@@ -695,10 +686,10 @@ void TAudioCommand::ShowFull()
                 }
 
                 if (Type)
-                    Write("\r\n");                        
-            }            
-        }     
-    }    
+                    Write("\r\n");
+            }
+        }
+    }
 }
 
 /*##########################################################################
@@ -728,11 +719,11 @@ void TAudioCommand::ShowDevices()
 
         WriteOutputAmp(dev, codec, node, "");
         Write(", ");
-        
+
         RdosGetAudioWidgetInfo(dev, codec, node, Info);
         Write(Info);
 
-        sprintf(Info, " (%d.%d.%d)", dev, codec, node); 
+        sprintf(Info, " (%d.%d.%d)", dev, codec, node);
         Write(Info);
         Write("\r\n\r\n");
     }
@@ -743,18 +734,18 @@ void TAudioCommand::ShowDevices()
         if (ok)
         {
             if (i == 0)
-                Write("Jack output:\r\n");                
+                Write("Jack output:\r\n");
 
             sprintf(Info, "%d: ", i + 1);
             Write(Info);
 
             WriteOutputAmp(dev, codec, node, "");
             Write(", ");
-            
+
             RdosGetAudioWidgetInfo(dev, codec, node, Info);
             Write(Info);
 
-            sprintf(Info, " (%d.%d.%d)", dev, codec, node); 
+            sprintf(Info, " (%d.%d.%d)", dev, codec, node);
             Write(Info);
             Write("\r\n");
         }
@@ -772,14 +763,14 @@ void TAudioCommand::ShowDevices()
         if (ok)
         {
             if (i == 0)
-                Write("Jack input:\r\n");                
+                Write("Jack input:\r\n");
 
             sprintf(Info, "%d: ", i + 1);
             Write(Info);
 
             RdosGetAudioWidgetInfo(dev, codec, node, Info);
             Write(Info);
-            sprintf(Info, " (%d.%d.%d)", dev, codec, node); 
+            sprintf(Info, " (%d.%d.%d)", dev, codec, node);
             Write(Info);
             Write("\r\n");
         }
@@ -790,7 +781,7 @@ void TAudioCommand::ShowDevices()
             break;
         }
     }
-}    
+}
 
 /*##########################################################################
 #
@@ -805,8 +796,6 @@ void TAudioCommand::ShowDevices()
 ##########################################################################*/
 int TAudioCommand::Execute(char *param)
 {
-    TArg *arg;
-
     InitOptions();
 
     if (!ScanCmdLine(param, 0))
@@ -822,6 +811,4 @@ int TAudioCommand::Execute(char *param)
         ShowDevices();
         return 0;
     }
-
-    return 0;
 }

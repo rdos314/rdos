@@ -180,17 +180,17 @@ int TInfoCommand::Execute(char *param)
             if (Type == 1)
             {
                 Base = RdosGetPhysicalEntryBase(Entry);
-                Size = RdosGetPhysicalEntrySize(Entry);         
+                Size = RdosGetPhysicalEntrySize(Entry);
 
                 LsbStart = (unsigned int)Base;
-                MsbStart = (unsigned int)(Base >> 32);  
+                MsbStart = (unsigned int)(Base >> 32);
 
                 LsbEnd = (unsigned int)(Base + Size - 1);
-                MsbEnd = (unsigned int)((Base + Size - 1) >> 32);  
+                MsbEnd = (unsigned int)((Base + Size - 1) >> 32);
 
                 FMsg.printf(TEXT_INFO_PHYS_ENTRY, MsbStart, LsbStart, MsbEnd, LsbEnd);
                 Write(FMsg.GetData());
-            }  
+            }
             Entry++;
         }
     }
@@ -213,11 +213,11 @@ int TInfoCommand::Execute(char *param)
         FMsg.printf(TEXT_INFO_PAGING32);
         Write(FMsg.GetData());
     }
-        
-    
+
+
     PhysMem = RdosGetFreePhysical();
     mb = (int)(PhysMem / 1024LL / 1024LL);
-    kb = PhysMem - (long long)mb * 1024LL * 1024LL;
+    kb = (int)(PhysMem - (long long)mb * 1024LL * 1024LL);
     kb = kb * 1000 / 1024;
     kb = kb * 100 / 1024;
     FMsg.printf(TEXT_INFO_PHYSICAL, mb, kb);
@@ -247,7 +247,7 @@ int TInfoCommand::Execute(char *param)
 
     if (!strcmp(CpuVendor, "AMDisbetter!"))
         strcpy(CpuVendor, "AMD K5");
-        
+
     if (!strcmp(CpuVendor, "AuthenticAMD"))
         strcpy(CpuVendor, "AMD");
 
@@ -403,7 +403,7 @@ int TInfoCommand::Execute(char *param)
     if (FeatureBits & 0x80000000)
         Write("PBE ");
 
-    Write("\r\n");    
+    Write("\r\n");
 
     return 0;
 }

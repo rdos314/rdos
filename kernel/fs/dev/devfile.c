@@ -260,7 +260,6 @@ int VfsRead(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, in
     int LastIndex;
     short int sel = GetSel(Map);
     struct RdosFileInfo *info = (struct RdosFileInfo *)OffsetToPtr(sel, Map->InfoOffset);
-    struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
     long long TotalSize = info->CurrSize;
 
     if (Map->Update)
@@ -332,7 +331,6 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
     int LastIndex = 0;
     short int sel = GetSel(Map);
     struct RdosFileInfo *info = (struct RdosFileInfo *)OffsetToPtr(sel, Map->InfoOffset);
-    struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
     long long Grow;
 
     if (Map->Update)

@@ -501,7 +501,6 @@ void TStateCommand::WriteModuleById(int pid, int mid)
     int ok = FALSE;
     int i;
     int id;
-    int Usage;
     int ModuleCount = RdosGetModuleCount();
 
     for (i = 0; i < ModuleCount && !ok; i++)

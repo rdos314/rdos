@@ -66,7 +66,7 @@ TDebugFactory::TDebugFactory()
 ##########################################################################*/
 TCommand *TDebugFactory::Create(TSession *session, const char *param)
 {
-	return new TDebugCommand(session, param);
+        return new TDebugCommand(session, param);
 }
 
 /*##########################################################################
@@ -83,7 +83,7 @@ TCommand *TDebugFactory::Create(TSession *session, const char *param)
 TDebugCommand::TDebugCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_DEBUG);
+        FHelpScreen.Load(TEXT_CMDHELP_DEBUG);
 }
 
 /*##########################################################################
@@ -99,62 +99,61 @@ TDebugCommand::TDebugCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TDebugCommand::Execute(char *param)
 {
-	const char *NodeName;
-	int n0,n1,n2,n3;
-	long Node;
-	unsigned long Temp;
-	int i;
+        const char *NodeName;
+        int n0,n1,n2,n3;
+        long Node;
+        unsigned long Temp;
 
-	if (!ScanCmdLine(param, 0))
-		return 1;
+        if (!ScanCmdLine(param, 0))
+                return 1;
 
-	if (FArgCount != 1)
-	{
-		FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-		Write(FMsg.GetData());
-		return E_Useage;
-	}
+        if (FArgCount != 1)
+        {
+                FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+                Write(FMsg.GetData());
+                return E_Useage;
+        }
 
-	NodeName = FArgList->FName.GetData();
+        NodeName = FArgList->FName.GetData();
 
-	if (isdigit(NodeName[0]))
-	{
-		if (sscanf(NodeName, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
-			Node = n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
-		else
-		{
-			Node = 0;
-    		FMsg.Load(TEXT_ERROR_INVALID_IP);
-    		Write(FMsg.GetData());
-    		return 0;
-		}
-	}
-	else
-	{
-		Node = RdosNameToIp(NodeName);
-		if (Node == 0)
-		{
-			FMsg.Load(TEXT_ERROR_INVALID_HOSTNAME);
-			Write(FMsg.GetData());
-			return 0;
-		}
-	}
+        if (isdigit(NodeName[0]))
+        {
+                if (sscanf(NodeName, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
+                        Node = n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
+                else
+                {
+                        Node = 0;
+                FMsg.Load(TEXT_ERROR_INVALID_IP);
+                Write(FMsg.GetData());
+                return 0;
+                }
+        }
+        else
+        {
+                Node = RdosNameToIp(NodeName);
+                if (Node == 0)
+                {
+                        FMsg.Load(TEXT_ERROR_INVALID_HOSTNAME);
+                        Write(FMsg.GetData());
+                        return 0;
+                }
+        }
 
-	if (Node)
-	{
-		Temp = (unsigned long)Node;
-		n3 = Temp & 0xFF;
-		Temp = Temp >> 8;
-		n2 = Temp & 0xFF;
-		Temp = Temp >> 8;
-		n1 = Temp & 0xFF;
-		Temp = Temp >> 8;
-		n0 = Temp & 0xFF;
+        if (Node)
+        {
+                Temp = (unsigned long)Node;
+                n3 = Temp & 0xFF;
+                Temp = Temp >> 8;
+                n2 = Temp & 0xFF;
+                Temp = Temp >> 8;
+                n1 = Temp & 0xFF;
+                Temp = Temp >> 8;
+                n0 = Temp & 0xFF;
 
         RdosRemoteDebug(Node);
 
-		return 0;
+                return 0;
     }
-	return 1;
+        return 1;
 }
 

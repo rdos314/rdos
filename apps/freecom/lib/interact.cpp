@@ -576,8 +576,6 @@ int TInteract::ReadCmd(char *str, int maxsize)
     }
     else
         return ReadCon(str, maxsize);
-
-    return FALSE;
 }
 
 /*##########################################################################

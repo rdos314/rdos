@@ -98,7 +98,6 @@ TSyncPartitionCommand::TSyncPartitionCommand(TSession *session, const char *para
 ##########################################################################*/
 int TSyncPartitionCommand::Execute(char *param)
 {
-    int ret;
     int DiscNr;
 
     if (!ScanCmdLine(param, 0))

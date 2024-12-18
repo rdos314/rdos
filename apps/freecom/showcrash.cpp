@@ -104,12 +104,12 @@ void TShowCrashCommand::WriteSelector(const char *Name, TCrashSelectorInfo *info
     Write(Name);
     Write("=");
 
-    sprintf(str,"%04hX", info->Selector);    
+    sprintf(str,"%04hX", info->Selector);
     Write(str);
 
     if (info->Valid)
-    {    
-        sprintf(str," %08lX (%08lX) ", info->Base, info->Limit);    
+    {
+        sprintf(str," %08lX (%08lX) ", info->Base, info->Limit);
         Write(str);
 
         Write(info->InfoText);
@@ -135,7 +135,7 @@ void TShowCrashCommand::WriteDt(const char *Name, TCrashSelectorInfo *info)
     Write(Name);
     Write("=");
 
-    sprintf(str,"%08lX (%08lX) ", info->Base, info->Limit);    
+    sprintf(str,"%08lX (%08lX) ", info->Base, info->Limit);
     Write(str);
     Write("\r\n");
 }
@@ -155,7 +155,7 @@ void TShowCrashCommand::WriteFlags(long long flags)
 {
     int iopl = (((int)flags) >> 12) & 0x3;
     char str[10];
-     
+
     if (flags & 0x1)
         Write("CY ");
     else
@@ -200,21 +200,21 @@ void TShowCrashCommand::WriteThread(TCrashThreadInfo *info)
 {
     char str[81];
 
-    sprintf(str,"%04hX ", info->Selector);    
+    sprintf(str,"%04hX ", info->Selector);
     Write(str);
 
-    sprintf(str,"PRIO=%d ", info->Prio);    
+    sprintf(str,"PRIO=%d ", info->Prio);
     Write(str);
 
     if (info->Core)
     {
-        sprintf(str,"CORE=%04hX ", info->Core);    
+        sprintf(str,"CORE=%04hX ", info->Core);
         Write(str);
     }
 
     if (info->WantedCore)
     {
-        sprintf(str,"WCORE=%04hX ", info->WantedCore);    
+        sprintf(str,"WCORE=%04hX ", info->WantedCore);
         Write(str);
     }
 
@@ -242,7 +242,7 @@ void TShowCrashCommand::WriteStack(char *data, int sel, int base, int size)
     char str[10];
     int i;
     short int sval;
-    
+
     while (size >= 16)
     {
         ads = base + size - 16;
@@ -262,7 +262,7 @@ void TShowCrashCommand::WriteStack(char *data, int sel, int base, int size)
             else
                 Write(" ");
         }
-        size -= 16;                
+        size -= 16;
     }
 
     if (size)
@@ -274,7 +274,7 @@ void TShowCrashCommand::WriteStack(char *data, int sel, int base, int size)
         Write(str);
 
         size = size / 2;
-    
+
        for (i = 0; i < 8 - size; i++)
             Write("     ");
 
@@ -288,7 +288,7 @@ void TShowCrashCommand::WriteStack(char *data, int sel, int base, int size)
                 Write("\r\n");
             else
                 Write(" ");
-        }        
+        }
     }
 }
 
@@ -310,32 +310,32 @@ void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
 
     sprintf(str, "Core=%d (%04hX)\r\n", core, info->Core);
     Write(str);
-    
+
     sprintf(str, "CS:EIP=%04hX:%08lX\r\n", info->Cs.Selector, (int)info->Rip);
     Write(str);
-    
-    sprintf(str, "SS:ESP=%04hX:%08lX\r\n", info->Ss.Selector, (int)info->Rsp); 
+
+    sprintf(str, "SS:ESP=%04hX:%08lX\r\n", info->Ss.Selector, (int)info->Rsp);
     Write(str);
 
-    sprintf(str,"EAX=%08lX ", (int)info->Rax);    
+    sprintf(str,"EAX=%08lX ", (int)info->Rax);
     Write(str);
 
-    sprintf(str, "EBX=%08lX ", (int)info->Rbx);    
+    sprintf(str, "EBX=%08lX ", (int)info->Rbx);
     Write(str);
 
-    sprintf(str, "ECX=%08lX ", (int)info->Rcx);    
+    sprintf(str, "ECX=%08lX ", (int)info->Rcx);
     Write(str);
 
-    sprintf(str, "EDX=%08lX\r\n", (int)info->Rdx);    
+    sprintf(str, "EDX=%08lX\r\n", (int)info->Rdx);
     Write(str);
 
-    sprintf(str, "ESI=%08lX ", (int)info->Rsi);    
+    sprintf(str, "ESI=%08lX ", (int)info->Rsi);
     Write(str);
 
-    sprintf(str, "EDI=%08lX ", (int)info->Rdi);    
+    sprintf(str, "EDI=%08lX ", (int)info->Rdi);
     Write(str);
 
-    sprintf(str, "EBP=%08lX\r\n", (int)info->Rbp);    
+    sprintf(str, "EBP=%08lX\r\n", (int)info->Rbp);
     Write(str);
 
     WriteFlags(info->Rflags);
@@ -350,19 +350,19 @@ void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
     WriteDt("GDT", &info->Gdt);
     WriteDt("IDT", &info->Idt);
 
-    sprintf(str, "CR0=%08lX ", info->Cr0);    
+    sprintf(str, "CR0=%08lX ", info->Cr0);
     Write(str);
 
-    sprintf(str, "CR2=%08lX ", info->Cr2);    
+    sprintf(str, "CR2=%08lX ", info->Cr2);
     Write(str);
 
-    sprintf(str, "CR3=%08lX ", info->Cr3);    
+    sprintf(str, "CR3=%08lX ", info->Cr3);
     Write(str);
 
-    sprintf(str, "CR4=%08lX\r\n", info->Cr4);    
+    sprintf(str, "CR4=%08lX\r\n", info->Cr4);
     Write(str);
 
-    sprintf(str, "NEST=%d\r\n", (int)info->Nesting);    
+    sprintf(str, "NEST=%d\r\n", (int)info->Nesting);
     Write(str);
 
     WriteSelector("TR", &info->Tr);
@@ -389,10 +389,9 @@ void TShowCrashCommand::WriteCore(int core, TCrashCoreInfo *info)
 ##########################################################################*/
 void TShowCrashCommand::WriteLog(TCrashLogInfo *info)
 {
-    int i;
     char str[81];
 
-    sprintf(str, "%04d-%02d-%02d %02d.%02d.%02d,%03d %03d ", 
+    sprintf(str, "%04d-%02d-%02d %02d.%02d.%02d,%03d %03d ",
                     info->Time.GetYear(),
                     info->Time.GetMonth(),
                     info->Time.GetDay(),
@@ -403,15 +402,15 @@ void TShowCrashCommand::WriteLog(TCrashLogInfo *info)
                     info->Time.GetMicroSec());
     Write(str);
 
-    sprintf(str, "CORE=%d ", info->Core); 
+    sprintf(str, "CORE=%d ", info->Core);
     Write(str);
 
-    sprintf(str, "TYPE=%d ", info->Type); 
+    sprintf(str, "TYPE=%d ", info->Type);
     Write(str);
-    
+
     sprintf(str, "PROC=%04hX ", info->Proc);
     Write(str);
-    
+
     sprintf(str, "DATA=%08hX\r\n", info->Data);
     Write(str);
 }

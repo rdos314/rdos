@@ -97,20 +97,19 @@ TTempCommand::TTempCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TTempCommand::Execute(char *param)
 {
-    char str[16];
     int val = RdosGetCpuTemperature();
 
     if (val)
     {
          FMsg.printf(TEXT_CPU_TEMP, val / 10, val % 10);
          Write(FMsg.GetData());
-        
+
     }
     else
     {
         FMsg.Load(TEXT_NO_CPU_TEMP);
         Write(FMsg.GetData());
-    }    
+    }
 
     return 0;
 }

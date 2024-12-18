@@ -218,7 +218,6 @@ void TShowPartitionCommand::ShowFreeEntry(int Nr, TPartition *Entry)
 {
     const char *Name;
     double TotalSpace;
-    double FreeSpace;
     char str[100];
 
     Name = Entry->GetPartName();

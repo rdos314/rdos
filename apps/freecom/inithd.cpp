@@ -218,7 +218,7 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc, int IdeDisc)
         bootp.SectorsPerCyl = Disc->GetSectorsPerCyl();
         bootp.Heads = Disc->GetHeads();
         bootp.HiddenSectors = FLoaderSectors;
-        bootp.Sectors = Disc->GetTotalSectors();
+        bootp.Sectors = (int)Disc->GetTotalSectors();
         bootp.Drive = 0x80 + IdeDisc;
         bootp.Resv7 = 0;
         bootp.Signature = 0;
@@ -360,7 +360,7 @@ void TInitHdCommand::WriteGptSector(TDisc *Disc, int IdeDisc)
     bootp.SectorsPerCyl = Disc->GetSectorsPerCyl();
     bootp.Heads = Disc->GetHeads();
     bootp.HiddenSectors = 0;
-    bootp.Sectors = Total;
+    bootp.Sectors = (int)Total;
     bootp.Drive = 0x80 + IdeDisc;
     bootp.Resv7 = 0;
     bootp.Signature = 0;
@@ -421,7 +421,7 @@ void TInitHdCommand::WriteGptLoader(TDisc *Disc)
 #
 #   Name       : TInitHdCommand::InitGpt
 #
-#   Purpose....: Init GPT 
+#   Purpose....: Init GPT
 #
 #   In params..: *
 #   Out params.: *
@@ -436,8 +436,8 @@ void TInitHdCommand::InitGpt(TDisc *Disc, int DiscNr)
 
     LoadGptLoader(Disc);
     WriteGptLoader(Disc);
-    WriteGptSector(Disc, DiscNr);            
-    Part.Write(FLoaderSectors);    
+    WriteGptSector(Disc, DiscNr);
+    Part.Write(FLoaderSectors);
 }
 
 /*##########################################################################
@@ -581,7 +581,7 @@ int TInitHdCommand::Execute(char *param)
 
         if (ok)
         {
-        
+
             LoadBootLoader(Disc);
 
             if (FOptI)

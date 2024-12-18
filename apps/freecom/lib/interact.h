@@ -37,7 +37,7 @@ class TInteract
 public:
     TInteract(TKeyboardDevice *Keyboard);
     TInteract(const TInteract &source);
-    ~TInteract();
+    virtual ~TInteract();
 
     virtual void DisplayPrompt() = 0;
     virtual void Run() = 0;
@@ -47,7 +47,7 @@ public:
     bool IsEchoOn();
 
     TKeyboardDevice *GetKeyboard();
-    
+
     void Write(char ch);
     void Write(const char *str);
 
@@ -58,7 +58,7 @@ public:
     int ReadCmd(char *str, int maxsize);
 
     int ReadCon(char *str, int maxsize);
- 
+
 protected:
     TString FormatTime(TDateTime &time);
     TString FormatLongDate(TDateTime &date);

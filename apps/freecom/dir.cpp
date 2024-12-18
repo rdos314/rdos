@@ -752,16 +752,17 @@ void TDirCommand::Add(TString &path)
 ##########################################################################*/
 int TDirCommand::Execute(char *param)
 {
-        TArg *arg;
+    TArg *arg;
+    TString all("*");
 
-        InitOptions();
+    InitOptions();
 
-        if (!ScanCmdLine(param, 0))
-                return 1;
+    if (!ScanCmdLine(param, 0))
+        return 1;
 
-        FFileCount = 0;
-        FDirCount = 0;
-        FTotalSize = 0;
+    FFileCount = 0;
+    FDirCount = 0;
+    FTotalSize = 0;
 
     arg = FArgList;
 
@@ -769,8 +770,8 @@ int TDirCommand::Execute(char *param)
     {
         FFileList.SetRequiredAttributes(FRequired & (~FILE_ATTRIBUTE_DIRECTORY));
         FFileList.SetIgnoredAttributes(FIgnored | FILE_ATTRIBUTE_DIRECTORY);
-                FDirList.SetRequiredAttributes(FRequired | FILE_ATTRIBUTE_DIRECTORY);
-                FDirList.SetIgnoredAttributes(FIgnored & (~FILE_ATTRIBUTE_DIRECTORY));
+        FDirList.SetRequiredAttributes(FRequired | FILE_ATTRIBUTE_DIRECTORY);
+        FDirList.SetIgnoredAttributes(FIgnored & (~FILE_ATTRIBUTE_DIRECTORY));
     }
     else
     {
@@ -778,20 +779,20 @@ int TDirCommand::Execute(char *param)
         FFileList.SetIgnoredAttributes(FIgnored);
     }
 
-        if (arg)
+    if (arg)
+    {
+        WriteHeader(arg->FName);
+        while (arg)
         {
-                WriteHeader(arg->FName);
-                while (arg)
-                {
-                        Add(arg->FName);
-                        arg = arg->FList;
-                }
+            Add(arg->FName);
+            arg = arg->FList;
         }
-        else
-        {
-                WriteHeader("*");
-                Add("*");
-        }
+    }
+    else
+    {
+        WriteHeader(all);
+        Add(all);
+    }
 
     FFileList.RemoveDuplicates();
     FDirList.RemoveDuplicates();
@@ -799,12 +800,12 @@ int TDirCommand::Execute(char *param)
     FFileList.Sort();
     FDirList.Sort();
 
-        if (FOptW)
-                WriteWide();
-        else
-                WriteDetailed();
+    if (FOptW)
+        WriteWide();
+    else
+        WriteDetailed();
 
-        WriteFooter();
+    WriteFooter();
 
-        return 0;
+    return 0;
 }

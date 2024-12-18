@@ -146,10 +146,8 @@ void TComCommand::InitOptions()
 int TComCommand::Execute(char *param)
 {
     const int KNOWN_COUNT = 3;
-    static char *unknown = "Unknown";
     char txt[256];
     int moduleNr;
-    int portNr;
 
     int numPorts = RdosGetMaxComPort();
 

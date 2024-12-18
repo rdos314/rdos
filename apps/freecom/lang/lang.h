@@ -329,7 +329,6 @@
 #define TEXT_CPU_TEMP  325
 #define TEXT_NO_CPU_TEMP  326
 #define TEXT_CMDHELP_DHCP  327
-#define TEXT_ERROR_OPT_ARG   328
 #define TEXT_CMDHELP_COPY  329
 
 #endif
