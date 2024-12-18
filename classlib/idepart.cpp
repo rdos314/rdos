@@ -929,7 +929,7 @@ void TIdeDiscPartition::Load()
     if (FDisc->IsValid())
     {
         Name = PartRoot->GetPartName();
-        PartRoot->FTotalSectors = FDisc->GetTotalSectors();
+        PartRoot->FTotalSectors = (int)FDisc->GetTotalSectors();
         PartRoot->FHeads = FDisc->GetHeads();
         PartRoot->FSectorsPerCyl = FDisc->GetSectorsPerCyl();
         PartRoot->Size = PartRoot->FTotalSectors;

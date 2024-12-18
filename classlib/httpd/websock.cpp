@@ -595,12 +595,9 @@ void TWebSocketServer::ReceivedPong(char *str)
 void TWebSocketServer::HandleUpgrade(const char *Name, THttpCommand *Cmd, const char *upgrade)
 {
     THttpOption *opt;
-    int size;
-    char *ptr;
     const char *prot;
     TString key;
     TString str;
-    long ip;
     bool ok = false;
 
     if (strstr(upgrade, "websocket"))

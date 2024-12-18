@@ -35,7 +35,7 @@ class THttpSocketServerFactory : public TSocketServerFactory, public THttpServer
 {
 public:
     THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-    ~THttpSocketServerFactory();
+    virtual ~THttpSocketServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket);
 };

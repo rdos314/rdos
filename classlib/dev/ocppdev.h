@@ -13,7 +13,7 @@ class TOcppNotify
 friend class TOcppSocketServer;
 public:
     TOcppNotify();
-    ~TOcppNotify();
+    virtual ~TOcppNotify();
 
     void (*OnState)(TOcppNotify *Server, const char *state);
     void (*OnStart)(TOcppNotify *Server, int val);
@@ -57,7 +57,7 @@ class TOcppSocketServerFactory : public THttpSocketServerFactory, public TOcppNo
 {
 public:
     TOcppSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-    ~TOcppSocketServerFactory();
+    virtual ~TOcppSocketServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket);
 };

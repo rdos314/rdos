@@ -376,7 +376,6 @@ int TIcsp87Xa::DoVerify()
 	int i;
 	char *ptr;
 	int adr;
-	int ok;
 	int val;
 
 	adr = 0;

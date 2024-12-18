@@ -34,7 +34,7 @@ class THttpServerFactory
 {
 public:
     THttpServerFactory();
-    ~THttpServerFactory();
+    virtual ~THttpServerFactory();
 
     void AddCustomPage(THttpCustomPageFactory *page);
     void AddCustomDir(THttpCustomDirFactory *dir);

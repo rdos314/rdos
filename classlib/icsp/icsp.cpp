@@ -128,7 +128,6 @@ static void string_putc( _SPECS *specs, int op_char )
 void TIcsp::Info(const char *format, ...)
 {
     va_list ap;
-    slib_callback_t *tmp;
     int len;
 
     va_start(ap, format);

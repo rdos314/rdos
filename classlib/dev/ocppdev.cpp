@@ -968,7 +968,7 @@ void TOcppSocketServer::HandleStartTransaction(TJsonDocument *doc)
 {
     TJsonCollection *root = doc->GetRoot();
     const char *id = root->GetText("idTag", "");
-    long meter = root->GetInt("meterStart", 0);
+    long meter = (int)root->GetInt("meterStart", 0);
     TJsonCollection *info;
 
     TJsonDocument *json = new TJsonDocument;
@@ -998,7 +998,7 @@ void TOcppSocketServer::HandleStopTransaction(TJsonDocument *doc)
 {
     TJsonCollection *root = doc->GetRoot();
     const char *id = root->GetText("idTag", "");
-    long meter = root->GetInt("meterStop", 0);
+    long meter = (int)root->GetInt("meterStop", 0);
     TJsonCollection *info;
 
     TJsonDocument *json = new TJsonDocument;
@@ -1139,9 +1139,7 @@ void TOcppSocketServer::UpdateMeter(TJsonCollection *root)
     TString param;
     TString unit;
     const char *ptr;
-    long long val;
     bool use;
-    bool kwh;
     bool data = false;
 
     if (root)

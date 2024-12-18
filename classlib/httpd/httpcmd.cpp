@@ -951,7 +951,7 @@ void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
         WriteTimeOption("Last-Modified", time);
         WriteOption("Accept-Ranges", "bytes");
         WriteOption("Content-Type", ContentType);
-        WriteLongOption("Content-Length", file.GetSize());
+        WriteLongOption("Content-Length", (int)file.GetSize());
         WriteEndHeader();
 
         count = file.Read(Buf, 512);
@@ -1038,7 +1038,7 @@ int THttpCommand::PushFile(TPathName &path, const char *ContentType, int ReloadT
     TDateTime time(file.GetTime());
 
     WriteOption("Content-Type", ContentType);
-    WriteLongOption("Content-Length", file.GetSize());
+    WriteLongOption("Content-Length", (int)file.GetSize());
     WriteEndHeader();
 
     count = file.Read(Buf, 512);
