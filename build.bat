@@ -76,6 +76,10 @@ echo "Building Open SSL Lib"
 ide2make -p classlib/ssl/openssl 1>nul
 wmake -f classlib/ssl/openssl.mk -h -e 1>nul
 
+echo "Building SSL server"
+ide2make -p kernel/ssl/ssl 1>nul
+wmake -f kernel/ssl/ssl.mk -h -e 1>nul
+
 echo "Building Win32 classlib"
 ide2make -p classlib/win32/win32 1>nul
 wmake -f classlib/win32/win32.mk -h -e 1>nul

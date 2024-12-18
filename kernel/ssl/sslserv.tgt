@@ -1,4 +1,4 @@
-40
+42
 targetIdent
 0
 MProject
@@ -98,14 +98,14 @@ WString
 WCC
 24
 WString
-25
-r????Include directories:
+12
+r????WLANG_i
 1
+0
 25
 WString
 133
 "\rdos\kernel;\rdos\classlib;\rdos\classlib\ssl;\rdos\classlib\ssl\include;\rdos\classlib\ssl\apps;\rdos\classlib\rdos;$(%watcom)/rh"
-0
 26
 MVState
 27
@@ -114,14 +114,14 @@ WString
 WCC
 28
 WString
-29
-?????Disable warning messages
+14
+?????WLANG_wcd
 1
+0
 29
 WString
-3
-202
-0
+7
+202 303
 30
 WVList
 0

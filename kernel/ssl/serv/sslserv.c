@@ -46,6 +46,7 @@
 #include <openssl/async.h>
 #include <openssl/srp.h>
 #include <openssl/ct.h>
+#include "crypto/jsonc.h"
 
 #include "rdos.h"
 #include "serv.h"
@@ -820,7 +821,7 @@ static void ListenHandler(void *par)
         }
     }
 
-    RdosCloseWait(WaitHandle);
+//    RdosCloseWait(WaitHandle);
 }
 
 /*##########################################################################
@@ -1256,4 +1257,6 @@ int main(int argc, char **argv)
 
     while (WaitForMsg())
         ;
+
+    return 0;
 }
