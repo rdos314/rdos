@@ -445,7 +445,8 @@ UpdateAppPending   Endp
 WaitTimer   Proc near
     push es
     pushad
-;
+
+wtTry:
     mov cx,ds:kt_user_count
     or cx,cx
     jz wtIdle
@@ -456,8 +457,8 @@ WaitTimer   Proc near
 ;
     mov ax,flat_data_sel
     mov es,eax
-    mov edx,ds:kt_user_ptr
-    lea esi,[ebx+edx].ut_rw_active.uat_entries
+    mov edi,ds:kt_user_ptr
+    lea esi,[ebx+edi].ut_rw_active.uat_entries
 ;
     GetSystemTime
     sub eax,es:[esi].ute_timeout
@@ -476,6 +477,22 @@ WaitTimer   Proc near
 
 wtCompleted:
     int 3
+    movzx ebx,ds:kt_user_wait
+    btc es:[edi].ut_rw_active.uat_pending_map,ebx
+    bts es:[edi].ut_rw_active.uat_completed_map,ebx
+;
+    sub ds:kt_user_count,1
+    jz wtTry
+;
+    movzx ecx,ds:kt_user_count
+    mov ebx,OFFSET kt_user_wait
+
+wtComplLoop:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    loop wtComplLoop
+;
+    jmp wtTry
 
 wtIdle:
     GetSystemTime
