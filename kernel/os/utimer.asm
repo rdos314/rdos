@@ -241,20 +241,29 @@ AddAppReq   Proc near
     mov cx,ds:kt_user_count
     or cx,cx
     jz aarAdd
+;
+    int 3
+    push ebx
+;
+    mov ebp,ds:kt_user_ptr
+    add ebp,OFFSET ut_rw_active
 
 aarLoop:
-    movzx ebp,word ptr ds:[edi]
-    sub ebp,4
-    shl ebp,4
+    movzx ebx,word ptr ds:[edi]
+    shl ebx,4
+    add ebx,ebp
+;
     mov eax,es:[esi].ute_timeout
     mov edx,es:[esi].ute_timeout+4
-    sub eax,es:[ebp].ute_timeout
-    sbb edx,es:[ebp].ute_timeout+4
+    sub eax,es:[ebx].ute_timeout
+    sbb edx,es:[ebx].ute_timeout+4
     jc aarAdd
 ;
     add edi,2
     sub cx,1
     jnz aarLoop
+;
+    pop ebx
 
 aarAdd:
     xchg bx,ds:[edi]
@@ -308,7 +317,6 @@ sarDone:
     jmp sarCopy
 
 sarActive:  
-    int 3  
     bts es:[edi].uat_pending_map,ebx
     lock btc es:[esi].urt_req_map,ebx
 ;

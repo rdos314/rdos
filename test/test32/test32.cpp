@@ -12,14 +12,24 @@
 #include "videodev.h"
 #include "table.h"
 
-void TimeoutCallback(void *param)
+void TimeoutCallback1(void *param)
+{
+}
+
+void TimeoutCallback2(void *param)
+{
+}
+
+void TimeoutCallback3(void *param)
 {
 }
 
 void main()
 {
     int timer;
-    timer = RdosStartAppTimer(TimeoutCallback, 0, 1000);
+    timer = RdosStartAppTimer(TimeoutCallback1, 0, 1000);
+    timer = RdosStartAppTimer(TimeoutCallback2, 0, 2000);
+    timer = RdosStartAppTimer(TimeoutCallback3, 0, 500);
     RdosStopAppTimer(timer);
 
 /*
