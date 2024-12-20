@@ -86,13 +86,13 @@ AllocateUserTimer    Proc near
 ;
     mov edi,OFFSET kt_kernel_wait
     mov ecx,TIMER_ENTRIES
-    xor ax,ax
-    rep stosw
+    xor al,al
+    rep stosb
 ;
     mov edi,OFFSET kt_user_wait
     mov ecx,TIMER_ENTRIES
-    xor ax,ax
-    rep stosw
+    xor al,al
+    rep stosb
     mov ds:pf_timer_sel,es
 ;
     popad
@@ -235,6 +235,7 @@ init_user_timer   Endp
 AddAppReq   Proc near
     pushad
 ;
+    push ebx
     EnterSection ds:kt_section
 ;
     mov edi,OFFSET kt_user_wait
@@ -242,14 +243,11 @@ AddAppReq   Proc near
     or cx,cx
     jz aarAdd
 ;
-    int 3
-    push ebx
-;
     mov ebp,ds:kt_user_ptr
     add ebp,OFFSET ut_rw_active
 
-aarLoop:
-    movzx ebx,word ptr ds:[edi]
+aarFindLoop:
+    movzx ebx,byte ptr ds:[edi]
     shl ebx,4
     add ebx,ebp
 ;
@@ -259,20 +257,21 @@ aarLoop:
     sbb edx,es:[ebx].ute_timeout+4
     jc aarAdd
 ;
-    add edi,2
+    inc edi
     sub cx,1
-    jnz aarLoop
-;
-    pop ebx
+    jnz aarFindLoop
 
 aarAdd:
-    xchg bx,ds:[edi]
-    add edi,2
+    pop ebx
+
+aarAddLoop:
+    xchg bl,ds:[edi]
+    inc edi
     or cx,cx
     jz aarLeave
 ;
     sub cx,1
-    jmp aarAdd
+    jmp aarAddLoop
 
 aarLeave:
     inc ds:kt_user_count
@@ -459,14 +458,14 @@ wtTry:
     or cx,cx
     jz wtIdle
 ;
+    int 3
     movzx ebx,ds:kt_user_wait
-    sub ebx,4
     shl ebx,4
 ;
     mov ax,flat_data_sel
     mov es,eax
     mov edi,ds:kt_user_ptr
-    lea esi,[ebx+edi].ut_rw_active.uat_entries
+    lea esi,[ebx+edi].ut_rw_active
 ;
     GetSystemTime
     sub eax,es:[esi].ute_timeout
@@ -496,8 +495,9 @@ wtCompleted:
     mov ebx,OFFSET kt_user_wait
 
 wtComplLoop:
-    mov ax,ds:[ebx+2]
-    mov ds:[ebx],ax
+    mov al,ds:[ebx+1]
+    mov ds:[ebx],al
+    inc ebx
     loop wtComplLoop
 ;
     jmp wtTry

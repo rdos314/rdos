@@ -442,8 +442,8 @@ kt_flags            DB ?
 kt_section          section_typ <>
 kt_kernel_count     DW ?
 kt_user_count       DW ?
-kt_kernel_wait      DW TIMER_ENTRIES DUP(?)
-kt_user_wait        DW TIMER_ENTRIES DUP(?)
+kt_kernel_wait      DB TIMER_ENTRIES DUP(?)
+kt_user_wait        DB TIMER_ENTRIES DUP(?)
 
 kernel_timer_struc  ENDS
 
