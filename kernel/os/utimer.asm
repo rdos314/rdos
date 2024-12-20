@@ -222,9 +222,9 @@ init_user_timer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddReq
+;       NAME:           AddAppReq
 ;
-;       DESCRIPTION:    Add request
+;       DESCRIPTION:    Add app request
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
 ;                       ES:ESI  User timer data
@@ -232,16 +232,16 @@ init_user_timer   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddReq   Proc near
+AddAppReq   Proc near
     ret
-AddReq   Endp
+AddAppReq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartReq
+;       NAME:           StartAppReq
 ;
-;       DESCRIPTION:    Start request
+;       DESCRIPTION:    Start app request
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
 ;                       ES:EDX  User timer
@@ -249,7 +249,7 @@ AddReq   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartReq   Proc near
+StartAppReq   Proc near
     pushad
 ;
     mov ecx,ebx
@@ -260,44 +260,44 @@ StartReq   Proc near
     GetSystemTime
     sub eax,es:[esi+ecx].ute_timeout
     sbb edx,es:[esi+ecx+4].ute_timeout
-    jc srActive
+    jc sarActive
 
-srDone:
+sarDone:
     bts es:[edi].uat_completed_map,ebx
     lock btc es:[esi].urt_req_map,ebx
 ;
     add esi,ecx
     add edi,ecx
-    jmp srCopy
+    jmp sarCopy
 
-srActive:    
+sarActive:    
     bts es:[edi].uat_pending_map,ebx
     lock btc es:[esi].urt_req_map,ebx
 ;
     add esi,ecx
     add edi,ecx
-    call AddReq
+    call AddAppReq
 
-srCopy:
+sarCopy:
     mov ecx,4
     rep movs dword ptr es:[edi],es:[esi]
 ;
     popad
     ret
-StartReq   Endp
+StartAppReq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           UpdateReq
+;       NAME:           UpdateAppReq
 ;
-;       DESCRIPTION:    Update requests
+;       DESCRIPTION:    Update app requests
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateReq   Proc near
+UpdateAppReq   Proc near
     push es
     pushad
 ;
@@ -308,38 +308,90 @@ UpdateReq   Proc near
     mov ecx,8
     xor ebx,ebx
 
-urLoop:
+uarLoop:
     lods dword ptr es:[esi]
     or eax,eax
-    jz urNext
+    jz uarNext
 ;
     push ecx
     mov ecx,32
 
-urBitLoop:
+uarBitLoop:
     test al,1
-    jz urBitNext
+    jz uarBitNext
 ;
-    call StartReq
+    call StartAppReq
 
-urBitNext:
+uarBitNext:
     shr eax,1
     inc ebx
-    loop urBitLoop
+    loop uarBitLoop
 ;
     pop ecx
-    jmp urNextSkip
+    jmp uarNextSkip
 
-urNext:
+uarNext:
     add ebx,32
 
-urNextSkip:
-    loop urLoop
+uarNextSkip:
+    loop uarLoop
 ;
     popad
     pop es
     ret
-UpdateReq   Endp
+UpdateAppReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateAppPending
+;
+;       DESCRIPTION:    Update app pending
+;
+;       PARAMETERS:     DS      Kernel timer struc
+;
+;       RETURNS:        CY      No pending user callbacks
+;                       NC      Pending user callbacks
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateAppPending   Proc near
+    push es
+    pushad
+;
+    mov ax,flat_data_sel
+    mov es,eax
+    mov edx,ds:kt_user_ptr
+    lea esi,[edx].ut_rw_active.uat_completed_map
+    lea edi,[edx].ut_req.urt_done_map
+    mov ecx,8
+    xor ebx,ebx
+
+uapLoop:
+    mov eax,es:[esi]
+    mov edx,es:[edi]
+    and eax,edx
+    xor es:[esi],eax
+    jz uapNext
+;
+    inc ebx
+
+uapNext:
+    add esi,4
+    add edi,4
+    loop uapLoop
+;
+    or ebx,ebx
+    stc
+    jz uapDone
+;
+    clc
+
+uapDone:
+    popad
+    pop es
+    ret
+UpdateAppPending   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -365,8 +417,13 @@ wait_timer_event   Proc far
     mov ds,ds:pf_timer_sel
 
 wteLoop:
-    call UpdateReq
+    call UpdateAppReq
+    call UpdateAppPending
+    jnc wteLeave
 ;
+    int 3
+
+wteLeave:
     pop eax
     pop ds
     ret
