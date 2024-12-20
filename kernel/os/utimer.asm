@@ -81,15 +81,15 @@ AllocateUserTimer    Proc near
     InitSection es:kt_section
     mov es:kt_started,0
     mov es:kt_flags,0
-    mov es:kt_kernel_head,0
-    mov es:kt_user_head,0
+    mov es:kt_kernel_count,0
+    mov es:kt_user_count,0
 ;
-    mov edi,OFFSET kt_kernel_list
+    mov edi,OFFSET kt_kernel_wait
     mov ecx,TIMER_ENTRIES
     xor ax,ax
     rep stosw
 ;
-    mov edi,OFFSET kt_user_list
+    mov edi,OFFSET kt_user_wait
     mov ecx,TIMER_ENTRIES
     xor ax,ax
     rep stosw
@@ -233,6 +233,43 @@ init_user_timer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddAppReq   Proc near
+    pushad
+;
+    EnterSection ds:kt_section
+;
+    mov edi,OFFSET kt_user_wait
+    mov cx,ds:kt_user_count
+    or cx,cx
+    jz aarAdd
+
+aarLoop:
+    movzx ebp,word ptr ds:[edi]
+    sub ebp,4
+    shl ebp,4
+    mov eax,es:[esi].ute_timeout
+    mov edx,es:[esi].ute_timeout+4
+    sub eax,es:[ebp].ute_timeout
+    sbb edx,es:[ebp].ute_timeout+4
+    jc aarAdd
+;
+    add edi,2
+    sub cx,1
+    jnz aarLoop
+
+aarAdd:
+    xchg bx,ds:[edi]
+    add edi,2
+    or cx,cx
+    jz aarLeave
+;
+    sub cx,1
+    jmp aarAdd
+
+aarLeave:
+    inc ds:kt_user_count
+    LeaveSection ds:kt_section
+;
+    popad
     ret
 AddAppReq   Endp
 
