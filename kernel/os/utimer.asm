@@ -443,10 +443,50 @@ UpdateAppPending   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitTimer   Proc near
+    push es
+    pushad
+;
+    mov cx,ds:kt_user_count
+    or cx,cx
+    jz wtIdle
+;
+    movzx ebx,ds:kt_user_wait
+    sub ebx,4
+    shl ebx,4
+;
+    mov ax,flat_data_sel
+    mov es,eax
+    mov edx,ds:kt_user_ptr
+    lea esi,[ebx+edx].ut_rw_active.uat_entries
+;
+    GetSystemTime
+    sub eax,es:[esi].ute_timeout
+    sbb edx,es:[esi].ute_timeout+4
+    jnc wtCompleted
+;
+    or edx,edx
+    jnz wtIdle
+;
+    cmp eax,1193*90
+    jb wtIdle
+;
+    mov eax,es:[esi].ute_timeout
+    mov edx,es:[esi].ute_timeout+4
+    jmp wtWait
+
+wtCompleted:
+    int 3
+
+wtIdle:
     GetSystemTime
     add eax,1193 * 90
     adc edx,0
+
+wtWait:
     WaitForSignalWithTimeout
+;
+    popad
+    pop es
     ret
 WaitTimer   Endp
 
