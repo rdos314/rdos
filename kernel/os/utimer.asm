@@ -270,7 +270,8 @@ sarDone:
     add edi,ecx
     jmp sarCopy
 
-sarActive:    
+sarActive:  
+    int 3  
     bts es:[edi].uat_pending_map,ebx
     lock btc es:[esi].urt_req_map,ebx
 ;
@@ -396,6 +397,25 @@ UpdateAppPending   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           WaitTimer
+;
+;       DESCRIPTION:    Wait for timer
+;
+;       PARAMETERS:     DS      Kernel timer struc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitTimer   Proc near
+    GetSystemTime
+    add eax,1193 * 90
+    adc edx,0
+    WaitForSignalWithTimeout
+    ret
+WaitTimer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           WaitTimerEvent
 ;
 ;       DESCRIPTION:    Wait for timer event
@@ -421,7 +441,7 @@ wteLoop:
     call UpdateAppPending
     jnc wteLeave
 ;
-    int 3
+    call WaitTimer
 
 wteLeave:
     pop eax
