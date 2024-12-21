@@ -74,6 +74,7 @@ AllocateUserTimer    Proc near
     InitSection es:kt_section
     mov es:kt_started,0
     mov es:kt_flags,0
+    mov es:kt_thread,0
     mov es:kt_kernel_count,0
     mov es:kt_user_count,0
 ;
@@ -450,6 +451,9 @@ UpdateAppPending   Endp
 WaitTimer   Proc near
     pushad
 ;
+    GetThread
+    mov ds:kt_thread,ax
+;
     xor ebp,ebp
 
 wtTry:
@@ -513,6 +517,8 @@ wtWait:
     stc
 
 wtDone:
+    mov ds:kt_thread,0
+;
     popad
     ret
 WaitTimer   Endp
@@ -559,6 +565,36 @@ wait_timer_event   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SignalTimer
+;
+;       DESCRIPTION:    Signal timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+signal_timer_name  DB 'Signal User Timer' ,0
+
+signal_timer   Proc far
+    push ds
+    push eax
+    push ebx
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_timer_sel
+;
+    mov bx,ds:kt_thread
+    Signal
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+signal_timer   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitTimer
 ;
 ;           DESCRIPTION:    init module
@@ -582,6 +618,12 @@ InitTimer_    Proc near
     mov edi,OFFSET wait_timer_event_name
     xor dx,dx
     mov ax,wait_timer_event_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET signal_timer
+    mov edi,OFFSET signal_timer_name
+    xor dx,dx
+    mov ax,signal_timer_nr
     RegisterBimodalUserGate
     ret
 InitTimer_    Endp

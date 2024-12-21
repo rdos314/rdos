@@ -439,6 +439,7 @@ kt_kernel_ptr       DD ?
 kt_user_ptr         DD ?
 kt_started          DB ?
 kt_flags            DB ?
+kt_thread           DW ?
 kt_section          section_typ <>
 kt_kernel_count     DW ?
 kt_user_count       DW ?

@@ -14,22 +14,37 @@
 
 void TimeoutCallback1(void *param)
 {
+    RdosWriteChar('1');
 }
 
 void TimeoutCallback2(void *param)
 {
+    RdosWriteChar('2');
 }
 
 void TimeoutCallback3(void *param)
 {
+    RdosWriteChar('3');
+}
+
+void TimeoutCallback4(void *param)
+{
+    RdosWriteChar('4');
 }
 
 void main()
 {
     int timer;
-    timer = RdosStartAppTimer(TimeoutCallback1, 0, 1000);
-    timer = RdosStartAppTimer(TimeoutCallback2, 0, 2000);
-    timer = RdosStartAppTimer(TimeoutCallback3, 0, 500);
+
+    for (;;)
+    {
+        timer = RdosStartAppTimer(TimeoutCallback1, 0, RdosGetRandom(200));
+        timer = RdosStartAppTimer(TimeoutCallback2, 0, RdosGetRandom(200));
+        timer = RdosStartAppTimer(TimeoutCallback3, 0, RdosGetRandom(200));
+        timer = RdosStartAppTimer(TimeoutCallback4, 0, RdosGetRandom(200));
+        RdosWaitMilli(RdosGetRandom(200));
+    }
+
     RdosStopAppTimer(timer);
 
 /*
