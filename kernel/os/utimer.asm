@@ -66,13 +66,6 @@ AllocateUserTimer    Proc near
     push es
     pushad
 ;
-    mov ax,flat_sel
-    mov es,eax
-;
-    GetThread
-    mov ds,eax
-    mov ds,ds:p_proc_sel
-;
     mov eax,SIZE kernel_timer_struc
     AllocateSmallGlobalMem
 ;
@@ -93,6 +86,10 @@ AllocateUserTimer    Proc near
     mov ecx,TIMER_ENTRIES
     xor al,al
     rep stosb
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
     mov ds:pf_timer_sel,es
 ;
     popad
@@ -135,9 +132,9 @@ FreeUserTimer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AllocateUserTimer
+;       NAME:           InitUserTimer
 ;
-;       DESCRIPTION:    Allocate user timer
+;       DESCRIPTION:    Init user timer
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
 ;
@@ -227,7 +224,8 @@ init_user_timer   Endp
 ;       DESCRIPTION:    Add app request
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
-;                       ES:ESI  User timer data
+;                       ES      Flat data sel
+;                       ESI     User timer offset
 ;                       EBX     Timer #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -289,7 +287,8 @@ AddAppReq   Endp
 ;       DESCRIPTION:    Start app request
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
-;                       ES:EDX  User timer
+;                       ES      Flat data sel
+;                       EDX     User timer offset
 ;                       EBX     Timer #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -339,15 +338,13 @@ StartAppReq   Endp
 ;       DESCRIPTION:    Update app requests
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
+;                       ES      Flat data sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateAppReq   Proc near
-    push es
     pushad
 ;
-    mov ax,flat_data_sel
-    mov es,eax
     mov edx,ds:kt_user_ptr
     lea esi,[edx].ut_req.urt_req_map
     mov ecx,8
@@ -382,7 +379,6 @@ uarNextSkip:
     loop uarLoop
 ;
     popad
-    pop es
     ret
 UpdateAppReq   Endp
 
@@ -394,6 +390,7 @@ UpdateAppReq   Endp
 ;       DESCRIPTION:    Update app pending
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
+;                       ES      Flat data sel
 ;
 ;       RETURNS:        CY      No pending user callbacks
 ;                       NC      Pending user callbacks
@@ -401,11 +398,8 @@ UpdateAppReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateAppPending   Proc near
-    push es
     pushad
 ;
-    mov ax,flat_data_sel
-    mov es,eax
     mov edx,ds:kt_user_ptr
     lea esi,[edx].ut_rw_active.uat_completed_map
     lea edi,[edx].ut_req.urt_done_map
@@ -434,7 +428,6 @@ uapNext:
 
 uapDone:
     popad
-    pop es
     ret
 UpdateAppPending   Endp
 
@@ -446,11 +439,11 @@ UpdateAppPending   Endp
 ;       DESCRIPTION:    Wait for timer
 ;
 ;       PARAMETERS:     DS      Kernel timer struc
+;                       ES      Flat data sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitTimer   Proc near
-    push es
     pushad
 
 wtTry:
@@ -462,8 +455,6 @@ wtTry:
     movzx ebx,ds:kt_user_wait
     shl ebx,4
 ;
-    mov ax,flat_data_sel
-    mov es,eax
     mov edi,ds:kt_user_ptr
     lea esi,[ebx+edi].ut_rw_active
 ;
@@ -511,7 +502,6 @@ wtWait:
     WaitForSignalWithTimeout
 ;
     popad
-    pop es
     ret
 WaitTimer   Endp
 
@@ -521,6 +511,8 @@ WaitTimer   Endp
 ;       NAME:           WaitTimerEvent
 ;
 ;       DESCRIPTION:    Wait for timer event
+;
+;       PARAMETERS:     ES          Flat data sel
 ;
 ;       RETURN VALUE:   NC          Has event
 ;                       CY          Terminate
