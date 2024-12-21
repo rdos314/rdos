@@ -441,10 +441,15 @@ UpdateAppPending   Endp
 ;       PARAMETERS:     DS      Kernel timer struc
 ;                       ES      Flat data sel
 ;
+;       RETURNS:        CY      No pending user callbacks
+;                       NC      Pending user callbacks
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitTimer   Proc near
     pushad
+;
+    xor ebp,ebp
 
 wtTry:
     mov cx,ds:kt_user_count
@@ -475,6 +480,7 @@ wtTry:
 
 wtCompleted:
     int 3
+    inc ebp
     movzx ebx,ds:kt_user_wait
     btc es:[edi].ut_rw_active.uat_pending_map,ebx
     bts es:[edi].ut_rw_active.uat_completed_map,ebx
@@ -499,8 +505,14 @@ wtIdle:
     adc edx,0
 
 wtWait:
-    WaitForSignalWithTimeout
+    or ebp,ebp
+    clc
+    jnz wtDone
 ;
+    WaitForSignalWithTimeout
+    stc
+
+wtDone:
     popad
     ret
 WaitTimer   Endp
@@ -536,6 +548,7 @@ wteLoop:
     jnc wteLeave
 ;
     call WaitTimer
+    jc wteLoop
 
 wteLeave:
     pop eax
