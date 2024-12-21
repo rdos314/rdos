@@ -410,6 +410,7 @@ uapLoop:
     mov eax,es:[esi]
     mov edx,es:[edi]
     and eax,edx
+    xor es:[edi],eax
     xor es:[esi],eax
     jz uapNext
 ;
@@ -456,7 +457,6 @@ wtTry:
     or cx,cx
     jz wtIdle
 ;
-    int 3
     movzx ebx,ds:kt_user_wait
     shl ebx,4
 ;
@@ -468,18 +468,18 @@ wtTry:
     sbb edx,es:[esi].ute_timeout+4
     jnc wtCompleted
 ;
-    or edx,edx
-    jnz wtIdle
+    add edx,1
+    jnc wtIdle
 ;
+    not eax
     cmp eax,1193*90
-    jb wtIdle
+    ja wtIdle
 ;
     mov eax,es:[esi].ute_timeout
     mov edx,es:[esi].ute_timeout+4
     jmp wtWait
 
 wtCompleted:
-    int 3
     inc ebp
     movzx ebx,ds:kt_user_wait
     btc es:[edi].ut_rw_active.uat_pending_map,ebx
