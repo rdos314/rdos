@@ -309,16 +309,16 @@ StartAppReq   Proc near
 
 sarDone:
     bts es:[edi].uat_completed_map,ebx
-    lock btc es:[esi].urt_req_map,ebx
+    lock btr es:[esi].urt_req_map,ebx
 ;
     add esi,ecx
     add edi,ecx
     jmp sarCopy
 
 sarActive:  
-    btc es:[edi].uat_completed_map,ebx
+    btr es:[edi].uat_completed_map,ebx
     bts es:[edi].uat_pending_map,ebx
-    lock btc es:[esi].urt_req_map,ebx
+    lock btr es:[esi].urt_req_map,ebx
 ;
     add esi,ecx
     add edi,ecx
@@ -512,7 +512,7 @@ wtReload:
 wtNotReload: 
     inc ebp
     movzx ebx,ds:kt_user_wait
-    btc es:[edi].ut_rw_active.uat_pending_map,ebx
+    btr es:[edi].ut_rw_active.uat_pending_map,ebx
     bts es:[edi].ut_rw_active.uat_completed_map,ebx
 ;
     sub ds:kt_user_count,1

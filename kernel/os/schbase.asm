@@ -1055,7 +1055,7 @@ gtiLoop:
     jz gtiNext
 ;
     bsf ecx,eax
-    btc eax,ecx
+    btr eax,ecx
     mov ds:[esi],eax
 ;
     mov eax,ecx

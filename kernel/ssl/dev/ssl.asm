@@ -1787,7 +1787,7 @@ glLeave:
     jmp glDone
 
 glMsg:
-    btc ds:sl_pend_mask,edx
+    btr ds:sl_pend_mask,edx
     dec ds:sl_pend_count
     LeaveSection ds:sl_section
 ;

@@ -2949,7 +2949,7 @@ free_usb_address_name DB 'Free USB Address', 0
 free_usb_address       Proc far
     push eax
     movzx eax,al
-    btc ds:usb_addr_bitmap,eax
+    btr ds:usb_addr_bitmap,eax
     cmc
     pop eax
     retf32

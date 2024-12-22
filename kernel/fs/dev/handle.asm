@@ -1014,7 +1014,7 @@ chLeave:
     mov ds:[2*ebx].ph_wait_arr,0
     LeaveSectionUseFlags ds:ph_section
 ;
-    btc ds:ph_bitmap,ebx
+    btr ds:ph_bitmap,ebx
     jnc chFail
 ;
     mov ds,eax

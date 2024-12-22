@@ -381,7 +381,7 @@ gmeRetry:
     jz gmeTryUnused
 ;
     bsf ecx,ebx
-    lock btc ds:ssl_cmd_free_mask,ecx
+    lock btr ds:ssl_cmd_free_mask,ecx
     jc gmeOk
     jmp gmeRetry
 
@@ -391,7 +391,7 @@ gmeTryUnused:
     jz gmeBlock
 ;
     bsf ecx,ebx
-    lock btc ds:ssl_cmd_unused_mask,ecx
+    lock btr ds:ssl_cmd_unused_mask,ecx
     jc gmeAlloc
     jmp gmeRetry
 

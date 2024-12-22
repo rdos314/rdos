@@ -4592,13 +4592,13 @@ actLockOk:
     lock bts fs:cs_tlb.pt32_used,ecx
     jnc actUnlock
 ;
-    lock btc fs:cs_tlb.pt32_locked,ecx
+    lock btr fs:cs_tlb.pt32_locked,ecx
     sti
     pause
     jmp actTryLock
 
 actUnlock:
-    lock btc fs:cs_tlb.pt32_locked,ecx
+    lock btr fs:cs_tlb.pt32_locked,ecx
     sti
 
 actDone:    

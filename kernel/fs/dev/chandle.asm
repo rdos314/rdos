@@ -1159,7 +1159,7 @@ chVfsOk:
     xchg ax,ds:[ebx].sh_sel
     movzx ebp,ds:[ebx].sh_type
 ;    mov bx,ds:[ebx].sh_handle
-    btc ds:hd_sys_bitmap,ecx
+    btr ds:hd_sys_bitmap,ecx
 ;
     cmp ebp,10
     jae chLeave

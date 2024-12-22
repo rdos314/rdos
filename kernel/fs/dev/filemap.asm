@@ -5111,7 +5111,7 @@ CloseHandleSel      Proc near
     add edx,OFFSET fh_bitmap
 ;
     dec ebx
-    lock btc ds:[edx],ebx
+    lock btr ds:[edx],ebx
     jc choDone
 ;
     int 3
@@ -5180,7 +5180,7 @@ fhSelOk:
     xor eax,eax
     xchg eax,ds:[4*ebx].kf_proc_arr
 ;
-    btc ds:kf_proc_bitmap,ebx
+    btr ds:kf_proc_bitmap,ebx
     jc fhBitOk
 ;
     int 3

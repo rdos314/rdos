@@ -590,7 +590,7 @@ npLoop:
     jz npDone
 ;
     bsf si,bx
-    btc bx,si
+    btr bx,si
 ;
     movzx esi,si
     dec esi
@@ -3431,7 +3431,7 @@ gmeRetry:
     jz gmeTryUnused
 ;
     bsf ecx,ebx
-    lock btc fs:vfsp_cmd_free_mask,ecx
+    lock btr fs:vfsp_cmd_free_mask,ecx
     jc gmeOk
     jmp gmeRetry
 
@@ -3441,7 +3441,7 @@ gmeTryUnused:
     jz gmeBlock
 ;
     bsf ecx,ebx
-    lock btc fs:vfsp_cmd_unused_mask,ecx
+    lock btr fs:vfsp_cmd_unused_mask,ecx
     jc gmeAlloc
     jmp gmeRetry
 

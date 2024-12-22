@@ -2872,7 +2872,7 @@ free_int  Proc far
 ;
     movzx ax,al
     mov si,OFFSET irq_bitmask
-    btc ds:[si],ax
+    btr ds:[si],ax
 ;
     pop si
     pop ax
