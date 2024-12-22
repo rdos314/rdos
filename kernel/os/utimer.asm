@@ -485,6 +485,31 @@ wtTry:
     jmp wtWait
 
 wtCompleted:
+    mov eax,es:[esi].ute_timeout
+    mov edx,es:[esi].ute_timeout+4
+;
+    lea esi,[ebx+edi].ut_req
+    sub eax,es:[esi].ute_timeout
+    sbb edx,es:[esi].ute_timeout+4
+    jae wtNotReload
+;
+    int 3
+;
+    sub ds:kt_user_count,1
+    jz wtReload
+;
+    movzx ecx,ds:kt_user_count
+    mov ebx,OFFSET kt_user_wait
+
+wtReloadRemoveLoop:
+    mov al,ds:[ebx+1]
+    mov ds:[ebx],al
+    inc ebx
+    loop wtReloadRemoveLoop
+
+wtReload:
+
+wtNotReload: 
     inc ebp
     movzx ebx,ds:kt_user_wait
     btc es:[edi].ut_rw_active.uat_pending_map,ebx
