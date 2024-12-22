@@ -47,9 +47,9 @@ void main()
 {
     int timer;
 
-//    RdosStartAppTimer(TimeoutCallbackRestart, 0, 500);
+    RdosStartAppTimer(TimeoutCallbackRestart, 0, 500);
 
-    for (;;)
+//    for (;;)
     {
         timer = RdosStartAppTimer(TimeoutCallbackReload, 0, 750);
         RdosWaitMilli(RdosGetRandom(1000));
