@@ -316,6 +316,7 @@ sarDone:
     jmp sarCopy
 
 sarActive:  
+    btc es:[edi].uat_completed_map,ebx
     bts es:[edi].uat_pending_map,ebx
     lock btc es:[esi].urt_req_map,ebx
 ;

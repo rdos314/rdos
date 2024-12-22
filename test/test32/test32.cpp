@@ -12,6 +12,12 @@
 #include "videodev.h"
 #include "table.h"
 
+void TimeoutCallbackRestart(void *param)
+{
+    RdosWriteChar('r');
+    RdosRestartCurrentAppTimer(500);
+}
+
 void TimeoutCallback1(void *param)
 {
     RdosWriteChar('1');
@@ -35,6 +41,8 @@ void TimeoutCallback4(void *param)
 void main()
 {
     int timer;
+
+    RdosStartAppTimer(TimeoutCallbackRestart, 0, 500);
 
     for (;;)
     {
