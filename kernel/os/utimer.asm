@@ -493,10 +493,20 @@ wtCompleted:
     sbb edx,es:[esi].ute_timeout+4
     jae wtNotReload
 ;
-    int 3
+    push esi
+    push edi
+;
+    lea edi,[ebx+edi].ut_rw_active
+    movs dword ptr es:[edi],es:[esi]
+    movs dword ptr es:[edi],es:[esi]
+;
+    pop edi
+    pop esi
 ;
     sub ds:kt_user_count,1
     jz wtReload
+;
+    push ebx
 ;
     movzx ecx,ds:kt_user_count
     mov ebx,OFFSET kt_user_wait
@@ -506,8 +516,13 @@ wtReloadRemoveLoop:
     mov ds:[ebx],al
     inc ebx
     loop wtReloadRemoveLoop
+;
+    pop ebx
 
 wtReload:
+    shr ebx,4
+    call AddAppReq
+    jmp wtTry
 
 wtNotReload: 
     inc ebp

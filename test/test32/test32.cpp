@@ -21,6 +21,9 @@ void TimeoutCallbackRestart(void *param)
 void TimeoutCallbackReload(void *param)
 {
     RdosWriteChar('R');
+
+    for (;;)
+        RdosWaitMilli(100);
 }
 
 void TimeoutCallback1(void *param)
@@ -45,15 +48,12 @@ void TimeoutCallback4(void *param)
 
 void main()
 {
+    int reload_timer;
     int timer;
 
     RdosStartAppTimer(TimeoutCallbackRestart, 0, 500);
 
-//    for (;;)
-    {
-        timer = RdosStartAppTimer(TimeoutCallbackReload, 0, 750);
-        RdosWaitMilli(RdosGetRandom(1000));
-    }
+    reload_timer = RdosStartAppTimer(TimeoutCallbackReload, 0, 750);
 
     for (;;)
     {
@@ -62,6 +62,7 @@ void main()
         timer = RdosStartAppTimer(TimeoutCallback3, 0, RdosGetRandom(200));
         timer = RdosStartAppTimer(TimeoutCallback4, 0, RdosGetRandom(200));
         RdosWaitMilli(RdosGetRandom(200));
+        RdosResetAppTimer(reload_timer, 750);
     }
 
     RdosStopAppTimer(timer);
