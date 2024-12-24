@@ -3901,8 +3901,15 @@ CloseAdcChannel      MACRO
         UserGate close_adc_chan_nr
                                                 ENDM
 
-;   IN  BX      Channel
-;   IN  ES:EDI  4k buffer
+; IN  BX      Channel
+; OUT EDX:EAX Position
+GetAdcChannelPos      MACRO
+        UserGate get_adc_chan_pos_nr
+                                                ENDM
+
+; IN  BX      Channel
+; IN  ES:EDI  8k buffer
+; OUT EDX:EAX Position
 ReadAdcChannel      MACRO
         UserGate read_adc_chan_nr
                                                 ENDM

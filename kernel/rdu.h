@@ -1027,6 +1027,10 @@
 
 #define usergate_get_handle_count 0x00000354
 #define usergate_create_timer_thread 0x00000355
+#define usergate_wait_timer_event 0x00000356
+#define usergate_signal_timer 0x00000357
+
+#define usergate_get_adc_chan_pos 0x00000358
 
 
 
@@ -2060,6 +2064,10 @@
 
 #define CallGate_get_handle_count 0x55 0x67 0x9a 84 3 0 0 3 0 0x5d
 #define CallGate_create_timer_thread 0x55 0x67 0x9a 85 3 0 0 3 0 0x5d
+#define CallGate_wait_timer_event 0x55 0x67 0x9a 86 3 0 0 3 0 0x5d
+#define CallGate_signal_timer 0x55 0x67 0x9a 87 3 0 0 3 0 0x5d
+
+#define CallGate_get_adc_chan_pos 0x55 0x67 0x9a 88 3 0 0 3 0 0x5d
 
 #else
 
@@ -3091,5 +3099,9 @@
 
 #define CallGate_get_handle_count 0x3e 0x67 0x9a 84 3 0 0 3 0
 #define CallGate_create_timer_thread 0x3e 0x67 0x9a 85 3 0 0 3 0
+#define CallGate_wait_timer_event 0x3e 0x67 0x9a 86 3 0 0 3 0
+#define CallGate_signal_timer 0x3e 0x67 0x9a 87 3 0 0 3 0
+
+#define CallGate_get_adc_chan_pos 0x3e 0x67 0x9a 88 3 0 0 3 0
 
 #endif

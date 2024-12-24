@@ -1547,7 +1547,7 @@
     CallGate_get_handle_count  \
     "jnc ok" \
     "mov ecx,256" \
-    "ok: " \ 
+    "ok: " \
     __value [__ecx]
 
 #pragma aux RdosOpenHandle = \
@@ -3845,11 +3845,15 @@
     CallGate_close_adc_chan  \
     __parm [__ebx]
 
+#pragma aux RdosGetAdcChannelPos = \
+    CallGate_get_adc_chan_pos  \
+    __parm [__ebx] \
+    __value [__edx __eax]
+
 #pragma aux RdosReadAdcChannel = \
     CallGate_read_adc_chan  \
-    CarryToBool \
     __parm [__ebx] [__edi] \
-    __value [__eax]
+    __value [__edx __eax]
 
 #pragma aux RdosSetupAdc = \
     CallGate_setup_adc  \
