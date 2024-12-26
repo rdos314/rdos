@@ -259,7 +259,6 @@
 #define usergate_add_wait_for_mouse 0x000000F2
 #define usergate_remove_wait 0x000000F3
 
-#define usergate_add_wait_for_adc_chan 0x000000F4
 #define usergate_open_adc_chan 0x000000F5
 #define usergate_close_adc_chan 0x000000F6
 
@@ -1296,7 +1295,6 @@
 #define CallGate_add_wait_for_mouse 0x55 0x67 0x9a 242 0 0 0 3 0 0x5d
 #define CallGate_remove_wait 0x55 0x67 0x9a 243 0 0 0 3 0 0x5d
 
-#define CallGate_add_wait_for_adc_chan 0x55 0x67 0x9a 244 0 0 0 3 0 0x5d
 #define CallGate_open_adc_chan 0x55 0x67 0x9a 245 0 0 0 3 0 0x5d
 #define CallGate_close_adc_chan 0x55 0x67 0x9a 246 0 0 0 3 0 0x5d
 
@@ -2331,7 +2329,6 @@
 #define CallGate_add_wait_for_mouse 0x3e 0x67 0x9a 242 0 0 0 3 0
 #define CallGate_remove_wait 0x3e 0x67 0x9a 243 0 0 0 3 0
 
-#define CallGate_add_wait_for_adc_chan 0x3e 0x67 0x9a 244 0 0 0 3 0
 #define CallGate_open_adc_chan 0x3e 0x67 0x9a 245 0 0 0 3 0
 #define CallGate_close_adc_chan 0x3e 0x67 0x9a 246 0 0 0 3 0
 

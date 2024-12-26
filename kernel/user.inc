@@ -822,13 +822,6 @@ AddWaitForUsbDevicePipe       MACRO
         UserGate add_wait_for_usb_dev_pipe_nr
                                                 ENDM
 
-; IN  AX        ADC handle
-; IN  BX        Wait handle
-; IN  ECX       Object ID
-AddWaitForAdcChannel       MACRO
-        UserGate add_wait_for_adc_chan_nr
-                                                ENDM
-
 ; OUT BX        Signal handle
 CreateSignal       MACRO
         UserGate create_signal_nr

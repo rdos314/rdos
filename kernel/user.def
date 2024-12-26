@@ -259,7 +259,6 @@ read_key_event_nr           = 241
 add_wait_for_mouse_nr           = 242
 remove_wait_nr              = 243
 
-add_wait_for_adc_chan_nr    = 244
 open_adc_chan_nr            = 245
 close_adc_chan_nr           = 246
 

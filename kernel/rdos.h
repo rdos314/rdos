@@ -805,7 +805,6 @@ void RDOSAPI RdosRemoveWait(int Handle, int ID);
 void RDOSAPI RdosAddWaitForKeyboard(int Handle, int ID);
 void RDOSAPI RdosAddWaitForMouse(int Handle, int ID);
 void RDOSAPI RdosAddWaitForCom(int Handle, int ComHandle, int ID);
-void RDOSAPI RdosAddWaitForAdcChannel(int Handle, int AdcHandle, int ID);
 void RDOSAPI RdosAddWaitForSysLog(int Handle, int SyslogHandle, int ID);
 
 int RDOSAPI RdosCreateSignal(void);

@@ -2747,10 +2747,6 @@
     CallGate_add_wait_for_syslog  \
     __parm [__ebx] [__eax] [__ecx]
 
-#pragma aux RdosAddWaitForAdcChannel = \
-    CallGate_add_wait_for_adc_chan  \
-    __parm [__ebx] [__eax] [__ecx]
-
 #pragma aux RdosCreateSignal = \
     CallGate_create_signal  \
     ValidateHandle  \
