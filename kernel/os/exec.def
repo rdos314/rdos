@@ -431,7 +431,7 @@ ute_param         DD ?
 
 user_timer_entry         ENDS
 
-TIMER_ENTRIES   = 252
+USER_TIMER_ENTRIES   = 252
 
 kernel_timer_struc  STRUC
 
@@ -443,8 +443,8 @@ kt_thread           DW ?
 kt_section          section_typ <>
 kt_kernel_count     DW ?
 kt_user_count       DW ?
-kt_kernel_wait      DB TIMER_ENTRIES DUP(?)
-kt_user_wait        DB TIMER_ENTRIES DUP(?)
+kt_kernel_wait      DB USER_TIMER_ENTRIES DUP(?)
+kt_user_wait        DB USER_TIMER_ENTRIES DUP(?)
 
 kernel_timer_struc  ENDS
 
@@ -452,7 +452,7 @@ kernel_active_timer STRUC
 
 kat_pending_map     DD 8 DUP(?)
 kat_completed_map   DD 8 DUP(?)
-kat_entries         DB 16 * TIMER_ENTRIES DUP(?)
+kat_entries         DB 16 * USER_TIMER_ENTRIES DUP(?)
 
 kernel_active_timer ENDS
 
@@ -460,7 +460,7 @@ kernel_req_timer    STRUC
 
 krt_req_map         DD 8 DUP(?)
 krt_done_map        DD 8 DUP(?)
-krt_entries         DB 16 * TIMER_ENTRIES DUP(?)
+krt_entries         DB 16 * USER_TIMER_ENTRIES DUP(?)
 
 kernel_req_timer    ENDS
 
@@ -468,7 +468,7 @@ user_active_timer   STRUC
 
 uat_pending_map     DD 8 DUP(?)
 uat_completed_map   DD 8 DUP(?)
-uat_entries         DB 16 * TIMER_ENTRIES DUP(?)
+uat_entries         DB 16 * USER_TIMER_ENTRIES DUP(?)
 
 user_active_timer   ENDS
 
@@ -476,7 +476,7 @@ user_req_timer      STRUC
 
 urt_req_map         DD 8 DUP(?)
 urt_done_map        DD 8 DUP(?)
-urt_entries         DB 16 * TIMER_ENTRIES DUP(?)
+urt_entries         DB 16 * USER_TIMER_ENTRIES DUP(?)
 
 user_req_timer      ENDS
 

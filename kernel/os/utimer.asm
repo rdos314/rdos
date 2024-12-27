@@ -79,12 +79,12 @@ AllocateUserTimer    Proc near
     mov es:kt_user_count,0
 ;
     mov edi,OFFSET kt_kernel_wait
-    mov ecx,TIMER_ENTRIES
+    mov ecx,USER_TIMER_ENTRIES
     xor al,al
     rep stosb
 ;
     mov edi,OFFSET kt_user_wait
-    mov ecx,TIMER_ENTRIES
+    mov ecx,USER_TIMER_ENTRIES
     xor al,al
     rep stosb
 ;
@@ -175,7 +175,7 @@ init_user_timer   Proc far
     rep stosd
 ;
     lea edi,[edx].ut_rw_active.uat_entries
-    mov ecx,4 * TIMER_ENTRIES
+    mov ecx,4 * USER_TIMER_ENTRIES
     rep stosd
 ;
     lea edi,[edx].ut_req.urt_req_map
@@ -187,7 +187,7 @@ init_user_timer   Proc far
     rep stosd
 ;
     lea edi,[edx].ut_req.urt_entries
-    mov ecx,4 * TIMER_ENTRIES
+    mov ecx,4 * USER_TIMER_ENTRIES
     rep stosd
 ;
     GetPageEntry
