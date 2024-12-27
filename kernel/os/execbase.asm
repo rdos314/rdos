@@ -2201,7 +2201,7 @@ lpEnvDone:
 
 lpForkExec:
     ExecCloseProcHandle
-    call FreeUserTimer
+;    call FreeUserTimer
     ResetLdt
     mov ds,es:p_proc_sel
 
