@@ -3833,9 +3833,9 @@
 
 #pragma aux RdosOpenAdcChannel = \
     CallGate_open_adc_chan  \
-    ValidateHandle \
+    CarryToBool \
     __parm [__ebx] [__eax] [__ecx] \
-    __value [__ebx]
+    __value [__eax]
 
 #pragma aux RdosCloseAdcChannel = \
     CallGate_close_adc_chan  \
@@ -3848,8 +3848,11 @@
 
 #pragma aux RdosReadAdcChannel = \
     CallGate_read_adc_chan  \
-    __parm [__ebx] [__edi] \
-    __value [__edx __eax]
+    "mov [esi],eax" \
+    "mov [esi+4],edx" \
+    __parm [__ebx] [__esi] \
+    __value [__edi] \
+    __modify [__edx __eax]
 
 #pragma aux RdosSetupAdc = \
     CallGate_setup_adc  \

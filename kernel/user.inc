@@ -3901,8 +3901,8 @@ GetAdcChannelPos      MACRO
                                                 ENDM
 
 ; IN  BX      Channel
-; IN  ES:EDI  4k buffer
 ; OUT EDX:EAX Position
+; OUT EDI     4k buffer
 ReadAdcChannel      MACRO
         UserGate read_adc_chan_nr
                                                 ENDM
