@@ -759,7 +759,7 @@ void __far SchedulerThread(void *param)
     int LowestLoad;
     int OptLoad;
     int BestLoad;
-    int BestThread;
+    int BestThread = 0;
 
     ProcessorCount = RdosGetCoreCount();
 
@@ -1140,6 +1140,7 @@ void __far SchedulerThread(void *param)
             if (OptLoad > 100)
             {
                 BestLoad = 2000;
+                BestThread = 0;
 
                 for (i = 0; i < StatCount; i++)
                 {
@@ -1162,16 +1163,19 @@ void __far SchedulerThread(void *param)
 
                 RdosEnterKernelSection(&ThreadSection);
 
-                for (i = 0; i < ActiveThreads; i++)
+                if (BestThread)
                 {
-                    if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadStatArr[BestThread].ID)
+                    for (i = 0; i < ActiveThreads; i++)
                     {
-                        if (LowestCore != ThreadArr[i].Core)
+                        if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadStatArr[BestThread].ID)
                         {
-                            ThreadArr[i].Core = LowestCore;
-                            SetThreadCore(LowestCore, ThreadArr[i].Handle);
+                            if (LowestCore != ThreadArr[i].Core)
+                            {
+                                ThreadArr[i].Core = LowestCore;
+                                SetThreadCore(LowestCore, ThreadArr[i].Handle);
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
 
@@ -1240,6 +1244,14 @@ void __far InitTasking()
     RdosCreateKernelThread(5, 0x1000, &SchedulerThread, "Scheduler", 0);
 }
 
+#pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
+
+void __far ImplTestGate(const char *msg)
+{
+    SchedulerThread(0);
+}
+
+
 /*##########################################################################
 #
 #   Name       : main
@@ -1266,5 +1278,8 @@ int main()
 
     RdosRegisterBimodalUserGate(usergate_get_active_cores, (__rdos_gate_callback *)&ImplGetActiveCores, "Get Active Cores");
     RdosRegisterBimodalUserGate(usergate_get_program_count, (__rdos_gate_callback *)&ImplGetProgramCount, "Get Program Count");
+
+//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
+
     return 0;
 }

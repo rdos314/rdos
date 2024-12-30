@@ -12,6 +12,7 @@
 #include "videodev.h"
 #include "table.h"
 
+/*
 void TimeoutCallbackRestart(void *param)
 {
     RdosWriteChar('r');
@@ -46,8 +47,15 @@ void TimeoutCallback4(void *param)
     RdosWriteChar('4');
 }
 
+*/
+
 void main()
 {
+    char *buf = new char[1024];
+
+    RdosTestGate(buf);
+
+/*
     int reload_timer;
     int timer;
 
@@ -66,6 +74,8 @@ void main()
     }
 
     RdosStopAppTimer(timer);
+
+*/
 
 /*
     int count;
@@ -194,13 +204,6 @@ void main()
 
     delete buf;
 
-
-*/
-
-/*
-    char *buf = new char[1024];
-
-    RdosTestGate(buf);
 
 */
 

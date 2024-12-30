@@ -3805,12 +3805,6 @@ init_sys_handle     PROC near
     mov ax,write_file_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
-;
     popad
     pop es
     pop ds

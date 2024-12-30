@@ -1575,6 +1575,7 @@ SetupMsiVector	Endp
 FindIrq     Proc near
     push ds
     push fs
+    push gs
     push edx
 ;
     mov dx,SEG data
@@ -1611,7 +1612,7 @@ fiFuncLoop:
 ;
     mov cl,es:[edi].pcif_msi
     or cl,cl
-    jz fiFuncNext
+    jz fiFuncCheckMsiX
 ;
     mov ah,al
     sub ah,es:[edi].pcif_irq
@@ -1622,6 +1623,33 @@ fiFuncLoop:
 ;
     clc
     jmp fiDone
+
+fiFuncCheckMsiX:
+    mov cl,es:[edi].pcif_msix
+    or cl,cl
+    jz fiFuncNext
+;
+    mov cl,byte ptr es:[edi].pcif_msix_count
+    mov gs,es:[edi].pcif_msix_irq_sel
+;
+    push bx
+;
+    xor bx,bx
+
+fiCheckMsixLoop:
+    cmp al,gs:[bx]
+    clc
+    je fiCheckMsixPop
+;
+    inc bx
+    sub cl,1
+    jnz fiCheckMsixLoop
+;
+    stc
+
+fiCheckMsixPop:
+    pop bx
+    jnc fiDone
 
 fiFuncNext:
     inc ch
@@ -1642,6 +1670,7 @@ fiBusNext:
 
 fiDone:
     pop edx
+    pop gs
     pop fs
     pop ds
     ret
@@ -1755,13 +1784,52 @@ move_pci_msi     Proc far
 ;
     mov cl,es:[edi].pcif_msi
     or cl,cl
-    jz mpmDone
+    jz mpmMsix
 ;
     mov es:[edi].pcif_msi_core,fs
 ;
     mov al,es:[edi].pcif_irq
     call SetupMsiVector
     clc
+    jmp mpmDone
+
+mpmMsix:
+    mov cl,es:[edi].pcif_msix
+    or cl,cl
+    jz mpmDone
+;    
+    push ds
+;
+    mov es:[edi].pcif_msi_core,fs    
+    mov ds,es:[edi].pcif_msix_irq_sel
+    xor si,si
+    mov cx,es:[edi].pcif_msix_count
+
+mpmMsixIrq:
+    cmp al,ds:[si]
+    je mpmMsixFound
+;
+    inc si
+    sub cx,1
+    jnz mpmMsixIrq
+;
+    int 3
+
+mpmMsixFound:
+    shl si,4
+    mov es,es:[edi].pcif_msix_data_sel
+;
+    GetMsiVector
+;
+    mov es:[si],edx
+    movzx eax,ax
+    mov es:[si+8],eax
+;
+    xor eax,eax
+    mov es:[si+4],eax
+    mov es:[si+12],eax    
+;
+    pop ds
 
 mpmDone:
     popad
@@ -1793,12 +1861,27 @@ get_pci_msi_info     Proc far
     call FindIrq
     jc gpmiDone
 ;
-    mov al,es:[edi].pcif_msi
-    or al,al
+    mov bl,es:[edi].pcif_msi
+    or bl,bl
+    jz gpmiMsix
+;
+    mov al,es:[edi].pcif_irq
+    mov dx,es:[edi].pcif_msi_core
+    or dx,dx
     stc
     jz gpmiDone
 ;
-    mov al,es:[edi].pcif_irq
+    mov es,dx
+    mov dx,es:cs_id
+    clc
+    jmp gpmiDone
+
+gpmiMsix:
+    mov bl,es:[edi].pcif_msix
+    or bl,bl
+    stc
+    jz gpmiDone
+;
     mov dx,es:[edi].pcif_msi_core
     or dx,dx
     stc
@@ -2026,6 +2109,8 @@ setup_pci_msix_entry     Proc far
     mov es,ds:[esi].pcif_msix_data_sel
 ;    
     GetCore
+    mov ds:[esi].pcif_msi_core,fs
+;
     movzx si,dl
     shl si,4
 ;

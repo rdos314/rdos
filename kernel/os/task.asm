@@ -1427,6 +1427,7 @@ load_thread_wakeup_loop:
     cmp di,fs:cs_prio_act
     jbe load_thread_wakeup_loop
 ;       
+    lock or fs:cs_flags,CS_FLAG_PRIO_CHANGE
     mov fs:cs_prio_act,di
     jmp load_thread_wakeup_loop
     
@@ -1578,14 +1579,11 @@ load_bp_done:
     mov dr7,eax
 
 load_actions_done: 
-    call LoadUnlockCore
+    cli
     mov ax,fs:cs_wakeup_count
     or ax,ax
     jz load_wakeup_ok
 ;
-    call LockCore
-    sti
-;    
     mov ax,es
     cmp ax,fs:cs_null_thread
     je load_thread_loop
@@ -1600,6 +1598,7 @@ load_actions_done:
     jmp load_thread_loop
 
 load_wakeup_ok:
+    call LoadUnlockCore
     test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jnz load_relock    
 ;
@@ -4193,7 +4192,6 @@ UnlockCore    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadUnlockCore    Proc near
-    cli
     lock sub fs:cs_nesting,1
     jc lulcDone
 ;
