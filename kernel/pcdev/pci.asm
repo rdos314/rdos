@@ -2297,6 +2297,25 @@ spMsiDone:
 
 spMsiXCountOk:
     mov es:[di].pcif_msix_count,ax
+;
+    push es
+    push cx
+    push di
+;
+    mov cx,ax
+    movzx eax,ax
+    AllocateSmallGlobalMem
+;
+    mov al,-1
+    xor di,di
+    rep stos byte ptr es:[di]
+;
+    mov ax,es
+;
+    pop di
+    pop cx
+    pop es
+    mov es:[di].pcif_msix_irq_sel,ax
 
 spMsiXDone:
     mov cl,PCI_header_type
