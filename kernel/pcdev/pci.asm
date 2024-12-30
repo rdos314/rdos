@@ -40,21 +40,22 @@ INCLUDE ..\os\core.inc
 
 pci_func_struc   STRUC
 
-pcif_vendor_dev DD ?
-pcif_bridge     DW ?
-pcif_class      DW ?
-pcif_interface  DB ?
-pcif_pin        DB ?
-pcif_irq        DB ?
-pcif_msi        DB ?
-pcif_msi_core   DW ?
-pcif_msi_count  DB ?
-pcif_msix       DB ?
-pcif_msix_count DW ?
-pcif_msix_sel   DW ?
-pcif_used       DW ?
-pcif_acpi_index DD ?
-pcif_acpi_name  DB 102 DUP(?)
+pcif_vendor_dev     DD ?
+pcif_bridge         DW ?
+pcif_class          DW ?
+pcif_interface      DB ?
+pcif_pin            DB ?
+pcif_irq            DB ?
+pcif_msi            DB ?
+pcif_msi_core       DW ?
+pcif_msi_count      DB ?
+pcif_msix           DB ?
+pcif_msix_count     DW ?
+pcif_msix_irq_sel   DW ?
+pcif_msix_data_sel  DW ?
+pcif_used           DW ?
+pcif_acpi_index     DD ?
+pcif_acpi_name      DB 100 DUP(?)
 
 pci_func_struc   ENDS
 
@@ -2225,7 +2226,8 @@ spdInitFunc:
     mov es:[di].pcif_msi_core,0
     mov es:[di].pcif_msix,0
     mov es:[di].pcif_msi_count,0
-    mov es:[di].pcif_msix_sel,0
+    mov es:[di].pcif_msix_irq_sel,0
+    mov es:[di].pcif_msix_data_sel,0
     mov es:[di].pcif_msix_count,0
     mov es:[di].pcif_acpi_index,-1
     mov es:[di].pcif_acpi_name,0
