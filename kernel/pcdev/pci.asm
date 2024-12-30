@@ -1884,8 +1884,6 @@ get_pci_msix     Endp
 ;                           BL          Device
 ;                           CH          Function
 ;
-;           RETURNS:        ES          Selector for message entries
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enable_pci_msix_name DB 'Enable PCI MSI-X',0
@@ -1982,7 +1980,6 @@ enable_pci_msix     Endp
 ;           PARAMETERS:     BH          Bus
 ;                           BL          Device
 ;                           CH          Function
-;                           ES          Selector for message entries
 ;                           DL          Entry #
 ;                           AL          Int #
 ;
@@ -1991,10 +1988,38 @@ enable_pci_msix     Endp
 setup_pci_msix_entry_name DB 'Setup PCI MSI-X Entry',0
 
 setup_pci_msix_entry     Proc far    
+    push ds
+    push es
     push fs
-    push eax
-    push edx
-    push esi
+    pushad
+;
+    mov bp,ax
+    mov ax,SEG data    
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz spmxFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz spmxFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    cmp dl,byte ptr ds:[esi].pcif_msix_count
+    jae spmxFail
+;
+    mov ax,bp
+    mov es,ds:[esi].pcif_msix_irq_sel
+    movzx di,dl
+    mov es:[di],al
+;    
+    mov es,ds:[esi].pcif_msix_data_sel
 ;    
     GetCore
     movzx si,dl
@@ -2009,11 +2034,17 @@ setup_pci_msix_entry     Proc far
     xor eax,eax
     mov es:[si+4],eax
     mov es:[si+12],eax    
-;
-    pop esi
-    pop edx
-    pop eax
+    clc
+    jmp spmxDone
+
+spmxFail:
+    stc
+
+spmxDone:
+    popad
     pop fs
+    pop es
+    pop ds
     retf32
 setup_pci_msix_entry    Endp
 
