@@ -945,14 +945,11 @@ void __far SchedulerThread(void *param)
                 irq = ThreadArr[i].Irq;
                 if (irq > 0)
                 {
-/* disable since MSI-X is not supported!
-
                     if (ThreadArr[i].Core != IrqArr[irq].Core)
                     {
                         ThreadArr[i].Core = IrqArr[irq].Core;
                         SetThreadCore(IrqArr[irq].Core, ThreadArr[i].Handle);
                     }
-*/
                 }
 
                 Tics = GetThreadTics(ThreadArr[i].Handle);

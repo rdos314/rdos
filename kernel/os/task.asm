@@ -2649,19 +2649,11 @@ AddWakeup  PROC near
 awLoop:
     mov ax,fs:[bx]
     or ax,ax
-    jnz awCheck
-
-awTry:
+    jnz awNext
+;
     xchg dx,fs:[bx]
     or dx,dx
     jz awAdd
-;
-    mov dx,es
-    jmp awNext
-
-awCheck:
-    cmp ax,dx
-    je awDone
 
 awNext:
     add bx,2
@@ -2671,8 +2663,7 @@ awNext:
    
 awAdd:
     lock add fs:cs_wakeup_count,1
-
-awDone:
+;
     pop dx
     pop cx
     pop bx
