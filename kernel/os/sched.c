@@ -1000,8 +1000,8 @@ void __far SchedulerThread(void *param)
                 switch (IrqArr[i].ModFlags)
                 {
                     case MOD_FLAG_MSI_BASE:
-                    ints = GetCoreInts(IrqArr[i].Core, i);
-                    break;
+                        ints = GetCoreInts(IrqArr[i].Core, i);
+                        break;
 
                     case MOD_FLAG_MSI_SHARED:
                         base--;
