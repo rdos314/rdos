@@ -1428,6 +1428,7 @@ load_thread_wakeup_loop:
     jbe load_thread_wakeup_loop
 ;       
     mov fs:cs_prio_act,di
+    lock or fs:cs_flags,CS_FLAG_PRIO_CHANGE
     jmp load_thread_wakeup_loop
     
 load_thread_wakeup_done:
@@ -1581,8 +1582,39 @@ load_actions_done:
     call LoadUnlockCore
     mov ax,fs:cs_wakeup_count
     or ax,ax
-    jnz load_relock
+    jz load_wakeup_ok
+;
+    call LockCore
+    cli
+
+load_retry_wakeup_loop:
+    mov ax,es
+    call RemoveWakeup
 ;    
+    mov di,es:p_prio
+    call InsertCoreBlock
+    cmp di,fs:cs_prio_act
+    jbe load_retry_wakeup_next
+;       
+    mov fs:cs_prio_act,di
+    lock or fs:cs_flags,CS_FLAG_PRIO_CHANGE
+;
+    mov es,ax
+    mov di,es:p_prio
+    call InsertCoreFirst
+    jmp load_thread_loop
+
+load_retry_wakeup_next:
+    mov es,ax
+;
+    mov ax,fs:cs_wakeup_count
+    or ax,ax
+    jnz load_retry_wakeup_loop
+;
+    sti
+    jmp load_retry
+
+load_wakeup_ok:
     test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jnz load_relock    
 ;
@@ -2620,9 +2652,7 @@ AddWakeup  PROC near
     push bx
     push cx
     push dx
-    push bp
 ;
-    mov bp,256
     mov bx,OFFSET cs_wakeup_arr
 ;
     mov es:p_sleep_sel,fs
@@ -2634,27 +2664,30 @@ AddWakeup  PROC near
 awLoop:
     mov ax,fs:[bx]
     or ax,ax
-    jnz awNext
-;
+    jnz awCheck
+
+awTry:
     xchg dx,fs:[bx]
     or dx,dx
-    jz awDone
+    jz awAdd
+;
+    mov dx,es
+    jmp awNext
+
+awCheck:
+    cmp ax,dx
+    je awDone
 
 awNext:
     add bx,2
     loop awLoop    
 ;
-    mov cx,CORE_WAKEUP_ENTRIES
-    mov bx,OFFSET cs_wakeup_arr
-    sub bp,1
-    jnz awLoop
-;
     CrashGate
    
-awDone:
+awAdd:
     lock add fs:cs_wakeup_count,1
-;
-    pop bp
+
+awDone:
     pop dx
     pop cx
     pop bx
