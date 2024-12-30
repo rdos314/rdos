@@ -1827,7 +1827,6 @@ get_pci_msi_info      Endp
 ;                           CH          Function
 ;
 ;           RETURNS:        NC          Success
-;                           CL          MSI register base
 ;                           DL          Requested vectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1856,9 +1855,9 @@ get_pci_msix     Proc far
     mov ds,ax
     movzx esi,ch
     shl esi,7
-    mov cl,ds:[esi].pcif_msix
+    mov al,ds:[esi].pcif_msix
     mov dl,byte ptr ds:[esi].pcif_msix_count
-    or cl,cl
+    or al,al
     jz gpmxFail
 ;
     clc
@@ -1884,7 +1883,6 @@ get_pci_msix     Endp
 ;           PARAMETERS:     BH          Bus
 ;                           BL          Device
 ;                           CH          Function
-;                           CL          MSI register base
 ;
 ;           RETURNS:        ES          Selector for message entries
 ;
@@ -1893,18 +1891,35 @@ get_pci_msix     Endp
 enable_pci_msix_name DB 'Enable PCI MSI-X',0
 
 enable_pci_msix     Proc far    
-    push eax
-    push ebx
-    push cx
-    push edx
-    push si
-    push edi
+    push ds
+    pushad
 ;
-    push cx
+    mov ax,SEG data    
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz epmxFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz epmxFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    mov al,ds:[esi].pcif_msix
+    or al,al
+    jz epmxFail
+
+epmxOk:
     mov eax,1000h
     AllocateBigLinear
-    pop cx
 ;    
+    mov cl,ds:[esi].pcif_msix
     ReadPciWord
     or ax,8000h
     WritePciWord
@@ -1942,13 +1957,18 @@ enable_pci_msix     Proc far
     shl cx,4
     CreateDataSelector16
     mov es,bx
-;
-    pop edi
-    pop si
-    pop edx
-    pop cx
-    pop ebx
-    pop eax
+    mov ds:[esi].pcif_msix_data_sel,bx
+    clc
+    jmp epmxDone
+
+epmxFail:
+    stc
+    xor bx,bx
+    mov es,bx    
+
+epmxDone:
+    popad
+    pop ds
     retf32
 enable_pci_msix     Endp
 

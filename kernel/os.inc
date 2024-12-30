@@ -4180,7 +4180,6 @@ SetupPciMsi    MACRO
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function
-; IN  CL    MSI Register base
 ; OUT ES    Int vector selector
 EnablePciMsiX    MACRO
     OsGate enable_pci_msix_nr
@@ -4189,7 +4188,6 @@ EnablePciMsiX    MACRO
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function
-; IN  CL    MSI Register base
 ; IN  ES    Int vector selector
 ; IN  AL    Int #
 ; IN  DL    Entry #
