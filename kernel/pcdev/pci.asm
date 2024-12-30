@@ -1918,6 +1918,8 @@ epmxOk:
     AllocateBigLinear
 ;    
     mov cl,ds:[esi].pcif_msix
+    push esi
+;
     ReadPciWord
     or ax,8000h
     WritePciWord
@@ -1955,6 +1957,8 @@ epmxOk:
     shl cx,4
     CreateDataSelector16
     mov es,bx
+;
+    pop esi
     mov ds:[esi].pcif_msix_data_sel,bx
     clc
     jmp epmxDone
