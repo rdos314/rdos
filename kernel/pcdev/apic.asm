@@ -1666,26 +1666,24 @@ send_nmi Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SendInt
+;       NAME:           SendLockedInt
 ;
-;       DESCRIPTION:    Send int to processor
+;       DESCRIPTION:    Send int to processor. Scheduler lock must be taken
 ;
 ;       PARAMETERS:     FS      Processor selector
 ;                       AL      Int #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-send_int_name    DB 'Send Int',0
+send_locked_int_name    DB 'Send Locked Int',0
 
-send_int  Proc far
-    pushf
+send_locked_int  Proc far
     push ds
     push eax
     push ecx
     push edx
 ;    
     mov edx,fs:cs_apic
-    cli
     shl edx,24
     mov cx,apic_mem_sel
     mov ds,cx
@@ -1709,9 +1707,8 @@ siDo:
     pop ecx
     pop eax
     pop ds    
-    popf
     retf32
-send_int  Endp
+send_locked_int  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4364,10 +4361,10 @@ init    PROC far
     mov ax,boot_realtime_core_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET send_int
-    mov edi,OFFSET send_int_name
+    mov esi,OFFSET send_locked_int
+    mov edi,OFFSET send_locked_int_name
     xor cl,cl
-    mov ax,send_int_nr
+    mov ax,send_locked_int_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_id

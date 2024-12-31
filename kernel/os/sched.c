@@ -54,6 +54,7 @@ struct TThread
     int ID;
     int Core;
     int Prio;
+    int Dedicated;
     int IdleCount;
     int Irq;
     long long BaseTics;
@@ -65,6 +66,7 @@ struct TCore
     long long CoreBaseTics;
     int Active;
     int Realtime;
+    int Dedicated;
     int IrqCount;
 };
 
@@ -259,6 +261,7 @@ void ThreadCreated(int handle, int ID, int Prio)
         ThreadArr[Index].IdleCount = 0;
         ThreadArr[Index].BaseTics = 0;
         ThreadArr[Index].Irq = 0;
+        ThreadArr[Index].Dedicated = FALSE;
 
         ClearThreadIrqs(handle);
     }
@@ -417,7 +420,7 @@ void MoveThread(int Core, int ThreadId)
         ok = TRUE;
 
     if (ok)
-        ok = CoreArr[Core].Active && !CoreArr[Core].Realtime;
+        ok = CoreArr[Core].Active && !CoreArr[Core].Realtime && !CoreArr[Core].Dedicated;
 
     if (ok)
     {
@@ -427,7 +430,7 @@ void MoveThread(int Core, int ThreadId)
         {
             if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId)
             {
-                if (Core != ThreadArr[i].Core)
+                if (!ThreadArr[i].Dedicated && Core != ThreadArr[i].Core)
                 {
                     ThreadArr[i].Core = Core;
                     SetThreadCore(Core, ThreadArr[i].Handle);
@@ -454,12 +457,15 @@ void ImplMoveToNewCore()
     int Core;
     int CoreId = 0;
     int i;
+    int handle;
+    int irq;
 
     for (Core = 0; Core < ProcessorCount; Core++)
     {
         if (!CoreArr[Core].Realtime && !CoreArr[Core].Active)
         {
             CoreArr[Core].Active = TRUE;
+            CoreArr[Core].Dedicated = TRUE;
             CoreId = RdosGetCoreNum(Core);
             RdosStartCore(CoreId);
             ActiveProcessors++;
@@ -475,11 +481,33 @@ void ImplMoveToNewCore()
         {
             if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId)
             {
+                handle = ThreadArr[i].Handle;
+
+                ThreadArr[i].Dedicated = TRUE;
+
                 if (Core != ThreadArr[i].Core)
                 {
                     ThreadArr[i].Core = Core;
-                    SetThreadCore(Core, ThreadArr[i].Handle);
+                    SetThreadCore(Core, handle);
                 }
+
+                for (irq = 0; irq < 256; irq++)
+                {
+                    if (IrqArr[irq].ModFlags == MOD_FLAG_MSI_BASE && IrqArr[irq].ServerCount == 1)
+                    {
+                        if (IrqArr[irq].ServerArr[0] == ThreadId)
+                        {
+                            if (IrqArr[irq].Core != Core)
+                            {
+                                MovePciMsi(Core, irq);
+                                IrqArr[irq].Core = Core;
+                                SetThreadIrq(handle, irq);
+                                ThreadArr[i].Irq = irq;
+                             }
+                        }
+                    }
+                }
+
                 break;
             }
         }
@@ -771,6 +799,7 @@ void __far SchedulerThread(void *param)
         CoreArr[Core].CoreBaseTics = CoreTics;
         CoreArr[Core].NullBaseTics = NullTics;
         CoreArr[Core].Realtime = FALSE;
+        CoreArr[Core].Dedicated = FALSE;
         if (Core == 0)
             CoreArr[Core].Active = TRUE;
         else
@@ -900,7 +929,7 @@ void __far SchedulerThread(void *param)
 
         for (Core = 0; Core < ProcessorCount; Core++)
         {
-            if (CoreArr[Core].Active)
+            if (CoreArr[Core].Active && !CoreArr[Core].Dedicated)
             {
                 NullTime = CoreStatArr[Core].NullTics;
                 CoreTime = CoreStatArr[Core].CoreTics;
@@ -940,7 +969,7 @@ void __far SchedulerThread(void *param)
 
         for (i = 0; i < ActiveThreads; i++)
         {
-            if (ThreadArr[i].Valid)
+            if (ThreadArr[i].Valid && !ThreadArr[i].Dedicated)
             {
                 irq = ThreadArr[i].Irq;
                 if (irq > 0)
@@ -1050,7 +1079,7 @@ void __far SchedulerThread(void *param)
 
             for (Core = 0; Core < ProcessorCount; Core++)
             {
-                if (CoreArr[Core].Active && !CoreArr[Core].Realtime)
+                if (CoreArr[Core].Active && !CoreArr[Core].Realtime && !CoreArr[Core].Dedicated)
                 {
                     if (MinIrqs > CoreArr[Core].IrqCount)
                     {
@@ -1117,7 +1146,7 @@ void __far SchedulerThread(void *param)
 
             for (Core = 0; Core < ProcessorCount; Core++)
             {
-                if (CoreArr[Core].Active && !CoreArr[Core].Realtime)
+                if (CoreArr[Core].Active && !CoreArr[Core].Realtime && !CoreArr[Core].Dedicated)
                 {
                     Load = CoreStatArr[Core].Load;
 

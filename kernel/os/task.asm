@@ -1447,7 +1447,7 @@ load_thread_wakeup_done:
     cmp dx,ax
     jz load_reload_loop
 ;    
-    call InsertWakeup
+    call InsertLockedWakeup
     jmp load_thread_loop
 
 load_reload_loop:
@@ -2673,16 +2673,16 @@ AddWakeup  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InsertWakeup
+;           NAME:           InsertLockedWakeup
 ;
-;           DESCRIPTION:    Add to wakeup
+;           DESCRIPTION:    Add to wakeup. Scheduler must be locked
 ;
 ;           PARAMETERS:     ES      Thread
 ;                           FS      Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InsertWakeup  PROC near
+InsertLockedWakeup  PROC near
     push ax
     push di
 ;
@@ -2714,7 +2714,7 @@ iwOther:
     jne iwIntOk
 ;    
     mov al,81h
-    SendInt    
+    SendLockedInt
 
 iwIntOk:
     pop fs
@@ -2723,7 +2723,7 @@ iwDone:
     pop di
     pop ax
     ret
-InsertWakeup  Endp
+InsertLockedWakeup  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2930,7 +2930,7 @@ WakeThread      PROC near
     call RemoveBlock32
     mov es:p_data,eax
     call cs:unlock_list_proc
-    call InsertWakeup
+    call InsertLockedWakeup
     
 wtUnlock:    
     call TryUnlockCore
@@ -4707,7 +4707,7 @@ nfLoop:
     jne nfNext
 ;    
     mov al,81h
-    SendInt
+    SendLockedInt
 
 nfNext:
     add si,2
@@ -5282,7 +5282,7 @@ wake_new    PROC near
     call SaveCurrentThread
 ;
     mov es,dx
-    call InsertWakeup
+    call InsertLockedWakeup
     jmp ContinueCurrentThread
 
 wake_new_other_core:
@@ -5527,7 +5527,7 @@ signal_do_lock:
     mov es:p_sleep_type,0
     mov es:p_signal,0
     call cs:unlock_signal_proc
-    call InsertWakeup    
+    call InsertLockedWakeup    
     jmp signal_unlock_core
 
 signal_unlock_signal:
@@ -6019,7 +6019,7 @@ signal_wait_dev   PROC far
     mov es,ax
     mov es:p_sleep_type,0
     call cs:unlock_wait_dev_proc
-    call InsertWakeup    
+    call InsertLockedWakeup    
     jmp swdCore
 
 swdUnlock:
@@ -6135,7 +6135,7 @@ lcsUnblock:
     mov es:p_data,0
     sub esi,OFFSET cs_list
     call cs:unlock_kernel_section_proc        
-    call InsertWakeup
+    call InsertLockedWakeup
 
 lcsUnblocked:
     pop di
@@ -6643,7 +6643,7 @@ lusUnblock:
     call RemoveBlock32
     mov es:p_data,0
     call cs:unlock_user_section_proc
-    call InsertWakeup
+    call InsertLockedWakeup
 
 lusUnblocked:
     pop di
@@ -7001,7 +7001,7 @@ release_futex   Proc near
 ;
     push es    
     mov es,cx
-    call InsertWakeup
+    call InsertLockedWakeup
     pop es
 ;    
     pop di
@@ -7278,7 +7278,7 @@ ctbWake:
     call RemoveBlock32
     mov es:p_data,0
 ;
-    call InsertWakeup
+    call InsertLockedWakeup
     jmp ctbWake
 
 ctbUnlock:
@@ -7778,7 +7778,7 @@ wake_until      PROC far
     call TryLockCore
     sti
     mov es,cx
-    call InsertWakeup
+    call InsertLockedWakeup
     call TryUnlockCore
     retf32
 wake_until      ENDP

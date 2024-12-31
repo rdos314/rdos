@@ -1641,7 +1641,7 @@ fiCheckMsixLoop:
     clc
     je fiCheckMsixPop
 ;
-    inc bx
+    add bx,4
     sub cl,1
     jnz fiCheckMsixLoop
 ;
@@ -1800,7 +1800,6 @@ mpmMsix:
 ;    
     push ds
 ;
-    mov es:[edi].pcif_msi_core,fs    
     mov ds,es:[edi].pcif_msix_irq_sel
     xor si,si
     mov cx,es:[edi].pcif_msix_count
@@ -1809,14 +1808,15 @@ mpmMsixIrq:
     cmp al,ds:[si]
     je mpmMsixFound
 ;
-    inc si
+    add si,4
     sub cx,1
     jnz mpmMsixIrq
 ;
     int 3
 
 mpmMsixFound:
-    shl si,4
+    mov ds:[si+2],fs
+    shl si,2
     mov es,es:[edi].pcif_msix_data_sel
 ;
     GetMsiVector
@@ -1856,6 +1856,7 @@ get_pci_msi_info_name DB 'Get PCI MSI Info',0
 get_pci_msi_info     Proc far    
     push es
     push ebx
+    push ecx
     push edi
 ;
     call FindIrq
@@ -1882,7 +1883,23 @@ gpmiMsix:
     stc
     jz gpmiDone
 ;
-    mov dx,es:[edi].pcif_msi_core
+    mov cx,es:[edi].pcif_msix_count
+    mov es,es:[edi].pcif_msix_irq_sel
+    xor di,di
+
+gpmiMsixLoop:
+    cmp al,es:[di]
+    je gpmiMsixFound
+;
+    add di,4
+    sub cx,1
+    jnz gpmiMsixLoop
+;
+    stc
+    jmp gpmiDone
+
+gpmiMsixFound:
+    mov dx,es:[di+2]
     or dx,dx
     stc
     jz gpmiDone
@@ -1893,6 +1910,7 @@ gpmiMsix:
 
 gpmiDone:
     pop edi
+    pop ecx
     pop ebx
     pop es
     retf32
@@ -2104,13 +2122,14 @@ setup_pci_msix_entry     Proc far
     mov ax,bp
     mov es,ds:[esi].pcif_msix_irq_sel
     movzx di,dl
+    shl di,2
     mov es:[di],al
+;
+    GetCore
+    mov es:[di+2],fs
 ;    
     mov es,ds:[esi].pcif_msix_data_sel
 ;    
-    GetCore
-    mov ds:[esi].pcif_msi_core,fs
-;
     movzx si,dl
     shl si,4
 ;
@@ -2439,21 +2458,30 @@ spMsiXCountOk:
     mov es:[di].pcif_msix_count,ax
 ;
     push es
+    push bx
     push cx
-    push di
 ;
     mov cx,ax
     movzx eax,ax
+    shl eax,2
     AllocateSmallGlobalMem
 ;
-    mov al,-1
-    xor di,di
-    rep stos byte ptr es:[di]
+    xor bx,bx
+
+spMsiXInit:
+    mov ax,-1
+    mov es:[bx],ax
+    xor ax,ax
+    mov es:[bx+2],ax
+;
+    add bx,2
+    sub cx,1
+    jnz spMsiXInit
 ;
     mov ax,es
 ;
-    pop di
     pop cx
+    pop bx
     pop es
     mov es:[di].pcif_msix_irq_sel,ax
 

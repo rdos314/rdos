@@ -379,7 +379,7 @@ show_proc_debug_nr          = 381
 preempt_expired_nr          = 383
 
 send_eoi_nr                 = 384
-send_int_nr                 = 385
+send_locked_int_nr          = 385
 send_nmi_nr                 = 386
 
 add_printer_nr              = 387

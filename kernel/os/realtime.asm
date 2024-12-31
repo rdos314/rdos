@@ -519,7 +519,7 @@ laLoop:
     mov dword ptr ds:rds_linear_page,esi
     mov dword ptr ds:rds_linear_page+4,0
     mov al,23h
-    SendInt
+    SendLockedInt
     WaitForSignal
 ;
     mov eax,dword ptr ds:rds_linear_page
@@ -553,7 +553,7 @@ laLoop:
     mov dword ptr ds:rds_linear_page,esi
     mov dword ptr ds:rds_linear_page+4,0
     mov al,24h
-    SendInt
+    SendLockedInt
     clc
 ;
     popad
@@ -1030,7 +1030,7 @@ ucNotBooted:
     mov dword ptr es:rds_phys_page+4,ebx
 ;
     mov al,22h
-    SendInt
+    SendLockedInt
     pop eax
 
 ucNotPhys:

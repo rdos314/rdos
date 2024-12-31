@@ -2075,7 +2075,7 @@ sitLoop:
 ;        
     push ax
     mov al,2
-    SendInt
+    SendLockedInt
     pop ax
         
 sitNext:

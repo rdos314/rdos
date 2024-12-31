@@ -1293,8 +1293,8 @@ SendNmi    MACRO
 
 ;   IN  AL      Int #
 ;   IN  FS      Processor selector
-SendInt    MACRO
-    OsGate send_int_nr
+SendLockedInt    MACRO
+    OsGate send_locked_int_nr
                 ENDM
 
 ;   IN  FS      Processor selector

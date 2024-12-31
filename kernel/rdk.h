@@ -379,7 +379,7 @@
 #define osgate_preempt_expired 383
 
 #define osgate_send_eoi 384
-#define osgate_send_int 385
+#define osgate_send_locked_int 385
 #define osgate_send_nmi 386
 
 #define osgate_add_printer 387
@@ -922,6 +922,8 @@
 #define osgate_set_kernel_handle_size 857
 #define osgate_get_kernel_handle_time 858
 
+#define osgate_init_user_timer 859
+
 
 
 
@@ -1305,7 +1307,7 @@
 #define OsGate_preempt_expired 0x3E 0x67 0x9a 127 1 0 0 2 0
 
 #define OsGate_send_eoi 0x3E 0x67 0x9a 128 1 0 0 2 0
-#define OsGate_send_int 0x3E 0x67 0x9a 129 1 0 0 2 0
+#define OsGate_send_locked_int 0x3E 0x67 0x9a 129 1 0 0 2 0
 #define OsGate_send_nmi 0x3E 0x67 0x9a 130 1 0 0 2 0
 
 #define OsGate_add_printer 0x3E 0x67 0x9a 131 1 0 0 2 0
@@ -1847,4 +1849,6 @@
 #define OsGate_get_kernel_handle_size 0x3E 0x67 0x9a 88 3 0 0 2 0
 #define OsGate_set_kernel_handle_size 0x3E 0x67 0x9a 89 3 0 0 2 0
 #define OsGate_get_kernel_handle_time 0x3E 0x67 0x9a 90 3 0 0 2 0
+
+#define OsGate_init_user_timer 0x3E 0x67 0x9a 91 3 0 0 2 0
 

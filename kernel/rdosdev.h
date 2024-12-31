@@ -1237,13 +1237,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     "pop fs" \
     __parm [__ebx]
 
-#pragma aux RdosSendInt = \
-    "push fs" \
-    "mov fs,ebx" \
-    OsGate_send_int  \
-    "pop fs" \
-    __parm [__ebx] [__eax]
-
 #pragma aux RdosLockScheduler = \
     OsGate_lock_task;
 
@@ -1473,13 +1466,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_send_nmi \
     "pop fs" \
     __parm [__eax]
-
-#pragma aux RdosSendInt = \
-    "push fs" \
-    "mov fs,edx" \
-    OsGate_send_int \
-    "pop fs" \
-    __parm [__edx] [__eax]
 
 #pragma aux RdosAllocateHandle = \
     "push ds" \

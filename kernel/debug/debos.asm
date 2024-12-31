@@ -3946,8 +3946,9 @@ DebugWakeup    Proc near
     mov fs,gs:p_core
     RunRealtime
 ;
+    cli
     mov al,21h
-    SendInt
+    SendLockedInt
     pop fs
     jmp dwDone
 
