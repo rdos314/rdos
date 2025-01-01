@@ -1067,33 +1067,6 @@ spDone:
     ret
 SetupPreempt    Endp
     
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetNextThread
-;
-;           DESCRIPTION:    Get next thread to run
-;
-;           PARAMETERS:     FS      Core selector
-;                           DS      Task sel
-;
-;       RETURNS:    ES      Thread to run next
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetNextThread    Proc near
-    sti
-    lock and fs:cs_flags,NOT CS_FLAG_PRIO_CHANGE
-;
-    call HandlePreempt
-    call HandlePrio
-    call GetPrioThread
-    call SetupPreempt
-    ret
-GetNextThread   Endp
-
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1435,7 +1408,12 @@ load_thread_wakeup_done:
     xor ax,ax
     mov es,ax
     sti    
-    call GetNextThread
+    lock and fs:cs_flags,NOT CS_FLAG_PRIO_CHANGE
+;
+    call HandlePreempt
+    call HandlePrio
+    call GetPrioThread
+    call SetupPreempt
 ;
     xor ax,ax
     xchg ax,es:p_wanted_core
@@ -1525,6 +1503,7 @@ load_not_flush:
     mov fs:cs_tlb.pt32_used,0
     and ax,0F000h
     mov fs:cs_cr3,eax
+    jmp load_cr3_flush_ok
 
 load_cr3_ok:
     mov eax,fs:cs_tlb.pt32_used
@@ -1580,25 +1559,12 @@ load_bp_done:
 
 load_actions_done: 
     cli
+    call LoadUnlockCore
+;
     mov ax,fs:cs_wakeup_count
     or ax,ax
-    jz load_wakeup_ok
+    jnz load_relock
 ;
-    mov ax,es
-    cmp ax,fs:cs_null_thread
-    je load_thread_loop
-;
-    mov di,es:p_prio
-    call InsertCoreFirst
-    cmp di,fs:cs_prio_act
-    jbe load_thread_loop
-;
-    mov fs:cs_prio_act,di
-    lock or fs:cs_flags,CS_FLAG_PRIO_CHANGE
-    jmp load_thread_loop
-
-load_wakeup_ok:
-    call LoadUnlockCore
     test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
     jnz load_relock    
 ;
@@ -2557,6 +2523,15 @@ null_loop_start:
     GetCore
     
 null_loop:
+    mov ax,fs:cs_wakeup_count
+    or ax,ax
+    jz null_not_wakeup
+;
+    EnterInt
+    LeaveInt
+    sti
+
+null_not_wakeup:
     test fs:cs_flags,CS_FLAG_SHUTDOWN
     jz null_hlt
 ;
