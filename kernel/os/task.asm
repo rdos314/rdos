@@ -2523,15 +2523,6 @@ null_loop_start:
     GetCore
     
 null_loop:
-    mov ax,fs:cs_wakeup_count
-    or ax,ax
-    jz null_not_wakeup
-;
-    EnterInt
-    LeaveInt
-    sti
-
-null_not_wakeup:
     test fs:cs_flags,CS_FLAG_SHUTDOWN
     jz null_hlt
 ;
@@ -2551,6 +2542,13 @@ null_hlt:
     CrashGate
 
 null_nest_ok:      
+    mov ax,fs:cs_wakeup_count
+    or ax,ax
+    jz null_wakeup_ok
+;
+;    CrashGate
+
+null_wakeup_ok:
     hlt
     jmp null_loop
 
@@ -4009,6 +4007,10 @@ tucHandleTimer:
     jmp tucRetry
     
 tucTimerOk:      
+    mov ax,fs:cs_wakeup_count
+    or ax,ax
+    jnz tucSwap
+;
     mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz tucTlbDone
@@ -4033,10 +4035,6 @@ tucTlbDone:
     jz tucDone
 ;
     test fs:cs_flags,CS_FLAG_PREEMPT
-    jnz tucSwap
-;    
-    mov ax,fs:cs_wakeup_count
-    or ax,ax
     jz tucDone
 
 tucSwap:
@@ -4107,6 +4105,10 @@ ucHandleTimer:
     jmp ucRetry
     
 ucTimerOk:      
+    mov ax,fs:cs_wakeup_count
+    or ax,ax
+    jnz ucSwap
+;
     mov eax,fs:cs_tlb.pt32_used
     or eax,eax
     jz ucTlbDone
@@ -4127,10 +4129,6 @@ ucFlush:
 
 ucTlbDone:    
     test fs:cs_flags,CS_FLAG_PREEMPT
-    jnz ucSwap
-;    
-    mov ax,fs:cs_wakeup_count
-    or ax,ax
     jz ucDone
 
 ucSwap:
@@ -4348,6 +4346,10 @@ lliHandleTimer:
     jmp lliRetry
     
 lliTimerOk:    
+    mov ax,fs:cs_wakeup_count
+    or ax,ax
+    jnz lliSwap
+;
     mov ax,fs:cs_curr_thread
     or ax,ax
     jz lliDone
@@ -4372,10 +4374,6 @@ lliFlush:
 
 lliTlbDone:    
     test fs:cs_flags,CS_FLAG_PREEMPT
-    jnz lliSwap
-;    
-    mov ax,fs:cs_wakeup_count
-    or ax,ax
     jz lliDone
 
 lliSwap:

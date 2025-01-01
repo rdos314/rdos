@@ -1886,6 +1886,7 @@ tucFlush:
 tucTlbDone:    
     test fs:cs_flags,CS_FLAG_PREEMPT
     jz tucDone
+
 tucSwap:
     lock add fs:cs_nesting,1
     jc tucSched
