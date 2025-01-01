@@ -2673,18 +2673,6 @@ iwOther:
     mov fs,di
 ;
     call AddWakeup
-    mov di,es:p_prio
-    cmp di,fs:cs_prio_act
-    jbe iwIntOk
-;    
-    test fs:cs_flags,CS_FLAG_PREEMPT
-    jnz iwIntOk
-;    
-    lock or fs:cs_flags,CS_FLAG_PREEMPT
-;
-    mov ax,fs:cs_nesting
-    cmp ax,-1
-    jne iwIntOk
 ;    
     mov al,81h
     SendLockedInt
@@ -4674,10 +4662,6 @@ nfLoop:
 ;
     test fs:cs_flags,CS_FLAG_ACTIVE
     jz nfNext
-;   
-    mov ax,fs:cs_nesting
-    cmp ax,-1
-    jne nfNext
 ;    
     mov al,81h
     SendLockedInt
