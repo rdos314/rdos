@@ -2249,6 +2249,12 @@ IpiWakeup    MACRO
     OsGate ipi_wakeup_nr
                         ENDM
 
+; IN  AL    IRQ
+; IN  ES    Thread
+SetThreadIrq    MACRO
+    OsGate set_thread_irq_nr
+                    ENDM
+
 ; IN  CX        Number of ints (1,2,4,8,16 or 32)
 ; IN  AL        Priority (0..31)
 ; OUT AL        Int base

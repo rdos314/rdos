@@ -405,6 +405,33 @@ int CreateTid()
 
 /*##########################################################################
 #
+#   Name       : SetThreadIrq
+#
+##########################################################################*/
+#pragma aux ImplSetThreadIrq "*" rdosdev parm routine [eax ebx]
+void ImplSetThreadIrq(int irq, int ThreadId)
+{
+    int i;
+
+    RdosEnterKernelSection(&ThreadSection);
+
+    for (i = 0; i < ActiveThreads; i++)
+    {
+        if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId)
+        {
+            IrqArr[irq].ServerArr[0] = ThreadId;
+            IrqArr[irq].ServerCount = 1;
+            SetThreadIrq(ThreadId, irq);
+            ThreadArr[i].Irq = irq;
+            break;
+        }
+    }
+
+    RdosLeaveKernelSection(&ThreadSection);
+}
+
+/*##########################################################################
+#
 #   Name       : MoveThread
 #
 #   Descr      : Move thread to another core

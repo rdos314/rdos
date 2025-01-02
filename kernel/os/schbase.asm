@@ -275,6 +275,36 @@ thread_to_sel_done:
 thread_to_sel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetThreadIrq
+;
+;           DESCRIPTION:    Set thread IRQ
+;
+;           PARAMETERS:     AL                  IRQ
+;                           ES                  Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extrn ImplSetThreadIrq:near
+
+set_thread_irq_name DB 'Get Thread Count',0
+
+set_thread_irq    Proc far
+    push eax
+    push ebx
+;
+    movzx eax,al
+    movzx ebx,es:p_id
+    call ImplSetThreadIrq
+;
+    pop ebx
+    pop eax
+    ret
+set_thread_irq    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           GetThreadState
@@ -1245,6 +1275,12 @@ init_state_hooks:
     mov edi,OFFSET create_pid_name
     xor cl,cl
     mov ax,create_pid_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_thread_irq
+    mov edi,OFFSET set_thread_irq_name
+    xor cl,cl
+    mov ax,set_thread_irq_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET get_thread_state16
