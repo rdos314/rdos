@@ -59,7 +59,7 @@ pt32_linear_arr DD 32 DUP(?)
 
 core_tlb32_struc        ENDS
 
-CORE_TIMER_COUNT    = 200
+CORE_TIMER_COUNT    = 242
 MAX_IRQ_NESTING     = 64
 CORE_LOG_ENTRIES    = 200h
 CORE_WAKEUP_ENTRIES = 64
@@ -70,7 +70,8 @@ core_seg   STRUC
 cs_base_data            core_base_struc <>    ; this must be first!
 
 cs_wakeup_count         DW ?
-cs_ipi_count            DW ?
+cs_ipi_wakeup_count     DW ?
+cs_ipi_spinlock         spinlock_typ <>
 
 cs_id                   DW ?
 cs_processor            DW ?
@@ -133,7 +134,7 @@ cs_nested_irq_count     DW ?
 cs_nested_irq_stack     DD MAX_IRQ_NESTING DUP(?)
 
 cs_wakeup_arr           DW CORE_WAKEUP_ENTRIES DUP(?)
-cs_ipi_arr              DW IPI_WAKEUP_ENTRIES DUP(?)
+cs_ipi_wakeup_arr       DW IPI_WAKEUP_ENTRIES DUP(?)
 
 cs_irq_count            DW ?
 cs_irq_stack            DB MAX_IRQ_NESTING DUP(?)

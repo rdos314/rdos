@@ -3249,7 +3249,7 @@ icWakeupInit:
     loop icWakeupInit
 ;
     mov cx,IPI_WAKEUP_ENTRIES
-    mov bx,OFFSET cs_ipi_arr
+    mov bx,OFFSET cs_ipi_wakeup_arr
     xor ax,ax
 
 icIpiInit:
@@ -3259,7 +3259,8 @@ icIpiInit:
 ;
     mov es:cs_serv_sel,0
     mov es:cs_wakeup_count,0
-    mov es:cs_ipi_count,0
+    mov es:cs_ipi_wakeup_count,0
+    InitSpinlock  es:cs_ipi_spinlock
     mov es:cs_nesting,-1
     mov es:cs_curr_thread,0
     mov es:cs_last_thread,-1
