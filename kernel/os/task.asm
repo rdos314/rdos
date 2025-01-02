@@ -2577,6 +2577,9 @@ InsertLockedWakeup  PROC near
     jne iwOther
 
 iwSelf:    
+    mov es:p_sleep_sel,fs
+    mov es:p_sleep_offset,OFFSET cs_wakeup_arr
+;
     cli
     movzx edi,fs:cs_wakeup_count
     cmp di,CORE_WAKEUP_ENTRIES
@@ -2594,6 +2597,9 @@ iwSelfOk:
 iwOther:    
     push fs
     mov fs,di
+;
+    mov es:p_sleep_sel,fs
+    mov es:p_sleep_offset,OFFSET cs_ipi_wakeup_arr
 ;
     RequestSpinlock fs:cs_ipi_spinlock
 ;
@@ -4654,7 +4660,7 @@ nfLoop:
 ;
     test fs:cs_flags,CS_FLAG_ACTIVE
     jz nfNext
-;    
+;   
     mov al,81h
     SendLockedInt
 
