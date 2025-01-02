@@ -2656,8 +2656,8 @@ AddWakeup  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertLockedWakeup  PROC near
-    push ax
-    push di
+    push eax
+    push edi
 ;
     mov ax,fs
     mov di,es:p_core
@@ -2672,17 +2672,30 @@ iwOther:
     push fs
     mov fs,di
 ;
-    call AddWakeup
+    RequestSpinlock fs:cs_ipi_spinlock
+;
+    movzx edi,fs:cs_ipi_wakeup_count
+    cmp di,IPI_WAKEUP_ENTRIES
+    jne iwOtherOk
+;
+    CrashGate
+
+iwOtherOk:
+    mov fs:[2*edi].cs_ipi_wakeup_arr,es
+    inc di
+    mov fs:cs_ipi_wakeup_count,di
+
+    ReleaseSpinlock fs:cs_ipi_spinlock
 ;    
-    mov al,81h
+    mov al,86h
     SendLockedInt
 
 iwIntOk:
     pop fs
 
 iwDone:    
-    pop di
-    pop ax
+    pop edi
+    pop eax
     ret
 InsertLockedWakeup  Endp
 
@@ -4221,7 +4234,24 @@ irq_schedule    Endp
 ipi_wakeup_name  DB 'IPI Wakeup',0
 
 ipi_wakeup    Proc far    
-    CrashGate
+    RequestSpinlock fs:cs_ipi_spinlock
+;
+    xor cx,cx
+    xchg cx,fs:cs_ipi_wakeup_count
+    or cx,cx
+    jz ipiDone
+;
+    xor si,si
+
+ipiLoop:
+    mov es,fs:[si].cs_ipi_wakeup_arr
+    call AddWakeup
+    add si,2
+;
+    loop ipiLoop
+
+ipiDone:
+    ReleaseSpinlock fs:cs_ipi_spinlock
     retf32
 ipi_wakeup    Endp
 

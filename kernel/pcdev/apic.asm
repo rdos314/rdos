@@ -2882,7 +2882,7 @@ siHpetOk:
     SetupLongTimerInt
 
 siPreemptTimerOk:
-    mov al,84h
+    mov al,86h
     mov esi,OFFSET wakeup_int
     SetupIntGate
 ;
