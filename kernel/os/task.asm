@@ -2549,7 +2549,7 @@ null_nest_ok:
     or ax,ax
     jz null_wakeup_ok
 ;
-;    CrashGate
+    CrashGate
 
 null_wakeup_ok:
     hlt
