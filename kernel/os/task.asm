@@ -1421,44 +1421,20 @@ load_thread_wakeup_done:
     xor ax,ax
     xchg ax,es:p_wanted_core
     or ax,ax
-    jz load_reload_loop
+    jz load_start
 ;
     mov es:p_core,ax
     mov dx,fs
     cmp dx,ax
-    jz load_reload_loop
+    jz load_start
 ;    
     call InsertLockedWakeup
     jmp load_thread_loop
-
-load_reload_loop:
-    call cs:preempt_reload_proc
-    jnc load_a_task
     
-load_retry:
-    mov ax,SEG data
-    mov ds,ax
+load_start:
+    call cs:preempt_reload_proc
+    jc load_retry
 ;
-    test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    jz load_timer_not_expired
-;
-    call cs:update_timer_proc
-
-load_timer_not_expired:        
-    mov ax,es
-    cmp ax,fs:cs_null_thread
-    je load_thread_loop
-;    
-    mov di,es:p_prio
-    call InsertCoreFirst
-    cmp di,fs:cs_prio_act
-    jbe load_thread_loop
-;
-    mov fs:cs_prio_act,di
-    lock or fs:cs_flags,CS_FLAG_PRIO_CHANGE
-    jmp load_thread_loop
-
-load_a_task:
     mov es:p_sleep_type,0
     lock or fs:cs_flags,CS_FLAG_LOADING
     mov ax,gdt_sel
@@ -1569,7 +1545,7 @@ load_actions_done:
     jnz load_relock
 ;
     test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    jnz load_relock    
+    jnz load_relock
 ;
     mov eax,fs:cs_tlb.pt32_used
     or eax,eax
@@ -1578,7 +1554,29 @@ load_actions_done:
 load_relock:
     call LockCore
     sti
-    jmp load_retry
+
+load_retry:
+    mov ax,SEG data
+    mov ds,ax
+;
+    test fs:cs_flags,CS_FLAG_TIMER_EXPIRED
+    jz load_timer_not_expired
+;
+    call cs:update_timer_proc
+
+load_timer_not_expired:        
+    mov ax,es
+    cmp ax,fs:cs_null_thread
+    je load_thread_loop
+;    
+    mov di,es:p_prio
+    call InsertCoreFirst
+    cmp di,fs:cs_prio_act
+    jbe load_thread_loop
+;
+    mov fs:cs_prio_act,di
+    lock or fs:cs_flags,CS_FLAG_PRIO_CHANGE
+    jmp load_thread_loop
         
 load_regs:
     test fs:cs_flags,CS_FLAG_LONG_MODE
