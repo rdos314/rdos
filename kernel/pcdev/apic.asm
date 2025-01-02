@@ -2846,7 +2846,7 @@ siTimerOk:
     SetupLongPreemptInt
 
 siPreemptOk:
-    mov al,81h
+    mov al,25h
     mov esi,OFFSET tlb_int
     SetupIntGate
 ;        
@@ -2882,7 +2882,7 @@ siHpetOk:
     SetupLongTimerInt
 
 siPreemptTimerOk:
-    mov al,86h
+    mov al,26h
     mov esi,OFFSET wakeup_int
     SetupIntGate
 ;

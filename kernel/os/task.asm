@@ -2616,7 +2616,7 @@ iwOtherOk:
 
     ReleaseSpinlock fs:cs_ipi_spinlock
 ;    
-    mov al,86h
+    mov al,26h
     SendLockedInt
 
 iwIntOk:
@@ -4661,7 +4661,7 @@ nfLoop:
     test fs:cs_flags,CS_FLAG_ACTIVE
     jz nfNext
 ;   
-    mov al,81h
+    mov al,25h
     SendLockedInt
 
 nfNext:
