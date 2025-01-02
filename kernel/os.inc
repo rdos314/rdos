@@ -1951,10 +1951,6 @@ FlushTlb    MACRO
     OsGate flush_tlb_nr
                         ENDM
 
-IpiWakeup    MACRO
-    OsGate ipi_wakeup_nr
-                        ENDM
-
 ;    DS:SI       Thread
 ;    AX          Status to thread
 Wake MACRO
@@ -2243,9 +2239,15 @@ AddSerIoDevice  MACRO
 
 ;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
+; IN  FS     Core
 IrqSchedule    MACRO
     OsGate irq_schedule_nr
                     ENDM
+
+; IN  FS     Core
+IpiWakeup    MACRO
+    OsGate ipi_wakeup_nr
+                        ENDM
 
 ; IN  CX        Number of ints (1,2,4,8,16 or 32)
 ; IN  AL        Priority (0..31)

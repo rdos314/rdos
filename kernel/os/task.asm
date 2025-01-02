@@ -4210,6 +4210,24 @@ irq_schedule    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IpiWakeup
+;
+;           DESCRIPTION:    IPI IRQ for thread wakeup
+;
+;           PARAMETERS:     FS  Core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ipi_wakeup_name  DB 'IPI Wakeup',0
+
+ipi_wakeup    Proc far    
+    CrashGate
+    retf32
+ipi_wakeup    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           TryLockTask
 ;
 ;           DESCRIPTION:    Try lock task
@@ -11732,6 +11750,12 @@ timer_free_list_create:
     mov edi,OFFSET irq_schedule_name
     xor cl,cl
     mov ax,irq_schedule_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET ipi_wakeup
+    mov edi,OFFSET ipi_wakeup_name
+    xor cl,cl
+    mov ax,ipi_wakeup_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_scheduler_lock_counter
