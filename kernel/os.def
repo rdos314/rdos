@@ -924,4 +924,6 @@ get_kernel_handle_time_nr   = 858
 
 init_user_timer_nr          = 859
 
-osgate_entries              = 860
+ipi_wakeup_nr               = 860
+
+osgate_entries              = 880

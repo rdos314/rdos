@@ -1951,6 +1951,10 @@ FlushTlb    MACRO
     OsGate flush_tlb_nr
                         ENDM
 
+IpiWakeup    MACRO
+    OsGate ipi_wakeup_nr
+                        ENDM
+
 ;    DS:SI       Thread
 ;    AX          Status to thread
 Wake MACRO

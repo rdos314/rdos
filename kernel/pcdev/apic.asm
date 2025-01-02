@@ -2751,6 +2751,7 @@ wakeup_int:
     mov ds,ax
     xor eax,eax
     mov ds:APIC_EOI,eax
+    IpiWakeup
     LeaveInt
 ;
     pop ax
