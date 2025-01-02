@@ -2564,84 +2564,17 @@ null_wakeup_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemoveWakeup  PROC near
-    push ax
-    push bx
-    push cx
+    push ebx
 ;
-    mov bx,OFFSET cs_wakeup_arr
-    mov cx,CORE_WAKEUP_ENTRIES
-
-rwLoop:
-    xor ax,ax
-    xchg ax,fs:[bx]
-    or ax,ax
-    jnz rwOk
+    cli
+    dec fs:cs_wakeup_count
+    movzx ebx,fs:cs_wakeup_count
+    mov es,fs:[2*ebx].cs_wakeup_arr
+    sti
 ;
-    add bx,2
-    loop rwLoop
-;
-    CrashGate
-
-rwOk:
-    mov es,ax
-    lock sub fs:cs_wakeup_count,1
-;
-    pop cx
-    pop bx    
-    pop ax
+    pop ebx    
     ret
 RemoveWakeup  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AddWakeup
-;
-;           DESCRIPTION:    Add to wakeup
-;
-;           PARAMETERS:     ES      Thread
-;                           FS      Core
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddWakeup  PROC near
-    push ax
-    push bx
-    push cx
-    push dx
-;
-    mov bx,OFFSET cs_wakeup_arr
-;
-    mov es:p_sleep_sel,fs
-    mov word ptr es:p_sleep_offset,bx
-;
-    mov cx,CORE_WAKEUP_ENTRIES
-    mov dx,es
-
-awLoop:
-    mov ax,fs:[bx]
-    or ax,ax
-    jnz awNext
-;
-    xchg dx,fs:[bx]
-    or dx,dx
-    jz awAdd
-
-awNext:
-    add bx,2
-    loop awLoop    
-;
-    CrashGate
-   
-awAdd:
-    lock add fs:cs_wakeup_count,1
-;
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
-AddWakeup  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2665,7 +2598,18 @@ InsertLockedWakeup  PROC near
     jne iwOther
 
 iwSelf:    
-    call AddWakeup
+    cli
+    movzx edi,fs:cs_wakeup_count
+    cmp di,CORE_WAKEUP_ENTRIES
+    jne iwSelfOk
+;
+    CrashGate
+
+iwSelfOk:
+    mov fs:[2*edi].cs_wakeup_arr,es
+    inc di
+    mov fs:cs_wakeup_count,di
+    sti
     jmp iwDone
     
 iwOther:    
@@ -4242,11 +4186,21 @@ ipi_wakeup    Proc far
     jz ipiDone
 ;
     xor si,si
+    mov di,fs:cs_wakeup_count
+    add di,di
 
 ipiLoop:
-    mov es,fs:[si].cs_ipi_wakeup_arr
-    call AddWakeup
+    cmp di,2 * CORE_WAKEUP_ENTRIES
+    jne ipiOk
+;
+    CrashGate
+
+ipiOk:
+    mov ax,fs:[si].cs_ipi_wakeup_arr
+    mov fs:[di].cs_wakeup_arr,ax
+    inc fs:cs_wakeup_count
     add si,2
+    add di,2
 ;
     loop ipiLoop
 
