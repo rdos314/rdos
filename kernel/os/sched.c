@@ -412,6 +412,7 @@ int CreateTid()
 void ImplSetThreadIrq(int irq, int ThreadId)
 {
     int i;
+    int handle;
 
     RdosEnterKernelSection(&ThreadSection);
 
@@ -419,9 +420,11 @@ void ImplSetThreadIrq(int irq, int ThreadId)
     {
         if (ThreadArr[i].Valid && ThreadArr[i].ID == ThreadId)
         {
+            handle = ThreadArr[i].Handle;
+
             IrqArr[irq].ServerArr[0] = ThreadId;
             IrqArr[irq].ServerCount = 1;
-            SetThreadIrq(ThreadId, irq);
+            SetThreadIrq(handle, irq);
             ThreadArr[i].Irq = irq;
             break;
         }
