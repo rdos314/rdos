@@ -2670,13 +2670,13 @@ preempt_ds_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           force_schedule_int
+;           NAME:           tlb_int
 ;
-;           DESCRIPTION:    Force schedule int
+;           DESCRIPTION:    TLB invalidate int
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-force_schedule_int:
+tlb_int:
     pushad
     push ds
     push es
@@ -2693,38 +2693,100 @@ force_schedule_int:
 ;
     pop ax
     verr ax
-    jz FsExitGs
+    jz TlbExitGs
 ;    
     xor ax,ax
 
-FsExitGs:
+TlbExitGs:
     mov gs,ax
 ;
     pop ax
     verr ax
-    jz FsExitFs
+    jz TlbExitFs
 ;    
     xor ax,ax
 
-FsExitFs:
+TlbExitFs:
     mov fs,ax
 ;
     pop ax
     verr ax
-    jz FsExitEs
+    jz TlbExitEs
 ;    
     xor ax,ax
 
-FsExitEs:
+TlbExitEs:
     mov es,ax
 ;
     pop ax
     verr ax
-    jz FsExitDs
+    jz TlbExitDs
 ;    
     xor ax,ax
 
-FsExitDs:
+TlbExitDs:
+    mov ds,ax
+    popad
+    iretd    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           wakeup_int
+;
+;           DESCRIPTION:    Wakeup int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wakeup_int:
+    pushad
+    push ds
+    push es
+    push fs
+    push gs
+;
+    mov al,-1
+    EnterInt
+    mov ax,apic_mem_sel
+    mov ds,ax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    LeaveInt
+;
+    pop ax
+    verr ax
+    jz WiExitGs
+;    
+    xor ax,ax
+
+WiExitGs:
+    mov gs,ax
+;
+    pop ax
+    verr ax
+    jz WiExitFs
+;    
+    xor ax,ax
+
+WiExitFs:
+    mov fs,ax
+;
+    pop ax
+    verr ax
+    jz WiExitEs
+;    
+    xor ax,ax
+
+WiExitEs:
+    mov es,ax
+;
+    pop ax
+    verr ax
+    jz WiExitDs
+;    
+    xor ax,ax
+
+WiExitDs:
     mov ds,ax
     popad
     iretd    
@@ -2784,7 +2846,7 @@ siTimerOk:
 
 siPreemptOk:
     mov al,81h
-    mov esi,OFFSET force_schedule_int
+    mov esi,OFFSET tlb_int
     SetupIntGate
 ;        
     mov ax,setup_long_schedule_int_nr
@@ -2819,6 +2881,10 @@ siHpetOk:
     SetupLongTimerInt
 
 siPreemptTimerOk:
+    mov al,84h
+    mov esi,OFFSET wakeup_int
+    SetupIntGate
+;
     popad
     pop ds
     ret
