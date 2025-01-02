@@ -1388,12 +1388,15 @@ load_thread_loop:
     mov es,ax
 
 load_thread_wakeup_loop:    
-    cli
     mov ax,fs:cs_wakeup_count
     or ax,ax
     jz load_thread_wakeup_done
 ;
-    call RemoveWakeup
+    cli
+    dec fs:cs_wakeup_count
+    movzx ebx,fs:cs_wakeup_count
+    mov es,fs:[2*ebx].cs_wakeup_arr
+    sti
 ;    
     mov di,es:p_prio
     call InsertCoreBlock
@@ -2551,30 +2554,6 @@ null_nest_ok:
 null_wakeup_ok:
     hlt
     jmp null_loop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RemoveWakeup
-;
-;           DESCRIPTION:    Remove wakeup
-;
-;           RETURNS:        ES      Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveWakeup  PROC near
-    push ebx
-;
-    cli
-    dec fs:cs_wakeup_count
-    movzx ebx,fs:cs_wakeup_count
-    mov es,fs:[2*ebx].cs_wakeup_arr
-    sti
-;
-    pop ebx    
-    ret
-RemoveWakeup  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
