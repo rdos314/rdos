@@ -3841,8 +3841,13 @@
     CallGate_close_adc_chan  \
     __parm [__ebx]
 
-#pragma aux RdosGetAdcChannelPos = \
-    CallGate_get_adc_chan_pos  \
+#pragma aux RdosGetAdcChannelStartPos = \
+    CallGate_get_adc_chan_start_pos  \
+    __parm [__ebx] \
+    __value [__edx __eax]
+
+#pragma aux RdosGetAdcChannelCurrPos = \
+    CallGate_get_adc_chan_curr_pos  \
     __parm [__ebx] \
     __value [__edx __eax]
 

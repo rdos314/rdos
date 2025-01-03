@@ -4200,7 +4200,6 @@ EnablePciMsiX    MACRO
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function
-; IN  ES    Int vector selector
 ; IN  AL    Int #
 ; IN  DL    Entry #
 InitPciMsiXEntry    MACRO
@@ -4210,7 +4209,6 @@ InitPciMsiXEntry    MACRO
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function
-; IN  ES    Int vector selector
 ; IN  AL    Int #
 ; IN  DL    Entry #
 SetupPciMsiXEntry    MACRO
