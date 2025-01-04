@@ -1030,7 +1030,7 @@ int RDOSAPI RdosGetSyslog(int handle, int *severity, unsigned long *msb, unsigne
 int RDOSAPI RdosOpenAdcChannel(int Channel, int Freq, int Periods);
 void RDOSAPI RdosCloseAdcChannel(int handle);
 void RDOSAPI RdosStartAdcChannel(int handle);
-long long RDOSAPI RdosGetAdcChannelCurrPos(int handle);
+long long RDOSAPI RdosAdjustAdcChannelTime(int handle, int rel);
 void *RDOSAPI RdosReadAdcChannel(int handle, long long *pos);
 
 void RDOSAPI RdosSetupAdc(char TestMode, char Speed, int BufCount);

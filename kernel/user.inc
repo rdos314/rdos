@@ -3900,9 +3900,9 @@ StartAdcChannel      MACRO
                                                 ENDM
 
 ; IN  BX      Channel
-; OUT EDX:EAX Position
-GetAdcChannelCurrPos      MACRO
-        UserGate get_adc_chan_curr_pos_nr
+; IN  EAX     Relative adjustment
+AdjustAdcChannelTime      MACRO
+        UserGate adjust_adc_chan_time_nr
                                                 ENDM
 
 ; IN  BX      Channel

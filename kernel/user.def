@@ -1030,6 +1030,6 @@ wait_timer_event_nr               = 854
 signal_timer_nr                   = 855
 
 start_adc_chan_nr                 = 856
-get_adc_chan_curr_pos_nr          = 857
+adjust_adc_chan_time_nr           = 857
 
 usergate_entries                  = 880

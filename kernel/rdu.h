@@ -1030,7 +1030,7 @@
 #define usergate_signal_timer 0x00000357
 
 #define usergate_start_adc_chan 0x00000358
-#define usergate_get_adc_chan_curr_pos 0x00000359
+#define usergate_adjust_adc_chan_time 0x00000359
 
 
 
@@ -2067,7 +2067,7 @@
 #define CallGate_signal_timer 0x55 0x67 0x9a 87 3 0 0 3 0 0x5d
 
 #define CallGate_start_adc_chan 0x55 0x67 0x9a 88 3 0 0 3 0 0x5d
-#define CallGate_get_adc_chan_curr_pos 0x55 0x67 0x9a 89 3 0 0 3 0 0x5d
+#define CallGate_adjust_adc_chan_time 0x55 0x67 0x9a 89 3 0 0 3 0 0x5d
 
 #else
 
@@ -3102,6 +3102,6 @@
 #define CallGate_signal_timer 0x3e 0x67 0x9a 87 3 0 0 3 0
 
 #define CallGate_start_adc_chan 0x3e 0x67 0x9a 88 3 0 0 3 0
-#define CallGate_get_adc_chan_curr_pos 0x3e 0x67 0x9a 89 3 0 0 3 0
+#define CallGate_adjust_adc_chan_time 0x3e 0x67 0x9a 89 3 0 0 3 0
 
 #endif
