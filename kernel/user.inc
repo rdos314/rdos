@@ -3895,9 +3895,8 @@ CloseAdcChannel      MACRO
                                                 ENDM
 
 ; IN  BX      Channel
-; OUT EDX:EAX Position
-GetAdcChannelStartPos      MACRO
-        UserGate get_adc_chan_start_pos_nr
+StartAdcChannel      MACRO
+        UserGate start_adc_chan_nr
                                                 ENDM
 
 ; IN  BX      Channel

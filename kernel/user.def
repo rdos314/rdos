@@ -1029,7 +1029,7 @@ create_timer_thread_nr            = 853
 wait_timer_event_nr               = 854
 signal_timer_nr                   = 855
 
-get_adc_chan_start_pos_nr         = 856
+start_adc_chan_nr                 = 856
 get_adc_chan_curr_pos_nr          = 857
 
 usergate_entries                  = 880
