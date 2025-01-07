@@ -4186,8 +4186,8 @@ allocate_circ_buf    PROC far
     dec eax
     and ax,0F000h
     add eax,1000h
-    add eax,2000h
     mov ecx,eax
+    add eax,2000h
     AllocateLocalLinear
 ;
     push ecx
