@@ -1032,4 +1032,7 @@ signal_timer_nr                   = 855
 start_adc_chan_nr                 = 856
 adjust_adc_chan_time_nr           = 857
 
+allocate_circ_buf_nr              = 858
+free_circ_buf_nr                  = 859
+
 usergate_entries                  = 880

@@ -346,6 +346,18 @@ SetFlatLinearReadWrite  MACRO
         UserGate set_flat_linear_readwrite_nr
                                         ENDM
 
+; IN  EAX               Number of bytes
+; OUT EDX               Flat offset
+AllocateCircularBuffer  MACRO
+        UserGate allocate_circ_buf_nr
+                                        ENDM
+
+; IN  ECX               Size of buffer
+; IN  EDX               Flat offset
+FreeCircularBuffer  MACRO
+        UserGate free_circ_buf_nr
+                                        ENDM
+
 ;;;;;;;;;;;; INTERRUPT & EXCEPTION ;;;;;;;;;;;
 
 ; OUT BX:CX             V86 address to use to switch to Prot mode

@@ -843,6 +843,17 @@
     CallGate_free_debug_app_mem  \
     __parm [__edx]
 
+
+#pragma aux RdosAllocateCircularBuffer = \
+    CallGate_allocate_circ_buf  \
+    ValidateEdx \
+    __parm [__eax]  \
+    __value [__edx]
+
+#pragma aux RdosFreeCircularBuffer = \
+    CallGate_free_circ_buf  \
+    __parm [__edx] [__ecx]
+
 #pragma aux RdosGetThreadLinear = \
     CallGate_get_thread_linear  \
     ValidateEdx \

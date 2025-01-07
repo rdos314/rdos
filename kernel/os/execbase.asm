@@ -4165,6 +4165,103 @@ free_debug_app_mem      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AllocateCircBuf
+;
+;           DESCRIPTION:    Allocate circular buffer
+;
+;           PARAMETERS:     EAX      Size
+;
+;           RETURNS:        EDX      Buffer ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_circ_buf_name   DB 'Allocate Circular Buffer',0
+
+allocate_circ_buf    PROC far
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    add eax,2000h
+    mov ecx,eax
+    AllocateLocalLinear
+;
+    push ecx
+    mov ax,flat_sel
+    mov es,eax
+    mov edi,edx
+    add edi,1000h
+    xor eax,eax
+    shr ecx,2
+    rep stosd
+    pop ecx
+;
+    add edx,1000h
+    GetPageEntry
+    add edx,ecx
+    or ax,800h
+    SetPageEntry
+;
+    sub edx,1000h   
+    GetPageEntry
+    sub edx,ecx
+    or ax,800h
+    SetPageEntry
+;
+    add edx,1000h
+    mov ax,system_data_sel
+    mov es,ax
+    sub edx,es:flat_base
+
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+allocate_circ_buf    ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeCircBuf
+;
+;           DESCRIPTION:    Free circular buffer
+;
+;           PARAMETERS:     EDX      Buffer ptr
+;                           ECX      Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_circ_buf_name       DB 'Free Circular Buffer',0
+
+free_circ_buf    PROC far
+    push ds
+    push eax
+    push ecx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    add edx,ds:flat_base
+;
+    dec ecx
+    and cx,0F000h
+    add ecx,3000h
+    sub edx,1000h
+    FreeLinear
+;
+    pop ecx
+    pop eax
+    pop ds
+    ret
+free_circ_buf    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           KernelDebugEvent
 ;
 ;           DESCRIPTION:    Kernel debug event
@@ -6765,6 +6862,18 @@ InitExec_    Proc near
     mov edi,OFFSET free_debug_app_mem_name
     mov dx,virt_es_in
     mov ax,free_debug_app_mem_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET allocate_circ_buf
+    mov edi,OFFSET allocate_circ_buf_name
+    xor dx,dx
+    mov ax,allocate_circ_buf_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET free_circ_buf
+    mov edi,OFFSET free_circ_buf_name
+    xor dx,dx
+    mov ax,free_circ_buf_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_debug_event

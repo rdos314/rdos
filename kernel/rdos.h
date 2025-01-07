@@ -485,6 +485,9 @@ int RDOSAPI RdosPrintf(TRdosCallback *outproc, void *param, const char *format, 
 
 #endif
 
+void *RDOSAPI RdosAllocateCircularBuffer(int size);
+void RDOSAPI RdosFreeCircularBuffer(void *ptr, int size);
+
 int RDOSAPI RdosHasPhysical64();
 int RDOSAPI RdosUsesPae();
 
