@@ -4617,6 +4617,10 @@ init_hpet_loop:
     test ax,8000h
     jz init_hpet_done
 
+; never use global timer!
+
+    jmp init_hpet_done
+
 init_hpet_timer_ok:
     UseOwnPreemptTimer
 ;    
