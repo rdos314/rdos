@@ -581,9 +581,9 @@ deref_handle    PROC far
     pop ax
 ;
     mov si,bx
-;    EnterSection ds:handle_section
+    EnterSection ds:handle_section
     mov bx,word ptr [bx+si].handle_arr
-;    LeaveSection ds:handle_section
+    LeaveSection ds:handle_section
 ;
     mov dx,es
     mov ds,dx
