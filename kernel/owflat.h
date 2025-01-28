@@ -3842,31 +3842,18 @@
     __parm [__ebx] [__esi] [__edx] [__eax] [__edi] [__ecx] \
     __value [__eax]
 
-#pragma aux RdosOpenAdcChannel = \
-    CallGate_open_adc_chan  \
-    CarryToBool \
-    __parm [__ebx] [__eax] [__ecx] \
-    __value [__eax]
+#pragma aux RdosConfigAdcChannel = \
+    CallGate_config_adc_chan  \
+    __parm [__ebx] [__edx] [__eax] [__ecx]
 
-#pragma aux RdosCloseAdcChannel = \
-    CallGate_close_adc_chan  \
+#pragma aux RdosStartAdcFreq = \
+    CallGate_start_adc_freq  \
     __parm [__ebx]
-
-#pragma aux RdosStartAdcChannel = \
-    CallGate_start_adc_chan  \
-    __parm [__ebx]
-
-#pragma aux RdosAdjustAdcChannelTime = \
-    CallGate_adjust_adc_chan_time  \
-    __parm [__ebx] [__eax]
 
 #pragma aux RdosReadAdcChannel = \
-    CallGate_read_adc_chan  \
-    "mov [esi],eax" \
-    "mov [esi+4],edx" \
-    __parm [__ebx] [__esi] \
-    __value [__edi] \
-    __modify [__edx __eax]
+    CallGate_read_adc_freq  \
+    __parm [__ebx] \
+    __value [__edi]
 
 #pragma aux RdosSetupAdc = \
     CallGate_setup_adc  \

@@ -516,8 +516,7 @@ anio_code_sel       EQU 0C20h
 anio_data_sel       EQU 0C28h
 anio_control_sel    EQU 0C30h
 anio_adc_sel        EQU 0C38h
-anio_dac_sel        EQU 0C40h
-anio_signal_sel     EQU 0C48h
+anio_status_sel     EQU 0C40h
 
 pmu_code_sel        EQU 0C50h
 pmu_data_sel        EQU 0C58h

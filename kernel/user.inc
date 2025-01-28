@@ -3893,63 +3893,27 @@ SetAdcTrigger     MACRO
         UserGate set_adc_trigger_nr
                                                 ENDM
 
-;   IN  BX      Channel
-;   IN  EAX     Frequency i Hz
-;   IN  ECX     Periods
-OpenAdcChannel      MACRO
-        UserGate open_adc_chan_nr
+; IN  EBX     Device
+; IN  EDX     Channel
+; IN  EAX     Frequency i Hz
+; IN  ECX     Periods
+ConfigAdcChannel      MACRO
+        UserGate config_adc_chan_nr
                                                 ENDM
 
-
-;   IN  BX      Channel
-CloseAdcChannel      MACRO
-        UserGate close_adc_chan_nr
+; IN  EBX     Device
+StartAdcFreq      MACRO
+        UserGate start_adc_freq_nr
                                                 ENDM
 
-; IN  BX      Channel
-StartAdcChannel      MACRO
-        UserGate start_adc_chan_nr
+; IN  EBX     Device
+; OUT EDI     2k buffer
+ReadAdcFreq      MACRO
+        UserGate read_adc_freq_nr
                                                 ENDM
 
-; IN  BX      Channel
-; IN  EAX     Relative adjustment
-AdjustAdcChannelTime      MACRO
-        UserGate adjust_adc_chan_time_nr
-                                                ENDM
-
-; IN  BX      Channel
-; OUT EDX:EAX Position
-; OUT EDI     4k buffer
-ReadAdcChannel      MACRO
-        UserGate read_adc_chan_nr
-                                                ENDM
-
-
-;       IN  AX          Adc channel
-;       OUT BX          Adc handle
-OpenAdc      MACRO
-        UserGate open_adc_nr
-                                                ENDM
-                                                
-;       IN  BX          Adc handle
-CloseAdc      MACRO
-        UserGate close_adc_nr
-                                                ENDM
-                                                
-;       IN  BX          Adc handle
-;   IN  EDX:EAX Time to do next ADC conversion
-DefineAdcTime      MACRO
-        UserGate define_adc_time_nr
-                                                ENDM
-                                                                                                
-;       IN  BX          Adc handle
-;   OUT EAX     Value
-ReadAdc      MACRO
-        UserGate read_adc_nr
-                                                ENDM
-
-;       IN  DH          Device #
-;       OUT AL          State
+;   IN  DH          Device #
+;   OUT AL          State
 ReadSerialLines      MACRO
         UserGate read_serial_lines_nr
                                                 ENDM

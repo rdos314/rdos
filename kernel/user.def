@@ -259,11 +259,9 @@ read_key_event_nr           = 241
 add_wait_for_mouse_nr           = 242
 remove_wait_nr              = 243
 
-open_adc_chan_nr            = 245
-close_adc_chan_nr           = 246
-
-define_adc_time_nr                      = 247
-read_adc_nr                                     = 248
+config_adc_chan_nr          = 245
+start_adc_freq_nr           = 246
+read_adc_freq_nr            = 248
 
 free_v86_nr                 = 249
 
