@@ -3850,7 +3850,7 @@
     CallGate_start_adc_freq  \
     __parm [__ebx]
 
-#pragma aux RdosReadAdcChannel = \
+#pragma aux RdosReadAdcFreq = \
     CallGate_read_adc_freq  \
     __parm [__ebx] \
     __value [__edi]
