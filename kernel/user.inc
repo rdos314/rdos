@@ -3897,6 +3897,7 @@ SetAdcTrigger     MACRO
 ; IN  EDX     Channel
 ; IN  EAX     Frequency i Hz
 ; IN  ECX     Periods
+; OUT EAX     Samples used in analysis
 ConfigAdcChannel      MACRO
         UserGate config_adc_chan_nr
                                                 ENDM

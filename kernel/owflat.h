@@ -3844,8 +3844,9 @@
 
 #pragma aux RdosConfigAdcChannel = \
     CallGate_config_adc_chan  \
-    __parm [__ebx] [__edx] [__eax] [__ecx]
-
+    __parm [__ebx] [__edx] [__eax] [__ecx] \
+    __value [__eax]
+    
 #pragma aux RdosStartAdcFreq = \
     CallGate_start_adc_freq  \
     __parm [__ebx]
