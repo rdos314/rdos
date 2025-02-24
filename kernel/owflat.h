@@ -3846,7 +3846,15 @@
     CallGate_config_adc_chan  \
     __parm [__ebx] [__edx] [__eax] [__ecx] \
     __value [__eax]
-    
+
+#pragma aux RdosSetAdcLimit = \
+    CallGate_set_adc_limit  \
+    __parm [__ebx] [__eax]
+
+#pragma aux RdosSetAdcChannels = \
+    CallGate_set_adc_channels  \
+    __parm [__ebx] [__eax]
+        
 #pragma aux RdosStartAdcFreq = \
     CallGate_start_adc_freq  \
     __parm [__ebx]

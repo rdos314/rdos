@@ -1033,4 +1033,7 @@ adjust_adc_chan_time_nr           = 857
 allocate_circ_buf_nr              = 858
 free_circ_buf_nr                  = 859
 
+set_adc_limit_nr                  = 860
+set_adc_channels_nr               = 861
+
 usergate_entries                  = 880

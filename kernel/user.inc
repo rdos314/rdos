@@ -3903,6 +3903,18 @@ ConfigAdcChannel      MACRO
                                                 ENDM
 
 ; IN  EBX     Device
+; IN  EAX     Min amplitude
+SetAdcLimit      MACRO
+        UserGate set_adc_limit_nr
+                                                ENDM
+
+; IN  EBX     Device
+; IN  EAX     Min channels
+SetAdcChannels      MACRO
+        UserGate set_adc_channels_nr
+                                                ENDM
+
+; IN  EBX     Device
 StartAdcFreq      MACRO
         UserGate start_adc_freq_nr
                                                 ENDM

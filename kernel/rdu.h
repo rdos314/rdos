@@ -1033,6 +1033,9 @@
 #define usergate_allocate_circ_buf 0x0000035A
 #define usergate_free_circ_buf 0x0000035B
 
+#define usergate_set_adc_limit 0x0000035C
+#define usergate_set_adc_channels 0x0000035D
+
 
 
 #ifdef __FLAT__
@@ -2071,6 +2074,9 @@
 #define CallGate_allocate_circ_buf 0x55 0x67 0x9a 90 3 0 0 3 0 0x5d
 #define CallGate_free_circ_buf 0x55 0x67 0x9a 91 3 0 0 3 0 0x5d
 
+#define CallGate_set_adc_limit 0x55 0x67 0x9a 92 3 0 0 3 0 0x5d
+#define CallGate_set_adc_channels 0x55 0x67 0x9a 93 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -3106,5 +3112,8 @@
 
 #define CallGate_allocate_circ_buf 0x3e 0x67 0x9a 90 3 0 0 3 0
 #define CallGate_free_circ_buf 0x3e 0x67 0x9a 91 3 0 0 3 0
+
+#define CallGate_set_adc_limit 0x3e 0x67 0x9a 92 3 0 0 3 0
+#define CallGate_set_adc_channels 0x3e 0x67 0x9a 93 3 0 0 3 0
 
 #endif

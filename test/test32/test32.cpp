@@ -6,208 +6,54 @@
 #include <sys/stat.h>
 
 #include "rdos.h"
-#include "keyboard.h"
-#include "modbus.h"
-#include "datetime.h"
-#include "videodev.h"
-#include "table.h"
+#include "sockobj.h"
 
-/*
-void TimeoutCallbackRestart(void *param)
+static char ipstr[] = "192.168.10.133";
+
+void HandleSocket(TTcpSocket *Socket)
 {
-    RdosWriteChar('r');
-    RdosRestartCurrentAppTimer(500);
+    bool ok;
+    char ch;
+
+    while (Socket->IsOpen())
+    {
+        ok = Socket->WaitForData(100);
+        if (ok)
+        {
+            ch = Socket->Read();
+            RdosWriteChar(ch);
+        }
+    }
 }
-
-void TimeoutCallbackReload(void *param)
-{
-    RdosWriteChar('R');
-
-    for (;;)
-        RdosWaitMilli(100);
-}
-
-void TimeoutCallback1(void *param)
-{
-    RdosWriteChar('1');
-}
-
-void TimeoutCallback2(void *param)
-{
-    RdosWriteChar('2');
-}
-
-void TimeoutCallback3(void *param)
-{
-    RdosWriteChar('3');
-}
-
-void TimeoutCallback4(void *param)
-{
-    RdosWriteChar('4');
-}
-
-*/
 
 void main()
 {
-    char *buf = new char[1024];
-
-    RdosTestGate(buf);
-
-
-/*
-    int reload_timer;
-    int timer;
-
-    RdosStartAppTimer(TimeoutCallbackRestart, 0, 500);
-
-    reload_timer = RdosStartAppTimer(TimeoutCallbackReload, 0, 750);
-
-    for (;;)
-    {
-        timer = RdosStartAppTimer(TimeoutCallback1, 0, RdosGetRandom(200));
-        timer = RdosStartAppTimer(TimeoutCallback2, 0, RdosGetRandom(200));
-        timer = RdosStartAppTimer(TimeoutCallback3, 0, RdosGetRandom(200));
-        timer = RdosStartAppTimer(TimeoutCallback4, 0, RdosGetRandom(200));
-        RdosWaitMilli(RdosGetRandom(200));
-        RdosResetAppTimer(reload_timer, 750);
-    }
-
-    RdosStopAppTimer(timer);
-
-*/
-
-/*
+    int n1, n2, n3, n4;
     int count;
+    long Ip;
+    TTcpSocket *Socket;   
 
-    for (;;)
+    count = sscanf(ipstr, "%d.%d.%d.%d", &n1, &n2, &n3, &n4);
+
+    if (count == 4)
     {
-        RdosWaitMilli(250);
-        count = RdosGetFreeGdt();
-        printf("GDT: %d\r\n", count);
+        Ip = n4;
+        Ip = (Ip << 8) | n3;
+        Ip = (Ip << 8) | n2;
+        Ip = (Ip << 8) | n1;
+
+        Socket = new TTcpSocket(Ip, 10097, 6000, 0x4000);
+
+        if (Socket->WaitForConnection(10000))
+            HandleSocket(Socket);
     }
 
-*/
-
-/*
-    int handle = open("e:/test.txt", O_RDWR);
-    int count;
-    char buf[10];
-
-    count = read(handle, buf, 10);
-
-    while (count)
-        count = read(handle, buf, 10);
-
-    close(handle);
-
-*/
+    delete Socket;
 
 
+//    char *buf = new char[1024];
 
-/*    TFile file("e:/test.bin");
-    char *buf = new char[1024];
-    int size;
-    int dummy;
-
-    file.SetPos(500234);
-    size = file.Read(buf, 267);
-
-    file.SetPos(1000234);
-    size = file.Read(buf, 99);
-
-    file.SetPos(100234);
-    size = file.Read(buf, 567);
-
-    scanf("%d", &dummy);
-
-    file.SetPos(760234);
-    size = file.Read(buf, 455);
-
-*/
-
-/*
-
-    int i;
-    char *buf = new char[1024];
-    int size;
-    int dummy;
-    long long pos;
-    int handle = RdosOpenHandle("e:/test.bin", O_RDWR);
-    int handle2;
-
-    handle2 = RdosDupHandle(handle);
-    RdosSetHandlePos(handle, 25);
-
-    size = RdosReadHandle(handle, buf, 267);
-
-    if (!RdosFork())
-    {
-        pos = RdosGetHandlePos(handle);
-        printf("Pos 1: %lld\r\n", pos);
-
-        pos = RdosGetHandlePos(handle2);
-        printf("Pos 2: %lld\r\n", pos);
-
-        size = RdosGetHandleSize(handle);
-        printf("Size 1: %d\r\n", size);
-
-        size = RdosGetHandleSize(handle2);
-        printf("Size 2: %d\r\n", size);
-
-        size = RdosReadHandle(handle, buf, 267);
-        printf("Read: %d\r\n", size);
-
-//        RdosCloseHandle(handle2);
-//        RdosCloseHandle(handle);
-
-        exit(0);
-    }
-
-    pos = RdosGetHandlePos(handle);
-    pos = RdosGetHandlePos(handle2);
-
-    size = RdosGetHandleSize(handle);
-    size = RdosGetHandleSize(handle2);
-
-    RdosTestGate(buf);
-
-    RdosSetHandlePos(handle, 500234);
-    size = RdosReadHandle(handle, buf, 267);
-
-    pos = RdosGetHandlePos(handle);
-    pos = RdosGetHandlePos(handle2);
-
-    RdosSetHandlePos(handle, 1000234);
-    size = RdosReadHandle(handle, buf, 99);
-
-    RdosSetHandlePos(handle, 1000234);
-    size = RdosReadHandle(handle, buf, 567);
-
-
-    RdosCloseHandle(handle2);
-    RdosCloseHandle(handle);
-
-
-//    RdosSetHandleSize(handle, 0);
-
-    scanf("%d", &dummy);
-
-    RdosSetHandlePos(handle, 760234);
-    size = RdosReadHandle(handle, buf, 455);
-
-    RdosCloseHandle(handle);
-    RdosCloseHandle(handle2);
-
-    handle = RdosOpenHandle("e:/test.txt", O_RDWR);
-    RdosCloseHandle(handle);
-
-    delete buf;
-
-
-*/
-
+//    RdosTestGate(buf);
 }
 
 
