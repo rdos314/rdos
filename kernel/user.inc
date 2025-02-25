@@ -3904,8 +3904,14 @@ ConfigAdcChannel      MACRO
 
 ; IN  EBX     Device
 ; IN  EAX     Min amplitude
-SetAdcLimit      MACRO
-        UserGate set_adc_limit_nr
+SetAdcAmpLimit      MACRO
+        UserGate set_adc_amp_limit_nr
+                                                ENDM
+
+; IN  EBX     Device
+; IN  EAX     Max phase divergence
+SetAdcPhaseLimit      MACRO
+        UserGate set_adc_phase_limit_nr
                                                 ENDM
 
 ; IN  EBX     Device

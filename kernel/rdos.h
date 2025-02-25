@@ -1031,7 +1031,8 @@ void RDOSAPI RdosCloseSyslog(int handle);
 int RDOSAPI RdosGetSyslog(int handle, int *severity, unsigned long *msb, unsigned long *lsb, char *buf, int size);
 
 int RDOSAPI RdosConfigAdcChannel(int device, int Channel, int Freq, int Periods);
-void RDOSAPI RdosSetAdcLimit(int device, int MinAmp);
+void RDOSAPI RdosSetAdcAmpLimit(int device, int MinAmp);
+void RDOSAPI RdosSetAdcPhaseLimit(int device, int PhaseDiff);
 void RDOSAPI RdosSetAdcChannels(int device, int MinChannels);
 void RDOSAPI RdosStartAdcCFreq(int device);
 void *RDOSAPI RdosReadAdcFreq(int device);

@@ -3847,8 +3847,12 @@
     __parm [__ebx] [__edx] [__eax] [__ecx] \
     __value [__eax]
 
-#pragma aux RdosSetAdcLimit = \
-    CallGate_set_adc_limit  \
+#pragma aux RdosSetAdcAmpLimit = \
+    CallGate_set_adc_amp_limit  \
+    __parm [__ebx] [__eax]
+
+#pragma aux RdosSetAdcPhaseLimit = \
+    CallGate_set_adc_phase_limit  \
     __parm [__ebx] [__eax]
 
 #pragma aux RdosSetAdcChannels = \
