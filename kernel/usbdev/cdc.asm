@@ -244,12 +244,12 @@ header_descr	Proc near
 header_descr	Endp
 
 call_descr	Proc near
-    mov cl,es:[edi].ucdccall_cap
-    test cl,1
-    jz cdOk
+;    mov cl,es:[edi].ucdccall_cap
+;    test cl,1
+;    jz cdOk
 ;
-    stc
-    jmp cdDone
+;    stc
+;    jmp cdDone
 
 cdOk:
     clc
