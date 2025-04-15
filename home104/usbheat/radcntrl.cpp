@@ -39,9 +39,9 @@
 #define TEXT_G  0
 #define TEXT_B  0
 
-#define WIDTH 125
-#define SPACE 15
-#define HEIGHT 35
+#define WIDTH 85
+#define SPACE 12
+#define HEIGHT 25
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -131,7 +131,7 @@ void TRadControl::Define(int rad, const char *name)
 
             size = strlen(name);
             FName[rad] = new char[size + 1];
-            strcpy(FName[rad], name);    
+            strcpy(FName[rad], name);
 
                  FChangedName[rad] = TRUE;
         }
@@ -160,7 +160,7 @@ void TRadControl::SetRef(int rad)
             {
             FHasRef[rad] = FALSE;
             FChangedRef[rad] = TRUE;
-        }           
+        }
     }
 
         FSection.Leave();
@@ -473,7 +473,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
         int x;
     int y;
     char str[80];
-    TFont Font(35);
+    TFont Font(25);
 
     if (IsVisible())
     {
@@ -488,11 +488,11 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
 
         if (FDrawHeader)
         {
-            dev->DrawString(xmin + 475, ymin, "   Ref");
-            dev->DrawString(xmin + 600, ymin, "  Temp");
-            dev->DrawString(xmin + 725, ymin, "Pådrag");
-            dev->DrawString(xmin + 850, ymin, "  Ljus");
-            dev->DrawString(xmin + 975, ymin, "Temp 2");
+            dev->DrawString(xmin + 315, ymin, "   Ref");
+            dev->DrawString(xmin + 400, ymin, "  Temp");
+            dev->DrawString(xmin + 485, ymin, "Pådrag");
+            dev->DrawString(xmin + 565, ymin, "  Ljus");
+            dev->DrawString(xmin + 650, ymin, "Temp 2");
 
             FDrawHeader = FALSE;
         }
@@ -503,7 +503,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
             {
                 FSection.Enter();
 
-                x = xmin + 475;        
+                x = xmin + 315;
                 y = ymin + (HEIGHT + 5) * (i + 1);
 
                 if (FChangedName[i])
@@ -520,7 +520,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
                                 strcpy(str, "------ ");
 
                             dev->SetFilledStyle();
-    
+
                             dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
                             dev->DrawRect(x, y, x + WIDTH - SPACE, y + HEIGHT - 1);
 
@@ -539,7 +539,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
 
                             dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
                         dev->DrawRect(x + WIDTH, y, x + 2 * WIDTH - SPACE, y + HEIGHT - 1);
-        
+
                             dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
                             dev->DrawString(x + WIDTH, y, str);
 
@@ -550,12 +550,12 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
                         {
                     if (FHasMotor[i])
                                 sprintf(str, "%4ld.%ld ", FMotor[i] / 10, FMotor[i] % 10);
-                        else    
+                        else
                                 strcpy(str, "------ ");
 
                     dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
                         dev->DrawRect(x + 2 * WIDTH, y, x + 3 * WIDTH - SPACE, y + HEIGHT - 1);
-    
+
                         dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
                         dev->DrawString(x + 2 * WIDTH, y, str);
 
@@ -571,7 +571,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
 
                             dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
                             dev->DrawRect(x + 3 * WIDTH, y, x + 4 * WIDTH - SPACE, y + HEIGHT - 1);
-        
+
                         dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
                             dev->DrawString(x + 3 * WIDTH, y, str);
 
@@ -587,7 +587,7 @@ void TRadControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int 
 
                         dev->SetDrawColor(BACK_R, BACK_G, BACK_B);
                             dev->DrawRect(x + 4 * WIDTH, y, x + 5 * WIDTH - SPACE, y + HEIGHT - 1);
-        
+
                         dev->SetDrawColor(TEXT_R, TEXT_G, TEXT_B);
                             dev->DrawString(x + 4 * WIDTH, y, str);
 

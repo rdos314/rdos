@@ -877,44 +877,44 @@ void TimeThread(void *Param)
     RdosWaitMilli(5000);
 
     CommentFactory.SetSpace(4, 4);
-    CommentFactory.SetFont(35);
+    CommentFactory.SetFont(25);
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
     CommentFactory.ForceNoScale();
 
     ValueFactory.SetSpace(4, 4);
-    ValueFactory.SetFont(35);
+    ValueFactory.SetFont(25);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
     ValueFactory.ForceNoScale();
 
     UnitFactory.SetSpace(4, 4);
-    UnitFactory.SetFont(35);
+    UnitFactory.SetFont(25);
     UnitFactory.SetBackTransparent();
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
     UnitFactory.ForceNoScale();
 
-    Table = new TTableControl(control, 1450, 5, 550, 450);
+    Table = new TTableControl(control, 925, 5, 370, 300);
     Table->SetBackColor(0, 20, 50);
-    Table->SetRowSpacing(10);
-    Table->SetColSpacing(16);
+    Table->SetRowSpacing(8);
+    Table->SetColSpacing(12);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentFactory, 125);
-    Table->AddLabelColumn(&ValueFactory, 225);
-    Table->AddLabelColumn(&UnitFactory, 100);
+    Table->AddLabelColumn(&CommentFactory, 85);
+    Table->AddLabelColumn(&ValueFactory, 150);
+    Table->AddLabelColumn(&UnitFactory, 65);
 
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
 
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
 
     Table->SetText(0, 0, "State");
     Table->SetText(1, 0, "Energy");
@@ -937,8 +937,8 @@ void TimeThread(void *Param)
 
     LockGUI();
 
-    Label = new TLabelControl(control, 10, 790, 250, 35);
-    Label->SetFont(30);
+    Label = new TLabelControl(control, 350, 450, 165, 25);
+    Label->SetFont(20);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
     Label->Show();
@@ -1077,43 +1077,43 @@ void SmaThread(void *Param)
     LockGUI();
 
     CommentFactory.SetSpace(4, 4);
-    CommentFactory.SetFont(35);
+    CommentFactory.SetFont(25);
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
     CommentFactory.ForceNoScale();
 
     ValueFactory.SetSpace(4, 4);
-    ValueFactory.SetFont(35);
+    ValueFactory.SetFont(25);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
     ValueFactory.ForceNoScale();
 
     UnitFactory.SetSpace(4, 4);
-    UnitFactory.SetFont(35);
+    UnitFactory.SetFont(25);
     UnitFactory.SetBackTransparent();
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
     UnitFactory.ForceNoScale();
 
-    Table = new TTableControl(control, 1175, 450, 775, 300);
+    Table = new TTableControl(control, 750, 300, 515, 200);
     Table->SetBackColor(0, 20, 50);
-    Table->SetRowSpacing(10);
-    Table->SetColSpacing(16);
+    Table->SetRowSpacing(8);
+    Table->SetColSpacing(12);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentFactory, 150);
-    Table->AddLabelColumn(&ValueFactory, 150);
-    Table->AddLabelColumn(&ValueFactory, 150);
-    Table->AddLabelColumn(&ValueFactory, 150);
-    Table->AddLabelColumn(&UnitFactory, 100);
+    Table->AddLabelColumn(&CommentFactory, 100);
+    Table->AddLabelColumn(&ValueFactory, 100);
+    Table->AddLabelColumn(&ValueFactory, 100);
+    Table->AddLabelColumn(&ValueFactory, 100);
+    Table->AddLabelColumn(&UnitFactory, 75);
 
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
 
     Table->SetText(0, 0, "Volt");
     Table->SetText(1, 0, "Current");
@@ -1130,19 +1130,19 @@ void SmaThread(void *Param)
     Table->SetText(5, 4, "kWh");
     Table->Show();
 
-    SumTable = new TTableControl(control, 475, 420, 475, 200);
+    SumTable = new TTableControl(control, 315, 280, 315, 135);
     SumTable->SetBackColor(0, 20, 50);
-    SumTable->SetRowSpacing(10);
-    SumTable->SetColSpacing(16);
+    SumTable->SetRowSpacing(8);
+    SumTable->SetColSpacing(12);
     SumTable->SetSpacingColor(0, 20, 50);
-    SumTable->AddLabelColumn(&CommentFactory, 150);
-    SumTable->AddLabelColumn(&ValueFactory, 175);
-    SumTable->AddLabelColumn(&UnitFactory, 100);
+    SumTable->AddLabelColumn(&CommentFactory, 100);
+    SumTable->AddLabelColumn(&ValueFactory, 115);
+    SumTable->AddLabelColumn(&UnitFactory, 65);
 
-    SumTable->AddRow(35, 55);
-    SumTable->AddRow(35, 55);
-    SumTable->AddRow(35, 55);
-    SumTable->AddRow(35, 55);
+    SumTable->AddRow(25, 35);
+    SumTable->AddRow(25, 35);
+    SumTable->AddRow(25, 35);
+    SumTable->AddRow(25, 35);
 
     SumTable->SetText(0, 0, "Prod (P)");
     SumTable->SetText(1, 0, "Cons (P)");
@@ -1459,7 +1459,7 @@ void PerfThread(void *ptr)
             PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
             PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
 
-            PerfChart[Cores]->SetWindow(950, 10 + Cores * 140, 1200, 150 + Cores * 140);
+            PerfChart[Cores]->SetWindow(635, 10 + Cores * 90, 900, 100 + Cores * 90);
 
             PerfChart[Cores]->SetBackColor(0, 0, 0);
             PerfChart[Cores]->SetLineColor(0, 50, 200, 100);
@@ -1603,7 +1603,7 @@ int main()
     vbe->SetFilledStyle();
     vbe->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
 
-    RadControl = new TRadControl(control, 5, 795, 1150, 35 * 8);
+    RadControl = new TRadControl(control, 5, 530, 765, 25 * 8);
 
     index = 0;
 
@@ -1691,50 +1691,50 @@ int main()
     LockGUI();
 
     CommentLabelFactory.SetSpace(4, 4);
-    CommentLabelFactory.SetFont(35);
+    CommentLabelFactory.SetFont(25);
     CommentLabelFactory.SetBackTransparent();
     CommentLabelFactory.SetDrawColor(0, 0, 0);
     CommentLabelFactory.AlignLeft();
     CommentLabelFactory.ForceNoScale();
 
     AltLabelFactory.SetSpace(4, 4);
-    AltLabelFactory.SetFont(35);
+    AltLabelFactory.SetFont(25);
     AltLabelFactory.SetBackColor(100, 100, 100);
     AltLabelFactory.SetDrawColor(0, 0, 0);
     AltLabelFactory.AlignRight();
     AltLabelFactory.ForceNoScale();
 
     AziLabelFactory.SetSpace(4, 4);
-    AziLabelFactory.SetFont(35);
+    AziLabelFactory.SetFont(25);
     AziLabelFactory.SetBackColor(100, 100, 100);
     AziLabelFactory.SetDrawColor(0, 0, 0);
     AziLabelFactory.AlignRight();
     AziLabelFactory.ForceNoScale();
 
     PhLabelFactory.SetSpace(4, 4);
-    PhLabelFactory.SetFont(35);
+    PhLabelFactory.SetFont(25);
     PhLabelFactory.SetBackColor(100, 100, 100);
     PhLabelFactory.SetDrawColor(0, 0, 0);
     PhLabelFactory.AlignRight();
     PhLabelFactory.ForceNoScale();
 
-    Table = new TTableControl(control, 1300, 750, 600, 400);
+    Table = new TTableControl(control, 865, 550, 400, 265);
     Table->SetBackColor(0, 20, 50);
-    Table->SetRowSpacing(10);
-    Table->SetColSpacing(16);
+    Table->SetRowSpacing(8);
+    Table->SetColSpacing(12);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentLabelFactory, 100);
-    Table->AddLabelColumn(&AltLabelFactory, 125);
-    Table->AddLabelColumn(&AziLabelFactory, 125);
-    Table->AddLabelColumn(&PhLabelFactory, 125);
+    Table->AddLabelColumn(&CommentLabelFactory, 65);
+    Table->AddLabelColumn(&AltLabelFactory, 80);
+    Table->AddLabelColumn(&AziLabelFactory, 80);
+    Table->AddLabelColumn(&PhLabelFactory, 80);
 
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
 
     Table->SetText(0, 0, "Solen");
     Table->SetText(1, 0, "Månen");
@@ -1746,44 +1746,44 @@ int main()
     Table->Show();
 
     CommentFactory.SetSpace(4, 4);
-    CommentFactory.SetFont(35);
+    CommentFactory.SetFont(25);
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
     CommentFactory.ForceNoScale();
 
     ValueFactory.SetSpace(4, 4);
-    ValueFactory.SetFont(35);
+    ValueFactory.SetFont(25);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
     ValueFactory.ForceNoScale();
 
     UnitFactory.SetSpace(4, 4);
-    UnitFactory.SetFont(35);
+    UnitFactory.SetFont(25);
     UnitFactory.SetBackTransparent();
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
     UnitFactory.ForceNoScale();
 
-    WeatherTable = new TTableControl(control, 5, 5, 450, 420);
+    WeatherTable = new TTableControl(control, 5, 5, 300, 300);
     WeatherTable->SetBackColor(0, 20, 50);
-    WeatherTable->SetRowSpacing(10);
-    WeatherTable->SetColSpacing(16);
+    WeatherTable->SetRowSpacing(8);
+    WeatherTable->SetColSpacing(12);
     WeatherTable->SetSpacingColor(0, 20, 50);
-    WeatherTable->AddLabelColumn(&CommentFactory, 175);
-    WeatherTable->AddLabelColumn(&ValueFactory, 150);
-    WeatherTable->AddLabelColumn(&UnitFactory, 125);
+    WeatherTable->AddLabelColumn(&CommentFactory, 125);
+    WeatherTable->AddLabelColumn(&ValueFactory, 100);
+    WeatherTable->AddLabelColumn(&UnitFactory, 85);
 
-    WeatherTable->AddRow(35, 55);
-    WeatherTable->AddRow(35, 55);
-    WeatherTable->AddRow(35, 55);
-    WeatherTable->AddRow(35, 55);
-    WeatherTable->AddRow(35, 55);
-    WeatherTable->AddRow(35, 55);
-    WeatherTable->AddRow(35, 55);
-    WeatherTable->AddRow(35, 55);
-    WeatherTable->AddRow(35, 55);
+    WeatherTable->AddRow(25, 35);
+    WeatherTable->AddRow(25, 35);
+    WeatherTable->AddRow(25, 35);
+    WeatherTable->AddRow(25, 35);
+    WeatherTable->AddRow(25, 35);
+    WeatherTable->AddRow(25, 35);
+    WeatherTable->AddRow(25, 35);
+    WeatherTable->AddRow(25, 35);
+    WeatherTable->AddRow(25, 35);
 
     WeatherTable->SetText(0, 0, "Temperature");
     WeatherTable->SetText(0, 2, "°C");
@@ -1814,20 +1814,20 @@ int main()
 
     WeatherTable->Show();
 
-    WindTable = new TTableControl(control, 475, 5, 475, 270);
+    WindTable = new TTableControl(control, 315, 5, 315, 180);
     WindTable->SetBackColor(0, 20, 50);
-    WindTable->SetRowSpacing(10);
-    WindTable->SetColSpacing(16);
+    WindTable->SetRowSpacing(8);
+    WindTable->SetColSpacing(12);
     WindTable->SetSpacingColor(0, 20, 50);
-    WindTable->AddLabelColumn(&CommentFactory, 150);
-    WindTable->AddLabelColumn(&ValueFactory, 175);
-    WindTable->AddLabelColumn(&UnitFactory, 100);
+    WindTable->AddLabelColumn(&CommentFactory, 100);
+    WindTable->AddLabelColumn(&ValueFactory, 115);
+    WindTable->AddLabelColumn(&UnitFactory, 65);
 
-    WindTable->AddRow(35, 55);
-    WindTable->AddRow(35, 55);
-    WindTable->AddRow(35, 55);
-    WindTable->AddRow(35, 55);
-    WindTable->AddRow(35, 55);
+    WindTable->AddRow(25, 35);
+    WindTable->AddRow(25, 35);
+    WindTable->AddRow(25, 35);
+    WindTable->AddRow(25, 35);
+    WindTable->AddRow(25, 35);
 
     WindTable->SetText(0, 0, "State");
     WindTable->SetText(0, 2, "");
@@ -1845,17 +1845,17 @@ int main()
     WindTable->SetText(4, 2, "kWh");
     WindTable->Show();
 
-    SolarTable = new TTableControl(control, 475, 300, 475, 100);
+    SolarTable = new TTableControl(control, 315, 200, 315, 85);
     SolarTable->SetBackColor(0, 20, 50);
-    SolarTable->SetRowSpacing(10);
-    SolarTable->SetColSpacing(16);
+    SolarTable->SetRowSpacing(8);
+    SolarTable->SetColSpacing(12);
     SolarTable->SetSpacingColor(0, 20, 50);
-    SolarTable->AddLabelColumn(&CommentFactory, 150);
-    SolarTable->AddLabelColumn(&ValueFactory, 175);
-    SolarTable->AddLabelColumn(&UnitFactory, 100);
+    SolarTable->AddLabelColumn(&CommentFactory, 100);
+    SolarTable->AddLabelColumn(&ValueFactory, 115);
+    SolarTable->AddLabelColumn(&UnitFactory, 85);
 
-    SolarTable->AddRow(35, 55);
-    SolarTable->AddRow(35, 55);
+    SolarTable->AddRow(25, 35);
+    SolarTable->AddRow(25, 35);
 
     SolarTable->SetText(0, 0, "Power");
     SolarTable->SetText(0, 2, "W");

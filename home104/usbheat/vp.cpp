@@ -673,21 +673,21 @@ void TVp::Execute()
 
 
     CommentLabelFactory.SetSpace(4, 4);
-    CommentLabelFactory.SetFont(35);
+    CommentLabelFactory.SetFont(25);
     CommentLabelFactory.SetBackColor(0, 20, 50);
     CommentLabelFactory.SetDrawColor(0, 0, 0);
     CommentLabelFactory.AlignLeft();
     CommentLabelFactory.ForceNoScale();
 
     ValueLabelFactory.SetSpace(4, 4);
-    ValueLabelFactory.SetFont(35);
+    ValueLabelFactory.SetFont(25);
     ValueLabelFactory.SetBackColor(100, 100, 100);
     ValueLabelFactory.SetDrawColor(0, 0, 0);
     ValueLabelFactory.AlignRight();
     ValueLabelFactory.ForceNoScale();
 
     UnitLabelFactory.SetSpace(4, 4);
-    UnitLabelFactory.SetFont(35);
+    UnitLabelFactory.SetFont(25);
     UnitLabelFactory.SetBackColor(0, 20, 50);
     UnitLabelFactory.SetDrawColor(0, 0, 0);
     UnitLabelFactory.AlignLeft();
@@ -697,22 +697,22 @@ void TVp::Execute()
 
     LockGUI();
 
-    Table = new TTableControl(FControl, 5, 430, 450, 450);
+    Table = new TTableControl(FControl, 5, 315, 300, 300);
     Table->SetBackColor(0, 20, 50);
-    Table->SetRowSpacing(10);
-    Table->SetColSpacing(16);
+    Table->SetRowSpacing(8);
+    Table->SetColSpacing(12);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentLabelFactory, 175);
-    Table->AddLabelColumn(&ValueLabelFactory, 150);
-    Table->AddLabelColumn(&UnitLabelFactory, 125);
+    Table->AddLabelColumn(&CommentLabelFactory, 125);
+    Table->AddLabelColumn(&ValueLabelFactory, 100);
+    Table->AddLabelColumn(&UnitLabelFactory, 85);
 
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
+    Table->AddRow(25, 35);
 
     Table->SetText(0, 0, "Heat in");
     Table->SetText(0, 2, "°C");
