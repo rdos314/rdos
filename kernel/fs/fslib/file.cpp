@@ -223,8 +223,8 @@ void TFileReq::StartRead()
         else
             sprintf(str, "Read %d.%d start %lld size %d (%d)\r\n", Index, Req, SectPos, SectorCount, ReqCount);
 
-        RdosWriteFile(FileHandle, str, strlen(str));
-        printf(str);
+//        RdosWriteFile(FileHandle, str, strlen(str));
+//        printf(str);
 
         FreeArray();
     }
@@ -255,8 +255,8 @@ void TFileReq::StartWrite()
         else
             sprintf(str, "Write %d.%d start %lld size %d (%d)\r\n", Index, Req, SectPos, SectorCount, ReqCount);
 
-        RdosWriteFile(FileHandle, str, strlen(str));
-        printf(str);
+//        RdosWriteFile(FileHandle, str, strlen(str));
+//        printf(str);
 
         FreeArray();
     }
@@ -921,8 +921,8 @@ TFileReq *TFile::HandleRead(long long pos, int size)
     if (FileReq)
     {
         sprintf(str, "Read allocated %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
-        RdosWriteFile(FileHandle, str, strlen(str));
-        printf(str);
+//        RdosWriteFile(FileHandle, str, strlen(str));
+//        printf(str);
 
         FileReq->InitArray(FCurrSectors);
 
@@ -1043,8 +1043,8 @@ void TFile::HandleUpdateReq(long long pos, int size)
                 else
                     sprintf(str, "Update %d.%d\r\n", Index, FileReq->Req);
 
-                RdosWriteFile(FileHandle, str, strlen(str));
-                printf(str);
+//                RdosWriteFile(FileHandle, str, strlen(str));
+//                printf(str);
 
                 ServUpdateVfsFileReq(Handle, FileReq->Req + 1, offset, curr);
 
@@ -1110,8 +1110,8 @@ void TFile::HandleFreeReq(int req)
             FreeReq(FileReq);
 
             sprintf(str, "Free %d.%d\r\n", Index, req);
-            RdosWriteFile(FileHandle, str, strlen(str));
-            printf(str);
+//            RdosWriteFile(FileHandle, str, strlen(str));
+//            printf(str);
 
             ServFreeVfsFileReq(Handle, req + 1);
             break;
@@ -1138,8 +1138,8 @@ void TFile::HandleCompletedReq(int req)
     char str[80];
 
     sprintf(str, "Completed %d.%d\r\n", Index, req);
-    RdosWriteFile(FileHandle, str, strlen(str));
-    printf(str);
+//    RdosWriteFile(FileHandle, str, strlen(str));
+//    printf(str);
 }
 
 /*##########################################################################
@@ -1158,8 +1158,8 @@ void TFile::HandleMapReq(int req)
     char str[80];
 
     sprintf(str, "Map %d.%d\r\n", Index, req);
-    RdosWriteFile(FileHandle, str, strlen(str));
-    printf(str);
+//    RdosWriteFile(FileHandle, str, strlen(str));
+//    printf(str);
 }
 
 /*##########################################################################
@@ -1199,8 +1199,8 @@ TFileReq *TFile::HandleGrowReq(long long req)
     req = pages << 12;
 
     sprintf(str, "Grow %d.%lld\r\n", Index, req);
-    RdosWriteFile(FileHandle, str, strlen(str));
-    printf(str);
+//    RdosWriteFile(FileHandle, str, strlen(str));
+//    printf(str);
 
     GrowDisc(req);
 
@@ -1218,8 +1218,8 @@ TFileReq *TFile::HandleGrowReq(long long req)
     if (FileReq)
     {
         sprintf(str, "Grow %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
-        RdosWriteFile(FileHandle, str, strlen(str));
-        printf(str);
+//        RdosWriteFile(FileHandle, str, strlen(str));
+//        printf(str);
 
         FileReq->InitArray(FCurrSectors);
 
@@ -1305,8 +1305,8 @@ void TFile::HandleSizeReq(long long size)
     char str[80];
 
     sprintf(str, "Size %d.%lld\r\n", Index, size);
-    RdosWriteFile(FileHandle, str, strlen(str));
-    printf(str);
+//    RdosWriteFile(FileHandle, str, strlen(str));
+//    printf(str);
 
     SetSize(size);
 }
