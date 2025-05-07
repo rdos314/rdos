@@ -29,7 +29,7 @@
 #define _BASE64_H
 
 void CodeBase64(const char *inp, char *outp, int size);
-void DecodeBase64(const char *inp, char *outp);
+int DecodeBase64(const char *inp, char *outp);
 
 #endif
 

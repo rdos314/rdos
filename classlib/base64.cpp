@@ -80,7 +80,7 @@ static int FindBase64(char c)
 #   Returns....: *
 #
 ##########################################################################*/
-void DecodeBase64(const char *instr, char *outstr)
+int DecodeBase64(const char *instr, char *outstr)
 {
     int in_len = strlen(instr);
     int i = 0;
@@ -133,6 +133,8 @@ void DecodeBase64(const char *instr, char *outstr)
         }
     }
     outstr[out_] = 0;
+
+    return out_;
 }
 
 /*##########################################################################
