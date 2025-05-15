@@ -28,6 +28,8 @@
 INCLUDE ..\..\kernel\user.def
 INCLUDE ..\..\kernel\os.def
 INCLUDE ..\..\kernel\os.inc
+include ..\..\kernel\serv.def
+include ..\..\kernel\serv.inc
 INCLUDE ..\..\kernel\user.inc
 INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\os\system.def
@@ -1342,6 +1344,8 @@ acpi_setup_gates:
     mov dx,virt_es_in
     mov ax,get_cpu_version_nr
     RegisterUserGate
+;
+    call SetupServerGates
 
 acpi_fail:
     popad
@@ -1499,6 +1503,35 @@ gtlOk:
     ret
 GetTermalLimit_ Endp       
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiGetRdsp
+;
+;       DESCRIPTION:    Get RDSP
+;
+;       RETURNS:        EDX:EAX       RDSP physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_get_rdsp_name DB 'uACPI Get RDSP', 0
+
+uacpi_get_rdsp   PROC far
+    push ebx
+;
+    call GetRsdp
+    mov edx,ebx
+    jnc ugrDone
+;
+    xor eax,eax
+    xor edx,edx
+
+ugrDone:
+    pop ebx
+    ret
+uacpi_get_rdsp   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1558,6 +1591,25 @@ LoadAcpiServer_  Proc near
     ret
 LoadAcpiServer_  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupServerGates
+;
+;       DESCRIPTION:    Setup server gates
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupServerGates  Proc near
+;
+    mov esi,OFFSET uacpi_get_rdsp
+    mov edi,OFFSET uacpi_get_rdsp_name
+    xor cl,cl
+    mov ax,uacpi_get_rdsp_nr
+    RegisterServGate
+;
+    ret
+SetupServerGates  Endp
 
 _TEXT    ENDS
 
