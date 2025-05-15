@@ -443,3 +443,10 @@ DeleteSslListen  MACRO
 AddSslListen  MACRO    
     ServGate add_ssl_listen_nr
                     ENDM
+
+;;;;;;;;; uACPI ;;;;;;;;;;;;;;;;;;
+
+; OUT EDX:EAX          RDSP physical address
+GetUacpiRdsp  MACRO
+    ServGate uacpi_get_rdsp_nr
+                    ENDM

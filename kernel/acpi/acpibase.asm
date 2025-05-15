@@ -1499,6 +1499,66 @@ gtlOk:
     ret
 GetTermalLimit_ Endp       
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AcpiServer
+;
+;       DESCRIPTION:    ACPI server
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lpname DB 'uacpi', 0
+lpcmd  DB 0
+
+AcpiServer:
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET lpcmd
+    mov edi,OFFSET lpname
+    mov ax,4
+    xor bx,bx
+    LoadServer
+
+aLoop:
+    mov ax,250
+    WaitMilliSec
+    jmp aLoop
+;
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LoadAcpiServer
+;
+;       DESCRIPTION:    Load ACPI server
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LoadAcpiServer_
+
+LoadAcpiServer_  Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET AcpiServer
+    mov edi,OFFSET lpname
+    mov al,2
+    CreateServerProcess
+;
+    popad
+    pop es
+    pop ds
+    ret
+LoadAcpiServer_  Endp
+
+
 _TEXT    ENDS
 
     END

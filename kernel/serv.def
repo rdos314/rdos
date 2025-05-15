@@ -82,4 +82,6 @@ serv_disable_file_req_nr   = 75
 serv_signal_nr             = 76
 serv_update_file_nr        = 77
 
+uacpi_get_rdsp_nr          = 78
+
 serv_gate_entries          = 80

@@ -82,6 +82,8 @@
 #define serv_gate_serv_signal 0x0000004C
 #define serv_gate_serv_update_file 0x0000004D
 
+#define serv_gate_uacpi_get_rdsp 0x0000004E
+
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
 #define ServGate_get_vfs_handle 0x55 0x67 0x9a 2 0 0 0 4 0 0x5d
@@ -165,4 +167,6 @@
 #define ServGate_serv_disable_file_req 0x55 0x67 0x9a 75 0 0 0 4 0 0x5d
 #define ServGate_serv_signal 0x55 0x67 0x9a 76 0 0 0 4 0 0x5d
 #define ServGate_serv_update_file 0x55 0x67 0x9a 77 0 0 0 4 0 0x5d
+
+#define ServGate_uacpi_get_rdsp 0x55 0x67 0x9a 78 0 0 0 4 0 0x5d
 

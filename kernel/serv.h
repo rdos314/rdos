@@ -107,6 +107,8 @@ int RDOSAPI ServSslGetSendBuf(int index, char *buf);
 void RDOSAPI ServSslClearSendCount(int index, int count);
 int RDOSAPI ServSslWaitForChange(int consel);
 
+long long RDOSAPI ServUacpiGetRdsp();
+
 #ifdef __cplusplus
 }
 #endif

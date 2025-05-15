@@ -40,6 +40,9 @@
 
 #include <stdio.h>
 
+extern void LoadAcpiServer();
+extern void LoadAcpiServer();
+
 extern void InitAcpiTables();
 extern void InitOsAcpi();
 
@@ -3369,6 +3372,8 @@ void __far InitTasking()
     }
 
     ProcessorCount = RdosGetCoreCount();
+
+    LoadAcpiServer();
 } 
     
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]

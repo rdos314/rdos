@@ -361,3 +361,8 @@
 #pragma aux ServSslWaitForChange = \
     ServGate_ssl_wait_for_change  \
     __parm [__ebx]
+
+
+#pragma aux ServUacpiGetRdsp = \
+    ServGate_uacpi_get_rdsp  \
+    __value [__edx __eax]
