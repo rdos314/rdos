@@ -1673,7 +1673,7 @@ uacpi_map   PROC far
     AllocateLocalLinear
     pop eax
 ;
-    or ax,865h
+    or ax,867h
 
     dec ecx
     and cx,0F000h
