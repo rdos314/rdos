@@ -86,7 +86,8 @@
 #define serv_gate_uacpi_map 0x0000004F
 #define serv_gate_uacpi_unmap 0x00000050
 #define serv_gate_uacpi_enable_io 0x00000051
-#define serv_gate_uacpi_disable_io 0x00000052
+#define serv_gate_uacpi_in 0x00000052
+#define serv_gate_uacpi_out 0x00000053
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -176,5 +177,6 @@
 #define ServGate_uacpi_map 0x55 0x67 0x9a 79 0 0 0 4 0 0x5d
 #define ServGate_uacpi_unmap 0x55 0x67 0x9a 80 0 0 0 4 0 0x5d
 #define ServGate_uacpi_enable_io 0x55 0x67 0x9a 81 0 0 0 4 0 0x5d
-#define ServGate_uacpi_disable_io 0x55 0x67 0x9a 82 0 0 0 4 0 0x5d
+#define ServGate_uacpi_in 0x55 0x67 0x9a 82 0 0 0 4 0 0x5d
+#define ServGate_uacpi_out 0x55 0x67 0x9a 83 0 0 0 4 0 0x5d
 

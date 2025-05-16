@@ -110,8 +110,9 @@ int RDOSAPI ServSslWaitForChange(int consel);
 long long RDOSAPI ServUacpiGetAcpi();
 void *RDOSAPI ServUacpiMap(long long phys, int size);
 void RDOSAPI ServUacpiUnmap(void *base, int size);
-void RDOSAPI ServUacpiEnableIo(int base, int size);
-void RDOSAPI ServUacpiDisableIo(int base, int size);
+int RDOSAPI ServUacpiEnableIo(int base, int size);
+int RDOSAPI ServUacpiIn(int port, int size);
+void RDOSAPI ServUacpiOut(int port, int data, int size);
 
 #ifdef __cplusplus
 }

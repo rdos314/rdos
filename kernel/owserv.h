@@ -378,8 +378,20 @@
 
 #pragma aux ServUacpiEnableIo = \
     ServGate_uacpi_enable_io  \
-    __parm [__edx] [__ecx]
+    "jc fail " \
+    "mov eax,1" \
+    "jmp done " \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    __parm [__edx] [__ecx] \
+    __value [__eax]
 
-#pragma aux ServUacpiDisableIo = \
-    ServGate_uacpi_disable_io  \
-    __parm [__edx] [__ecx]
+#pragma aux ServUacpiIn = \
+    ServGate_uacpi_in  \
+    __parm [__edx] [__ecx] \
+    __value [__eax]
+
+#pragma aux ServUacpiOut = \
+    ServGate_uacpi_out  \
+    __parm [__edx] [__eax] [__ecx]

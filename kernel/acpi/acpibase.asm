@@ -1734,34 +1734,138 @@ uacpi_unmap   Endp
 ;
 ;       DESCRIPTION:    Enable IO
 ;
-;       PARAMETERS:     DX               Port
-;                       CX               Size
+;       PARAMETERS:     EDX               Port
+;                       ECX               Size
+;
+;       RETURNS:        NC                Access allowed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 uacpi_enable_io_name DB 'uACPI Enable IO', 0
 
 uacpi_enable_io   PROC far
+    or ecx,ecx
+    jz ueFail
+;
+    cmp edx,400h
+    jae ueFail
+;
+    push ds
+    push eax
+    push ecx
+    push edx
+    push esi
+;
+    GetThread
+    mov ds,eax
+    mov esi,ds:p_tss_linear
+    mov eax,flat_sel
+    mov ds,eax
+
+ueLoop:
+    btr dword ptr ds:[esi].tss32_io_bitmap,edx
+    inc edx
+    loop ueLoop
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds    
+;
+    clc
+    jmp ueDone
+
+ueFail:
+    stc
+
+ueDone:
     ret
 uacpi_enable_io   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UacpiDisableIo
+;       NAME:           UacpiIn
 ;
-;       DESCRIPTION:    Disable IO
+;       DESCRIPTION:    In
 ;
-;       PARAMETERS:     DX               Port
-;                       CX               Size
+;       PARAMETERS:     EDX               Port
+;                       ECX               Size
+;
+;       RETURNS:        EAX               Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-uacpi_disable_io_name DB 'uACPI Disable IO', 0
+uacpi_in_name DB 'uACPI In', 0
 
-uacpi_disable_io   PROC far
+uacpi_in   PROC far
+    cmp ecx,1
+    je uiByte
+;
+    cmp ecx,2
+    je uiWord
+;
+    cmp ecx,4
+    je uiDword
+;
+    mov eax,-1
+    je uiDone
+
+uiByte:
+    in al,dx
+    jmp uiDone
+
+uiWord:
+    in ax,dx
+    jmp uiDone
+
+uiDword:
+    in eax,dx
+
+uiDone:
     ret
-uacpi_disable_io   Endp
+uacpi_in   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiOut
+;
+;       DESCRIPTION:    Out
+;
+;       PARAMETERS:     EDX               Port
+;                       EAX               Data
+;                       ECX               Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_out_name DB 'uACPI Out', 0
+
+uacpi_out   PROC far
+    cmp ecx,1
+    je uoByte
+;
+    cmp ecx,2
+    je uoWord
+;
+    cmp ecx,4
+    jne uoDone
+
+uoByte:
+    out dx,al
+    jmp uoDone
+
+uoWord:
+    out dx,ax
+    jmp uoDone
+
+uoDword:
+    out dx,eax
+
+uoDone:
+    ret
+uacpi_out   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1857,10 +1961,16 @@ SetupServerGates  Proc near
     mov ax,uacpi_enable_io_nr
     RegisterServGate
 ;
-    mov esi,OFFSET uacpi_disable_io
-    mov edi,OFFSET uacpi_disable_io_name
+    mov esi,OFFSET uacpi_in
+    mov edi,OFFSET uacpi_in_name
     xor cl,cl
-    mov ax,uacpi_disable_io_nr
+    mov ax,uacpi_in_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_out
+    mov edi,OFFSET uacpi_out_name
+    xor cl,cl
+    mov ax,uacpi_out_nr
     RegisterServGate
 ;
     ret
