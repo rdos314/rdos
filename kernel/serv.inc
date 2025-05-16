@@ -463,3 +463,15 @@ UacpiMap  MACRO
 UacpiUnmap  MACRO
     ServGate uacpi_unmap_nr
                     ENDM
+
+; IN  DX               Base
+; IN  CX               Size
+UacpiEnableIo  MACRO
+    ServGate uacpi_enable_io_nr
+                    ENDM
+
+; IN  DX               Base
+; IN  CX               Size
+UacpiDisableIo  MACRO
+    ServGate uacpi_disable_io_nr
+                    ENDM

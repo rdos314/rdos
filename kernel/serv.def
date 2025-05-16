@@ -85,5 +85,7 @@ serv_update_file_nr        = 77
 uacpi_get_acpi_nr          = 78
 uacpi_map_nr               = 79
 uacpi_unmap_nr             = 80
+uacpi_enable_io_nr         = 81
+uacpi_disable_io_nr        = 82
 
 serv_gate_entries          = 90

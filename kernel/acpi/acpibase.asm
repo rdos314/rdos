@@ -1728,6 +1728,42 @@ uacpi_unmap   PROC far
 uacpi_unmap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiEnableIo
+;
+;       DESCRIPTION:    Enable IO
+;
+;       PARAMETERS:     DX               Port
+;                       CX               Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_enable_io_name DB 'uACPI Enable IO', 0
+
+uacpi_enable_io   PROC far
+    ret
+uacpi_enable_io   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiDisableIo
+;
+;       DESCRIPTION:    Disable IO
+;
+;       PARAMETERS:     DX               Port
+;                       CX               Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_disable_io_name DB 'uACPI Disable IO', 0
+
+uacpi_disable_io   PROC far
+    ret
+uacpi_disable_io   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           AcpiServer
@@ -1813,6 +1849,18 @@ SetupServerGates  Proc near
     mov edi,OFFSET uacpi_unmap_name
     xor cl,cl
     mov ax,uacpi_unmap_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_enable_io
+    mov edi,OFFSET uacpi_enable_io_name
+    xor cl,cl
+    mov ax,uacpi_enable_io_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_disable_io
+    mov edi,OFFSET uacpi_disable_io_name
+    xor cl,cl
+    mov ax,uacpi_disable_io_nr
     RegisterServGate
 ;
     ret
