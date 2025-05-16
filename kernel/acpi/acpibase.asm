@@ -1673,7 +1673,7 @@ uacpi_map   PROC far
     AllocateLocalLinear
     pop eax
 ;
-    mov al,67h
+    or ax,865h
 
     dec ecx
     and cx,0F000h
@@ -1711,6 +1711,19 @@ uacpi_map   Endp
 uacpi_unmap_name DB 'uACPI Unmap', 0
 
 uacpi_unmap   PROC far
+    push ecx
+    push edx
+;
+    add ecx,edx
+    and dx,0F000h
+    sub ecx,edx
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    FreeLinear
+;
+    pop edx
+    pop ecx
     ret
 uacpi_unmap   Endp
 
