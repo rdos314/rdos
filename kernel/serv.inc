@@ -446,7 +446,20 @@ AddSslListen  MACRO
 
 ;;;;;;;;; uACPI ;;;;;;;;;;;;;;;;;;
 
-; OUT EDX:EAX          RDSP physical address
-GetUacpiRdsp  MACRO
-    ServGate uacpi_get_rdsp_nr
+; OUT EDX:EAX          ACPI physical address
+GetUacpiAcpi  MACRO
+    ServGate uacpi_get_acpi_nr
+                    ENDM
+
+; IN  EDX:EAX          Physical address
+; IN  ECX              Size
+; OUT EAX              Linear address 
+UacpiMap  MACRO
+    ServGate uacpi_map_nr
+                    ENDM
+
+; IN  EDX              Linear address
+; IN  ECX              Size
+UacpiUnmap  MACRO
+    ServGate uacpi_unmap_nr
                     ENDM

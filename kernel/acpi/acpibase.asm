@@ -1507,30 +1507,212 @@ GetTermalLimit_ Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UacpiGetRdsp
+;       NAME:           UacpiGetAcpi
 ;
-;       DESCRIPTION:    Get RDSP
+;       DESCRIPTION:    Get ACPI
 ;
 ;       RETURNS:        EDX:EAX       RDSP physical address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-uacpi_get_rdsp_name DB 'uACPI Get RDSP', 0
+uacpi_get_acpi_name DB 'uACPI Get Acpi', 0
 
-uacpi_get_rdsp   PROC far
+uacpi_get_acpi   PROC far
+    push ds
+    push es
     push ebx
+    push ecx
+    push esi
+    push edi
+    push ebp
 ;
-    call GetRsdp
-    mov edx,ebx
-    jnc ugrDone
+    mov ax,system_data_sel
+    mov es,ax
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    AllocateGdt
+    push ebx
+;    
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds,bx    
+;
+    mov eax,es:efi_acpi
+    or eax,es:efi_acpi+4
+    jz ugaNotEfi
+;    
+    mov eax,es:efi_acpi
+    mov ebx,es:efi_acpi+4
+    mov si,ax
+    and si,00FFFh
+    and ax,0F000h
+    mov al,7h
+    SetPageEntry
+;        
+    call CheckRsdp
+    jnc ugaOk
+
+ugaNotEfi:    
+    xor ebx,ebx
+    mov eax,7h
+    SetPageEntry
+;    
+    mov esi,40Eh
+    mov si,[si]
+    movzx esi,si
+    shl esi,4
+;
+    mov eax,esi
+    and ax,0F000h
+    or al,7
+    SetPageEntry
+    and si,0FFFh
+;    
+    mov cx,40h
+
+ugaBda:
+    call CheckRsdp
+    jnc ugaOk
+;
+    add si,10h
+    loop ugaBda
+;     
+    mov edi,0E0000h
+    mov bp,20h
+
+ugaBios:
+    mov eax,edi
+    and ax,0F000h
+    or al,7
+    SetPageEntry
+;
+    mov esi,edi
+    and si,0FFFh
+;
+    mov cx,100h
+
+ugaBiosPage:
+    call CheckRsdp
+    jnc ugaOk
+;    
+    add si,10h
+    loop ugaBiosPage
+;
+    add edi,1000h
+    sub bp,1
+    jnz ugaBios
 ;
     xor eax,eax
     xor edx,edx
+    jmp ugaDone
 
-ugrDone:
+ugaOk:
+    GetPageEntry
+    and ax,0F000h
+    or ax,si
+
+ugaDone:  
+    push eax
+    push ebx
+;
+    xor eax,eax
+    xor ebx,ebx
+    mov ds,ax
+    SetPageEntry
+    mov ecx,1000h
+    FreeLinear
+;
+    pop edx
+    pop eax
+;
+    pop ebx
+    FreeGdt    
+;    
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+uacpi_get_acpi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiMap
+;
+;       DESCRIPTION:    Map physical address
+;
+;       PARAMETERS:     EDX:EAX          Physical address
+;                       ECX              Size
+;
+;       RETURNS:        EAX              Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_map_name DB 'uACPI Map', 0
+
+uacpi_map   PROC far
+    push ebx
+    push ecx
+    push esi
+;
+    mov ebx,edx
+    mov si,ax
+    and si,0FFFh
+;
+    add ecx,eax
+    and ax,0F000h
+    sub ecx,eax
+;
+    push eax
+    mov eax,ecx
+    AllocateLocalLinear
+    pop eax
+;
+    mov al,67h
+
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    shr ecx,12
+    push edx
+
+umapLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop umapLoop
+;    
+    pop eax
+    or ax,si
+;
+    pop esi
+    pop ecx
     pop ebx
     ret
-uacpi_get_rdsp   Endp
+uacpi_map   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiUnmap
+;
+;       DESCRIPTION:    Unmap address
+;
+;       PARAMETERS:     EDX              Linear address
+;                       ECX              Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_unmap_name DB 'uACPI Unmap', 0
+
+uacpi_unmap   PROC far
+    ret
+uacpi_unmap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1602,10 +1784,22 @@ LoadAcpiServer_  Endp
 
 SetupServerGates  Proc near
 ;
-    mov esi,OFFSET uacpi_get_rdsp
-    mov edi,OFFSET uacpi_get_rdsp_name
+    mov esi,OFFSET uacpi_get_acpi
+    mov edi,OFFSET uacpi_get_acpi_name
     xor cl,cl
-    mov ax,uacpi_get_rdsp_nr
+    mov ax,uacpi_get_acpi_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_map
+    mov edi,OFFSET uacpi_map_name
+    xor cl,cl
+    mov ax,uacpi_map_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_unmap
+    mov edi,OFFSET uacpi_unmap_name
+    xor cl,cl
+    mov ax,uacpi_unmap_nr
     RegisterServGate
 ;
     ret

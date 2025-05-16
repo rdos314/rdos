@@ -363,6 +363,15 @@
     __parm [__ebx]
 
 
-#pragma aux ServUacpiGetRdsp = \
-    ServGate_uacpi_get_rdsp  \
+#pragma aux ServUacpiGetAcpi = \
+    ServGate_uacpi_get_acpi  \
     __value [__edx __eax]
+
+#pragma aux ServUacpiMap = \
+    ServGate_uacpi_map  \
+    __parm [__edx __eax] [__ecx] \
+    __value [_eax]
+
+#pragma aux ServUacpiUnmap = \
+    ServGate_uacpi_unmap  \
+    __parm [__edx] [__ecx]
