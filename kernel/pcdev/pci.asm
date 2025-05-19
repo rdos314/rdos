@@ -3317,6 +3317,246 @@ uoDone:
 uacpi_out   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiReadPciByte
+;
+;       DESCRIPTION:    Read PCI byte
+;
+;       PARAMETERS:     EBX 			Register
+;
+;       RETURNS:        AL			Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_read_pci_byte_name DB 'uACPI Read PCI Byte', 0
+
+uacpi_read_pci_byte   PROC far
+    push ds
+    push ebx
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+;    
+    mov eax,ebx
+    and al,0FCh
+    mov dx,0CF8h
+    RequestSpinlock ds:pci_spinlock
+    out dx,eax
+    mov dx,0CFCh
+    and bl,3
+    or dl,bl
+    in al,dx
+    ReleaseSpinlock ds:pci_spinlock
+;
+    pop edx
+    pop ebx
+    pop ds
+    retf32
+uacpi_read_pci_byte    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiReadPciWord
+;
+;       DESCRIPTION:    Read PCI word
+;
+;       PARAMETERS:     EBX 			Register
+;
+;       RETURNS:        AX			Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_read_pci_word_name DB 'uACPI Read PCI Word', 0
+
+uacpi_read_pci_word   PROC far
+    push ds
+    push ebx
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov eax,ebx
+    and al,0FCh
+    mov dx,0CF8h
+    RequestSpinlock ds:pci_spinlock
+    out dx,eax
+    mov dx,0CFCh
+    and bl,2
+    or dl,bl
+    in ax,dx
+    ReleaseSpinlock ds:pci_spinlock
+;
+    pop edx
+    pop ebx
+    pop ds
+    retf32
+uacpi_read_pci_word    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiReadPciDword
+;
+;       DESCRIPTION:    Read PCI dword
+;
+;       PARAMETERS:     EBX 			Register
+;
+;       RETURNS:        EAX			Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_read_pci_dword_name DB 'uACPI Read PCI Dword', 0
+
+uacpi_read_pci_dword   PROC far
+    push ds
+    push edx
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov eax,ebx
+    and al,0FCh
+    mov dx,0CF8h
+    RequestSpinlock ds:pci_spinlock
+    out dx,eax
+    mov dx,0CFCh
+    in eax,dx
+    ReleaseSpinlock ds:pci_spinlock
+;
+    pop edx
+    pop ds
+    retf32
+uacpi_read_pci_dword    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiWritePciByte
+;
+;       DESCRIPTION:    Read PCI byte
+;
+;       PARAMETERS:     EBX 			Register
+;		        AL			Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_write_pci_byte_name DB 'uACPI Write PCI Byte', 0
+
+uacpi_write_pci_byte   PROC far
+    push ds
+    push ebx
+    push edx
+;
+    mov dx,SEG data
+    mov ds,dx
+;
+    push eax
+    mov eax,ebx
+    and al,0FCh
+    mov dx,0CF8h
+    RequestSpinlock ds:pci_spinlock
+    out dx,eax
+    pop eax
+;
+    mov dx,0CFCh
+    and bl,3
+    or dl,bl
+    out dx,al
+    ReleaseSpinlock ds:pci_spinlock
+;
+    pop edx
+    pop ebx
+    pop ds
+    retf32
+uacpi_write_pci_byte    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiWritePciWord
+;
+;       DESCRIPTION:    Read PCI word
+;
+;       PARAMETERS:     EBX 			Register
+;		        AX			Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_write_pci_word_name DB 'uACPI Write PCI Word', 0
+
+uacpi_write_pci_word   PROC far
+    push ds
+    push ebx
+    push edx
+;
+    mov dx,SEG data
+    mov ds,dx
+;
+    push eax
+    mov eax,ebx
+    and al,0FCh
+    mov dx,0CF8h
+    RequestSpinlock ds:pci_spinlock
+    out dx,eax
+    pop eax
+;
+    mov dx,0CFCh
+    and bl,2
+    or dl,bl
+    out dx,ax
+    ReleaseSpinlock ds:pci_spinlock
+;
+    pop edx
+    pop ebx
+    pop ds
+    retf32
+uacpi_write_pci_word    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiWritePciDword
+;
+;       DESCRIPTION:    Read PCI dword
+;
+;       PARAMETERS:     EBX 			Register
+;			EAX			Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_write_pci_dword_name DB 'uACPI Write PCI Dword', 0
+
+uacpi_write_pci_dword   PROC far
+    push ds
+    push ebx
+    push edx
+;
+    mov dx,SEG data
+    mov ds,dx
+;
+    push eax
+    mov eax,ebx
+    and al,0FCh
+    mov dx,0CF8h
+    RequestSpinlock ds:pci_spinlock
+    out dx,eax
+    pop eax
+;
+    mov dx,0CFCh
+    out dx,eax
+    ReleaseSpinlock ds:pci_spinlock
+;
+    pop edx
+    pop ebx
+    pop ds
+    retf32
+uacpi_write_pci_dword    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           AcpiServer
@@ -3645,6 +3885,42 @@ init    Proc far
     mov edi,OFFSET uacpi_out_name
     xor cl,cl
     mov ax,uacpi_out_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_read_pci_byte
+    mov edi,OFFSET uacpi_read_pci_byte_name
+    xor cl,cl
+    mov ax,uacpi_read_pci_byte_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_read_pci_word
+    mov edi,OFFSET uacpi_read_pci_word_name
+    xor cl,cl
+    mov ax,uacpi_read_pci_word_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_read_pci_dword
+    mov edi,OFFSET uacpi_read_pci_dword_name
+    xor cl,cl
+    mov ax,uacpi_read_pci_dword_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_write_pci_byte
+    mov edi,OFFSET uacpi_write_pci_byte_name
+    xor cl,cl
+    mov ax,uacpi_write_pci_byte_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_write_pci_word
+    mov edi,OFFSET uacpi_write_pci_word_name
+    xor cl,cl
+    mov ax,uacpi_write_pci_word_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_write_pci_dword
+    mov edi,OFFSET uacpi_write_pci_dword_name
+    xor cl,cl
+    mov ax,uacpi_write_pci_dword_nr
     RegisterServGate
 ;
     mov esi,OFFSET get_pci_bus

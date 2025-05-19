@@ -88,5 +88,11 @@ uacpi_unmap_nr             = 80
 uacpi_enable_io_nr         = 81
 uacpi_in_nr                = 82
 uacpi_out_nr               = 83
+uacpi_read_pci_byte_nr     = 84
+uacpi_read_pci_word_nr     = 85
+uacpi_read_pci_dword_nr    = 86
+uacpi_write_pci_byte_nr    = 87
+uacpi_write_pci_word_nr    = 88
+uacpi_write_pci_dword_nr   = 89
 
 serv_gate_entries          = 90

@@ -88,6 +88,12 @@
 #define serv_gate_uacpi_enable_io 0x00000051
 #define serv_gate_uacpi_in 0x00000052
 #define serv_gate_uacpi_out 0x00000053
+#define serv_gate_uacpi_read_pci_byte 0x00000054
+#define serv_gate_uacpi_read_pci_word 0x00000055
+#define serv_gate_uacpi_read_pci_dword 0x00000056
+#define serv_gate_uacpi_write_pci_byte 0x00000057
+#define serv_gate_uacpi_write_pci_word 0x00000058
+#define serv_gate_uacpi_write_pci_dword 0x00000059
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -179,4 +185,10 @@
 #define ServGate_uacpi_enable_io 0x55 0x67 0x9a 81 0 0 0 4 0 0x5d
 #define ServGate_uacpi_in 0x55 0x67 0x9a 82 0 0 0 4 0 0x5d
 #define ServGate_uacpi_out 0x55 0x67 0x9a 83 0 0 0 4 0 0x5d
+#define ServGate_uacpi_read_pci_byte 0x55 0x67 0x9a 84 0 0 0 4 0 0x5d
+#define ServGate_uacpi_read_pci_word 0x55 0x67 0x9a 85 0 0 0 4 0 0x5d
+#define ServGate_uacpi_read_pci_dword 0x55 0x67 0x9a 86 0 0 0 4 0 0x5d
+#define ServGate_uacpi_write_pci_byte 0x55 0x67 0x9a 87 0 0 0 4 0 0x5d
+#define ServGate_uacpi_write_pci_word 0x55 0x67 0x9a 88 0 0 0 4 0 0x5d
+#define ServGate_uacpi_write_pci_dword 0x55 0x67 0x9a 89 0 0 0 4 0 0x5d
 
