@@ -33,6 +33,8 @@ INCLUDE ..\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+include ..\serv.def
+include ..\serv.inc
 INCLUDE pci.inc
 INCLUDE ..\os\core.inc
 
@@ -2882,6 +2884,500 @@ hook_thread_loop:
 hook_thread_done:
     ret
 init_pci_thread Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CheckRsdp
+;
+;           DESCRIPTION:    Check for an RSDP
+;
+;       PARAMETERS:     DS:SI       Base address to check
+;
+;       RETURNS:        NC      OK
+;                       EBX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+rsd1 DB 'RSD '
+rsd2 DB 'PTR '
+
+CheckRsdp   Proc near
+    mov eax,dword ptr cs:rsd1
+    cmp eax,[si]
+    jne check_rsdp_fail
+;
+    mov eax,dword ptr cs:rsd2
+    cmp eax,[si+4]
+    jne check_rsdp_fail
+;
+    push ecx
+    push esi
+;    
+    xor al,al    
+    mov cx,20
+
+check_rsdp_loop:
+    add al,[si]
+    inc si
+    loop check_rsdp_loop
+;
+    pop esi
+    pop ecx    
+;
+    or al,al
+    jnz check_rsdp_fail
+;
+    mov al,[si+15]
+    cmp al,2
+    jb check_get32
+;
+    mov ax,[si+20]
+    cmp ax,32
+    jb check_get32
+;
+    mov eax,[si+24]
+    mov ebx,[si+28]       
+    clc
+    jmp check_rsdp_done
+
+check_get32:    
+    mov eax,[si+16]
+    xor ebx,ebx
+    clc
+    jmp check_rsdp_done
+
+check_rsdp_fail:
+    stc
+
+check_rsdp_done:    
+    ret
+CheckRsdp   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiGetAcpi
+;
+;       DESCRIPTION:    Get ACPI
+;
+;       RETURNS:        EDX:EAX       RDSP physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_get_acpi_name DB 'uACPI Get Acpi', 0
+
+uacpi_get_acpi   PROC far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,system_data_sel
+    mov es,ax
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    AllocateGdt
+    push ebx
+;    
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds,bx    
+;
+    mov eax,es:efi_acpi
+    or eax,es:efi_acpi+4
+    jz ugaNotEfi
+;    
+    mov eax,es:efi_acpi
+    mov ebx,es:efi_acpi+4
+    mov si,ax
+    and si,00FFFh
+    and ax,0F000h
+    mov al,7h
+    SetPageEntry
+;        
+    call CheckRsdp
+    jnc ugaOk
+
+ugaNotEfi:    
+    xor ebx,ebx
+    mov eax,7h
+    SetPageEntry
+;    
+    mov esi,40Eh
+    mov si,[si]
+    movzx esi,si
+    shl esi,4
+;
+    mov eax,esi
+    and ax,0F000h
+    or al,7
+    SetPageEntry
+    and si,0FFFh
+;    
+    mov cx,40h
+
+ugaBda:
+    call CheckRsdp
+    jnc ugaOk
+;
+    add si,10h
+    loop ugaBda
+;     
+    mov edi,0E0000h
+    mov bp,20h
+
+ugaBios:
+    mov eax,edi
+    and ax,0F000h
+    or al,7
+    SetPageEntry
+;
+    mov esi,edi
+    and si,0FFFh
+;
+    mov cx,100h
+
+ugaBiosPage:
+    call CheckRsdp
+    jnc ugaOk
+;    
+    add si,10h
+    loop ugaBiosPage
+;
+    add edi,1000h
+    sub bp,1
+    jnz ugaBios
+;
+    xor eax,eax
+    xor edx,edx
+    jmp ugaDone
+
+ugaOk:
+    GetPageEntry
+    and ax,0F000h
+    or ax,si
+
+ugaDone:  
+    push eax
+    push ebx
+;
+    xor eax,eax
+    xor ebx,ebx
+    mov ds,ax
+    SetPageEntry
+    mov ecx,1000h
+    FreeLinear
+;
+    pop edx
+    pop eax
+;
+    pop ebx
+    FreeGdt    
+;    
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    retf32
+uacpi_get_acpi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiMap
+;
+;       DESCRIPTION:    Map physical address
+;
+;       PARAMETERS:     EDX:EAX          Physical address
+;                       ECX              Size
+;
+;       RETURNS:        EAX              Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_map_name DB 'uACPI Map', 0
+
+uacpi_map   PROC far
+    push ebx
+    push ecx
+    push esi
+;
+    mov ebx,edx
+    mov si,ax
+    and si,0FFFh
+;
+    add ecx,eax
+    and ax,0F000h
+    sub ecx,eax
+;
+    push eax
+    mov eax,ecx
+    AllocateLocalLinear
+    pop eax
+;
+    or ax,867h
+
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    shr ecx,12
+    push edx
+
+umapLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    loop umapLoop
+;    
+    pop eax
+    or ax,si
+;
+    pop esi
+    pop ecx
+    pop ebx
+    retf32
+uacpi_map   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiUnmap
+;
+;       DESCRIPTION:    Unmap address
+;
+;       PARAMETERS:     EDX              Linear address
+;                       ECX              Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_unmap_name DB 'uACPI Unmap', 0
+
+uacpi_unmap   PROC far
+    push ecx
+    push edx
+;
+    add ecx,edx
+    and dx,0F000h
+    sub ecx,edx
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    FreeLinear
+;
+    pop edx
+    pop ecx
+    retf32
+uacpi_unmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiEnableIo
+;
+;       DESCRIPTION:    Enable IO
+;
+;       PARAMETERS:     EDX               Port
+;                       ECX               Size
+;
+;       RETURNS:        NC                Access allowed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_enable_io_name DB 'uACPI Enable IO', 0
+
+uacpi_enable_io   PROC far
+    or ecx,ecx
+    jz ueFail
+;
+    cmp edx,400h
+    jae ueFail
+;
+    push ds
+    push eax
+    push ecx
+    push edx
+    push esi
+;
+    GetThread
+    mov ds,eax
+    mov esi,ds:p_tss_linear
+    mov eax,flat_sel
+    mov ds,eax
+
+ueLoop:
+    btr dword ptr ds:[esi].tss32_io_bitmap,edx
+    inc edx
+    loop ueLoop
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds    
+;
+    clc
+    jmp ueDone
+
+ueFail:
+    stc
+
+ueDone:
+    retf32
+uacpi_enable_io   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiIn
+;
+;       DESCRIPTION:    In
+;
+;       PARAMETERS:     EDX               Port
+;                       ECX               Size
+;
+;       RETURNS:        EAX               Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_in_name DB 'uACPI In', 0
+
+uacpi_in   PROC far
+    cmp ecx,1
+    je uiByte
+;
+    cmp ecx,2
+    je uiWord
+;
+    cmp ecx,4
+    je uiDword
+;
+    mov eax,-1
+    je uiDone
+
+uiByte:
+    in al,dx
+    jmp uiDone
+
+uiWord:
+    in ax,dx
+    jmp uiDone
+
+uiDword:
+    in eax,dx
+
+uiDone:
+    retf32
+uacpi_in   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiOut
+;
+;       DESCRIPTION:    Out
+;
+;       PARAMETERS:     EDX               Port
+;                       EAX               Data
+;                       ECX               Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_out_name DB 'uACPI Out', 0
+
+uacpi_out   PROC far
+    cmp ecx,1
+    je uoByte
+;
+    cmp ecx,2
+    je uoWord
+;
+    cmp ecx,4
+    jne uoDone
+
+uoByte:
+    out dx,al
+    jmp uoDone
+
+uoWord:
+    out dx,ax
+    jmp uoDone
+
+uoDword:
+    out dx,eax
+
+uoDone:
+    retf32
+uacpi_out   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AcpiServer
+;
+;       DESCRIPTION:    ACPI server
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lpname DB 'uacpi', 0
+lpcmd  DB 0
+
+AcpiServer:
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET lpcmd
+    mov edi,OFFSET lpname
+    mov ax,4
+    xor bx,bx
+    LoadServer
+;
+    mov ax,1000
+    WaitMilliSec
+;
+    mov ax,3Eh
+    SetFocus
+
+aLoop:
+    mov ax,250
+    WaitMilliSec
+    jmp aLoop
+;
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LoadAcpiServer
+;
+;       DESCRIPTION:    Load ACPI server
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadAcpiServer  Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET AcpiServer
+    mov edi,OFFSET lpname
+    mov al,2
+    CreateServerProcess
+;
+    popad
+    pop es
+    pop ds
+    ret
+LoadAcpiServer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2901,6 +3397,7 @@ init_pci    Proc far
 ;
     call CheckAcpiBuses
     call UpdateAcpi
+    call LoadAcpiServer
 ;
     mov ax,cs
     mov ds,ax
@@ -2957,7 +3454,7 @@ gpbDone:
     pop ds
     retf32
 get_pci_bus     Endp
-
+      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -3113,6 +3610,42 @@ init    Proc far
     xor cl,cl
     mov ax,setup_pci_msix_entry_nr
     RegisterOsGate
+;
+    mov esi,OFFSET uacpi_get_acpi
+    mov edi,OFFSET uacpi_get_acpi_name
+    xor cl,cl
+    mov ax,uacpi_get_acpi_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_map
+    mov edi,OFFSET uacpi_map_name
+    xor cl,cl
+    mov ax,uacpi_map_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_unmap
+    mov edi,OFFSET uacpi_unmap_name
+    xor cl,cl
+    mov ax,uacpi_unmap_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_enable_io
+    mov edi,OFFSET uacpi_enable_io_name
+    xor cl,cl
+    mov ax,uacpi_enable_io_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_in
+    mov edi,OFFSET uacpi_in_name
+    xor cl,cl
+    mov ax,uacpi_in_nr
+    RegisterServGate
+;
+    mov esi,OFFSET uacpi_out
+    mov edi,OFFSET uacpi_out_name
+    xor cl,cl
+    mov ax,uacpi_out_nr
+    RegisterServGate
 ;
     mov esi,OFFSET get_pci_bus
     mov edi,OFFSET get_pci_bus_name
