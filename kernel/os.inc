@@ -206,6 +206,13 @@ RegisterServGate  MACRO
                     ENDM
 
 ;       AX          GATE NUMBER
+;       DS:ESI      GATE CALL ADDRESS
+;       ES:EDI      GATE NAME ADDRESS
+RegisterPrivateServGate  MACRO
+    OsGate register_priv_serv_gate_nr
+                    ENDM
+
+;       AX          GATE NUMBER
 ;       DX          SEGMENT TRANSFER
 ;       DS:ESI  GATE CALL ADDRESS
 ;       ES:EDI  GATE NAME ADDRESS

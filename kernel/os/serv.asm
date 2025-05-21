@@ -102,6 +102,12 @@ init_serv_gate_loop:
     xor cl,cl
     RegisterOsGate
 ;
+    mov esi,OFFSET register_priv_serv_gate
+    mov edi,OFFSET register_priv_serv_gate_name
+    mov ax,register_priv_serv_gate_nr
+    xor cl,cl
+    RegisterOsGate
+;
     popa
     pop es
     pop ds
@@ -157,6 +163,89 @@ register_serv_gate   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           REGISTER_PRIVATE_GATE
+;
+;           DESCRIPTION:    Register a private server gate
+;
+;           PARAMETERS:     AX          Gate number
+;                           DS:ESI      Gate call address
+;                           ES:EDI      Gate name address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_priv_serv_gate_name      DB 'Register Private Server Gate',0
+
+register_priv_serv_gate   PROC far
+    push ds
+    push fs
+    push gs
+    push bx
+;
+    push ds
+    mov bx,ax
+;
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_serv_sel
+    or ax,ax
+    jz reg_priv_do
+;
+    stc
+    pop ax
+    jmp reg_priv_done
+
+reg_priv_do:
+    mov ax,ds:serv_gate_sel
+    or ax,ax
+    jnz reg_priv_has_sel
+;
+    push es
+    push cx
+    push di
+;
+    mov eax,serv_gate_entries SHL 4
+    AllocateSmallGlobalMem
+;    
+    xor di,di
+    mov cx,serv_gate_entries
+
+reg_priv_loop:
+    mov es:[di].serv_gate_proc_offset,OFFSET illegal_gate
+    mov es:[di].serv_gate_proc_sel,cs
+    mov es:[di].serv_gate_name_offset,OFFSET illegal_gate_name
+    mov es:[di].serv_gate_name_sel,cs
+    add di,16
+    loop reg_priv_loop
+;
+    mov ds:serv_gate_sel,es
+    mov ax,es
+;
+    pop di
+    pop cx
+    pop es
+
+reg_priv_has_sel:
+    mov ds,ax
+    pop ax
+;
+    shl bx,4
+    mov [bx].serv_gate_proc_sel,ax
+    mov [bx].serv_gate_proc_offset,esi
+    mov [bx].serv_gate_name_sel,es
+    mov [bx].serv_gate_name_offset,edi
+    clc
+
+reg_priv_done:
+    pop bx
+    pop gs
+    pop fs
+    pop ds
+    retf32
+register_priv_serv_gate   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           do_user_serv
 ;
 ;           DESCRIPTION:    do user mode serv
@@ -186,7 +275,13 @@ do_user_serv   Proc near
     mov edi,invalid_serv_nr
 
 do_user_serv_in_range:    
+    mov ax,fs:serv_gate_sel
+    or ax,ax
+    jnz do_user_serv_priv
+;
     mov ax,serv_gate_sel
+
+do_user_serv_priv:
     mov es,ax
 ;    
     push ebx

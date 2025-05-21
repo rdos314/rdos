@@ -71,7 +71,7 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;           DESCRIPTION:    Create serv mem
 ;
-;           PARAMETERS:     BX     Ldt obj
+;           PARAMETERS:     BX     Serv sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

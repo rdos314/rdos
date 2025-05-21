@@ -46,6 +46,8 @@ serv_small_used_mem      DD ?
 serv_big_section         section_typ <>
 serv_small_section       section_typ <>
 
+serv_gate_sel            DW ?
+
 serv_gate_arr            DW serv_gate_entries DUP (?)
 
 serv_dir_arr             DD ?
