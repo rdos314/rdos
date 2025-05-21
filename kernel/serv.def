@@ -82,17 +82,4 @@ serv_disable_file_req_nr   = 75
 serv_signal_nr             = 76
 serv_update_file_nr        = 77
 
-uacpi_get_acpi_nr          = 78
-uacpi_map_nr               = 79
-uacpi_unmap_nr             = 80
-uacpi_enable_io_nr         = 81
-uacpi_in_nr                = 82
-uacpi_out_nr               = 83
-uacpi_read_pci_byte_nr     = 84
-uacpi_read_pci_word_nr     = 85
-uacpi_read_pci_dword_nr    = 86
-uacpi_write_pci_byte_nr    = 87
-uacpi_write_pci_word_nr    = 88
-uacpi_write_pci_dword_nr   = 89
-
-serv_gate_entries          = 90
+serv_gate_entries          = 80

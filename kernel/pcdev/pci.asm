@@ -33,8 +33,8 @@ INCLUDE ..\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-include ..\serv.def
-include ..\serv.inc
+include ..\acpi.def
+include ..\acpi.inc
 INCLUDE pci.inc
 INCLUDE ..\os\core.inc
 
@@ -3572,6 +3572,79 @@ AcpiServer:
     mov eax,cs
     mov ds,eax
     mov es,eax
+;
+    mov esi,OFFSET uacpi_get_acpi
+    mov edi,OFFSET uacpi_get_acpi_name
+    xor cl,cl
+    mov ax,uacpi_get_acpi_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_map
+    mov edi,OFFSET uacpi_map_name
+    xor cl,cl
+    mov ax,uacpi_map_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_unmap
+    mov edi,OFFSET uacpi_unmap_name
+    xor cl,cl
+    mov ax,uacpi_unmap_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_enable_io
+    mov edi,OFFSET uacpi_enable_io_name
+    xor cl,cl
+    mov ax,uacpi_enable_io_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_in
+    mov edi,OFFSET uacpi_in_name
+    xor cl,cl
+    mov ax,uacpi_in_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_out
+    mov edi,OFFSET uacpi_out_name
+    xor cl,cl
+    mov ax,uacpi_out_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_read_pci_byte
+    mov edi,OFFSET uacpi_read_pci_byte_name
+    xor cl,cl
+    mov ax,uacpi_read_pci_byte_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_read_pci_word
+    mov edi,OFFSET uacpi_read_pci_word_name
+    xor cl,cl
+    mov ax,uacpi_read_pci_word_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_read_pci_dword
+    mov edi,OFFSET uacpi_read_pci_dword_name
+    xor cl,cl
+    mov ax,uacpi_read_pci_dword_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_write_pci_byte
+    mov edi,OFFSET uacpi_write_pci_byte_name
+    xor cl,cl
+    mov ax,uacpi_write_pci_byte_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_write_pci_word
+    mov edi,OFFSET uacpi_write_pci_word_name
+    xor cl,cl
+    mov ax,uacpi_write_pci_word_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_write_pci_dword
+    mov edi,OFFSET uacpi_write_pci_dword_name
+    xor cl,cl
+    mov ax,uacpi_write_pci_dword_nr
+    RegisterPrivateServGate
+;
     mov esi,OFFSET lpcmd
     mov edi,OFFSET lpname
     mov ax,4
@@ -3850,78 +3923,6 @@ init    Proc far
     xor cl,cl
     mov ax,setup_pci_msix_entry_nr
     RegisterOsGate
-;
-    mov esi,OFFSET uacpi_get_acpi
-    mov edi,OFFSET uacpi_get_acpi_name
-    xor cl,cl
-    mov ax,uacpi_get_acpi_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_map
-    mov edi,OFFSET uacpi_map_name
-    xor cl,cl
-    mov ax,uacpi_map_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_unmap
-    mov edi,OFFSET uacpi_unmap_name
-    xor cl,cl
-    mov ax,uacpi_unmap_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_enable_io
-    mov edi,OFFSET uacpi_enable_io_name
-    xor cl,cl
-    mov ax,uacpi_enable_io_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_in
-    mov edi,OFFSET uacpi_in_name
-    xor cl,cl
-    mov ax,uacpi_in_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_out
-    mov edi,OFFSET uacpi_out_name
-    xor cl,cl
-    mov ax,uacpi_out_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_read_pci_byte
-    mov edi,OFFSET uacpi_read_pci_byte_name
-    xor cl,cl
-    mov ax,uacpi_read_pci_byte_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_read_pci_word
-    mov edi,OFFSET uacpi_read_pci_word_name
-    xor cl,cl
-    mov ax,uacpi_read_pci_word_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_read_pci_dword
-    mov edi,OFFSET uacpi_read_pci_dword_name
-    xor cl,cl
-    mov ax,uacpi_read_pci_dword_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_write_pci_byte
-    mov edi,OFFSET uacpi_write_pci_byte_name
-    xor cl,cl
-    mov ax,uacpi_write_pci_byte_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_write_pci_word
-    mov edi,OFFSET uacpi_write_pci_word_name
-    xor cl,cl
-    mov ax,uacpi_write_pci_word_nr
-    RegisterServGate
-;
-    mov esi,OFFSET uacpi_write_pci_dword
-    mov edi,OFFSET uacpi_write_pci_dword_name
-    xor cl,cl
-    mov ax,uacpi_write_pci_dword_nr
-    RegisterServGate
 ;
     mov esi,OFFSET get_pci_bus
     mov edi,OFFSET get_pci_bus_name

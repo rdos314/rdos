@@ -188,13 +188,14 @@ register_priv_serv_gate   PROC far
     mov ds,ax
     mov ax,ds:p_serv_sel
     or ax,ax
-    jz reg_priv_do
+    jnz reg_priv_do
 ;
     stc
     pop ax
     jmp reg_priv_done
 
 reg_priv_do:
+    mov ds,ax
     mov ax,ds:serv_gate_sel
     or ax,ax
     jnz reg_priv_has_sel

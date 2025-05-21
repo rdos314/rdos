@@ -107,19 +107,6 @@ int RDOSAPI ServSslGetSendBuf(int index, char *buf);
 void RDOSAPI ServSslClearSendCount(int index, int count);
 int RDOSAPI ServSslWaitForChange(int consel);
 
-long long RDOSAPI ServUacpiGetAcpi();
-void *RDOSAPI ServUacpiMap(long long phys, int size);
-void RDOSAPI ServUacpiUnmap(void *base, int size);
-int RDOSAPI ServUacpiEnableIo(int base, int size);
-int RDOSAPI ServUacpiIn(int port, int size);
-void RDOSAPI ServUacpiOut(int port, int data, int size);
-char RDOSAPI ServUacpiReadPciByte(int dev);
-short RDOSAPI ServUacpiReadPciWord(int dev);
-int RDOSAPI ServUacpiReadPciDword(int dev);
-void RDOSAPI ServUacpiWritePciByte(int dev, char val);
-void RDOSAPI ServUacpiWritePciWord(int dev, short val);
-void RDOSAPI ServUacpiWritePciDword(int dev, int val);
-
 #ifdef __cplusplus
 }
 #endif
