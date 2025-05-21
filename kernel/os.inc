@@ -1988,13 +1988,6 @@ CreateServerProcess    MACRO
                         ENDM
 
 ; IN  AL          Priority
-; IN  DS:ESI      Start address
-; IN  ES:EDI      Process name
-CreateIoServerProcess    MACRO
-    OsGate create_io_serv_proc_nr
-                        ENDM
-
-; IN  AL          Priority
 ; IN  BH          Device #
 ; IN  BL          Unit #
 ; IN  DS:ESI      Parameters
@@ -2008,6 +2001,12 @@ LoadServer        MACRO
 ; IN  ES          Server app sel
 CreateServerApp        MACRO
     OsGate create_serv_app_nr
+                        ENDM
+
+; IN  BX          Program #
+; IN  ES          Server app sel
+CreateIoServerApp        MACRO
+    OsGate create_io_serv_app_nr
                         ENDM
 
 ; IN  BX          Program #

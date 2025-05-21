@@ -9328,7 +9328,7 @@ create_full_tss32    PROC near
     add edx,stack0_size
     mov ds:p_kernel_stack,edx
 ;    
-    mov ecx,SIZE tss32_seg
+    mov ecx,OFFSET tss32_io_bitmap + 2000h
     mov edx,edi
     AllocateGdt
     CreateTssSelector
@@ -10502,86 +10502,6 @@ create_serv_proc  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateIoServProc
-;
-;           DESCRIPTION:    Create IO server process
-;
-;           PARAMETERS:     AL          Priority
-;                           DS:ESI      Start address
-;                           ES:EDI      Thread name
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_io_serv_proc_name     DB 'Create IO Server Process',0
-
-create_io_serv_proc  PROC far
-    sub esp,30
-    push ebp
-    mov ebp,esp
-    pushf
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov [ebp].cr_seg,ds
-    mov [ebp].cr_offs,esi
-    xor dx,dx
-    mov dl,al       
-    mov [ebp].cr_prio,dx
-    mov dword ptr [ebp].cr_stack,stack0_size
-    mov [ebp].cr_name,edi
-    mov [ebp+4].cr_name,es
-    xor ax,ax
-    mov fs,ax
-    mov gs,ax
-    call allocate_thread_block
-    mov dx,[ebp].cr_prio
-    call init_thread_block
-    mov es:p_debug_event,0
-;
-    mov ax,es
-    mov ds,ax
-    call create_full_tss32
-    call init_default_regs
-;
-    NotifyCreateProcess
-    mov es:p_cr3,eax
-;
-    mov bx,1
-    call create_process_sel
-    call add_process_thread
-    call init_prot_thread
-    call init_serv_proc_regs
-    call init_process_callback
-;
-    call wake_new
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-;
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    popf
-    pop ebp
-    add esp,30
-    retf32
-create_io_serv_proc  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           INIT_FORK_REGS
 ;
 ;           DESCRIPTION:    Setup fork register state
@@ -11436,7 +11356,7 @@ create_serv_app  PROC far
     mov ax,es
     mov ds,ax
 ;
-    call create_tss32
+    call create_full_tss32
     call init_default_regs
 ;
     NotifyCreateProcess
@@ -12069,12 +11989,6 @@ timer_free_list_create:
     mov edi,OFFSET create_serv_proc_name
     xor cl,cl
     mov ax,create_serv_proc_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET create_io_serv_proc
-    mov edi,OFFSET create_io_serv_proc_name
-    xor cl,cl
-    mov ax,create_io_serv_proc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_serv_app

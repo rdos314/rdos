@@ -3574,7 +3574,7 @@ LoadAcpiServer  Proc near
     mov esi,OFFSET AcpiServer
     mov edi,OFFSET lpname
     mov al,2
-    CreateIoServerProcess
+    CreateServerProcess
 ;
     popad
     pop es

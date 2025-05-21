@@ -929,6 +929,5 @@ set_thread_irq_nr           = 861
 init_pci_msix_entry_nr      = 862
 
 register_priv_serv_gate_nr  = 863
-create_io_serv_proc_nr      = 864
 
 osgate_entries              = 880
