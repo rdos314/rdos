@@ -3186,19 +3186,11 @@ uacpi_unmap   Endp
 ;       PARAMETERS:     EDX               Port
 ;                       ECX               Size
 ;
-;       RETURNS:        NC                Access allowed
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 uacpi_enable_io_name DB 'uACPI Enable IO', 0
 
 uacpi_enable_io   PROC far
-    or ecx,ecx
-    jz ueFail
-;
-    cmp edx,400h
-    jae ueFail
-;
     push ds
     push eax
     push ecx
@@ -3216,105 +3208,15 @@ ueLoop:
     inc edx
     loop ueLoop
 ;
+    clc
+;
     pop esi
     pop edx
     pop ecx
     pop eax
     pop ds    
-;
-    clc
-    jmp ueDone
-
-ueFail:
-    stc
-
-ueDone:
     retf32
 uacpi_enable_io   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           UacpiIn
-;
-;       DESCRIPTION:    In
-;
-;       PARAMETERS:     EDX               Port
-;                       ECX               Size
-;
-;       RETURNS:        EAX               Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-uacpi_in_name DB 'uACPI In', 0
-
-uacpi_in   PROC far
-    cmp ecx,1
-    je uiByte
-;
-    cmp ecx,2
-    je uiWord
-;
-    cmp ecx,4
-    je uiDword
-;
-    mov eax,-1
-    je uiDone
-
-uiByte:
-    in al,dx
-    jmp uiDone
-
-uiWord:
-    in ax,dx
-    jmp uiDone
-
-uiDword:
-    in eax,dx
-
-uiDone:
-    retf32
-uacpi_in   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           UacpiOut
-;
-;       DESCRIPTION:    Out
-;
-;       PARAMETERS:     EDX               Port
-;                       EAX               Data
-;                       ECX               Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-uacpi_out_name DB 'uACPI Out', 0
-
-uacpi_out   PROC far
-    cmp ecx,1
-    je uoByte
-;
-    cmp ecx,2
-    je uoWord
-;
-    cmp ecx,4
-    jne uoDone
-
-uoByte:
-    out dx,al
-    jmp uoDone
-
-uoWord:
-    out dx,ax
-    jmp uoDone
-
-uoDword:
-    out dx,eax
-
-uoDone:
-    retf32
-uacpi_out   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3597,18 +3499,6 @@ AcpiServer:
     mov ax,uacpi_enable_io_nr
     RegisterPrivateServGate
 ;
-    mov esi,OFFSET uacpi_in
-    mov edi,OFFSET uacpi_in_name
-    xor cl,cl
-    mov ax,uacpi_in_nr
-    RegisterPrivateServGate
-;
-    mov esi,OFFSET uacpi_out
-    mov edi,OFFSET uacpi_out_name
-    xor cl,cl
-    mov ax,uacpi_out_nr
-    RegisterPrivateServGate
-;
     mov esi,OFFSET uacpi_read_pci_byte
     mov edi,OFFSET uacpi_read_pci_byte_name
     xor cl,cl
@@ -3684,7 +3574,7 @@ LoadAcpiServer  Proc near
     mov esi,OFFSET AcpiServer
     mov edi,OFFSET lpname
     mov al,2
-    CreateServerProcess
+    CreateIoServerProcess
 ;
     popad
     pop es

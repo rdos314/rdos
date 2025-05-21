@@ -21,9 +21,7 @@ extern "C" {
 long long RDOSAPI ServUacpiGetAcpi();
 void *RDOSAPI ServUacpiMap(long long phys, int size);
 void RDOSAPI ServUacpiUnmap(void *base, int size);
-int RDOSAPI ServUacpiEnableIo(int base, int size);
-int RDOSAPI ServUacpiIn(int port, int size);
-void RDOSAPI ServUacpiOut(int port, int data, int size);
+void RDOSAPI ServUacpiEnableIo(int base, int size);
 char RDOSAPI ServUacpiReadPciByte(int dev);
 short RDOSAPI ServUacpiReadPciWord(int dev);
 int RDOSAPI ServUacpiReadPciDword(int dev);

@@ -22,15 +22,6 @@
     __parm [__edx] [__ecx] \
     __value [__eax]
 
-#pragma aux ServUacpiIn = \
-    ServGate_uacpi_in  \
-    __parm [__edx] [__ecx] \
-    __value [__eax]
-
-#pragma aux ServUacpiOut = \
-    ServGate_uacpi_out  \
-    __parm [__edx] [__eax] [__ecx]
-
 #pragma aux ServUacpiReadPciByte = \
     ServGate_uacpi_read_pci_byte  \
     __parm [__ebx]  \

@@ -60,21 +60,6 @@ UacpiUnmap  MACRO
 UacpiEnableIo  MACRO
     ServGate uacpi_enable_io_nr
                     ENDM
-
-; IN  EDX               Base
-; IN  ECX               Size
-; OUT EAX               Data
-UacpiIn  MACRO
-    ServGate uacpi_in_nr
-                    ENDM
-
-; IN  EDX               Base
-; IN  EAX               Data
-; IN  ECX               Size
-UacpiOut  MACRO
-    ServGate uacpi_out_nr
-                    ENDM
-
 ; IN  EBX               Dev
 ; OUT AL                Value
 UacpiReadPciByte  MACRO
