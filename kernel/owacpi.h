@@ -48,3 +48,8 @@
 #pragma aux ServUacpiWritePciDword = \
     ServGate_uacpi_write_pci_dword  \
     __parm [__ebx] [__eax]
+
+#pragma aux ServUacpiGetTable = \
+    "mov eax,[esi]" \
+    ServGate_uacpi_test_get_table  \
+    __parm [__esi]

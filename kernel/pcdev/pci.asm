@@ -81,12 +81,44 @@ pcib_owner_func    DB ?
 
 pci_bus_struc  ENDS
 
+
+; should be moved from ACPI!
+
+acpi_header STRUC
+
+acpi_sign       DD ?
+acpi_size       DD ?
+
+acpi_rev        DB ?
+acpi_sum        DB ?
+
+acpi_oem        DB 6 DUP(?)
+acpi_oem_id     DD ?, ?
+acpi_oem_rev    DD ?
+acpi_cr_id      DD ?
+acpi_cr_rev     DD ?
+
+acpi_header ENDS
+
+acpi_table  STRUC
+
+act_next        DW ?
+act_size        DW ?
+act_sign        DD ?
+act_oem_id      DD ?, ?
+
+acpi_table  ENDS
+
+
 data    SEGMENT byte public 'DATA'
 
 pci_spinlock            spinlock_typ <>
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 32 DUP(?,?)
+
+acpi_table_count    	DW ?
+acpi_table_arr      	DD ?
 
 pci_bus_arr             DW 256 DUP(?)
 
@@ -2884,6 +2916,7 @@ hook_thread_loop:
 hook_thread_done:
     ret
 init_pci_thread Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2952,6 +2985,487 @@ check_rsdp_fail:
 check_rsdp_done:    
     ret
 CheckRsdp   Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetRsdp
+;
+;           DESCRIPTION:    Get the RSDP
+;
+;       RETURNS:            NC      OK
+;                           EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRsdp Proc near
+    push ds
+    push es
+    push ecx
+    push edx
+    push esi
+    push edi
+    push bp
+;
+    mov ax,system_data_sel
+    mov es,ax
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    AllocateGdt
+    push bx
+;    
+    mov ecx,1000h
+    CreateDataSelector16        
+    mov ds,bx    
+;
+    mov eax,es:efi_acpi
+    or eax,es:efi_acpi+4
+    jz get_rsdp_not_efi
+;    
+    mov eax,es:efi_acpi
+    mov ebx,es:efi_acpi+4
+    mov si,ax
+    and si,00FFFh
+    and ax,0F000h
+    mov al,7h
+    SetPageEntry
+;        
+    call CheckRsdp
+    jnc get_rsdp_ok
+    
+get_rsdp_not_efi:
+    xor ebx,ebx
+    mov eax,7h
+    SetPageEntry
+;    
+    mov esi,40Eh
+    mov si,[si]
+    movzx esi,si
+    shl esi,4
+;
+    mov eax,esi
+    and ax,0F000h
+    or al,7
+    SetPageEntry
+    and si,0FFFh
+;    
+    mov cx,40h
+
+get_rsdp_bda:
+    call CheckRsdp
+    jnc get_rsdp_ok
+;
+    add si,10h
+    loop get_rsdp_bda
+;     
+    mov edi,0E0000h
+    mov bp,20h
+
+get_rsdp_bios:
+    mov eax,edi
+    and ax,0F000h
+    or al,7
+    SetPageEntry
+;
+    mov esi,edi
+    and si,0FFFh
+;
+    mov cx,100h
+
+get_rsdp_bios_page:
+    call CheckRsdp
+    jnc get_rsdp_ok
+;    
+    add si,10h
+    loop get_rsdp_bios_page
+;
+    add edi,1000h
+    sub bp,1
+    jnz get_rsdp_bios
+;
+    stc
+    jmp get_rsdp_done
+
+get_rsdp_ok:
+    clc
+
+get_rsdp_done: 
+    push eax
+    pushf
+    xor eax,eax
+    mov ds,ax
+    SetPageEntry
+    mov ecx,1000h
+    FreeLinear
+    popf
+    pop eax
+;
+    mov edx,ebx
+    pop bx
+    pushf
+    FreeGdt    
+    popf
+;    
+    mov ebx,edx
+;
+    pop bp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop es
+    pop ds
+    ret
+GetRsdp Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetTable
+;
+;           DESCRIPTION:    Get a table
+;
+;       PARAMETERS:         EBX:EAX     Physical address
+;
+;       RETURNS:            NC      OK
+;                           ES      Table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetTable Proc near
+    push ds
+    pushad
+;   
+    mov ebp,eax 
+    mov edi,ebx
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,ebp
+    movzx esi,ax
+    and si,0FFFh
+;
+    and ax,0F000h
+    or al,7    
+    SetPageEntry
+;    
+    push edx
+    add edx,esi
+    AllocateGdt    
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds,bx    
+    pop edx
+;
+    push ebx
+    mov ecx,ds:acpi_size
+    xor ebx,ebx
+    xor eax,eax
+    mov ds,ax
+    SetPageEntry
+    pop ebx
+;    
+    push ecx
+    mov ecx,1000h
+    FreeLinear
+    pop ecx
+    FreeGdt
+;    
+    cmp ecx,10000h - SIZE acpi_table
+    jae get_table_fail
+;   
+    mov eax,ecx     
+    sub eax,SIZE acpi_header
+    add eax,SIZE acpi_table
+    AllocateSmallGlobalMem
+    mov eax,ecx
+    sub eax,SIZE acpi_header
+    mov es:act_size,ax
+;    
+    movzx eax,bp
+    and ax,0FFFh
+    add eax,ecx
+    add eax,1000h
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    AllocateBigLinear
+;
+    mov ecx,eax
+    shr ecx,12
+    push ecx
+;    
+    mov eax,ebp
+    movzx ebx,ax
+    and bx,0FFFh
+;
+    push ecx
+    push edx
+    add edx,ebx
+    AllocateGdt    
+    shl ecx,12
+    CreateDataSelector16
+    mov ds,bx    
+    pop edx
+    pop ecx
+;
+    push ebx
+    push edx
+;
+    mov ebx,edi
+    and ax,0F000h
+    or al,7    
+
+get_table_set_phys:
+    SetPageEntry
+    add eax,1000h
+    add edx,1000h
+    loop get_table_set_phys
+;
+    pop edx
+    pop ebx
+;    
+    mov di,SIZE acpi_table
+    mov si,SIZE acpi_header
+    mov ecx,ds:acpi_size
+    sub ecx,SIZE acpi_header
+    jz get_table_copied
+;
+    xor ah,ah
+
+get_table_copy:
+    lods byte ptr ds:[si]
+    add ah,al
+    stos byte ptr es:[di]
+    loop get_table_copy
+
+get_table_copied:
+    mov cx,SIZE acpi_header
+    xor si,si
+
+get_table_check:
+    lods byte ptr ds:[si]
+    add ah,al
+    loop get_table_check
+;
+    or ah,ah
+    jnz get_table_pop_fail
+;
+    mov eax,ds:acpi_sign
+    mov es:act_sign,eax
+    mov eax,ds:acpi_oem_id
+    mov es:act_oem_id,eax
+    mov eax,ds:acpi_oem_id+4
+    mov es:act_oem_id+4,eax
+    jmp get_table_free
+
+get_table_pop_fail:
+    pop ecx
+    FreeMem
+    jmp get_table_fail
+
+get_table_free:
+    pop ecx
+;
+    push ebx
+    push ecx
+    push edx
+;    
+    xor eax,eax
+    xor ebx,ebx
+
+get_table_free_phys:
+    SetPageEntry
+    add edx,1000h
+    loop get_table_free_phys
+
+    pop edx
+    pop ecx
+    pop ebx
+;
+    shl ecx,12
+    movzx ecx,cx
+    FreeLinear
+;
+    xor ax,ax
+    mov ds,ax
+    FreeGdt
+;
+    mov eax,es:act_sign
+    or eax,eax
+    jnz get_table_ok    
+;
+    FreeMem
+
+get_table_fail:
+    stc
+    jmp get_table_done
+
+get_table_ok:
+    clc
+
+get_table_done:
+    popad
+    pop ds
+    ret
+GetTable    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitAcpiTable
+;
+;           DESCRIPTION:    Init ACPI tables
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_init_acpi_table_name DB 'Init ACPI Tables', 0
+
+test_init_acpi_table   PROC far
+    push ds
+    push es
+    pushad
+;    
+    call GetRsdp
+    jc iatDone
+;    
+    call GetTable
+    jc iatDone
+;
+    mov ax,es
+    mov ds,ax
+    mov eax,es:act_sign
+    cmp eax,'TDSX'
+    je iatGet64
+;
+    cmp eax,'TDSR'
+    jne iatDone
+
+iatGet32:    
+    mov cx,ds:act_size
+    shr cx,1
+;    
+    mov ax,OFFSET acpi_table_arr
+    add ax,cx
+    movzx eax,ax
+    mov bx,acpi_data_sel
+    AllocateFixedSystemMem
+    mov es,bx
+;
+    shr cx,1
+    mov es:acpi_table_count,cx
+;
+    mov si,SIZE acpi_table
+    mov di,OFFSET acpi_table_arr
+
+iatLoop32:
+    mov eax,[si]
+    xor ebx,ebx
+    add si,4
+    push es
+    call GetTable
+    mov ax,es
+    pop es
+    jnc iatSave32
+;    
+    xor ax,ax
+
+iatSave32:
+    stos word ptr es:[di]
+    loop iatLoop32
+;
+    jmp iatDone
+
+iatGet64:
+    mov cx,ds:act_size
+    shr cx,2
+;    
+    mov ax,OFFSET acpi_table_arr
+    add ax,cx
+    movzx eax,ax
+    mov bx,acpi_data_sel
+    AllocateFixedSystemMem
+    mov es,bx
+;
+    shr cx,1
+    mov es:acpi_table_count,cx
+;
+    mov si,SIZE acpi_table
+    mov di,OFFSET acpi_table_arr
+
+iatLoop64:
+    mov eax,[si]
+    mov ebx,[si+4]
+    add si,8
+    push es
+    call GetTable
+    mov ax,es
+    pop es
+    jnc iatSave64
+;    
+    xor ax,ax
+
+iatSave64:
+    stos word ptr es:[di]
+    loop iatLoop64
+
+iatDone:
+    popad
+    pop es
+    pop ds
+    retf32
+test_init_acpi_table   Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetAcpiTable
+;
+;           DESCRIPTION:    Get ACPI table
+;
+;       PARAMETERS:   	    EAX     Table ID
+;
+;       RETURNS:   	    NC      Ok
+;		            ES  Table selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_get_acpi_table_name    DB 'Get ACPI Table',0
+
+test_get_acpi_table  Proc far
+    push ds
+    push cx
+    push si
+;
+    mov cx,SEG data
+    mov ds,cx
+    mov cx,ds:acpi_table_count
+    mov si,OFFSET acpi_table_arr
+
+gtLoop:
+    mov es,[si]
+    cmp eax,es:act_sign
+    je gtOk
+;    
+    add si,2
+    loop gtLoop
+;
+    xor cx,cx
+    mov es,cx
+    stc
+    jmp gtDone
+
+gtOk:
+    clc
+
+gtDone:
+    pop si
+    pop cx
+    pop ds
+    ret
+test_get_acpi_table  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3533,6 +4047,12 @@ AcpiServer:
     mov edi,OFFSET uacpi_write_pci_dword_name
     xor cl,cl
     mov ax,uacpi_write_pci_dword_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET test_init_acpi_table
+    mov edi,OFFSET test_init_acpi_table_name
+    xor cl,cl
+    mov ax,uacpi_test_get_table_nr
     RegisterPrivateServGate
 ;
     mov esi,OFFSET lpcmd
