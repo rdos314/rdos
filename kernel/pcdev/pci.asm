@@ -109,6 +109,13 @@ act_oem_id      DD ?, ?
 
 acpi_table  ENDS
 
+acpitab	STRUC
+
+acpi_table_count    	DD ?
+acpi_table_arr      	DD ?
+
+acpitab  ENDS
+
 
 data    SEGMENT byte public 'DATA'
 
@@ -116,9 +123,6 @@ pci_spinlock            spinlock_typ <>
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 32 DUP(?,?)
-
-acpi_table_count    	DW ?
-acpi_table_arr      	DD ?
 
 pci_bus_arr             DW 256 DUP(?)
 
@@ -3321,9 +3325,7 @@ GetTable    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_init_acpi_table_name DB 'Init ACPI Tables', 0
-
-test_init_acpi_table   PROC far
+InitAcpiTable   PROC near
     push ds
     push es
     pushad
@@ -3344,24 +3346,23 @@ test_init_acpi_table   PROC far
     jne iatDone
 
 iatGet32:    
-    mov cx,ds:act_size
-    shr cx,1
+    movzx ecx,ds:act_size
+    shr ecx,1
 ;    
-    mov ax,OFFSET acpi_table_arr
-    add ax,cx
-    movzx eax,ax
-    mov bx,acpi_data_sel
+    mov eax,OFFSET acpi_table_arr
+    add eax,ecx
+    mov bx,pci_acpi_sel
     AllocateFixedSystemMem
     mov es,bx
 ;
-    shr cx,1
-    mov es:acpi_table_count,cx
+    shr ecx,1
+    mov es:acpi_table_count,ecx
 ;
-    mov si,SIZE acpi_table
-    mov di,OFFSET acpi_table_arr
+    mov esi,SIZE acpi_table
+    mov edi,OFFSET acpi_table_arr
 
 iatLoop32:
-    mov eax,[si]
+    mov eax,[esi]
     xor ebx,ebx
     add si,4
     push es
@@ -3373,32 +3374,31 @@ iatLoop32:
     xor ax,ax
 
 iatSave32:
-    stos word ptr es:[di]
+    stos word ptr es:[edi]
     loop iatLoop32
 ;
     jmp iatDone
 
 iatGet64:
-    mov cx,ds:act_size
-    shr cx,2
+    movzx ecx,ds:act_size
+    shr ecx,2
 ;    
-    mov ax,OFFSET acpi_table_arr
-    add ax,cx
-    movzx eax,ax
-    mov bx,acpi_data_sel
+    mov eax,OFFSET acpi_table_arr
+    add eax,ecx
+    mov bx,pci_acpi_sel
     AllocateFixedSystemMem
     mov es,bx
 ;
-    shr cx,1
-    mov es:acpi_table_count,cx
+    shr ecx,1
+    mov es:acpi_table_count,ecx
 ;
-    mov si,SIZE acpi_table
-    mov di,OFFSET acpi_table_arr
+    mov esi,SIZE acpi_table
+    mov edi,OFFSET acpi_table_arr
 
 iatLoop64:
-    mov eax,[si]
-    mov ebx,[si+4]
-    add si,8
+    mov eax,[esi]
+    mov ebx,[esi+4]
+    add esi,8
     push es
     call GetTable
     mov ax,es
@@ -3408,15 +3408,15 @@ iatLoop64:
     xor ax,ax
 
 iatSave64:
-    stos word ptr es:[di]
+    stos word ptr es:[edi]
     loop iatLoop64
 
 iatDone:
     popad
     pop es
     pop ds
-    retf32
-test_init_acpi_table   Endp
+    ret
+InitAcpiTable   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3432,28 +3432,28 @@ test_init_acpi_table   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_get_acpi_table_name    DB 'Get ACPI Table',0
+get_acpi_table_name    DB 'Get ACPI Table',0
 
-test_get_acpi_table  Proc far
+get_acpi_table  Proc far
     push ds
-    push cx
-    push si
+    push ecx
+    push esi
 ;
-    mov cx,SEG data
-    mov ds,cx
-    mov cx,ds:acpi_table_count
-    mov si,OFFSET acpi_table_arr
+    mov ecx,pci_acpi_sel
+    mov ds,ecx
+    mov ecx,ds:acpi_table_count
+    mov esi,OFFSET acpi_table_arr
 
 gtLoop:
-    mov es,[si]
+    mov es,[esi]
     cmp eax,es:act_sign
     je gtOk
 ;    
-    add si,2
+    add esi,2
     loop gtLoop
 ;
-    xor cx,cx
-    mov es,cx
+    xor ecx,ecx
+    mov es,ecx
     stc
     jmp gtDone
 
@@ -3461,11 +3461,11 @@ gtOk:
     clc
 
 gtDone:
-    pop si
-    pop cx
+    pop esi
+    pop ecx
     pop ds
-    ret
-test_get_acpi_table  Endp
+    retf32
+get_acpi_table  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4049,12 +4049,6 @@ AcpiServer:
     mov ax,uacpi_write_pci_dword_nr
     RegisterPrivateServGate
 ;
-    mov esi,OFFSET test_init_acpi_table
-    mov edi,OFFSET test_init_acpi_table_name
-    xor cl,cl
-    mov ax,uacpi_test_get_table_nr
-    RegisterPrivateServGate
-;
     mov esi,OFFSET lpcmd
     mov edi,OFFSET lpname
     mov ax,4
@@ -4208,6 +4202,12 @@ init    Proc far
 ;
     mov edi,OFFSET init_pci
     HookInitTasking
+;
+    mov esi,OFFSET get_acpi_table
+    mov edi,OFFSET get_acpi_table_name
+    xor cl,cl
+    mov ax,get_acpi_table_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET hook_init_pci
     mov edi,OFFSET hook_init_pci_name
@@ -4395,6 +4395,7 @@ init    Proc far
     mov ax,get_pci_msix_nr
     RegisterBimodalUserGate
 ;
+    call InitAcpiTable
     call DetectDevices
     clc
     ret

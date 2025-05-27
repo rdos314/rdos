@@ -243,6 +243,7 @@ dpmi_code16_sel         EQU 510h
 dpmi_code32_sel         EQU 518h
 
 state_save_sel          EQU 523h
+pci_acpi_sel            EQU 528h
 
 discbuf_code_sel        EQU 530h
 

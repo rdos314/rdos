@@ -699,55 +699,6 @@ GetTable    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           GetAcpiTable
-;
-;           DESCRIPTION:    Get ACPI table
-;
-;       PARAMETERS:     EAX     Table ID
-;
-;       RETURNS:    NC      Ok
-;               ES  Table selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_acpi_table_name    DB 'Get ACPI Table',0
-
-get_acpi_table  Proc far
-    push ds
-    push cx
-    push si
-;
-    mov cx,acpi_data_sel
-    mov ds,cx
-    mov cx,ds:acpi_table_count
-    mov si,OFFSET acpi_table_arr
-
-get_acpi_table_loop:
-    mov es,[si]
-    cmp eax,es:act_sign
-    je get_acpi_table_ok
-;    
-    add si,2
-    loop get_acpi_table_loop
-;
-    xor cx,cx
-    mov es,cx
-    stc
-    jmp get_acpi_table_done
-
-get_acpi_table_ok:
-    clc
-
-get_acpi_table_done:
-    pop si
-    pop cx
-    pop ds
-    ret
-get_acpi_table  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GetAcpiDeviceIrq
 ;
 ;       DESCRIPTION:    Get ACPI device IRQ
@@ -1299,12 +1250,6 @@ acpi_setup_gates:
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET get_acpi_table
-    mov edi,OFFSET get_acpi_table_name
-    xor cl,cl
-    mov ax,get_acpi_table_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET get_pci_device_info
     mov edi,OFFSET get_pci_device_info_name
