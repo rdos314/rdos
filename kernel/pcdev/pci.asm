@@ -3988,6 +3988,15 @@ uacpi_start_pci   PROC far
     push es
     pushad
 ;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET init_pci_thread
+    mov edi,OFFSET init_pci_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;
     popad
     pop es
     pop ds
@@ -4086,7 +4095,7 @@ AcpiServer:
     mov ax,1000
     WaitMilliSec
 ;
-    mov ax,3Eh
+    mov ax,3Eh+5
     SetFocus
 
 aLoop:
@@ -4143,15 +4152,6 @@ init_pci    Proc far
     call CheckAcpiBuses
     call UpdateAcpi
     call LoadAcpiServer
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET init_pci_thread
-    mov di,OFFSET init_pci_thread_name
-    mov ax,3
-    mov cx,stack0_size
-    CreateThread
 ;
     popad
     pop es
