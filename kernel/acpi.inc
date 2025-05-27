@@ -96,7 +96,6 @@ UacpiWritePciDword  MACRO
     ServGate uacpi_write_pci_dword_nr
                     ENDM
 
-; IN  EAX               Table name
-UacpiGetTable  MACRO
-    ServGate uacpi_test_get_table_nr
+UacpiStartPci  MACRO
+    ServGate uacpi_start_pci_nr
                     ENDM

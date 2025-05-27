@@ -3973,6 +3973,28 @@ uacpi_write_pci_dword   PROC far
 uacpi_write_pci_dword    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiStartPci
+;
+;       DESCRIPTION:    Start PCI hooks
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_start_pci_name DB 'uACPI Start PCI', 0
+
+uacpi_start_pci   PROC far
+    push ds
+    push es
+    pushad
+;
+    popad
+    pop es
+    pop ds
+    retf32
+uacpi_start_pci    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           AcpiServer
@@ -4047,6 +4069,12 @@ AcpiServer:
     mov edi,OFFSET uacpi_write_pci_dword_name
     xor cl,cl
     mov ax,uacpi_write_pci_dword_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_start_pci
+    mov edi,OFFSET uacpi_start_pci_name
+    xor cl,cl
+    mov ax,uacpi_start_pci_nr
     RegisterPrivateServGate
 ;
     mov esi,OFFSET lpcmd
