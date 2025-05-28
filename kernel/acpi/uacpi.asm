@@ -1282,10 +1282,6 @@ init_pci    Endp
     public init_uacpi
 
 init_uacpi    Proc near
-    push ds
-    push es
-    pushad
-;
     mov eax,cs
     mov ds,eax
     mov es,eax
