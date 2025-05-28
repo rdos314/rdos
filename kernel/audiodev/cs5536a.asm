@@ -33,7 +33,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\core.inc
-INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\acpi\pci.inc
 
 ACC_GPIO_STATUS = 0
 ACC_GPIO_CONTROL = 4

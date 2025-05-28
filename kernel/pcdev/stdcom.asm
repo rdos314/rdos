@@ -31,7 +31,7 @@ include ..\os.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
-include ..\pcdev\pci.inc
+include ..\acpi\pci.inc
 include ..\os\com.inc
 include ..\os\protseg.def
 include ..\os\core.inc
@@ -3242,7 +3242,7 @@ InitMemPci  Endp
 ;
 ;       DESCRIPTION:    Steal FDC IRQ
 ;
-;       RETURNS:        NC		Stolen
+;       RETURNS:        NC              Stolen
 ;                           CL          IRQ
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3283,7 +3283,7 @@ FintekStealFdc      Endp
 ;
 ;       DESCRIPTION:    Steal KBD IRQ
 ;
-;       RETURNS:        NC		Stolen
+;       RETURNS:        NC              Stolen
 ;                           CL          IRQ
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3324,7 +3324,7 @@ FintekStealKbd      Endp
 ;
 ;       DESCRIPTION:    Steal EPC IRQ
 ;
-;       RETURNS:        NC		Stolen
+;       RETURNS:        NC              Stolen
 ;                           CL          IRQ
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

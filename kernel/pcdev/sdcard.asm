@@ -34,7 +34,7 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\core.inc
-INCLUDE pci.inc
+INCLUDE ..\acpi\pci.inc
 
 MAX_SD_DEVICES      = 32
 MAX_NAME_SIZE       = 24

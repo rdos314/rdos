@@ -33,7 +33,7 @@ INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
-INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\acpi\pci.inc
 INCLUDE usb.inc
 INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
@@ -1726,7 +1726,7 @@ SetupControl   Proc near
     pop ebx
     pop eax
     ret
-SetupControl	Endp
+SetupControl    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1824,7 +1824,7 @@ sciStatusOut:
 sciDone:
     popad
     ret
-SetupControlIn	Endp
+SetupControlIn  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1912,7 +1912,7 @@ cciDone:
     pop ebx
     pop eax
     ret
-CopyControlIn	Endp
+CopyControlIn   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2026,7 +2026,7 @@ scoStatusIn:
 scoDone:
     popad
     ret
-SetupControlOut	Endp
+SetupControlOut Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

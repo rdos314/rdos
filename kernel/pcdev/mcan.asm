@@ -34,7 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
-INCLUDE pci.inc
+INCLUDE ..\acpi\pci.inc
 
 SIDF_ELEMENT_SIZE = 4
 XIDF_ELEMENT_SIZE = 8
@@ -56,7 +56,7 @@ TXB_ENTRIES = 32
 
 can_struc   STRUC
 
-can_crel	DD ?
+can_crel        DD ?
 can_endn        DD ?
 can_cust        DD ?
 can_dbtp        DD ?
@@ -1393,7 +1393,7 @@ ctpExit:
     mov ds:capture_thread,0
     LeaveSection ds:capture_section
     ret
-capture_thread_pr	Endp
+capture_thread_pr       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

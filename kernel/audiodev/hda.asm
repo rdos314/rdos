@@ -33,7 +33,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\core.inc
-INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\acpi\pci.inc
 
 REQ_RESET   = 1
 

@@ -34,7 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
-INCLUDE pci.inc
+INCLUDE ..\acpi\pci.inc
 
 MAX_NVME_DEVICES    = 16
 MAX_NSID            = 8
@@ -45,7 +45,7 @@ MAX_NSID            = 8
 
 pci_config  STRUC
 
-pci_cap		DD ?,?
+pci_cap         DD ?,?
 pci_vs          DD ?
 pci_intms       DD ?
 pci_intmc       DD ?
@@ -74,15 +74,15 @@ pci_config  ENDS
 ; submission queue format
 ;
 
-sub_struc	STRUC
+sub_struc       STRUC
 
 sub_opc         DB ?
-sub_flags	DB ?
+sub_flags       DB ?
 sub_cid         DW ?
 sub_nsid        DD ?
-sub_cdw2	DD ?
-sub_cdw3	DD ?
-sub_mptr	DD ?,?
+sub_cdw2        DD ?
+sub_cdw3        DD ?
+sub_mptr        DD ?,?
 sub_prp1        DD ?,?
 sub_prp2        DD ?,?
 sub_cdw10       DD ?
@@ -94,14 +94,14 @@ sub_cdw15       DD ?
 
 sub_struc       ENDS
 
-adm_struc	STRUC
+adm_struc       STRUC
 
 adm_opc         DB ?
-adm_flags	DB ?
+adm_flags       DB ?
 adm_cid         DW ?
 adm_nsid        DD ?
-adm_resv	DD ?,?
-adm_mptr	DD ?,?
+adm_resv        DD ?,?
+adm_mptr        DD ?,?
 adm_prp1        DD ?,?
 adm_prp2        DD ?,?
 adm_ndt         DD ?

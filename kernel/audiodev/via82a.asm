@@ -33,7 +33,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\system.def
 INCLUDE ..\os\core.inc
-INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\acpi\pci.inc
 
 VIA_PCM_STATUS          = 0
 VIA_PCM_CONTROL         = 1

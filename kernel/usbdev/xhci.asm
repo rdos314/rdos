@@ -32,7 +32,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\protseg.def
-INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\acpi\pci.inc
 INCLUDE usb.inc
 INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
@@ -166,7 +166,7 @@ pss_lpm     DD ?
 
 port_stat_struc ENDS
 
-xhc_params	STRUC
+xhc_params      STRUC
 
 par_oper_offset    DD ?
 par_db_offset      DD ?
@@ -1886,7 +1886,7 @@ sciStatusOut:
 sciDone:
     popad
     ret
-SetupControlIn	Endp
+SetupControlIn  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2032,7 +2032,7 @@ scoStatusIn:
 scoDone:
     popad
     ret
-SetupControlOut	Endp
+SetupControlOut Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2614,7 +2614,7 @@ atdrLoop:
     pop eax
     pop gs
     ret
-AllocatePacketSel	Endp
+AllocatePacketSel       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4716,7 +4716,7 @@ AddFunction    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CalcRegSize	Proc near
+CalcRegSize     Proc near
     push ds
     push eax
     push ebx
@@ -4851,7 +4851,7 @@ crsCapOk:
     pop eax
     pop ds
     ret
-CalcRegSize	Endp
+CalcRegSize     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4868,7 +4868,7 @@ CalcRegSize	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateFuncSel	Proc near
+CreateFuncSel   Proc near
     push eax
     push ebx
     push ecx
@@ -4924,7 +4924,7 @@ CreateFuncSel  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitFuncSel	Proc near
+InitFuncSel     Proc near
     push eax
     push edx
 ;

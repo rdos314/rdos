@@ -31,7 +31,7 @@ INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
-INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\acpi\pci.inc
 INCLUDE ..\os\core.inc
 INCLUDE ..\os\net.inc
 
@@ -169,7 +169,7 @@ tx_high_ads DD ?
 
 tx_descr    ENDS
 
-mem_struc	STRUC
+mem_struc       STRUC
 
 mem_idr0      DD ?
 mem_idr1      DD ?
@@ -217,7 +217,7 @@ mem_rdsar     DD ?, ?
 mem_mtps      DB ?, ?, ?, ?             
 mem_res10     DD ?, ?, ?, ?
 
-mem_struc	ENDS
+mem_struc       ENDS
 
 data    STRUC
 
@@ -786,7 +786,7 @@ MemWritePhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WritePhy8169	Proc near
+WritePhy8169    Proc near
     push ax
     mov ax,ds:MemSel
     or ax,ax
@@ -794,7 +794,7 @@ WritePhy8169	Proc near
     jz IoWritePhy8169
     jmp MemWritePhy8169
 
-WritePhy8169	Endp
+WritePhy8169    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -896,13 +896,13 @@ MemReadPhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadPhy8169	Proc near
+ReadPhy8169     Proc near
     mov ax,ds:MemSel
     or ax,ax
     jz IoReadPhy8169
     jmp MemReadPhy8169
 
-ReadPhy8169	Endp
+ReadPhy8169     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1311,13 +1311,13 @@ MemReadEri     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadEri	Proc near
+ReadEri Proc near
     mov ax,ds:MemSel
     or ax,ax
     jz IoReadEri
     jmp MemReadEri
 
-ReadEri	Endp
+ReadEri Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1400,7 +1400,7 @@ WriteEri   Proc near
     jz IoWriteEri
     jmp MemWriteEri
 
-WriteEri	Endp
+WriteEri        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4713,13 +4713,13 @@ mstRecOk:
 ;
 ;           DESCRIPTION:    Create mem sel
 ;
-;       PARAMETERS:         EBX:EAX		Physical address
+;       PARAMETERS:         EBX:EAX             Physical address
 ;
-;       RETURNS:            BX			Mem sel
+;       RETURNS:            BX                  Mem sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateMemSel	Proc near
+CreateMemSel    Proc near
     and ax,0FFE0h
     push eax
     mov eax,1000h
@@ -4737,7 +4737,7 @@ CreateMemSel	Proc near
     mov ecx,SIZE mem_struc
     CreateDataSelector16
     ret
-CreateMemSel	Endp
+CreateMemSel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

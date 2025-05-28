@@ -30,7 +30,7 @@ INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
-INCLUDE ..\pcdev\pci.inc
+INCLUDE ..\acpi\pci.inc
 INCLUDE ..\os\net.inc
 
 MemControlReg   = 4

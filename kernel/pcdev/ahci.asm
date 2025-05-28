@@ -34,7 +34,7 @@ INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
-INCLUDE pci.inc
+INCLUDE ..\acpi\pci.inc
 
 MAX_DISCS           = 32
 
