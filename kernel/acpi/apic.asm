@@ -2939,26 +2939,26 @@ InitIoApic    Proc near
     push es
     mov ax,SEG data
     mov es,ax
-    mov cx,256 * 4
+    mov ecx,256 * 4
     xor eax,eax
-    mov di,OFFSET global_int_arr
+    mov edi,OFFSET global_int_arr
     rep stosd        
     pop es
 ;
-    mov cx,16
-    mov di,OFFSET global_int_arr
+    mov ecx,16
+    mov edi,OFFSET global_int_arr
 
 init_ioapic_isa_trigger_mode:
-    mov ds:[di].gi_trigger_mode,0
-    mov ds:[di].gi_long_ads,0
-    add di,16
+    mov ds:[edi].gi_trigger_mode,0
+    mov ds:[edi].gi_long_ads,0
+    add edi,16
     loop init_ioapic_isa_trigger_mode
 ;
-    mov cx,256-16
+    mov ecx,256-16
 
 init_ioapic_pci_trigger_mode:
-    mov [di].gi_trigger_mode,0A0h
-    add di,16
+    mov [edi].gi_trigger_mode,0A0h
+    add edi,16
     loop init_ioapic_pci_trigger_mode
 ;        
     mov eax,1000h
@@ -2971,19 +2971,19 @@ init_ioapic_pci_trigger_mode:
     mov ecx,1000h
     CreateDataSelector16
 ;
-    mov di,OFFSET apic_entries
-    mov cx,es:act_size
-    sub cx,OFFSET apic_entries - OFFSET apic_phys
+    mov edi,OFFSET apic_entries
+    movzx ecx,es:act_size
+    sub ecx,OFFSET apic_entries - OFFSET apic_phys
 
 init_ioapic_table_loop:
-    mov al,es:[di].apic_type
+    mov al,es:[edi].apic_type
     cmp al,1
     jne init_ioapic_table_next    
 ;
     push ecx
     mov eax,1000h
     AllocateBigLinear
-    mov eax,es:[di].aio_phys
+    mov eax,es:[edi].aio_phys
     or ax,33h
     xor ebx,ebx
     SetPageEntry    
@@ -2997,32 +2997,32 @@ init_ioapic_table_loop:
     mov ds:ioapic_regsel,1
     mov ecx,ds:ioapic_window
     shr ecx,16
-    inc cx
+    inc ecx
     pop ds
 ;    
-    mov bx,ds:ioapic_count
-    add bx,bx
-    mov ds:[bx].ioapic_arr,ax
+    movzx ebx,ds:ioapic_count
+    add ebx,ebx
+    mov ds:[ebx].ioapic_arr,ax
     inc ds:ioapic_count
 ;
-    mov ebx,es:[di].aio_int_base
-    shl bx,4
-    add bx,OFFSET global_int_arr
+    mov ebx,es:[edi].aio_int_base
+    shl ebx,4
+    add ebx,OFFSET global_int_arr
     xor dl,dl
 
 init_ioapic_loop:
-    mov ds:[bx].gi_ioapic_sel,ax
-    mov ds:[bx].gi_ioapic_id,dl
-    add bx,16
+    mov ds:[ebx].gi_ioapic_sel,ax
+    mov ds:[ebx].gi_ioapic_id,dl
+    add ebx,16
     inc dl
     loop init_ioapic_loop
 ;    
     pop ecx
 
 init_ioapic_table_next:
-    movzx ax,es:[di].apic_len
-    add di,ax
-    sub cx,ax
+    movzx eax,es:[edi].apic_len
+    add edi,eax
+    sub ecx,eax
     ja init_ioapic_table_loop
 ;    
     GetApicId
