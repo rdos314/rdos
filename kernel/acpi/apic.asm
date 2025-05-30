@@ -3976,62 +3976,62 @@ BootVbeCore    Proc near
     mov eax,1063h
     SetPageEntry
 ;
-    mov ax,flat_sel
-    mov es,ax
-    mov ax,cs
-    mov ds,ax
+    mov eax,flat_sel
+    mov es,eax
+    mov eax,cs
+    mov ds,eax
 ;
-    mov di,0F80h
-    mov si,OFFSET table_start
-    mov cx,OFFSET table_end - OFFSET table_start
+    mov edi,0F80h
+    mov esi,OFFSET table_start
+    mov ecx,OFFSET table_end - OFFSET table_start
     rep movsb
 ;
-    mov di,1000h
-    mov si,OFFSET vbe_info_start
-    mov cx,OFFSET vbe_info_end - OFFSET vbe_info_start
+    mov edi,1000h
+    mov esi,OFFSET vbe_info_start
+    mov ecx,OFFSET vbe_info_end - OFFSET vbe_info_start
     rep movsb
 ;
-    mov di,1400h
-    mov si,OFFSET prot_start
-    mov cx,OFFSET prot_end - OFFSET prot_start
+    mov edi,1400h
+    mov esi,OFFSET prot_start
+    mov ecx,OFFSET prot_end - OFFSET prot_start
     rep movsb
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;    
-    mov di,1800h
+    mov edi,1800h
     mov eax,cr0
-    mov es:[di].ap_cr0,eax
+    mov es:[edi].ap_cr0,eax
     mov eax,cr3
-    mov es:[di].ap_cr3,eax
+    mov es:[edi].ap_cr3,eax
 ;
     mov eax,cr4
-    mov es:[di].ap_cr4,eax
+    mov es:[edi].ap_cr4,eax
 ;
     db 66h
-    sidt fword ptr es:[di].ap_idt
+    sidt fword ptr es:[edi].ap_idt
 ;    
     mov ax,fs:cs_gdt_size
     dec ax
-    mov word ptr es:[di].ap_gdt,ax
+    mov word ptr es:[edi].ap_gdt,ax
     mov eax,fs:cs_gdt_base
-    mov dword ptr es:[di].ap_gdt+2,eax
+    mov dword ptr es:[edi].ap_gdt+2,eax
 ;
     mov eax,fs:cs_stack_offset
-    mov es:[di].ap_stack_offset,eax
+    mov es:[edi].ap_stack_offset,eax
     mov ax,fs:cs_stack_sel
-    mov es:[di].ap_stack_sel,ax
+    mov es:[edi].ap_stack_sel,ax
 ;
-    mov di,1900h
-    mov es:[di].vbe_sign,vbe_req_sign
-    mov es:[di].vbe_op,4F00h
-    mov es:[di].vbe_cx,0
+    mov edi,1900h
+    mov es:[edi].vbe_sign,vbe_req_sign
+    mov es:[edi].vbe_op,4F00h
+    mov es:[edi].vbe_cx,0
 ;
-    mov bx,467h
+    mov ebx,467h
     mov ax,0
-    mov es:[bx],ax
+    mov es:[ebx],ax
     mov ax,100h
-    mov es:[bx+2],ax
+    mov es:[ebx+2],ax
 ;
     mov al,0Fh
     out 70h,al
@@ -4044,17 +4044,17 @@ BootVbeCore    Proc near
     mov edx,fs:cs_apic
     call SendInit
 ;
-    mov ax,es:[di].vbe_sign
+    mov ax,es:[edi].vbe_sign
     cmp ax,vbe_ack_sign
     je bvcDone
 ;    
     mov al,1
     call SendStartup
     
-    mov cx,250
+    mov ecx,250
 
 bvcLoop1:
-    mov ax,es:[di].vbe_sign
+    mov ax,es:[edi].vbe_sign
     cmp ax,vbe_ack_sign
     je bvcDone
 ;    
@@ -4065,10 +4065,10 @@ bvcLoop1:
     mov al,1    
     call SendStartup
 ;    
-    mov cx,250
+    mov ecx,250
 
 bvcLoop2:
-    mov ax,es:[di].vbe_sign
+    mov ax,es:[edi].vbe_sign
     cmp ax,vbe_ack_sign
     je bvcDone
 ;    
