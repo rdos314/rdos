@@ -1869,27 +1869,27 @@ disable_all_irq_name    DB 'Disable All IRQs', 0
 
 disable_all_irq  Proc far
     push ds
-    push bx
-    push cx
-    push si
+    push ebx
+    push ecx
+    push esi
 ;
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     mov eax,10000h
     mov ds:APIC_TIMER,eax
 ;    
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;    
-    mov cx,ds:ioapic_count
-    mov si,OFFSET ioapic_arr
+    movzx ecx,ds:ioapic_count
+    mov esi,OFFSET ioapic_arr
 
 daiApicLoop:
     push ds
-    push cx
-    mov ds,ds:[si]
+    push ecx
+    mov ds,ds:[esi]
 ;    
-    mov cx,24
+    mov ecx,24
     mov bl,10h
 
 daiLoop:   
@@ -1904,20 +1904,20 @@ daiLoop:
     inc bl
     loop daiLoop
 ;
-    pop cx
+    pop ecx
     pop ds
-    add si,2
+    add esi,2
     loop daiApicLoop    
 ;
     call SetupLocalApic
 ;
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     mov eax,ds:APIC_ISR + 20h
 ;
-    pop si
-    pop cx
-    pop bx
+    pop esi
+    pop ecx
+    pop ebx
     pop ds
     retf32
 disable_all_irq Endp
