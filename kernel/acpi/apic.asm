@@ -1511,8 +1511,8 @@ DelayMs Proc near
     push es
     pushad
 ;
-    mov dx,SEG data
-    mov ds,dx
+    mov edx,SEG data
+    mov ds,edx
     movzx eax,ax
     mov ecx,1193
     mul ecx
@@ -1524,8 +1524,8 @@ DelayMs Proc near
     mul ecx
     inc edx
 ;
-    mov ax,apic_mem_sel
-    mov es,ax    
+    mov eax,apic_mem_sel
+    mov es,eax    
     mov es:APIC_INIT_COUNT,edx
 
 dmLoop:
@@ -1554,14 +1554,14 @@ get_id_name    DB 'Get Apic ID',0
 
 get_id  Proc far
     push ds
-    push ax
+    push eax
 ;    
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     mov edx,ds:APIC_ID
     shr edx,24
 ;
-    pop ax
+    pop eax
     pop ds
     retf32
 get_id Endp
@@ -1583,8 +1583,8 @@ send_eoi  Proc far
     push ds
     push eax
 ;    
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
 ;
@@ -1610,21 +1610,21 @@ notify_irq  Proc far
     push ds
     push es
     push eax
-    push bx
-    push dx
+    push ebx
+    push edx
 ;    
-    push ax
-    movzx bx,al
-    mov ax,SEG data
-    mov ds,ax
-    shl bx,4
-    add bx,OFFSET global_int_arr
-    mov al,ds:[bx].gi_ioapic_id
-    mov dx,ds:[bx].gi_ioapic_sel
+    push eax
+    movzx ebx,al
+    mov eax,SEG data
+    mov ds,eax
+    shl ebx,4
+    add ebx,OFFSET global_int_arr
+    mov al,ds:[ebx].gi_ioapic_id
+    mov dx,ds:[ebx].gi_ioapic_sel
     or dx,dx
     jz niNoIoApic
 ;       
-    mov es,dx
+    mov es,edx
     mov bl,10h
     add bl,al
     add bl,al
@@ -1641,18 +1641,18 @@ notify_irq  Proc far
     UnlockIoApic
 
 niNoIoApic:
-    pop ax
+    pop eax
 ;
-    movzx dx,al
-    cmp dx,64
+    movzx edx,al
+    cmp edx,64
     jae niDone
 ;    
-    mov bx,OFFSET detected_irqs
-    bts ds:[bx],dx
+    mov ebx,OFFSET detected_irqs
+    bts ds:[ebx],edx
 
 niDone:
-    pop dx
-    pop bx
+    pop edx
+    pop ebx
     pop eax
     pop es
     pop ds
