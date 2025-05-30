@@ -4140,7 +4140,7 @@ DoCreateCore   Endp
 ;
 ;   Purpose:        Get value from environment
 ;
-;   Parameters:     ES:DI   Name
+;   Parameters:     ES:EDI   Name
 ;
 ;   Returns:        NC          Found
 ;                   AX      Value
