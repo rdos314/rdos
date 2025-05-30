@@ -3111,35 +3111,35 @@ CreateIrqHandlers    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ProcessApicTable    Proc near
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;
-    mov di,OFFSET apic_entries
-    mov cx,es:act_size
-    sub cx,OFFSET apic_entries - OFFSET apic_phys
+    mov edi,OFFSET apic_entries
+    movzx ecx,es:act_size
+    sub ecx,OFFSET apic_entries - OFFSET apic_phys
 
 init_apic_loop:
-    mov al,es:[di].apic_type
+    mov al,es:[edi].apic_type
     cmp al,2
     jne init_apic_next
 ;
-    mov al,es:[di].ao_bus
+    mov al,es:[edi].ao_bus
     or al,al
     jnz init_apic_next
 ;
-    mov al,es:[di].ao_source
+    mov al,es:[edi].ao_source
     cmp al,16
     jae init_apic_next
 ;
-    mov eax,es:[di].ao_int
+    mov eax,es:[edi].ao_int
     cmp eax,80h
     jae init_apic_next
 ;
-    mov bx,ax
-    shl bx,4
-    add bx,OFFSET global_int_arr
+    mov ebx,eax
+    shl ebx,4
+    add ebx,OFFSET global_int_arr
 ;
-    mov ax,es:[di].ao_flags
+    mov ax,es:[edi].ao_flags
     test al,1
     jz init_apic_redir_pol_ok
 ;
@@ -3147,11 +3147,11 @@ init_apic_loop:
     jz init_apic_redir_pol_high
 
 init_apic_redir_pol_low:
-    or [bx].gi_trigger_mode,20h
+    or [ebx].gi_trigger_mode,20h
     jmp init_apic_redir_pol_ok
 
 init_apic_redir_pol_high:
-    and [bx].gi_trigger_mode,NOT 20h
+    and [ebx].gi_trigger_mode,NOT 20h
 
 init_apic_redir_pol_ok:
     test al,4
@@ -3161,16 +3161,16 @@ init_apic_redir_pol_ok:
     jz init_apic_redir_edge
 
 init_apic_redir_level:
-    or [bx].gi_trigger_mode,80h
+    or [ebx].gi_trigger_mode,80h
     jmp init_apic_next
 
 init_apic_redir_edge:
-    and [bx].gi_trigger_mode,7Fh
+    and [ebx].gi_trigger_mode,7Fh
 
 init_apic_next:
-    movzx ax,es:[di].apic_len
-    add di,ax
-    sub cx,ax
+    movzx eax,es:[edi].apic_len
+    add edi,eax
+    sub ecx,eax
     ja init_apic_loop
     ret
 ProcessApicTable    Endp
