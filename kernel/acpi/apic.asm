@@ -824,8 +824,8 @@ IsaIrqExitCountOk:
     mov dword ptr fs:cs_curr_irq_nr,eax
     
 IsaIrqExitNestingOk:
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
@@ -837,7 +837,7 @@ IsaIrqExitNestingOk:
     xor ax,ax
 
 IrqExitFs:
-    mov fs,ax
+    mov fs,eax
 ;
     pop ax
     verr ax
@@ -846,7 +846,7 @@ IrqExitFs:
     xor ax,ax
 
 IrqExitEs:
-    mov es,ax
+    mov es,eax
 ;
     pop ax
     verr ax
@@ -855,7 +855,7 @@ IrqExitEs:
     xor ax,ax
 
 IrqExitDs:
-    mov ds,ax
+    mov ds,eax
 ;
     popad
     iretd
@@ -1304,8 +1304,8 @@ MsiPrevOk:
     mov dword ptr fs:cs_curr_irq_nr,eax
     
 MsiExitNestingOk:
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax    
     LeaveInt
@@ -1317,7 +1317,7 @@ MsiExitNestingOk:
     xor ax,ax
 
 MsiExitFs:
-    mov fs,ax
+    mov fs,eax
 ;
     pop ax
     verr ax
@@ -1326,7 +1326,7 @@ MsiExitFs:
     xor ax,ax
 
 MsiExitEs:
-    mov es,ax
+    mov es,eax
 ;
     pop ax
     verr ax
@@ -1335,7 +1335,7 @@ MsiExitEs:
     xor ax,ax
 
 MsiExitDs:
-    mov ds,ax
+    mov ds,eax
 ;
     popad
     iretd
@@ -2371,7 +2371,7 @@ ghtGet:
     xor cx,cx
     
 hpet_time_es_ok:
-    mov es,cx
+    mov es,ecx
 ;
     pop cx
     verr cx
@@ -2380,7 +2380,7 @@ hpet_time_es_ok:
     xor cx,cx
     
 hpet_time_ds_ok:
-    mov ds,cx
+    mov ds,ecx
     pop ecx
     retf32
 get_hpet_time  Endp
@@ -2662,8 +2662,8 @@ preempt_int:
     mov al,-1
     EnterInt    
     lock or fs:cs_flags,CS_FLAG_PREEMPT
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
@@ -2675,7 +2675,7 @@ preempt_int:
     xor ax,ax
 
 preempt_fs_ok:
-    mov fs,ax
+    mov fs,eax
 ;    
     pop ax
     verr ax
@@ -2684,7 +2684,7 @@ preempt_fs_ok:
     xor ax,ax
 
 preempt_es_ok:
-    mov es,ax
+    mov es,eax
 ;    
     pop ax
     verr ax
@@ -2693,7 +2693,7 @@ preempt_es_ok:
     xor ax,ax
 
 preempt_ds_ok:
-    mov ds,ax
+    mov ds,eax
 ;    
     popad
     iretd
@@ -2716,8 +2716,8 @@ tlb_int:
 ;
     mov al,-1
     EnterInt
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
@@ -2729,7 +2729,7 @@ tlb_int:
     xor ax,ax
 
 TlbExitGs:
-    mov gs,ax
+    mov gs,eax
 ;
     pop ax
     verr ax
@@ -2738,7 +2738,7 @@ TlbExitGs:
     xor ax,ax
 
 TlbExitFs:
-    mov fs,ax
+    mov fs,eax
 ;
     pop ax
     verr ax
@@ -2747,7 +2747,7 @@ TlbExitFs:
     xor ax,ax
 
 TlbExitEs:
-    mov es,ax
+    mov es,eax
 ;
     pop ax
     verr ax
@@ -2756,7 +2756,7 @@ TlbExitEs:
     xor ax,ax
 
 TlbExitDs:
-    mov ds,ax
+    mov ds,eax
     popad
     iretd    
 
@@ -2778,8 +2778,8 @@ wakeup_int:
 ;
     mov al,-1
     EnterInt
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
     IpiWakeup
@@ -2792,7 +2792,7 @@ wakeup_int:
     xor ax,ax
 
 WiExitGs:
-    mov gs,ax
+    mov gs,eax
 ;
     pop ax
     verr ax
@@ -2801,7 +2801,7 @@ WiExitGs:
     xor ax,ax
 
 WiExitFs:
-    mov fs,ax
+    mov fs,eax
 ;
     pop ax
     verr ax
@@ -2810,7 +2810,7 @@ WiExitFs:
     xor ax,ax
 
 WiExitEs:
-    mov es,ax
+    mov es,eax
 ;
     pop ax
     verr ax
@@ -2819,7 +2819,7 @@ WiExitEs:
     xor ax,ax
 
 WiExitDs:
-    mov ds,ax
+    mov ds,eax
     popad
     iretd    
 
