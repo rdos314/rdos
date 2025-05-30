@@ -22,32 +22,5 @@
     __parm [__edx] [__ecx] \
     __value [__eax]
 
-#pragma aux ServUacpiReadPciByte = \
-    ServGate_uacpi_read_pci_byte  \
-    __parm [__ebx]  \
-    __value [__al]
-
-#pragma aux ServUacpiReadPciWord = \
-    ServGate_uacpi_read_pci_word  \
-    __parm [__ebx]  \
-    __value [__ax]
-
-#pragma aux ServUacpiReadPciDword = \
-    ServGate_uacpi_read_pci_dword  \
-    __parm [__ebx]  \
-    __value [__eax]
-
-#pragma aux ServUacpiWritePciByte = \
-    ServGate_uacpi_write_pci_byte  \
-    __parm [__ebx] [__al]
-
-#pragma aux ServUacpiWritePciWord = \
-    ServGate_uacpi_write_pci_word  \
-    __parm [__ebx] [__ax]
-
-#pragma aux ServUacpiWritePciDword = \
-    ServGate_uacpi_write_pci_dword  \
-    __parm [__ebx] [__eax]
-
 #pragma aux ServUacpiStartPci = \
     ServGate_uacpi_start_pci
