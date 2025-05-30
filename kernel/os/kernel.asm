@@ -33,7 +33,7 @@ INCLUDE protseg.def
 INCLUDE system.def
 INCLUDE port.def
 INCLUDE ..\driver.def
-INCLUDE ..\pcdev\apic.inc
+INCLUDE ..\acpi\apic.inc
 INCLUDE system.inc
 
 IA32_PAT      = 277h

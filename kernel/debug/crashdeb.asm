@@ -34,7 +34,7 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\os\core.inc
 INCLUDE ..\pcdev\key.inc
-INCLUDE ..\pcdev\apic.inc
+INCLUDE ..\acpi\apic.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\gate.def
 INCLUDE kdebug.inc

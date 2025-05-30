@@ -36,7 +36,7 @@ INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
-INCLUDE ..\pcdev\apic.inc
+INCLUDE ..\acpi\apic.inc
 INCLUDE core.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc

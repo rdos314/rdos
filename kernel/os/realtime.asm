@@ -38,7 +38,7 @@ INCLUDE system.def
 INCLUDE core.inc
 INCLUDE realmon.def
 INCLUDE ..\realtime.inc
-INCLUDE ..\pcdev\apic.inc
+INCLUDE ..\acpi\apic.inc
 
 .386p
 
