@@ -4238,31 +4238,31 @@ vbe_name        DB 'VBE', 0
 
 StartupApCores    Proc near
     push es
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET vbe_name
     call GetValue
     mov bx,ax
-    mov ax,SEG data
-    mov es,ax
+    mov eax,SEG data
+    mov es,eax
     mov es:vbe_desired,bx
     pop es
 ;
     push es
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET max_cores_name
     call GetValue
     pop es
     mov si,ax
 ;
-    mov di,OFFSET apic_entries
-    mov cx,es:act_size
-    sub cx,OFFSET apic_entries - OFFSET apic_phys
+    mov edi,OFFSET apic_entries
+    movzx ecx,es:act_size
+    sub ecx,OFFSET apic_entries - OFFSET apic_phys
     xor bp,bp
 
 init_core_loop:
-    mov al,es:[di].apic_type
+    mov al,es:[edi].apic_type
     or al,al
     jnz init_core_next    
 ;    
@@ -4271,10 +4271,10 @@ init_core_loop:
 
 init_boot_proc:
     GetCore
-    movzx edx,es:[di].ap_apic_id
+    movzx edx,es:[edi].ap_apic_id
     mov fs:cs_apic,edx
 ;
-    mov al,es:[di].ap_acpi_id
+    mov al,es:[edi].ap_acpi_id
     mov fs:cs_acpi,al
     inc bp
     jmp init_core_next
@@ -4283,14 +4283,14 @@ init_ap_proc:
     cmp si,bp
     je init_core_done
 ;    
-    mov eax,es:[di].ap_flags
+    mov eax,es:[edi].ap_flags
     test al,1
     jz init_core_next
 ;    
     call DoCreateCore    
-    movzx edx,es:[di].ap_apic_id
+    movzx edx,es:[edi].ap_apic_id
     mov fs:cs_apic,edx
-    mov al,es:[di].ap_acpi_id
+    mov al,es:[edi].ap_acpi_id
     mov fs:cs_acpi,al
     or bx,bx
     jz init_ap_boot
@@ -4306,9 +4306,9 @@ init_ap_done:
     inc bp
 
 init_core_next:
-    movzx ax,es:[di].apic_len
-    add di,ax
-    sub cx,ax
+    movzx eax,es:[edi].apic_len
+    add edi,eax
+    sub ecx,eax
     ja init_core_loop
 
 init_core_done:
