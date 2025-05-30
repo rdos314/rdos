@@ -3458,11 +3458,11 @@ boot_realtime_core    Proc far
     mov eax,1063h
     SetPageEntry
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;
-    mov ax,flat_sel
-    mov es,ax
+    mov eax,flat_sel
+    mov es,eax
 ;    
     mov edi,1800h
     mov eax,cr0
@@ -3510,7 +3510,7 @@ boot_realtime_core    Proc far
     mov al,1
     call SendStartup
     
-    mov cx,250
+    mov ecx,250
 
 brcLoop1:
     mov eax,es:[edi].ap_cr4
@@ -3524,7 +3524,7 @@ brcLoop1:
     mov al,1    
     call SendStartup
 ;    
-    mov cx,250
+    mov ecx,250
 
 brcLoop2:
     mov eax,es:[edi].ap_cr4
@@ -3593,57 +3593,57 @@ BootCore    Proc near
     mov eax,1063h
     SetPageEntry
 ;
-    mov ax,flat_sel
-    mov es,ax
-    mov ax,cs
-    mov ds,ax
+    mov eax,flat_sel
+    mov es,eax
+    mov eax,cs
+    mov ds,eax
 ;
-    mov di,0F80h
-    mov si,OFFSET table_start
-    mov cx,OFFSET table_end - OFFSET table_start
+    mov edi,0F80h
+    mov esi,OFFSET table_start
+    mov ecx,OFFSET table_end - OFFSET table_start
     rep movsb
 ;
-    mov di,1000h
-    mov si,OFFSET real_start
-    mov cx,OFFSET real_end - OFFSET real_start
+    mov edi,1000h
+    mov esi,OFFSET real_start
+    mov ecx,OFFSET real_end - OFFSET real_start
     rep movsb
 ;
-    mov di,1400h
-    mov si,OFFSET prot_start
-    mov cx,OFFSET prot_end - OFFSET prot_start
+    mov edi,1400h
+    mov esi,OFFSET prot_start
+    mov ecx,OFFSET prot_end - OFFSET prot_start
     rep movsb
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;    
-    mov di,1800h
+    mov edi,1800h
     mov eax,cr0
-    mov es:[di].ap_cr0,eax
+    mov es:[edi].ap_cr0,eax
     mov eax,cr3
-    mov es:[di].ap_cr3,eax
+    mov es:[edi].ap_cr3,eax
 ;
     mov eax,cr4
-    mov es:[di].ap_cr4,eax
+    mov es:[edi].ap_cr4,eax
 ;
     db 66h
-    sidt fword ptr es:[di].ap_idt
+    sidt fword ptr es:[edi].ap_idt
 ;    
     mov ax,fs:cs_gdt_size
     dec ax
-    mov word ptr es:[di].ap_gdt,ax
+    mov word ptr es:[edi].ap_gdt,ax
     mov eax,fs:cs_gdt_base
-    mov dword ptr es:[di].ap_gdt+2,eax
+    mov dword ptr es:[edi].ap_gdt+2,eax
 ;
     mov eax,fs:cs_stack_offset
-    mov es:[di].ap_stack_offset,eax
+    mov es:[edi].ap_stack_offset,eax
     mov ax,fs:cs_stack_sel
-    mov es:[di].ap_stack_sel,ax
+    mov es:[edi].ap_stack_sel,ax
 ;
-    mov bx,467h
+    mov ebx,467h
     mov ax,0
-    mov es:[bx],ax
+    mov es:[ebx],ax
     mov ax,100h
-    mov es:[bx+2],ax
+    mov es:[ebx+2],ax
 ;
     mov al,0Fh
     out 70h,al
@@ -3665,7 +3665,7 @@ BootCore    Proc near
     mov al,1
     call SendStartup
     
-    mov cx,250
+    mov ecx,250
 
 bcLoop1:
     mov eax,ds:mp_processor_sign
@@ -3679,7 +3679,7 @@ bcLoop1:
     mov al,1    
     call SendStartup
 ;    
-    mov cx,250
+    mov ecx,250
 
 bcLoop2:
     mov eax,ds:mp_processor_sign
