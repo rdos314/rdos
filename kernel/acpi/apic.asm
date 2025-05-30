@@ -277,9 +277,9 @@ table_end:
 ; this code is loaded at 0100:0000. It should contain no near jumps!
 
 real_start:    
-    db 0FAh		; cli
+    db 0FAh             ; cli
 ;
-    db 0B0h, 0Fh	; mov al,0Fh
+    db 0B0h, 0Fh        ; mov al,0Fh
     db 0E6h, 70h        ; out 70h,al
     db 0EBh, 0          ; jmp short $+2
 ;
@@ -3432,7 +3432,7 @@ sdcDone:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-boot_realtime_core_name	DB 'Boot Realtime Core', 0
+boot_realtime_core_name DB 'Boot Realtime Core', 0
 
 boot_realtime_core    Proc far
     push ds
@@ -4149,37 +4149,37 @@ DoCreateCore   Endp
     
 GetValue    Proc near
     push ds
-    push bx
-    push cx
-    push si
+    push ebx
+    push ecx
+    push esi
 ;
     LockSysEnv
     mov ds,bx
-    xor si,si
+    xor esi,esi
     
 find_val:
-    push di
+    push edi
 
 find_val_loop:
     cmpsb
     jnz find_val_next
 ;       
-    mov al,es:[di]
+    mov al,es:[edi]
     or al,al
     jnz find_val_loop
-    mov al,[si]
+    mov al,[esi]
     cmp al,'='
     je find_val_found
 
 find_val_next:
-    pop di
+    pop edi
 
 find_val_next_bp:
     lodsb
     or al,al
     jnz find_val_next_bp
 ;
-    mov al,[si]
+    mov al,[esi]
     or al,al
     jne find_val
 ;
@@ -4188,13 +4188,13 @@ find_val_next_bp:
     jmp find_val_done
 
 find_val_found:
-    pop di
-    inc si  
+    pop edi
+    inc esi  
     xor ax,ax
 
 find_val_digit:
-    mov bl,[si]
-    inc si
+    mov bl,[esi]
+    inc esi
     sub bl,'0'
     jc find_val_save
 ;
@@ -4215,9 +4215,9 @@ find_val_done:
     UnlockSysEnv
     popf
 ;
-    pop si
-    pop cx
-    pop bx
+    pop esi
+    pop ecx
+    pop ebx
     pop ds
     ret
 GetValue    Endp
@@ -4240,7 +4240,7 @@ StartupApCores    Proc near
     push es
     mov ax,cs
     mov es,ax
-    mov di,OFFSET vbe_name
+    mov edi,OFFSET vbe_name
     call GetValue
     mov bx,ax
     mov ax,SEG data
@@ -4251,7 +4251,7 @@ StartupApCores    Proc near
     push es
     mov ax,cs
     mov es,ax
-    mov di,OFFSET max_cores_name
+    mov edi,OFFSET max_cores_name
     call GetValue
     pop es
     mov si,ax
