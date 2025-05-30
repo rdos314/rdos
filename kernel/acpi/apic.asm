@@ -277,26 +277,27 @@ table_end:
 ; this code is loaded at 0100:0000. It should contain no near jumps!
 
 real_start:    
-    cli
-    mov al,0Fh
-    out 70h,al
-    jmp short $+2
+    db 0FAh		; cli
 ;
-    xor al,al
-    out 71h,al
-    jmp short $+2
+    db 0B0h, 0Fh	; mov al,0Fh
+    db 0E6h, 70h        ; out 70h,al
+    db 0EBh, 0          ; jmp short $+2
 ;
-    xor ax,ax
-    mov ds,ax
+    db 32h, 0C0h        ; xor al,al
+    db 0E6h, 71h        ; out 71h,al
+    db 0EBh, 0          ; jmp short $+2
+;
+    db 33h, 0C0h        ; xor ax,ax
+    db 8Eh, 0D8h        ; mov ds,ax
 ;    
-    mov bx,0F88h
-    lgdt fword ptr ds:[bx]
+    db 0BBh, 88h, 0Fh   ; mov bx,0F88h
+    db 0Fh, 1, 17h      ; lgdt fword ptr ds:[bx]
 ;
-    mov eax,cr0
-    or al,1
-    mov cr0,eax
+    db 0Fh, 20h, 0C0h   ; mov eax,cr0
+    db 0Ch, 1           ; or al,1
+    db 0Fh, 22h, 0C0h   ; mov cr0,eax
 ;
-    db 0EAh
+    db 0EAh             ; jmp 10:0
     dw 0
     dw 10h
 
@@ -330,51 +331,63 @@ vbe_buf     DW ?
 vbe_info_struc  ENDS
 
 vbe_info_start: 
-    mov ax,190h
-    mov es,ax
-    mov di,OFFSET vbe_buf
-    mov ax,140h
-    mov ss,ax
-    mov sp,400h
+    db 0B8h, 90h, 1     ; mov ax,190h
+    db 8Eh, 0C0h        ; mov es,ax
+    db 0BFh
+    dw OFFSET vbe_buf   ; mov di,OFFSET vbe_buf
+    db 0B8h, 40h, 1     ; mov ax,140h
+    db 8Eh, 0D0h        ; mov ss,ax
+    db 0BCh, 0, 4       ; mov sp,400h
 
 vbe_loop:
-    mov ax,es:vbe_op
-    mov bx,es:vbe_bx
-    mov cx,es:vbe_cx
-    int 10h
-    mov es:vbe_res,ax
-    mov es:vbe_sign,vbe_ack_sign
+    db 26h, 0A1h
+    dw OFFSET vbe_op    ; mov ax,es:vbe_op
+    db 26h, 8Bh, 1Eh
+    dw OFFSET vbe_bx    ; mov bx,es:vbe_bx
+    db 26h, 8Bh, 0Eh
+    dw OFFSET vbe_cx    ; mov cx,es:vbe_cx
+    db 0CDh, 10h        ; int 10h
+    db 26h, 0A3h
+    dw OFFSET vbe_res   ; mov es:vbe_res,ax
+    db 26h, 0C7h, 6
+    dw OFFSET vbe_sign   
+    dw vbe_ack_sign     ; mov es:vbe_sign,vbe_ack_sign
 
 vbe_wait:
-    mov ax,es:vbe_sign
-    cmp ax,vbe_req_sign
-    jne short vbe_wait
+    db 26h, 0A1h 
+    dw OFFSET vbe_sign  ; mov ax,es:vbe_sign
+    db 3Dh
+    dw vbe_req_sign     ; cmp ax,vbe_req_sign
+    db 75h, 0F7h        ; jne short vbe_wait
 ;
-    mov es:vbe_res,-1
-    mov ax,es:vbe_op
-    cmp ax,-1
-    jne short vbe_loop
+    db 26h, 0C7h, 6
+    dw OFFSET vbe_res
+    dw 0FFFFh           ; mov es:vbe_res,-1
+    db 26h, 0A1h
+    dw OFFSET vbe_op    ; mov ax,es:vbe_op
+    db 83h, 0F8h, 0FFh  ; cmp ax,-1
+    db 75h, 0CCh        ; jne short vbe_loop
 ;
-    cli
-    mov al,0Fh
-    out 70h,al
-    jmp short $+2
+    db 0FAh             ; cli
+    db 0B0h, 0Fh        ; mov al,0Fh
+    db 0E6h, 70h        ; out 70h,al
+    db 0EBh, 0          ; jmp short $+2
 ;
-    xor al,al
-    out 71h,al
-    jmp short $+2
+    db 32h, 0C0h        ; xor al,al
+    db 0E6h, 71h        ; out 71h,al
+    db 0EBh, 0          ; jmp short $+2
 ;
-    xor ax,ax
-    mov ds,ax
+    db 33h, 0C0h        ; xor ax,ax
+    db 8Eh, 0D8h        ; mov ds,ax
 ;    
-    mov bx,0F88h
-    lgdt fword ptr ds:[bx]
+    db 0BBh, 88h, 0Fh   ; mov bx,0F88h
+    db 0Fh, 1, 17h      ; lgdt fword ptr ds:[bx]
 ;
-    mov eax,cr0
-    or al,1
-    mov cr0,eax
+    db 0Fh, 20h, 0C0h   ; mov eax,cr0
+    db 0Ch, 1           ; or al,1
+    db 0Fh, 22h, 0C0h   ; mov cr0,eax
 ;
-    db 0EAh
+    db 0EAh             ; jmp 10:0
     dw 0
     dw 10h
 
@@ -390,36 +403,42 @@ vbe_info_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; this code is loaded at 01400. It should contain no near jumps!
+; offset 0BCh
     
 prot_start:
-    mov ax,18h
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-    mov ss,ax
-    mov sp,0F00h
+    db 0B8h, 18h, 0     ; mov ax,18h
+    db 8Eh, 0D8h        ; mov ds,ax
+    db 8Eh, 0C0h        ; mov es,ax
+    db 8Eh, 0E0h        ; mov fs,ax
+    db 8Eh, 0E8h        ; mov gs,ax
+    db 8Eh, 0D0h        ; mov ss,ax
+    db 0BCh, 0, 0Fh     ; mov sp,0F00h
 ;
-    mov ax,20h
-    mov es,ax
+    db 0B8h, 20h, 0     ; mov ax,20h
+    db 8Eh, 0C0h        ; mov es,ax
 ;    
-    mov eax,es:ap_cr4
-    mov cr4,eax
+    db 66h, 26h, 0A1h
+    dw OFFSET ap_cr4    ; mov eax,es:ap_cr4
+    db 0Fh, 22h, 0E0h   ; mov cr4,eax
 ;
-    mov eax,es:ap_cr3
-    mov cr3,eax
+    db 66h, 26h, 0A1h
+    dw OFFSET ap_cr3    ; mov eax,es:ap_cr3
+    db 0Fh, 22h, 0D8h   ;mov cr3,eax
 ;    
-    db 66h
-    lgdt fword ptr es:ap_gdt
+    db 66h, 26h, 0Fh, 1, 16h
+    dw OFFSET ap_gdt    ; lgdt fword ptr es:ap_gdt
 ;    
-    db 66h
-    lidt fword ptr es:ap_idt
+    db 66h, 26h, 0Fh, 1, 1Eh
+    dw OFFSET ap_idt    ; lidt fword ptr es:ap_idt
 ;
-    mov edx,es:ap_stack_offset
-    mov bx,es:ap_stack_sel
+    db 66h, 26h, 8Bh, 16h
+    dw OFFSET ap_stack_offset  ; mov edx,es:ap_stack_offset
+    db 26h, 8Bh, 1Eh
+    dw OFFSET ap_stack_sel     ; mov bx,es:ap_stack_sel
 ;    
-    mov eax,es:ap_cr0
-    mov cr0,eax
+    db 66h, 26h, 0A1h
+    dw OFFSET ap_cr0    ; mov eax,es:ap_cr0
+    db 0Fh, 22h, 0C0h   ; mov cr0,eax
 ;
     db 0EAh
     dw OFFSET ApInit
@@ -439,39 +458,49 @@ prot_end:
 ; this code is loaded at 01400. It should contain no near jumps!
     
 rt_start:
-    xor ax,ax
-    mov ds,ax
-    mov fs,ax
-    mov gs,ax
+    db 33h, 0C0h        ; xor ax,ax
+    db 8Eh, 0D8h        ; mov ds,ax
+    db 8Eh, 0E0h        ; mov fs,ax
+    db 8Eh, 0E8h        ; mov gs,ax
 ;
-    mov ax,18h
-    mov ss,ax
-    mov esp,OFFSET rt_end - rt_start + 1400h + 10h
+    db 0B8h, 18h, 0     ; mov ax,18h
+    db 8Eh, 0D0h        ; mov ss,ax
+    db 66h, 0BCh
+    dd OFFSET rt_end - rt_start + 1400h + 10h
+                        ; mov esp,OFFSET rt_end - rt_start + 1400h + 10h
 ;
-    mov ax,20h
-    mov es,ax
+    db 0B8h, 20h, 0     ; mov ax,20h
+    db 8Eh, 0C0h        ; mov es,ax
 ;    
-    mov eax,12345678h
-    xchg eax,es:ap_cr4
-    or al,20h
-    mov cr4,eax
+    db 66h, 0B8h
+    dd 12345678h        ; mov eax,12345678h
+    db 66h, 26h, 87h, 6
+    dw OFFSET ap_cr4    ; xchg eax,es:ap_cr4
+    db 0Ch, 20h         ; or al,20h
+    db 0Fh, 22h, 0E0h   ; mov cr4,eax
 ;
-    mov ecx,IA32_EFER
-    rdmsr
-    or eax,101h
-    wrmsr
+    db 66h, 0B9h
+    dd IA32_EFER        ; mov ecx,IA32_EFER
+    db 0Fh, 32h         ; rdmsr
+    db 66h, 0Dh
+    dd 101h             ; or eax,101h
+    db 0Fh, 30h         ; wrmsr
 ;
-    mov eax,es:ap_cr3
-    mov cr3,eax
+    db 66h, 26h, 0A1h
+    dw OFFSET ap_cr3    ; mov eax,es:ap_cr3
+    db 0Fh, 22h, 0D8h   ; mov cr3,eax
 ;    
-    mov eax,cr0
-    or eax,80010008h
-    mov cr0,eax
+    db 0Fh, 22h, 0C0h   ; mov eax,cr0
+    db 66h, 0Dh
+    dd 80010008h        ; or eax,80010008h
+    db 0Fh, 22h, 0C0h   ; mov cr0,eax
 ;
-    mov edx,es:ap_stack_offset
+    db 66h, 26h, 8Bh, 16h
+    dw OFFSET ap_stack_offset
+                        ; mov edx,es:ap_stack_offset
 ;
-    xor ax,ax
-    mov es,ax
+    db 33h, 0C0h        ; xor ax,ax
+    db 8Eh, 0C0h        ; mov es,ax
 ;
     db 0EAh
     dw OFFSET rt_init64 - rt_start + 1400h
