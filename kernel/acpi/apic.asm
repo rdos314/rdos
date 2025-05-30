@@ -1679,8 +1679,8 @@ send_nmi Proc far
 ;    
     mov edx,fs:cs_apic
     shl edx,24
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     mov ds:APIC_ICR+10h,edx
 ;
     mov eax,4400h
@@ -1714,8 +1714,8 @@ send_locked_int  Proc far
 ;    
     mov edx,fs:cs_apic
     shl edx,24
-    mov cx,apic_mem_sel
-    mov ds,cx
+    mov ecx,apic_mem_sel
+    mov ds,ecx
 
 siLoop:
     mov ecx,ds:APIC_ICR
@@ -1811,10 +1811,10 @@ setup_irq_detect_name   DB 'Setup IRQ detect',0
 
 setup_irq_detect    Proc far
     push ds
-    push ax
+    push eax
 ;       
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ds:detected_irqs,0
     call EnableDetect
 ;
@@ -1824,7 +1824,7 @@ setup_irq_detect    Proc far
     mov ds:detected_irqs,0       
     mov ds:detected_irqs+4,0       
 ;
-    pop ax
+    pop eax
     pop ds
     retf32
 setup_irq_detect    Endp
@@ -1845,8 +1845,8 @@ poll_irq_detect_name    DB 'Poll IRQ detect',0
 poll_irq_detect Proc far
     push ds
 ;       
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:detected_irqs
     mov edx,ds:detected_irqs+4
 ;
