@@ -33,7 +33,7 @@ INCLUDE ..\os\system.def
 INCLUDE apic.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
-INCLUDE ..\acpi\acpi.inc
+INCLUDE ..\acpi\acpitab.inc
 INCLUDE ..\os\realmon.def
 INCLUDE ..\bios\vbe.inc
 

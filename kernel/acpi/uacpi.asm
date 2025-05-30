@@ -33,11 +33,11 @@ INCLUDE ..\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-include ..\acpi.def
-include ..\acpi.inc
+include acpi.def
+include acpi.inc
 INCLUDE pci.inc
 INCLUDE ..\os\core.inc
-INCLUDE acpi.inc
+INCLUDE acpitab.inc
 
 acpitab STRUC
 

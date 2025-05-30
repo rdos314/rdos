@@ -20,32 +20,82 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; ACPI.DEF
-; ACPI types
-;
+; Shared.INC
+; Shared gate macros
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-acpi_header STRUC
 
-acpi_sign       DD ?
-acpi_size       DD ?
+ServGate    MACRO gate_nr
+    db 55h
+    db 67h
+    db 9Ah
+    dd gate_nr
+    dw 4
+    db 5Dh
+            ENDM
 
-acpi_rev        DB ?
-acpi_sum        DB ?
+;;;;;;;;; uACPI ;;;;;;;;;;;;;;;;;;
 
-acpi_oem        DB 6 DUP(?)
-acpi_oem_id     DD ?, ?
-acpi_oem_rev    DD ?
-acpi_cr_id      DD ?
-acpi_cr_rev     DD ?
+; OUT EDX:EAX          ACPI physical address
+GetUacpiAcpi  MACRO
+    ServGate uacpi_get_acpi_nr
+                    ENDM
 
-acpi_header ENDS
+; IN  EDX:EAX          Physical address
+; IN  ECX              Size
+; OUT EAX              Linear address 
+UacpiMap  MACRO
+    ServGate uacpi_map_nr
+                    ENDM
 
-acpi_table  STRUC
+; IN  EDX              Linear address
+; IN  ECX              Size
+UacpiUnmap  MACRO
+    ServGate uacpi_unmap_nr
+                    ENDM
 
-act_next        DW ?
-act_size        DW ?
-act_sign        DD ?
-act_oem_id      DD ?, ?
+; IN  EDX               Base
+; IN  ECX               Size
+UacpiEnableIo  MACRO
+    ServGate uacpi_enable_io_nr
+                    ENDM
+; IN  EBX               Dev
+; OUT AL                Value
+UacpiReadPciByte  MACRO
+    ServGate uacpi_read_pci_byte_nr
+                    ENDM
 
-acpi_table  ENDS
+; IN  EBX               Dev
+; OUT AX                Value
+UacpiReadPciWord  MACRO
+    ServGate uacpi_read_pci_word_nr
+                    ENDM
+
+; IN  EBX               Dev
+; OUT EAX               Value
+UacpiReadPciDword  MACRO
+    ServGate uacpi_read_pci_dword_nr
+                    ENDM
+
+; IN  EBX               Dev
+; IN  AL                Value
+UacpiWritePciByte  MACRO
+    ServGate uacpi_write_pci_byte_nr
+                    ENDM
+
+; IN  EBX               Dev
+; IN  AX                Value
+UacpiWritePciWord  MACRO
+    ServGate uacpi_write_pci_word_nr
+                    ENDM
+
+; IN  EBX               Dev
+; IN  EAX               Value
+UacpiWritePciDword  MACRO
+    ServGate uacpi_write_pci_dword_nr
+                    ENDM
+
+UacpiStartPci  MACRO
+    ServGate uacpi_start_pci_nr
+                    ENDM
