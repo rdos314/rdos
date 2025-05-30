@@ -1416,20 +1416,20 @@ CreateMsi   Endp
 
 SetupMsiHandler   Proc near
     push fs
-    push ax
+    push eax
     push edx
 ;
-    mov fs,bx
+    mov fs,ebx
     mov edx,fs:msi_linear
-    mov ax,flat_sel
-    mov fs,ax
+    mov eax,flat_sel
+    mov fs,eax
 ;
     mov fs:[edx].msi_handler_data,ds
     mov fs:[edx].msi_handler_ads,edi
     mov word ptr fs:[edx].msi_handler_ads+4,es
 ;
     pop edx
-    pop ax
+    pop eax
     pop fs    
     ret
 SetupMsiHandler   Endp
@@ -1448,10 +1448,10 @@ SetupMsiHandler   Endp
 SetupLocalApic    Proc near
     push es
     push eax
-    push bx
+    push ebx
 ;    
-    mov bx,apic_mem_sel
-    mov es,bx
+    mov ebx,apic_mem_sel
+    mov es,ebx
 ;
     mov eax,10000h
     mov es:APIC_LINT0,eax
@@ -1489,7 +1489,7 @@ SetupLocalApic    Proc near
     xor eax,eax
     mov es:APIC_TPR,eax
 ;
-    pop bx
+    pop ebx
     pop eax
     pop es    
     ret
