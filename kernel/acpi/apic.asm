@@ -1040,12 +1040,12 @@ request_irq_handler Proc far
     push fs
     pushad
 ;
-    movzx bx,al
-    shl bx,4
-    mov dx,SEG data
-    mov fs,dx
-    mov esi,fs:[bx].global_int_arr.gi_long_ads
-    mov bx,fs:[bx].global_int_arr.gi_handler_sel
+    movzx ebx,al
+    shl ebx,4
+    mov edx,SEG data
+    mov fs,edx
+    mov esi,fs:[ebx].global_int_arr.gi_long_ads
+    mov bx,fs:[ebx].global_int_arr.gi_handler_sel
     or bx,bx
     jz rihDone
 ;
@@ -1061,7 +1061,7 @@ rihPrioHighOk:
     mov ah,1    
 
 rihPrioLowOk:
-    push ax
+    push eax
 ;   
     or esi,esi
     jz rihLongOk
@@ -1069,10 +1069,10 @@ rihPrioLowOk:
     AddLongIrq
 
 rihLongOk:
-    mov fs,bx
+    mov fs,ebx
     mov edx,fs:isa_irq_linear
-    mov ax,flat_sel
-    mov fs,ax
+    mov eax,flat_sel
+    mov fs,eax
 ;
     mov al,fs:[edx].isa_irq_detect_nr
     cmp al,-1
@@ -1085,9 +1085,9 @@ rihChain:
     push esi
     push edi
 ;
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
+    mov eax,flat_sel
+    mov ds,eax
+    mov es,eax
 ;    
     mov esi,edx
     GetSelectorBaseSize
@@ -1104,8 +1104,8 @@ rihChain:
     xor ecx,ecx
     FreeLinear
 ;
-    mov ax,cs
-    mov ds,ax
+    mov eax,cs
+    mov ds,eax
     mov esi,OFFSET IsaIrqChainStart
     mov ecx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
     rep movs byte ptr es:[edi],ds:[esi]
@@ -1126,12 +1126,12 @@ rihChain:
     mov word ptr fs:[ebp].isa_irch_handler_ads+4,es
     mov eax,ebp
     sub eax,edx
-    add ax,OFFSET IsaIrqChainEntry - OFFSET IsaIrqChainStart
-    sub ax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
-    cmp ax,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
+    add eax,OFFSET IsaIrqChainEntry - OFFSET IsaIrqChainStart
+    sub eax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    cmp eax,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
     jae rihChainPrev
 ;    
-    add ax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    add eax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
     xchg ax,fs:[edx].isa_irq_chain
     mov fs:[ebp].isa_irch_chain,ax
     jmp rihChainDone
@@ -1139,7 +1139,7 @@ rihChain:
 rihChainPrev:
     mov edx,ebp
     sub edx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
-    add ax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
+    add eax,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
     xchg ax,fs:[edx].isa_irch_chain
     mov fs:[ebp].isa_irch_chain,ax
     jmp rihChainDone
@@ -1151,62 +1151,62 @@ rihReplace:
     mov fs:[edx].isa_irq_detect_nr,-1
 
 rihChainDone:
-    pop ax
+    pop eax
 ;    
-    movzx bx,al
-    shl bx,4
-    add bx,OFFSET global_int_arr
-    mov dx,SEG data
-    mov fs,dx
-    mov dl,fs:[bx].gi_prio
+    movzx ebx,al
+    shl ebx,4
+    add ebx,OFFSET global_int_arr
+    mov edx,SEG data
+    mov fs,edx
+    mov dl,fs:[ebx].gi_prio
     cmp ah,dl
     jbe rihDone
 ;
-    mov fs:[bx].gi_prio,ah
-    mov al,fs:[bx].gi_int_num
+    mov fs:[ebx].gi_prio,ah
+    mov al,fs:[ebx].gi_int_num
     FreeInt
 
 rihChangePrio:
-    mov al,fs:[bx].gi_prio
+    mov al,fs:[ebx].gi_prio
     mov cx,1
     AllocateInts
     jnc rihPrioOk
 ;
-    dec fs:[bx].gi_prio
+    dec fs:[ebx].gi_prio
     jmp rihChangePrio    
 
 rihPrioOk:    
     push ds
-    push bx
+    push ebx
 ;
-    mov esi,fs:[bx].gi_long_ads
+    mov esi,fs:[ebx].gi_long_ads
     or esi,esi
     jz rihLongPrioOk
 ;
-    push bx
+    push ebx
     xor bl,bl
     SetupLongIntGate
-    pop bx
+    pop ebx
 
 rihLongPrioOk:    
-    mov ds,fs:[bx].gi_handler_sel
+    mov ds,fs:[ebx].gi_handler_sel
     mov esi,OFFSET IsaIrqEntry - OFFSET IsaIrqStart
     xor bl,bl
     SetupIntGate
 ;    
-    pop bx
+    pop ebx
     pop ds
 ;
-    mov fs:[bx].gi_int_num,al
+    mov fs:[ebx].gi_int_num,al
 ;
     push ds
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;    
-    mov al,fs:[bx].gi_ioapic_id
-    movzx edx,fs:[bx].gi_int_num
-    mov dh,fs:[bx].gi_trigger_mode
-    mov fs,fs:[bx].gi_ioapic_sel
+    mov al,fs:[ebx].gi_ioapic_id
+    movzx edx,fs:[ebx].gi_int_num
+    mov dh,fs:[ebx].gi_trigger_mode
+    mov fs,fs:[ebx].gi_ioapic_sel
     call AddIoApicHandler
 ;       
     mov bl,10h
