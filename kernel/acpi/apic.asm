@@ -834,7 +834,7 @@ IsaIrqExitNestingOk:
     verr ax
     jz IrqExitFs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitFs:
     mov fs,eax
@@ -843,7 +843,7 @@ IrqExitFs:
     verr ax
     jz IrqExitEs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitEs:
     mov es,eax
@@ -852,7 +852,7 @@ IrqExitEs:
     verr ax
     jz IrqExitDs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitDs:
     mov ds,eax
@@ -1314,7 +1314,7 @@ MsiExitNestingOk:
     verr ax
     jz MsiExitFs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 MsiExitFs:
     mov fs,eax
@@ -1323,7 +1323,7 @@ MsiExitFs:
     verr ax
     jz MsiExitEs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 MsiExitEs:
     mov es,eax
@@ -1332,7 +1332,7 @@ MsiExitEs:
     verr ax
     jz MsiExitDs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 MsiExitDs:
     mov ds,eax
@@ -2368,7 +2368,7 @@ ghtGet:
     verr cx
     jz hpet_time_es_ok
 ;
-    xor cx,cx
+    xor ecx,ecx
     
 hpet_time_es_ok:
     mov es,ecx
@@ -2377,7 +2377,7 @@ hpet_time_es_ok:
     verr cx
     jz hpet_time_ds_ok
 ;
-    xor cx,cx
+    xor ecx,ecx
     
 hpet_time_ds_ok:
     mov ds,ecx
@@ -2533,7 +2533,7 @@ timer_int:
     verr ax
     jz timer_fs_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 timer_fs_ok:
     mov fs,eax
@@ -2542,7 +2542,7 @@ timer_fs_ok:
     verr ax
     jz timer_es_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 timer_es_ok:
     mov es,eax
@@ -2551,7 +2551,7 @@ timer_es_ok:
     verr ax
     jz timer_ds_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 timer_ds_ok:
     mov ds,eax
@@ -2595,7 +2595,7 @@ hpet_int:
     verr ax
     jz hpet_fs_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 hpet_fs_ok:
     mov fs,eax
@@ -2604,7 +2604,7 @@ hpet_fs_ok:
     verr ax
     jz hpet_es_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 hpet_es_ok:
     mov es,eax
@@ -2613,7 +2613,7 @@ hpet_es_ok:
     verr ax
     jz hpet_ds_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 hpet_ds_ok:
     mov ds,eax
@@ -2672,7 +2672,7 @@ preempt_int:
     verr ax
     jz preempt_fs_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 preempt_fs_ok:
     mov fs,eax
@@ -2681,7 +2681,7 @@ preempt_fs_ok:
     verr ax
     jz preempt_es_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 preempt_es_ok:
     mov es,eax
@@ -2690,7 +2690,7 @@ preempt_es_ok:
     verr ax
     jz preempt_ds_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 preempt_ds_ok:
     mov ds,eax
@@ -2726,7 +2726,7 @@ tlb_int:
     verr ax
     jz TlbExitGs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 TlbExitGs:
     mov gs,eax
@@ -2735,7 +2735,7 @@ TlbExitGs:
     verr ax
     jz TlbExitFs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 TlbExitFs:
     mov fs,eax
@@ -2744,7 +2744,7 @@ TlbExitFs:
     verr ax
     jz TlbExitEs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 TlbExitEs:
     mov es,eax
@@ -2753,7 +2753,7 @@ TlbExitEs:
     verr ax
     jz TlbExitDs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 TlbExitDs:
     mov ds,eax
@@ -2789,7 +2789,7 @@ wakeup_int:
     verr ax
     jz WiExitGs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 WiExitGs:
     mov gs,eax
@@ -2798,7 +2798,7 @@ WiExitGs:
     verr ax
     jz WiExitFs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 WiExitFs:
     mov fs,eax
@@ -2807,7 +2807,7 @@ WiExitFs:
     verr ax
     jz WiExitEs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 WiExitEs:
     mov es,eax
@@ -2816,7 +2816,7 @@ WiExitEs:
     verr ax
     jz WiExitDs
 ;    
-    xor ax,ax
+    xor eax,eax
 
 WiExitDs:
     mov ds,eax
