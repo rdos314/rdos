@@ -1753,8 +1753,8 @@ EnableDetect  Proc near
     push es
     pushad
 ;    
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ecx,64
     mov esi,OFFSET global_int_arr
 
@@ -3040,30 +3040,30 @@ InitIoApic    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIrqHandlers    Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,OFFSET global_int_arr
-    mov cx,64
+    mov eax,SEG data
+    mov ds,eax
+    mov ebx,OFFSET global_int_arr
+    mov ecx,64
     xor dl,dl
 
 create_irq_loop:
-    mov ax,ds:[bx].gi_ioapic_sel
+    mov ax,ds:[ebx].gi_ioapic_sel
     or ax,ax
     jz create_irq_next
 ;    
-    push cx
+    push ecx
     mov cx,1
     xor al,al
     mov ds:[bx].gi_prio,al
     AllocateInts
     mov ds:[bx].gi_int_num,al
-    pop cx
+    pop ecx
 ;
     push ds
-    push bx
+    push ebx
 ;    
-    push ax
-    mov ds:[bx].gi_long_ads,0
+    push eax
+    mov ds:[ebx].gi_long_ads,0
 ;    
     mov ax,create_long_irq_nr
     IsValidOsGate
@@ -3071,28 +3071,28 @@ create_irq_loop:
 ;
     mov al,dl
     CreateLongIrq
-    mov ds:[bx].gi_long_ads,esi
-    pop ax
+    mov ds:[ebx].gi_long_ads,esi
+    pop eax
 ;
-    push ax
+    push eax
     xor bl,bl
     SetupLongIntGate
     
 create_irq32:
     mov al,dl
     call CreateIsaIrq
-    pop ax
+    pop eax
 ;        
     xor bl,bl
     SetupIntGate
     mov ax,ds
 ;    
-    pop bx
+    pop ebx
     pop ds
-    mov ds:[bx].gi_handler_sel,ax
+    mov ds:[ebx].gi_handler_sel,ax
 
 create_irq_next:
-    add bx,16
+    add ebx,16
     inc dl
     loop create_irq_loop
 ;
