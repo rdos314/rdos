@@ -233,9 +233,6 @@ pcbios_data_sel         EQU 4A8h
 dosemu_code_sel     EQU 4E0h
 dosemu_data_sel     EQU 4E8h
 
-pci_code_sel            EQU 4F0h
-pci_data_sel            EQU 4F8h
-
 dpmi_data_sel           EQU 500h
 raw_switch_sel          EQU 50Bh
 
