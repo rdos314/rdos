@@ -1361,12 +1361,12 @@ MsiEnd:
 CreateMsi   Proc near
     push es
     push eax
-    push bx
+    push ebx
     push ecx
     push edx
     push edi
 ;
-    push ax
+    push eax
 ;
     mov eax,OFFSET MsiEnd - OFFSET MsiStart
     AllocateSmallLinear
@@ -1374,14 +1374,14 @@ CreateMsi   Proc near
     mov ecx,eax
     CreateCodeSelector16
 ;
-    mov ax,cs
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov eax,flat_sel
+    mov es,eax
     mov esi,OFFSET MsiStart
     mov edi,edx
     rep movs byte ptr es:[edi],ds:[esi]
-    pop ax
+    pop eax
 ;
     mov es:[edx].msi_linear,edx
     mov dword ptr es:[edx].msi_handler_ads,OFFSET MsiDefault - OFFSET MsiStart
@@ -1389,13 +1389,13 @@ CreateMsi   Proc near
     mov es:[edx].msi_handler_data,0
     mov es:[edx].msi_irq_nr,al
 ;
-    mov ds,bx
+    mov ds,ebx
     mov esi,OFFSET MsiEntry - OFFSET MsiStart
 ;
     pop edi
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop es
     ret
