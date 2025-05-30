@@ -2152,8 +2152,8 @@ reload_hpet_timer    Proc far
     push eax
     push edx
 ;    
-    mov dx,time_data_sel
-    mov ds,dx
+    mov edx,time_data_sel
+    mov ds,edx
     movzx eax,ax
     mov edx,31F5C4EDh
     mul edx
@@ -2194,8 +2194,8 @@ start_apic_preempt_timer_name    DB 'Start Apic Preempt Timer', 0
 
 start_apic_preempt_timer    Proc far
     push ds
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     mov eax,80h
     mov ds:APIC_TIMER,eax
     pop ds
@@ -2221,8 +2221,8 @@ reload_apic_preempt_timer    Proc far
     push ecx
     push edx
 ;
-    mov cx,SEG data
-    mov ds,cx
+    mov ecx,SEG data
+    mov ds,ecx
 ;    
     mov ecx,ds:apic_tics
     shl ecx,16
@@ -2230,8 +2230,8 @@ reload_apic_preempt_timer    Proc far
     shl eax,16
     mul ecx
     inc edx
-    mov ax,apic_mem_sel
-    mov ds,ax    
+    mov eax,apic_mem_sel
+    mov ds,eax    
     mov ds:APIC_INIT_COUNT,edx
 ;
     pop edx
@@ -2257,8 +2257,8 @@ get_pit_time_name    DB 'Get System Time', 0
 get_pit_time  Proc far
     push ds
 ;
-    mov ax,time_data_sel
-    mov ds,ax
+    mov eax,time_data_sel
+    mov ds,eax
 
 gstSpinLock:    
     mov ax,ds:t_spinlock
@@ -2321,8 +2321,8 @@ get_hpet_time  Proc far
     push ds
     push es
 ;
-    mov ax,time_data_sel
-    mov ds,ax
+    mov eax,time_data_sel
+    mov ds,eax
     mov es,ds:t_hpet_sel
 
 ghtSpinLock:    
@@ -2401,12 +2401,14 @@ set_system_time_name    DB 'Set System Time',0
 
 set_system_time PROC far
     push ds
-    push bx
-    mov bx,time_data_sel
-    mov ds,bx
+    push ebx
+;
+    mov ebx,time_data_sel
+    mov ds,ebx
     mov ds:t_system_time,eax
     mov ds:t_system_time+4,edx
-    pop bx
+;
+    pop ebx
     pop ds
     retf32
 set_system_time ENDP
