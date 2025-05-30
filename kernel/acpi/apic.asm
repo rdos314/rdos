@@ -3734,29 +3734,29 @@ HandleVbe    Proc near
     push fs
     pushad
 ;
-    mov ax,flat_sel
-    mov ds,ax
-    mov ax,SEG data
-    mov fs,ax
+    mov eax,flat_sel
+    mov ds,eax
+    mov eax,SEG data
+    mov fs,eax
     mov fs:vbe_width,0
     mov fs:vbe_height,0
     mov fs:vbe_lfb,0
     mov fs:vbe_mode,0
     mov fs:vbe_scan_size,0
 ;
-    mov si,1900h
-    mov ax,ds:[si].vbe_res
+    mov esi,1900h
+    mov ax,ds:[esi].vbe_res
     cmp ax,4Fh
     jne hvDone
 ;
-    add si,OFFSET vbe_buf
-    mov eax,dword ptr ds:[si].vesa_name
+    add esi,OFFSET vbe_buf
+    mov eax,dword ptr ds:[esi].vesa_name
     cmp eax,dword ptr cs:vesa_id
     jne hvDone
 ;
-    movzx eax,word ptr ds:[si].vesa_modes+2
+    movzx eax,word ptr ds:[esi].vesa_modes+2
     shl eax,4
-    movzx esi,word ptr ds:[si].vesa_modes
+    movzx esi,word ptr ds:[esi].vesa_modes
     add esi,eax
 ;
     push esi
@@ -3787,20 +3787,20 @@ hvCountOk:
 ;
     pop ecx
 ;
-    xor di,di
+    xor edi,edi
 
 hvGetLoop:
-    mov si,1900h
-    mov ds:[si].vbe_op,4F01h
-    mov bx,es:[di]
-    mov ds:[si].vbe_cx,bx
-    mov ds:[si].vbe_sign,vbe_req_sign
+    mov esi,1900h
+    mov ds:[esi].vbe_op,4F01h
+    mov bx,es:[edi]
+    mov ds:[esi].vbe_cx,bx
+    mov ds:[esi].vbe_sign,vbe_req_sign
 ;
-    push cx    
-    mov cx,250
+    push ecx    
+    mov ecx,250
 
 hvWaitLoop:
-    mov ax,ds:[si].vbe_sign
+    mov ax,ds:[esi].vbe_sign
     cmp ax,vbe_ack_sign
     je hvGetOk
 ;    
@@ -3809,23 +3809,23 @@ hvWaitLoop:
     loop hvWaitLoop
 
 hvGetOk:
-    pop cx
+    pop ecx
 ;
-    mov si,1900h
-    add si,OFFSET vbe_buf
-    mov dx,ds:[si].vmi_mode_attrib
+    mov esi,1900h
+    add esi,OFFSET vbe_buf
+    mov dx,ds:[esi].vmi_mode_attrib
     and dx,MODE_ATTRIB_REQUIRED
     cmp dx,MODE_ATTRIB_REQUIRED
     jne hvGetNext
 ;
-    mov dl,ds:[si].vmi_memory_model
+    mov dl,ds:[esi].vmi_memory_model
     cmp dl,MODEL_DIRECT
     jne hvGetNext
 ;
     pushad
-    movzx ax,ds:[si].vmi_bits_per_pixel
-    mov cx,ds:[si].vmi_x_pixels
-    mov dx,ds:[si].vmi_y_pixels
+    movzx ax,ds:[esi].vmi_bits_per_pixel
+    mov cx,ds:[esi].vmi_x_pixels
+    mov dx,ds:[esi].vmi_y_pixels
 ;
     cmp ax,32
     jne hvSkip
@@ -3838,7 +3838,7 @@ hvPart:
     cmp bp,cx
     je hvSet
 ;
-    mov eax,ds:[si].vmi_lfb
+    mov eax,ds:[esi].vmi_lfb
     or eax,eax
     jz hvSkip
 ;    
@@ -3847,7 +3847,7 @@ hvPart:
     jmp hvCmp
 
 hvHighest:
-    mov eax,ds:[si].vmi_lfb
+    mov eax,ds:[esi].vmi_lfb
     or eax,eax
     jz hvSkip
 
@@ -3856,11 +3856,11 @@ hvCmp:
     jc hvSkip
 
 hvSet:
-    mov eax,ds:[si].vmi_lfb
+    mov eax,ds:[esi].vmi_lfb
     mov fs:vbe_lfb,eax
     mov fs:vbe_width,cx
     mov fs:vbe_height,dx
-    mov ax,ds:[si].vmi_scan_lines
+    mov ax,ds:[esi].vmi_scan_lines
     mov fs:vbe_scan_size,ax
     mov fs:vbe_mode,bx
 
@@ -3868,21 +3868,21 @@ hvSkip:
     popad
 
 hvGetNext:
-    add di,2
-    sub cx,1
+    add edi,2
+    sub ecx,1
     jnz hvGetLoop
 ;
     mov bx,fs:vbe_mode
-    mov si,1900h
-    mov ds:[si].vbe_op,4F02h
-    mov ds:[si].vbe_bx,bx
-    mov ds:[si].vbe_sign,vbe_req_sign
+    mov esi,1900h
+    mov ds:[esi].vbe_op,4F02h
+    mov ds:[esi].vbe_bx,bx
+    mov ds:[esi].vbe_sign,vbe_req_sign
 ;
-    push cx    
-    mov cx,250
+    push ecx    
+    mov ecx,250
 
 hvSetLoop:
-    mov ax,ds:[si].vbe_sign
+    mov ax,ds:[esi].vbe_sign
     cmp ax,vbe_ack_sign
     je hvSetOk
 ;    
@@ -3891,16 +3891,16 @@ hvSetLoop:
     loop hvSetLoop
 
 hvSetOk:
-    pop cx
+    pop ecx
 ;
-    mov ds:[si].vbe_op,-1
-    mov ds:[si].vbe_sign,vbe_req_sign
+    mov ds:[esi].vbe_op,-1
+    mov ds:[esi].vbe_sign,vbe_req_sign
 ;
     mov ax,1
     call DelayMs
 ;
-    mov ax,system_data_sel
-    mov es,ax 
+    mov eax,system_data_sel
+    mov es,eax 
 ;
     mov ax,fs:vbe_width
     mov es:efi_width,ax
