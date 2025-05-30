@@ -3202,13 +3202,13 @@ InitApicTimer Proc near
     push es
     pushad
 ;    
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,apic_mem_sel
-    mov es,ax
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,apic_mem_sel
+    mov es,eax
 
 init_tsc_start:
-    xor cx,cx    
+    mov ecx,10000h    
 
 init_tsc_wait_start_high:
     read_tics    
@@ -3217,7 +3217,7 @@ init_tsc_wait_start_high:
     loop init_tsc_wait_start_high    
 
 init_tsc_wait_start_high_ok:
-    xor cx,cx    
+    mov ecx,10000h    
 
 init_tsc_wait_start_low:
     read_tics    
@@ -3230,7 +3230,7 @@ init_tsc_wait_start_low_ok:
     mov es:APIC_INIT_COUNT,eax
 
 init_apic_start_done:
-    xor cx,cx
+    mov ecx,10000h    
 
 init_tsc_wait_high:    
     read_tics
@@ -3239,7 +3239,7 @@ init_tsc_wait_high:
     loop init_tsc_wait_high
 
 init_tsc_wait_high_ok:
-    xor cx,cx
+    mov ecx,10000h    
 
 init_tsc_wait_low:    
     read_tics
