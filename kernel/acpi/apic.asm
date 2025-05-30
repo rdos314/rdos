@@ -4399,11 +4399,11 @@ init    PROC far
     mov ecx,2000h
     CreateDataSelector16
 ;
-    mov es,bx
-    xor di,di
-    mov cx,800h
+    mov es,ebx
+    xor edi,edi
+    mov ecx,800h
     xor eax,eax
-    rep stos dword ptr es:[di]
+    rep stos dword ptr es:[edi]
 ;
     add edx,1000h
     GetPageEntry
@@ -4411,8 +4411,8 @@ init    PROC far
     mov es:t_phys,eax
     mov es:t_phys+4,ebx
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ds:ioapic_spinlock,0
 ;    
     mov al,34h
@@ -4429,9 +4429,9 @@ init    PROC far
     jc init_apic_gates_ok
 ;
     push es
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov esi,OFFSET get_ioapic_state
     mov edi,OFFSET get_ioapic_state_name
@@ -4615,14 +4615,14 @@ init_hpet_check:
     inc ax
     mov ds:t_hpet_counters,ax
 ;
-    mov cx,ax
-    mov bx,OFFSET hpet_counter_arr    
+    movzx ecx,ax
+    mov ebx,OFFSET hpet_counter_arr    
 
 init_hpet_loop:
-    mov eax,es:[bx].hpetc_config
+    mov eax,es:[ebx].hpetc_config
     and ax,NOT 4004h
-    mov es:[bx].hpetc_config,eax
-    add bx,SIZE hpet_counter_struc
+    mov es:[ebx].hpetc_config,eax
+    add ebx,SIZE hpet_counter_struc
     loop init_hpet_loop
 ;    
     mov eax,es:hpet_config
@@ -4631,9 +4631,9 @@ init_hpet_loop:
     mov es:hpet_config,eax
 ;
     push es
-    mov ax,cs
-    mov ds,ax
-    mov es,ax    
+    mov eax,cs
+    mov ds,eax
+    mov es,eax    
     mov esi,OFFSET get_hpet_time
     mov edi,OFFSET get_hpet_time_name
     xor dx,dx
@@ -4641,8 +4641,8 @@ init_hpet_loop:
     RegisterBimodalUserGate
     pop es
 ;    
-    mov bx,OFFSET hpet_counter_arr    
-    mov eax,es:[bx].hpetc_config
+    mov ebx,OFFSET hpet_counter_arr    
+    mov eax,es:[ebx].hpetc_config
     test ax,8000h
     jz init_hpet_done
 
@@ -4653,9 +4653,9 @@ init_hpet_loop:
 init_hpet_timer_ok:
     UseOwnPreemptTimer
 ;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov esi,OFFSET start_apic_preempt_timer
     mov edi,OFFSET start_apic_preempt_timer_name
