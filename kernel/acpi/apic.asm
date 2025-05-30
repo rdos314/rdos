@@ -2452,8 +2452,8 @@ long_timer_handler      Proc far
     mov al,-1
     EnterInt    
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
@@ -2472,8 +2472,8 @@ long_timer_handler      Endp
 long_hpet_handler_name    DB 'Long Hpet Handler', 0
 
 long_hpet_handler      Proc far
-    mov ax,time_data_sel
-    mov ds,ax
+    mov eax,time_data_sel
+    mov ds,eax
     mov ds,ds:t_hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
@@ -2481,8 +2481,8 @@ long_hpet_handler      Proc far
     mov al,-1
     EnterInt    
     lock or fs:cs_flags,cS_FLAG_TIMER_EXPIRED
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
@@ -2523,8 +2523,8 @@ timer_int:
     mov al,-1
     EnterInt    
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
@@ -2536,7 +2536,7 @@ timer_int:
     xor ax,ax
 
 timer_fs_ok:
-    mov fs,ax
+    mov fs,eax
 ;    
     pop ax
     verr ax
@@ -2545,7 +2545,7 @@ timer_fs_ok:
     xor ax,ax
 
 timer_es_ok:
-    mov es,ax
+    mov es,eax
 ;    
     pop ax
     verr ax
@@ -2554,7 +2554,7 @@ timer_es_ok:
     xor ax,ax
 
 timer_ds_ok:
-    mov ds,ax
+    mov ds,eax
 ;    
     popad
     iretd
@@ -2576,8 +2576,8 @@ hpet_int:
     push es
     push fs
 ;
-    mov ax,time_data_sel
-    mov ds,ax
+    mov eax,time_data_sel
+    mov ds,eax
     mov ds,ds:t_hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
@@ -2585,8 +2585,8 @@ hpet_int:
     mov al,-1
     EnterInt    
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
@@ -2598,7 +2598,7 @@ hpet_int:
     xor ax,ax
 
 hpet_fs_ok:
-    mov fs,ax
+    mov fs,eax
 ;    
     pop ax
     verr ax
@@ -2607,7 +2607,7 @@ hpet_fs_ok:
     xor ax,ax
 
 hpet_es_ok:
-    mov es,ax
+    mov es,eax
 ;    
     pop ax
     verr ax
@@ -2616,7 +2616,7 @@ hpet_es_ok:
     xor ax,ax
 
 hpet_ds_ok:
-    mov ds,ax
+    mov ds,eax
 ;    
     popad
     iretd
@@ -2634,8 +2634,8 @@ hpet_ds_ok:
 
 hpet_ioapic_int Proc far
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    mov dx,time_data_sel
-    mov ds,dx
+    mov edx,time_data_sel
+    mov ds,edx
     mov ds,ds:t_hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx  
