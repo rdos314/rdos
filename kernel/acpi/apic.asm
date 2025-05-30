@@ -1963,7 +1963,7 @@ get_msi_vector  Endp
 request_msi_handler_name    DB 'Request MSI Handler',0
 
 request_msi_handler  Proc far
-    push bx
+    push ebx
     push esi
 ;    
     push ds
@@ -1974,24 +1974,24 @@ request_msi_handler  Proc far
     pop ds    
     call SetupMsiHandler
 ;
-    push ax
+    push eax
     mov ax,create_long_msi_nr
     IsValidOsGate
-    pop ax
+    pop eax
     jc rmhDone
 ;
     CreateLongMsi
 ;
-    push bx
+    push ebx
     xor bl,bl
     SetupLongIntGate
-    pop bx
+    pop ebx
 ;    
     AddLongMsi
 
 rmhDone:
     pop esi
-    pop bx
+    pop ebx
     retf32
 request_msi_handler  Endp
 
@@ -2011,8 +2011,8 @@ start_sys_preempt_timer_name    DB 'Start Apic Sys Preempt Timer', 0
 start_sys_preempt_timer    Proc far
     push ds
 ;    
-    mov ax,apic_mem_sel
-    mov ds,ax
+    mov eax,apic_mem_sel
+    mov ds,eax
     mov eax,83h
     mov ds:APIC_TIMER,eax
     xor eax,eax
@@ -2040,8 +2040,8 @@ reload_sys_preempt_timer    Proc far
     push ecx
     push edx
 ;
-    mov cx,SEG data
-    mov ds,cx
+    mov ecx,SEG data
+    mov ds,ecx
 ;    
     mov ecx,ds:apic_tics
     shl ecx,16
@@ -2049,8 +2049,8 @@ reload_sys_preempt_timer    Proc far
     shl eax,16
     mul ecx
     inc edx
-    mov ax,apic_mem_sel
-    mov ds,ax    
+    mov eax,apic_mem_sel
+    mov ds,eax    
     mov ds:APIC_INIT_COUNT,edx
     clc
 ;
@@ -2077,22 +2077,22 @@ start_hpet_timer_name    DB 'Start HPET Timer', 0
 start_hpet_timer    Proc far
     push ds
     push es
-    push bx
+    push ebx
     push edx
 ;
-    mov ax,time_data_sel
-    mov ds,ax
+    mov eax,time_data_sel
+    mov ds,eax
     mov es,ds:t_hpet_sel
-    mov bx,OFFSET hpet_counter_arr    
-    mov eax,es:[bx].hpetc_config
+    mov ebx,OFFSET hpet_counter_arr    
+    mov eax,es:[ebx].hpetc_config
     test ax,8000h
     jnz start_hpet_msi
 ;        
     push es
     mov al,2
     mov ah,12
-    mov bx,cs
-    mov es,bx
+    mov ebx,cs
+    mov es,ebx
     mov edi,OFFSET hpet_ioapic_int
     RequestIrqHandler
     pop es
@@ -2101,34 +2101,34 @@ start_hpet_timer    Proc far
     or al,3
     mov es:hpet_config,eax
 ;    
-    mov bx,OFFSET hpet_counter_arr    
-    mov edx,es:[bx].hpetc_config
+    mov ebx,OFFSET hpet_counter_arr    
+    mov edx,es:[ebx].hpetc_config
     and dx,NOT 08h
     or dx,506h 
-    mov es:[bx].hpetc_config,edx
+    mov es:[ebx].hpetc_config,edx
     jmp start_hpet_done
 
 start_hpet_msi: 
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,40h
     mov edx,ds:bsp_id
     shl edx,12
     or edx,0FEE00000h
 ;
-    mov es:[bx].hpetc_msi_data,eax
-    mov es:[bx].hpetc_msi_ads,edx
+    mov es:[ebx].hpetc_msi_data,eax
+    mov es:[ebx].hpetc_msi_ads,edx
 ;
-    mov eax,es:[bx].hpetc_config
+    mov eax,es:[ebx].hpetc_config
     and ax,NOT 0Ah
     or ax,4104h 
-    mov es:[bx].hpetc_config,eax
+    mov es:[ebx].hpetc_config,eax
 
 start_hpet_done:
     xor eax,eax
 ;
     pop edx
-    pop bx
+    pop ebx
     pop es
     pop ds
     retf32
