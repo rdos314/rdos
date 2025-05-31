@@ -4237,12 +4237,6 @@ GetPciMsiInfo    MACRO
 
 ;;;;;;;;;; ACPI ;;;;;;;;;
 
-;   IN  EAX     Table name
-;   OUT ES      Table selector
-GetAcpiTable    MACRO
-    OsGate get_acpi_table_nr
-                    ENDM
-
 ;   IN  EAX         PCI device #
 ;   IN  ES:EDI      ACPI name buffer
 GetAcpiPciDeviceName      MACRO

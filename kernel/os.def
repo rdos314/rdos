@@ -364,8 +364,6 @@ start_sys_timer_nr          = 374
 
 is_net_address_valid_nr     = 375
 
-get_acpi_table_nr           = 376
-
 allocate_debug_local_linear_nr  = 377
 
 process_key_scan_nr         = 378
