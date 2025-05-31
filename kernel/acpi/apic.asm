@@ -158,6 +158,8 @@ ENDIF
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
+    
+    extern GetAcpiTable:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2550,7 +2552,7 @@ init_apic    PROC near
     jmp short $+2
 ;
     mov eax,dword ptr cs:apic_tab
-    GetAcpiTable
+    call GetAcpiTable
     jc init_apic_gates_ok
 ;
     push es
@@ -2661,7 +2663,7 @@ init_apic    PROC near
     RegisterBimodalUserGate
 ;
     mov eax,dword ptr cs:hpet_tab
-    GetAcpiTable
+    call GetAcpiTable
     jc init_hpet_obj
 ;    
     mov ebx,es:hpett_phys_base

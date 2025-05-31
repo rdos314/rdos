@@ -119,6 +119,8 @@ acpitab  ENDS
 
 data    SEGMENT byte public 'DATA'
 
+apic_table              DW ?
+
 pci_spinlock            spinlock_typ <>
 
 pci_init_hooks          DW ?
@@ -2637,6 +2639,10 @@ hook_thread_done:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+apic_tab    DB 'APIC'
+
+    extern GetAcpiTable:near
+
     extern init_bios:near
     extern init_uacpi:near
     extern init_apic:near
@@ -2653,6 +2659,7 @@ init    Proc far
     mov ds,ebx
     mov es,ebx
 ;
+    mov ds:apic_table,0
     mov ds:pci_init_hooks,0
     InitSpinlock ds:pci_spinlock
 ;
@@ -2847,12 +2854,23 @@ init    Proc far
 ;
     call init_bios
     call init_uacpi
+;
+    mov eax,dword ptr cs:apic_tab
+    call GetAcpiTable
+    jc init_pic
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov ds:apic_table,es    
+
+init_pic:
     call DetectDevices
 ;
     call init_msi
     call init_apic_smp
     call init_apic
     call StartupApCores
+    
     clc
 ;
     popad

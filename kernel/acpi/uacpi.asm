@@ -569,9 +569,9 @@ InitAcpiTable   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_acpi_table_name    DB 'Get ACPI Table',0
+    public GetAcpiTable
 
-get_acpi_table  Proc far
+GetAcpiTable  Proc near
     push ds
     push ecx
     push esi
@@ -602,7 +602,7 @@ gtDone:
     pop ecx
     pop ds
     ret
-get_acpi_table  Endp
+GetAcpiTable  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1042,12 +1042,6 @@ init_uacpi    Proc near
 ;
     mov edi,OFFSET init_pci
     HookInitTasking
-;
-    mov esi,OFFSET get_acpi_table
-    mov edi,OFFSET get_acpi_table_name
-    xor cl,cl
-    mov ax,get_acpi_table_nr
-    RegisterOsGate
 ;
     call InitAcpiTable
     clc
