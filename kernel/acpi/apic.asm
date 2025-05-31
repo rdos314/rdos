@@ -2513,7 +2513,6 @@ DisablePic  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-apic_tab    DB 'APIC'
 hpet_tab    DB 'HPET'
 
     public init_apic
