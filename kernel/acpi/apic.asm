@@ -160,6 +160,7 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
     
     extern GetAcpiTable:near
+    extern GetApicTable:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2551,11 +2552,6 @@ init_apic    PROC near
     out TIMER0,al
     jmp short $+2
 ;
-    mov eax,dword ptr cs:apic_tab
-    call GetAcpiTable
-    jc init_apic_gates_ok
-;
-    push es
     mov eax,cs
     mov ds,eax
     mov es,eax
@@ -2727,7 +2723,6 @@ init_hpet_loop:
     or al,1
     mov es:hpet_config,eax
 ;
-    push es
     mov eax,cs
     mov ds,eax
     mov es,eax    
@@ -2736,11 +2731,10 @@ init_hpet_loop:
     xor dx,dx
     mov ax,get_system_time_nr
     RegisterBimodalUserGate
-    pop es
-;    
 
 init_hpet_done:    
-    pop es
+    call GetApicTable
+;    
     call DisablePic    
     call SetupInts
     call InitIoApic

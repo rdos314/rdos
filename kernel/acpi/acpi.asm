@@ -2554,6 +2554,62 @@ DetectDevices  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetApicTable
+;
+;           DESCRIPTION:    Get APIC table
+;
+;           RETURNS:        ES      APIC table        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetApicTable
+    
+GetApicTable Proc near
+    push eax
+;
+    mov eax,SEG data
+    mov es,eax
+    mov es,es:apic_table
+;
+    pop eax
+    ret
+GetApicTable  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HasApic
+;
+;           DESCRIPTION:    Has APIC?
+;
+;           RETURNS:        NC      APIC available
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HasApic
+    
+HasApic Proc near
+    push ds
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov ax,ds:apic_table
+    or ax,ax
+    stc
+    jz haDone
+;
+    clc
+
+haDone:
+    pop eax
+    pop ds
+    ret
+HasApic  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetPciBus
 ;
 ;           DESCRIPTION:    Get PCI bus
@@ -2870,7 +2926,6 @@ init_pic:
     call init_apic_smp
     call init_apic
     call StartupApCores
-    
     clc
 ;
     popad
