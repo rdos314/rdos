@@ -221,7 +221,7 @@ ELSE
     .386p
 ENDIF
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
     
@@ -657,25 +657,25 @@ get_ioapic_state_name   DB 'Get IO-APIC State',0
 get_ioapic_state    Proc far
     push ds
     push fs
-    push bx
+    push ebx
 ;    
-    mov bx,apic_mem_sel
-    mov ds,bx
-    mov bx,APIC_ISR + 50h
-    mov edx,ds:[bx]
+    mov ebx,apic_mem_sel
+    mov ds,ebx
+    mov ebx,APIC_ISR + 50h
+    mov edx,ds:[ebx]
 ;
     mov bx,APIC_IRR + 50h
-    mov edx,ds:[bx]        
+    mov edx,ds:[ebx]        
 ;    
-    mov bx,SEG data
-    mov ds,bx
+    mov ebx,SEG data
+    mov ds,ebx
 ;
-    movzx bx,al
-    shl bx,4
-    add bx,OFFSET global_int_arr
+    movzx ebx,al
+    shl ebx,4
+    add ebx,OFFSET global_int_arr
 ;    
-    mov al,ds:[bx].gi_ioapic_id
-    mov fs,ds:[bx].gi_ioapic_sel
+    mov al,ds:[ebx].gi_ioapic_id
+    mov fs,ds:[ebx].gi_ioapic_sel
 ;       
     mov bl,10h
     add bl,al
@@ -690,10 +690,10 @@ get_ioapic_state    Proc far
     mov edx,fs:ioapic_window
     UnlockIoApic
 ;    
-    pop bx
+    pop ebx
     pop fs
     pop ds
-    retf32
+    ret
 get_ioapic_state    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -830,7 +830,7 @@ IsaIrqExitNestingOk:
     mov ds:APIC_EOI,eax
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitFs
 ;    
@@ -839,7 +839,7 @@ IsaIrqExitNestingOk:
 IrqExitFs:
     mov fs,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitEs
 ;    
@@ -848,7 +848,7 @@ IrqExitFs:
 IrqExitEs:
     mov es,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitDs
 ;    
@@ -892,7 +892,7 @@ IsaIrqDetect:
     bts ds:[bx],dx
 
 IsaIrqDetectDone:
-    retf32
+    retf
 
 IsaIrqEnd:
     
@@ -947,22 +947,22 @@ IsaIrqChainEnd:
 CreateIsaIrq   Proc near
     push es
     push eax
-    push bx
+    push ebx
     push ecx
     push edx
     push edi
 ;
-    push ax
+    push eax
     mov eax,OFFSET IsaIrqEnd - OFFSET IsaIrqStart
     AllocateSmallLinear
     AllocateGdt
     mov ecx,eax
-    CreateCodeSelector16
+    CreateCodeSelector32
 ;
-    mov ax,cs
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov eax,flat_sel
+    mov es,eax
     mov esi,OFFSET IsaIrqStart
     mov edi,edx
     rep movs byte ptr es:[edi],ds:[esi]
@@ -972,7 +972,7 @@ CreateIsaIrq   Proc near
     mov dword ptr es:[edx].isa_irq_handler_ads,OFFSET IsaIrqDetect - OFFSET IsaIrqStart
     mov word ptr es:[edx].isa_irq_handler_ads+4,bx
     mov es:[edx].isa_irq_handler_data,0
-    pop ax
+    pop eax
     mov es:[edx].isa_irq_nr,al
     mov es:[edx].isa_irq_detect_nr,al
     mov es:[edx].isa_irq_type,IRQ_TYPE_ISA
@@ -983,7 +983,7 @@ CreateIsaIrq   Proc near
     pop edi
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop es
     ret
@@ -1004,20 +1004,20 @@ force_level_irq_name    DB 'Force Level IRQ',0
 
 force_level_irq Proc far
     push ds
-    push ax
-    push bx
+    push eax
+    push ebx
 ;    
-    mov bx,SEG data
-    mov ds,bx    
-    movzx bx,al
-    shl bx,4
-    add bx,OFFSET global_int_arr    
-    mov [bx].gi_trigger_mode,0A0h
+    mov ebx,SEG data
+    mov ds,ebx    
+    movzx ebx,al
+    shl ebx,4
+    add ebx,OFFSET global_int_arr    
+    mov [ebx].gi_trigger_mode,0A0h
 ;
-    pop bx
-    pop ax
+    pop ebx
+    pop eax
     pop ds
-    retf32
+    ret
 force_level_irq Endp    
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1113,7 +1113,7 @@ rihChain:
     pop edx
     pop ecx
     add ecx,OFFSET IsaIrqChainEnd - OFFSET IsaIrqChainStart
-    CreateCodeSelector16
+    CreateCodeSelector32
 ;    
     pop edi
     pop esi
@@ -1229,7 +1229,7 @@ rihLongPrioOk:
 rihDone:
     popad
     pop fs    
-    retf32
+    ret
 request_irq_handler Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1310,7 +1310,7 @@ MsiExitNestingOk:
     mov ds:APIC_EOI,eax    
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz MsiExitFs
 ;    
@@ -1319,7 +1319,7 @@ MsiExitNestingOk:
 MsiExitFs:
     mov fs,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz MsiExitEs
 ;    
@@ -1328,7 +1328,7 @@ MsiExitFs:
 MsiExitEs:
     mov es,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz MsiExitDs
 ;    
@@ -1341,7 +1341,7 @@ MsiExitDs:
     iretd
     
 MsiDefault:
-    retf32
+    retf
 
 MsiEnd:
     
@@ -1372,7 +1372,7 @@ CreateMsi   Proc near
     AllocateSmallLinear
     AllocateGdt
     mov ecx,eax
-    CreateCodeSelector16
+    CreateCodeSelector32
 ;
     mov eax,cs
     mov ds,eax
@@ -1563,7 +1563,7 @@ get_id  Proc far
 ;
     pop eax
     pop ds
-    retf32
+    ret
 get_id Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1590,7 +1590,7 @@ send_eoi  Proc far
 ;
     pop eax
     pop ds
-    retf32
+    ret
 send_eoi Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1656,7 +1656,7 @@ niDone:
     pop eax
     pop es
     pop ds
-    retf32
+    ret
 notify_irq  Endp    
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1689,7 +1689,7 @@ send_nmi Proc far
     pop edx
     pop eax
     pop ds
-    retf32
+    ret
 send_nmi Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1736,7 +1736,7 @@ siDo:
     pop ecx
     pop eax
     pop ds    
-    retf32
+    ret
 send_locked_int  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1826,7 +1826,7 @@ setup_irq_detect    Proc far
 ;
     pop eax
     pop ds
-    retf32
+    ret
 setup_irq_detect    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1851,7 +1851,7 @@ poll_irq_detect Proc far
     mov edx,ds:detected_irqs+4
 ;
     pop ds
-    retf32
+    ret
 poll_irq_detect Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1919,7 +1919,7 @@ daiLoop:
     pop ecx
     pop ebx
     pop ds
-    retf32
+    ret
 disable_all_irq Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1944,7 +1944,7 @@ get_msi_vector  Proc far
     mov edx,fs:cs_apic
     shl edx,12
     or edx,0FEE00000h
-    retf32
+    ret
 get_msi_vector  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1992,7 +1992,7 @@ request_msi_handler  Proc far
 rmhDone:
     pop esi
     pop ebx
-    retf32
+    ret
 request_msi_handler  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2018,7 +2018,7 @@ start_sys_preempt_timer    Proc far
     xor eax,eax
 ;
     pop ds
-    retf32
+    ret
 start_sys_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2058,7 +2058,7 @@ reload_sys_preempt_timer    Proc far
     pop ecx
     pop eax
     pop ds
-    retf32
+    ret
 reload_sys_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2131,7 +2131,7 @@ start_hpet_done:
     pop ebx
     pop es
     pop ds
-    retf32
+    ret
 start_hpet_timer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2178,7 +2178,7 @@ reload_hpet_done:
     pop edx
     pop eax
     pop ds    
-    retf32
+    ret
 reload_hpet_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2199,7 +2199,7 @@ start_apic_preempt_timer    Proc far
     mov eax,80h
     mov ds:APIC_TIMER,eax
     pop ds
-    retf32
+    ret
 start_apic_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2238,7 +2238,7 @@ reload_apic_preempt_timer    Proc far
     pop ecx
     pop eax
     pop ds
-    retf32
+    ret
 reload_apic_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2300,7 +2300,7 @@ gstGet:
     mov ds:t_spinlock,0
     sti
     pop ds
-    retf32
+    ret
 get_pit_time  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2364,7 +2364,7 @@ ghtGet:
     mov ds:t_spinlock,0
     sti
 ;
-    pop cx
+    pop ecx
     verr cx
     jz hpet_time_es_ok
 ;
@@ -2373,7 +2373,7 @@ ghtGet:
 hpet_time_es_ok:
     mov es,ecx
 ;
-    pop cx
+    pop ecx
     verr cx
     jz hpet_time_ds_ok
 ;
@@ -2382,7 +2382,7 @@ hpet_time_es_ok:
 hpet_time_ds_ok:
     mov ds,ecx
     pop ecx
-    retf32
+    ret
 get_hpet_time  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2410,7 +2410,7 @@ set_system_time PROC far
 ;
     pop ebx
     pop ds
-    retf32
+    ret
 set_system_time ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2429,12 +2429,12 @@ has_local_timer_name    DB 'Has Global Timer', 0
 
 has_global_timer  Proc far
     clc
-    retf32
+    ret
 has_global_timer    Endp
 
 has_local_timer  Proc far
     stc
-    retf32
+    ret
 has_local_timer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2457,7 +2457,7 @@ long_timer_handler      Proc far
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
-    retf32
+    ret
 long_timer_handler      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2486,7 +2486,7 @@ long_hpet_handler      Proc far
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
-    retf32
+    ret
 long_hpet_handler       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2529,7 +2529,7 @@ timer_int:
     mov ds:APIC_EOI,eax
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz timer_fs_ok
 ;
@@ -2538,7 +2538,7 @@ timer_int:
 timer_fs_ok:
     mov fs,eax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz timer_es_ok
 ;
@@ -2547,7 +2547,7 @@ timer_fs_ok:
 timer_es_ok:
     mov es,eax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz timer_ds_ok
 ;
@@ -2591,7 +2591,7 @@ hpet_int:
     mov ds:APIC_EOI,eax
     LeaveInt
 ;    
-    pop ax
+    pop eax
     verr ax
     jz hpet_fs_ok
 ;
@@ -2600,7 +2600,7 @@ hpet_int:
 hpet_fs_ok:
     mov fs,eax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz hpet_es_ok
 ;
@@ -2609,7 +2609,7 @@ hpet_fs_ok:
 hpet_es_ok:
     mov es,eax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz hpet_ds_ok
 ;
@@ -2639,7 +2639,7 @@ hpet_ioapic_int Proc far
     mov ds,ds:t_hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx  
-    retf32
+    ret
 hpet_ioapic_int Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2668,7 +2668,7 @@ preempt_int:
     mov ds:APIC_EOI,eax
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz preempt_fs_ok
 ;
@@ -2677,7 +2677,7 @@ preempt_int:
 preempt_fs_ok:
     mov fs,eax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz preempt_es_ok
 ;
@@ -2686,7 +2686,7 @@ preempt_fs_ok:
 preempt_es_ok:
     mov es,eax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz preempt_ds_ok
 ;
@@ -2722,7 +2722,7 @@ tlb_int:
     mov ds:APIC_EOI,eax
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz TlbExitGs
 ;    
@@ -2731,7 +2731,7 @@ tlb_int:
 TlbExitGs:
     mov gs,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz TlbExitFs
 ;    
@@ -2740,7 +2740,7 @@ TlbExitGs:
 TlbExitFs:
     mov fs,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz TlbExitEs
 ;    
@@ -2749,7 +2749,7 @@ TlbExitFs:
 TlbExitEs:
     mov es,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz TlbExitDs
 ;    
@@ -2785,7 +2785,7 @@ wakeup_int:
     IpiWakeup
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz WiExitGs
 ;    
@@ -2794,7 +2794,7 @@ wakeup_int:
 WiExitGs:
     mov gs,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz WiExitFs
 ;    
@@ -2803,7 +2803,7 @@ WiExitGs:
 WiExitFs:
     mov fs,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz WiExitEs
 ;    
@@ -2812,7 +2812,7 @@ WiExitFs:
 WiExitEs:
     mov es,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz WiExitDs
 ;    
@@ -3363,7 +3363,7 @@ start_core   Proc far
 start_core_normal:    
     lock or fs:cs_flags,CS_FLAG_ACTIVE
     SendNmi
-    retf32
+    ret
 start_core   Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3560,7 +3560,7 @@ brcDone:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 boot_realtime_core   Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
