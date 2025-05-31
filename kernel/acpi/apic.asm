@@ -1361,186 +1361,6 @@ reload_sys_preempt_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           StartSysTimer
-;
-;           DESCRIPTION:    Start HPET sys timer
-;
-;           RETURNS:        EAX      Update tics
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_hpet_timer_name    DB 'Start HPET Timer', 0
-
-start_hpet_timer    Proc far
-    push ds
-    push es
-    push ebx
-    push edx
-;
-    mov eax,time_data_sel
-    mov ds,eax
-    mov es,ds:t_hpet_sel
-    mov ebx,OFFSET hpet_counter_arr    
-    mov eax,es:[ebx].hpetc_config
-    test ax,8000h
-    jnz start_hpet_msi
-;        
-    push es
-    mov al,2
-    mov ah,12
-    mov ebx,cs
-    mov es,ebx
-    mov edi,OFFSET hpet_ioapic_int
-    RequestIrqHandler
-    pop es
-;
-    mov eax,es:hpet_config
-    or al,3
-    mov es:hpet_config,eax
-;    
-    mov ebx,OFFSET hpet_counter_arr    
-    mov edx,es:[ebx].hpetc_config
-    and dx,NOT 08h
-    or dx,506h 
-    mov es:[ebx].hpetc_config,edx
-    jmp start_hpet_done
-
-start_hpet_msi: 
-    mov eax,SEG data
-    mov ds,eax
-    mov eax,40h
-    mov edx,ds:bsp_id
-    shl edx,12
-    or edx,0FEE00000h
-;
-    mov es:[ebx].hpetc_msi_data,eax
-    mov es:[ebx].hpetc_msi_ads,edx
-;
-    mov eax,es:[ebx].hpetc_config
-    and ax,NOT 0Ah
-    or ax,4104h 
-    mov es:[ebx].hpetc_config,eax
-
-start_hpet_done:
-    xor eax,eax
-;
-    pop edx
-    pop ebx
-    pop es
-    pop ds
-    ret
-start_hpet_timer    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ReloadSysTimer
-;
-;           DESCRIPTION:    Reload HPET timer
-;
-;           PARAMETERS:     AX      Reload count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reload_hpet_timer_name    DB 'Reload HPET Timer', 0
-
-reload_hpet_timer    Proc far
-    push ds
-    push eax
-    push edx
-;    
-    mov edx,time_data_sel
-    mov ds,edx
-    movzx eax,ax
-    mov edx,31F5C4EDh
-    mul edx
-    div ds:t_hpet_factor
-    inc eax
-;    
-    mov ds,ds:t_hpet_sel
-    mov ds:hpet_int_status,1
-    add eax,ds:hpet_count
-    mov ds:hpet_counter_arr.hpetc_compare,eax
-    mov eax,ds:hpet_counter_arr.hpetc_compare
-    cmp eax,ds:hpet_count
-    jg reload_hpet_ok
-;
-    stc
-    jmp reload_hpet_done
-     
-reload_hpet_ok:
-    clc
-
-reload_hpet_done:
-    pop edx
-    pop eax
-    pop ds    
-    ret
-reload_hpet_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           StartPreemptionTimer
-;
-;               DESCRIPTION:    Start APIC timer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_apic_preempt_timer_name    DB 'Start Apic Preempt Timer', 0
-
-start_apic_preempt_timer    Proc far
-    push ds
-    mov eax,apic_mem_sel
-    mov ds,eax
-    mov eax,80h
-    mov ds:APIC_TIMER,eax
-    pop ds
-    ret
-start_apic_preempt_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           ReloadPreemptionTimer
-;
-;               DESCRIPTION:    Reload APIC timer with preemption only
-;
-;               PARAMETERS:     AX      Reload tics
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reload_apic_preempt_timer_name    DB 'Reload Apic Preempt Timer', 0
-
-reload_apic_preempt_timer    Proc far
-    push ds
-    push eax
-    push ecx
-    push edx
-;
-    mov ecx,SEG data
-    mov ds,ecx
-;    
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    shl eax,16
-    mul ecx
-    inc edx
-    mov eax,apic_mem_sel
-    mov ds,eax    
-    mov ds:APIC_INIT_COUNT,edx
-;
-    pop edx
-    pop ecx
-    pop eax
-    pop ds
-    ret
-reload_apic_preempt_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           GetSystemTime
 ;
 ;           DESCRIPTION:    Read system time, PIT version
@@ -1721,13 +1541,7 @@ set_system_time ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-has_global_timer_name    DB 'Has Global Timer', 0
 has_local_timer_name    DB 'Has Global Timer', 0
-
-has_global_timer  Proc far
-    clc
-    ret
-has_global_timer    Endp
 
 has_local_timer  Proc far
     stc
@@ -1756,35 +1570,6 @@ long_timer_handler      Proc far
     LeaveInt
     ret
 long_timer_handler      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           LongHpetHandler
-;
-;           DESCRIPTION:    Long HPET int
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-long_hpet_handler_name    DB 'Long Hpet Handler', 0
-
-long_hpet_handler      Proc far
-    mov eax,time_data_sel
-    mov ds,eax
-    mov ds,ds:t_hpet_sel
-    mov edx,ds:hpet_int_status
-    mov ds:hpet_int_status,edx
-;    
-    mov al,-1
-    EnterInt    
-    lock or fs:cs_flags,cS_FLAG_TIMER_EXPIRED
-    mov eax,apic_mem_sel
-    mov ds,eax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-    LeaveInt
-    ret
-long_hpet_handler       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2951,61 +2736,9 @@ init_hpet_loop:
     RegisterBimodalUserGate
     pop es
 ;    
-    mov ebx,OFFSET hpet_counter_arr    
-    mov eax,es:[ebx].hpetc_config
-    test ax,8000h
-    jz init_hpet_done
-
-; never use global timer!
-
-    jmp init_hpet_done
-
-init_hpet_timer_ok:
-    UseOwnPreemptTimer
-;    
-    mov eax,cs
-    mov ds,eax
-    mov es,eax
-;
-    mov esi,OFFSET start_apic_preempt_timer
-    mov edi,OFFSET start_apic_preempt_timer_name
-    xor cl,cl
-    mov ax,start_preempt_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reload_apic_preempt_timer
-    mov edi,OFFSET reload_apic_preempt_timer_name
-    xor cl,cl
-    mov ax,reload_preempt_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET start_hpet_timer
-    mov edi,OFFSET start_hpet_timer_name
-    xor cl,cl
-    mov ax,start_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reload_hpet_timer
-    mov edi,OFFSET reload_hpet_timer_name
-    xor cl,cl
-    mov ax,reload_sys_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET long_hpet_handler
-    mov edi,OFFSET long_hpet_handler_name
-    xor cl,cl
-    mov ax,long_hpet_handler_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET has_global_timer
-    mov edi,OFFSET has_global_timer_name
-    xor dx,dx
-    mov ax,has_global_timer_nr
-    RegisterBimodalUserGate
 
 init_hpet_done:    
     pop es
-;
     call DisablePic    
     call SetupInts
     call InitIoApic
