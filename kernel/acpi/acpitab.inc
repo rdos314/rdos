@@ -49,3 +49,58 @@ act_sign        DD ?
 act_oem_id      DD ?, ?
 
 acpi_table  ENDS
+
+IRQ_TYPE_ISA    = 5Ch
+IRQ_TYPE_PCI    = 9Ah
+
+; PCI IRQs active low, edge triggered
+
+apic_struc  STRUC
+
+apic_type       DB ?
+apic_len        DB ?
+
+apic_struc  ENDS
+
+apic_processor_struc  STRUC
+
+ap_base         apic_struc <>
+
+ap_acpi_id      DB ?
+ap_apic_id      DB ?
+ap_flags        DD ?
+
+apic_processor_struc  ENDS
+
+apic_ioapic_struc   STRUC
+
+aio_base        apic_struc <>
+
+aio_apic_id     DB ?
+aio_resv        DB ?
+aio_phys        DD ?
+aio_int_base    DD ?
+
+apic_ioapic_struc   ENDS
+
+apic_override_struc STRUC
+
+ao_base         apic_struc <>
+
+ao_bus          DB ?
+ao_source       DB ?
+ao_int          DD ?
+ao_flags        DW ?
+
+apic_override_struc ENDS
+
+apic_table  STRUC
+
+apic_base       acpi_table <>
+
+apic_phys       DD ?
+apic_flags      DD ?
+
+apic_entries    DB ?
+
+apic_table  ENDS
