@@ -2639,6 +2639,7 @@ hook_thread_done:
 
     extern init_bios:near
     extern init_uacpi:near
+    extern init_apic:near
     
 init    Proc far
     push ds
@@ -2844,6 +2845,7 @@ init    Proc far
     call init_bios
     call init_uacpi
     call DetectDevices
+    call init_apic
     clc
 ;
     popad

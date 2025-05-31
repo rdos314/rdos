@@ -4392,8 +4392,10 @@ DisablePic  Endp
 
 apic_tab    DB 'APIC'
 hpet_tab    DB 'HPET'
-    
-init    PROC far
+
+    public init_apic
+        
+init_apic    PROC near
     mov eax,2000h
     AllocateBigLinear
 ;
@@ -4711,9 +4713,9 @@ init_hpet_done:
 
 init_apic_gates_ok:     
     ret
-init    ENDP
+init_apic    ENDP
 
 code    ENDS
 
-    END init
-
+    END
+    
