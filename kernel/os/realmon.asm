@@ -30,7 +30,7 @@
 include realmon.def
 include ..\realtime.inc
 include system.def
-include ..\pcdev\apic.inc
+include ..\acpi\apic.inc
 
 mon_code_sel     = 8
 mon_data_sel     = 10h
@@ -929,7 +929,7 @@ siDo:
     pop rbx
     pop rax
     ret
-SendInt	Endp
+SendInt Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -938,7 +938,7 @@ SendInt	Endp
 ;
 ;               DESCRIPTION:    Allocate a physical page
 ;
-;               RETURNS:        RDX	Physical address
+;               RETURNS:        RDX     Physical address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -960,7 +960,7 @@ apWait:
 ;
     pop rbx
     ret
-AllocatePhys	Endp
+AllocatePhys    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

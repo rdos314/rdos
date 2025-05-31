@@ -427,8 +427,6 @@ hid_data_sel        EQU 0A28h
 ehci_code_sel       EQU 0A30h
 ehci_data_sel       EQU 0A38h
 
-apic_code_sel       EQU 0A40h
-apic_data_sel       EQU 0A48h
 apic_mem_sel        EQU 0A50h
 
 pic_code_sel        EQU 0A60h

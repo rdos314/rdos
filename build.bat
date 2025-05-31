@@ -4,10 +4,6 @@ echo "Building ACPI"
 ide2make -p kernel/acpi/acpi 1>nul
 wmake -f kernel/acpi/acpi.mk -h -e 1>nul
 
-echo "Building ACPI Prerelease"
-ide2make -p kernel/acpi-pre/acpi 1>nul
-wmake -f kernel/acpi-pre/acpi.mk -h -e 1>nul
-
 echo "Building Audio Device"
 ide2make -p kernel/audiodev/audiodev 1>nul
 wmake -f kernel/audiodev/audiodev.mk -h -e 1>nul
