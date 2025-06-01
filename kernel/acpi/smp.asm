@@ -71,6 +71,7 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
 
+    extern GetApicTable:near
     extern SetupLocalApic:near
     extern DelayMs:near
     extern GetValue:near
@@ -1423,21 +1424,22 @@ DoCreateCore   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:           StartupApCores
+;               NAME:           start smp
 ;
 ;               DESCRIPTION:    Startup application cores
-;
-;               PARAMETERS:     ES      Apic table
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 max_cores_name  DB 'CORES', 0
 vbe_name        DB 'VBE', 0
 
-    public StartupApCores
+    public start_smp
 
-StartupApCores    Proc near
+start_smp    Proc near
+    push ds
     push es
+    pushad
+;    
     mov eax,cs
     mov es,eax
     mov edi,OFFSET vbe_name
@@ -1446,15 +1448,13 @@ StartupApCores    Proc near
     mov eax,SEG data
     mov es,eax
     mov es:vbe_desired,bx
-    pop es
 ;
-    push es
     mov eax,cs
     mov es,eax
     mov edi,OFFSET max_cores_name
     call GetValue
-    pop es
     mov si,ax
+    call GetApicTable
 ;
     mov edi,OFFSET apic_entries
     movzx ecx,es:act_size
@@ -1512,21 +1512,28 @@ init_core_next:
     ja init_core_loop
 
 init_core_done:
+    popad
+    pop es
+    pop ds
     ret
-StartupApCores   Endp
+start_smp   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   Init
+;               NAME:           Init SMP
 ;
-;               DESCRIPTION:    Init apic mp module
+;               DESCRIPTION:    Init smp module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_apic_smp
+    public init_smp
         
-init_apic_smp    PROC near
+init_smp    PROC near
+    push ds
+    push es
+    pushad
+;    
     mov eax,cs
     mov ds,eax
     mov es,eax
@@ -1566,8 +1573,12 @@ init_apic_smp    PROC near
     xor cl,cl
     mov ax,send_nmi_nr
     RegisterOsGate
+;
+    popad
+    pop es
+    pop ds    
     ret
-init_apic_smp    ENDP
+init_smp    ENDP
 
 code    ENDS
 

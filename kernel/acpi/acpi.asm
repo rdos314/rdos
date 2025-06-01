@@ -2702,10 +2702,10 @@ apic_tab    DB 'APIC'
     extern init_bios:near
     extern init_uacpi:near
     extern init_apic:near
-    extern init_apic_smp:near
+    extern init_smp:near
     extern init_timer:near
     extern init_msi:near
-    extern StartupApCores:near
+    extern start_smp:near
     
 init    Proc far
     push ds
@@ -2924,10 +2924,10 @@ init_pic:
     call DetectDevices
 ;
     call init_msi
-    call init_apic_smp
+    call init_smp
     call init_timer
     call init_apic
-    call StartupApCores
+    call start_smp
     clc
 ;
     popad
