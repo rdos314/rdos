@@ -129,9 +129,6 @@ bsp_id              DD ?
 
 ioapic_spinlock     DW ?
 
-apic_tics           DD ?
-apic_rest           DW ?
-
 detected_irqs       DD ?,?
 
 ioapic_count        DW ?
@@ -156,6 +153,7 @@ code    SEGMENT byte public use32 'CODE'
     
     extern GetAcpiTable:near
     extern GetApicTable:near
+    extern InitApicTimer:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -864,52 +862,6 @@ SetupLocalApic    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;               NAME:                   DelayMs
-;
-;               DESCRIPTION:    Delay for Init/SIPI
-;
-;       PARAMETERS:     AX      Delay in ms
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public DelayMs
-
-DelayMs Proc near
-    push ds
-    push es
-    pushad
-;
-    mov edx,SEG data
-    mov ds,edx
-    movzx eax,ax
-    mov ecx,1193
-    mul ecx
-;        
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    shl eax,16
-    mul ecx
-    inc edx
-;
-    mov eax,apic_mem_sel
-    mov es,eax    
-    mov es:APIC_INIT_COUNT,edx
-
-dmLoop:
-    mov eax,es:APIC_CURR_COUNT
-    or eax,eax
-    jnz dmLoop
-;       
-    popad
-    pop es
-    pop ds
-    ret
-DelayMs Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           SendEoi
 ;
 ;       DESCRIPTION:    Send EOI to APIC (only use for custom ISRs)
@@ -1182,72 +1134,6 @@ daiLoop:
     pop ds
     ret
 disable_all_irq Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           StartSysPreemptTimer
-;
-;               DESCRIPTION:    Start mixed system and preempt timer
-;
-;               RETURNS:        EAX      Update tics
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_sys_preempt_timer_name    DB 'Start Apic Sys Preempt Timer', 0
-
-start_sys_preempt_timer    Proc far
-    push ds
-;    
-    mov eax,apic_mem_sel
-    mov ds,eax
-    mov eax,83h
-    mov ds:APIC_TIMER,eax
-    xor eax,eax
-;
-    pop ds
-    ret
-start_sys_preempt_timer  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           ReloadSysPreemptTimer
-;
-;               DESCRIPTION:    Reload mixed system and preempt timer
-;
-;               PARAMETERS:     AX      Reload tics
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reload_sys_preempt_timer_name    DB 'Reload Apic Sys Preempt Timer', 0
-
-reload_sys_preempt_timer    Proc far
-    push ds
-    push eax
-    push ecx
-    push edx
-;
-    mov ecx,SEG data
-    mov ds,ecx
-;    
-    mov ecx,ds:apic_tics
-    shl ecx,16
-    mov cx,ds:apic_rest
-    shl eax,16
-    mul ecx
-    inc edx
-    mov eax,apic_mem_sel
-    mov ds,eax    
-    mov ds:APIC_INIT_COUNT,edx
-    clc
-;
-    pop edx
-    pop ecx
-    pop eax
-    pop ds
-    ret
-reload_sys_preempt_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2077,94 +1963,6 @@ init_apic_next:
     ja init_apic_loop
     ret
 ProcessApicTable    Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:                   InitApicTimer
-;
-;               DESCRIPTION:    Init APIC timer
-;
-;               PARAMETERS:             EAX     Physical base of timer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_tics   MACRO
-    mov al,0
-    out TIMER_CONTROL,al
-    jmp short $+2
-    in al,TIMER0
-    mov ah,al
-    jmp short $+2
-    in al,TIMER0
-    xchg al,ah
-            ENDM
-
-InitApicTimer Proc near    
-    push ds
-    push es
-    pushad
-;    
-    mov eax,SEG data
-    mov ds,eax
-    mov eax,apic_mem_sel
-    mov es,eax
-
-init_tsc_start:
-    mov ecx,10000h    
-
-init_tsc_wait_start_high:
-    read_tics    
-    test ax,8000h
-    jnz init_tsc_wait_start_high_ok
-    loop init_tsc_wait_start_high    
-
-init_tsc_wait_start_high_ok:
-    mov ecx,10000h    
-
-init_tsc_wait_start_low:
-    read_tics    
-    test ax,8000h
-    jz init_tsc_wait_start_low_ok
-    loop init_tsc_wait_start_low
-
-init_tsc_wait_start_low_ok:    
-    mov eax,-1
-    mov es:APIC_INIT_COUNT,eax
-
-init_apic_start_done:
-    mov ecx,10000h    
-
-init_tsc_wait_high:    
-    read_tics
-    test ax,8000h
-    jnz init_tsc_wait_high_ok
-    loop init_tsc_wait_high
-
-init_tsc_wait_high_ok:
-    mov ecx,10000h    
-
-init_tsc_wait_low:    
-    read_tics
-    test ax,8000h
-    jz init_tsc_wait_low_ok
-    loop init_tsc_wait_low
-
-init_tsc_wait_low_ok:
-    mov eax,-1
-    sub eax,es:APIC_CURR_COUNT    
-    xor edx,edx
-    mov ecx,8000h
-    div ecx
-;
-    mov ds:apic_tics,eax
-    mov ds:apic_rest,dx    
-;    
-    popad
-    pop es
-    pop ds
-    ret
-InitApicTimer Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2423,18 +2221,6 @@ init_apic    PROC near
     mov edi,OFFSET set_system_time_name
     xor cl,cl
     mov ax,set_system_time_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET start_sys_preempt_timer
-    mov edi,OFFSET start_sys_preempt_timer_name
-    xor cl,cl
-    mov ax,start_sys_preempt_timer_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET reload_sys_preempt_timer
-    mov edi,OFFSET reload_sys_preempt_timer_name
-    xor cl,cl
-    mov ax,reload_sys_preempt_timer_nr
     RegisterOsGate
 ;
     mov esi,OFFSET long_timer_handler

@@ -2703,6 +2703,7 @@ apic_tab    DB 'APIC'
     extern init_uacpi:near
     extern init_apic:near
     extern init_apic_smp:near
+    extern init_timer:near
     extern init_msi:near
     extern StartupApCores:near
     
@@ -2924,6 +2925,7 @@ init_pic:
 ;
     call init_msi
     call init_apic_smp
+    call init_timer
     call init_apic
     call StartupApCores
     clc
