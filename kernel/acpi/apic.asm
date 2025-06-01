@@ -1595,6 +1595,15 @@ init_apic    PROC near
     mov eax,SEG data
     mov ds,eax
     mov ds:ioapic_spinlock,0
+;    
+    mov al,34h
+    out TIMER_CONTROL,al
+    jmp short $+2
+    mov al,0
+    out TIMER0,al
+    jmp short $+2
+    out TIMER0,al
+    jmp short $+2
 ;
     mov eax,cs
     mov ds,eax

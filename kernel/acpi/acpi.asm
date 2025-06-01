@@ -2797,6 +2797,7 @@ apic_tab    DB 'APIC'
     extern init_msi:near
     extern start_timer:near
     extern start_smp:near
+    extern init_pic:near
     
 init    Proc far
     push ds
@@ -3005,21 +3006,25 @@ init    Proc far
 ;
     mov eax,dword ptr cs:apic_tab
     call GetAcpiTable
-    jc init_pic
+    jc use_pic
 ;
     mov eax,SEG data
     mov ds,eax
     mov ds:apic_table,es    
-
-init_pic:
-    call DetectDevices
-;
+;    
     call init_msi
     call init_smp
     call init_timer
     call init_apic
     call start_timer
     call start_smp
+    jmp init_done
+
+use_pic:
+    call init_pic
+ 
+init_done:
+    call DetectDevices
     clc
 ;
     popad

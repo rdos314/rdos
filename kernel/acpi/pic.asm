@@ -61,7 +61,7 @@ ELSE
     .386p
 ENDIF
 
-code    SEGMENT byte public use16 'CODE'
+code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
     
@@ -97,10 +97,10 @@ IrqEntry1:
     push es
     push fs
 ;
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
+    xor eax,eax
+    mov ds,eax
+    mov es,eax
+    mov fs,eax
 ;
     mov al,cs:irq_nr
     EnterInt
@@ -175,32 +175,32 @@ IrqExitNestingOk1:
     out INT0_CONTROL,al
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitFs1
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitFs1:
-    mov fs,ax
+    mov fs,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitEs1
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitEs1:
-    mov es,ax
+    mov es,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitDs1
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitDs1:
-    mov ds,ax
+    mov ds,eax
 ;
     popad
     iretd
@@ -218,7 +218,7 @@ IrqDetect1:
     mov bx,OFFSET detected_irqs
     movzx dx,cs:irq_detect_nr
     bts ds:[bx],dx
-    retf32
+    retf
 
 IrqEnd1:
 
@@ -232,10 +232,10 @@ IrqEntry2:
     push es
     push fs
 ;
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
+    xor eax,eax
+    mov ds,eax
+    mov es,eax
+    mov fs,eax
 ;
     mov al,cs:irq_nr
     EnterInt
@@ -260,7 +260,7 @@ IrqAddStack2:
     mov fs:[bx].cs_nested_irq_stack,eax
 
 IrqPrevOk2: 
-    movzx bx,cs:irq_nr
+    movzx ebx,cs:irq_nr
     mov word ptr fs:cs_curr_irq_nr,bx
     mov fs:cs_curr_irq_retries,0
 ;
@@ -270,7 +270,7 @@ IrqRetry2:
     mov ds,cs:irq_handler_data
     call fword ptr cs:irq_handler_ads
 ;       
-    mov bx,OFFSET IrqEnd2 - OFFSET IrqStart2
+    mov ebx,OFFSET IrqEnd2 - OFFSET IrqStart2
     jmp cs:irq_chain
 
 IrqExit2:
@@ -314,32 +314,32 @@ IrqExitNestingOk2:
     out INT1_CONTROL,al
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitFs2
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitFs2:
-    mov fs,ax
+    mov fs,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitEs2
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitEs2:
-    mov es,ax
+    mov es,eax
 ;
-    pop ax
+    pop eax
     verr ax
     jz IrqExitDs2
 ;    
-    xor ax,ax
+    xor eax,eax
 
 IrqExitDs2:
-    mov ds,ax
+    mov ds,eax
 ;
     popad
     iretd
@@ -352,12 +352,12 @@ IrqDetect2:
     or al,ah
     out INT1_MASK,al
 ;
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,OFFSET detected_irqs
-    movzx dx,cs:irq_detect_nr
-    bts ds:[bx],dx
-    retf32
+    mov eax,SEG data
+    mov ds,eax
+    mov ebx,OFFSET detected_irqs
+    movzx edx,cs:irq_detect_nr
+    bts ds:[ebx],edx
+    retf
 
 IrqEnd2:
     
@@ -416,17 +416,17 @@ CreateIrq   Proc near
     jae ci2
 
 ci1:    
-    push ax
+    push eax
     mov eax,OFFSET IrqEnd1 - OFFSET IrqStart1
     AllocateSmallLinear
     AllocateGdt
     mov ecx,eax
     CreateCodeSelector16
 ;
-    mov ax,cs
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov eax,flat_sel
+    mov es,eax
     mov esi,OFFSET IrqStart1
     mov edi,edx
     rep movs byte ptr es:[edi],ds:[esi]
@@ -436,18 +436,18 @@ ci1:
     mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDetect1 - OFFSET IrqStart1
     mov word ptr es:[edx].irq_handler_ads+4,bx
     mov es:[edx].irq_handler_data,0
-    pop ax
+    pop eax
 ;
-    mov si,SEG data
-    mov ds,si
-    movzx si,al
-    shl si,1
-    mov ds:[si].global_int_arr,bx
+    mov esi,SEG data
+    mov ds,esi
+    movzx esi,al
+    shl esi,1
+    mov ds:[esi].global_int_arr,bx
 ;    
     mov es:[edx].irq_detect_nr,al
     mov es:[edx].irq_nr,al
 ;
-    mov ds,bx
+    mov ds,ebx
     mov esi,OFFSET IrqEntry1 - OFFSET IrqStart1
     add al,28h
     xor bl,bl
@@ -455,17 +455,17 @@ ci1:
     jmp ciDone
 
 ci2:
-    push ax
+    push eax
     mov eax,OFFSET IrqEnd2 - OFFSET IrqStart2
     AllocateSmallLinear
     AllocateGdt
     mov ecx,eax
     CreateCodeSelector16
 ;
-    mov ax,cs
-    mov ds,ax
-    mov ax,flat_sel
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov eax,flat_sel
+    mov es,eax
     mov esi,OFFSET IrqStart2
     mov edi,edx
     rep movs byte ptr es:[edi],ds:[esi]
@@ -475,19 +475,19 @@ ci2:
     mov dword ptr es:[edx].irq_handler_ads,OFFSET IrqDetect2 - OFFSET IrqStart2
     mov word ptr es:[edx].irq_handler_ads+4,bx
     mov es:[edx].irq_handler_data,0
-    pop ax
+    pop eax
 ;
-    mov si,SEG data
-    mov ds,si
-    movzx si,al
-    shl si,1
-    mov ds:[si].global_int_arr,bx
+    mov esi,SEG data
+    mov ds,esi
+    movzx esi,al
+    shl esi,1
+    mov ds:[esi].global_int_arr,bx
 ;    
     mov es:[edx].irq_detect_nr,al
     sub al,8
     mov es:[edx].irq_nr,al
 ;
-    mov ds,bx
+    mov ds,ebx
     mov esi,OFFSET IrqEntry2 - OFFSET IrqStart2
     add al,38h
     xor bl,bl
@@ -519,19 +519,19 @@ request_irq_handler Proc far
     push fs
     pushad
 ;
-    movzx bx,al
-    shl bx,1
-    mov dx,SEG data
-    mov fs,dx
-    mov bx,fs:[bx].global_int_arr
+    movzx ebx,al
+    shl ebx,1
+    mov edx,SEG data
+    mov fs,edx
+    mov bx,fs:[ebx].global_int_arr
     or bx,bx
     jz rihDone
 ;
-    push ax
-    mov fs,bx
+    push eax
+    mov fs,ebx
     mov edx,fs:irq_linear
-    mov ax,flat_sel
-    mov fs,ax
+    mov eax,flat_sel
+    mov fs,eax
 ;
     mov al,fs:[edx].irq_detect_nr
     cmp al,-1
@@ -544,9 +544,9 @@ rihChain:
     push esi
     push edi
 ;
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
+    mov eax,flat_sel
+    mov ds,eax
+    mov es,eax
 ;    
     mov esi,edx
     GetSelectorBaseSize
@@ -563,8 +563,8 @@ rihChain:
     xor ecx,ecx
     FreeLinear
 ;
-    mov ax,cs
-    mov ds,ax
+    mov eax,cs
+    mov ds,eax
     mov esi,OFFSET IrqChainStart
     mov ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
     rep movs byte ptr es:[edi],ds:[esi]
@@ -584,7 +584,7 @@ rihChain:
     mov fs:[ebp].irch_handler_ads,edi
     mov word ptr fs:[ebp].irch_handler_ads+4,es
 ;
-    pop ax
+    pop eax
     cmp al,8
     jae rihChain2
 
@@ -623,7 +623,7 @@ rihChainPrev:
     jmp rihDone
         
 rihReplace:    
-    pop ax
+    pop eax
     mov fs:[edx].irq_handler_data,ds
     mov fs:[edx].irq_handler_ads,edi
     mov word ptr fs:[edx].irq_handler_ads+4,es
@@ -632,7 +632,7 @@ rihReplace:
 rihDone:
     popad
     pop fs    
-    retf32
+    ret
 request_irq_handler   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -701,7 +701,7 @@ daiMasterLoop:
 daiMasterOk:
     mov eax,edx
     pop edx
-    retf32
+    ret
 disable_all_irq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -714,7 +714,7 @@ disable_all_irq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnableDetect  Proc near
-    push ax
+    push eax
 ;    
     xor al,al
     out 21h,al
@@ -723,7 +723,7 @@ EnableDetect  Proc near
     xor al,al
     out 0A1h,al
 ;
-    pop ax
+    pop eax
     ret
 EnableDetect   Endp
 
@@ -740,10 +740,10 @@ setup_irq_detect_name   DB 'Setup IRQ detect',0
 
 setup_irq_detect    Proc far
     push ds
-    push ax
+    push eax
 ;       
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ds:detected_irqs,0
     call EnableDetect
 ;
@@ -752,9 +752,9 @@ setup_irq_detect    Proc far
 ;
     mov ds:detected_irqs,0       
 ;
-    pop ax
+    pop eax
     pop ds
-    retf32
+    ret
 setup_irq_detect    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -773,13 +773,13 @@ poll_irq_detect_name    DB 'Poll IRQ detect',0
 poll_irq_detect Proc far
     push ds
 ;       
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     movzx eax,ds:detected_irqs
     xor edx,edx
 ;
     pop ds
-    retf32
+    ret
 poll_irq_detect Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -796,7 +796,7 @@ poll_irq_detect Endp
 send_eoi_name   DB 'Send EOI', 0
 
 send_eoi   Proc far
-    push ax
+    push eax
 ;
     mov ah,al
 ;    
@@ -818,8 +818,8 @@ sePic1:
     out INT0_CONTROL,al
 
 seDone:
-    pop ax
-    retf32
+    pop eax
+    ret
 send_eoi    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -837,11 +837,11 @@ notify_irq_name   DB 'Notify IRQ', 0
 
 notify_irq   Proc far
     push ds
-    push ax
-    push bx
-    push cx
+    push eax
+    push ebx
+    push ecx
 ;   
-    push ax 
+    push eax 
     cmp al,8
     jae niDo2
 
@@ -864,19 +864,19 @@ niDo2:
     out INT1_MASK,al
 
 niUpdate:    
-    mov ax,SEG data
-    mov ds,ax
-    pop ax
+    mov eax,SEG data
+    mov ds,eax
+    pop eax
 ;
-    mov bx,OFFSET detected_irqs
-    movzx ax,al
-    bts ds:[bx],ax
+    mov ebx,OFFSET detected_irqs
+    movzx eax,al
+    bts ds:[ebx],eax
 ;
-    pop cx
-    pop bx
-    pop ax
+    pop ecx
+    pop ebx
+    pop eax
     pop ds
-    retf32
+    ret
 notify_irq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -894,8 +894,9 @@ start_pit_timer_name    DB 'Start Pit Timer', 0
 
 start_pit_timer    Proc far
     push ds
-    mov ax,time_data_sel
-    mov ds,ax
+;    
+    mov eax,time_data_sel
+    mov ds,eax
     mov ds:t_pit_spinlock,0
 ;    
     mov al,0B4h
@@ -940,8 +941,9 @@ start_pit_timer    Proc far
     and al,NOT 1
     out INT0_MASK,al
     pop eax
+;    
     pop ds
-    retf32
+    ret
 start_pit_timer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -958,10 +960,11 @@ start_pit_timer    Endp
 reload_pit_timer_name    DB 'Reload Pit Timer', 0
 
 reload_pit_timer    Proc far
-    push ax
+    push eax
+;    
     mov ax,30h
     out TIMER_CONTROL,al
-    pop ax
+    pop eax
     jmp short $+2
 ;
     out TIMER0,al
@@ -969,7 +972,7 @@ reload_pit_timer    Proc far
     jmp short $+2
     out TIMER0,al
     clc
-    retf32
+    ret
 reload_pit_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -988,8 +991,8 @@ get_system_time_name    DB 'Get System Time', 0
 get_system_time  Proc far
     push ds
 ;
-    mov ax,time_data_sel
-    mov ds,ax
+    mov eax,time_data_sel
+    mov ds,eax
 
 gstSpinLock:    
     mov ax,ds:t_pit_spinlock
@@ -1030,10 +1033,10 @@ gstGet:
 ;    
     mov ds:t_pit_spinlock,0
     sti
+;
     pop ds
-    retf32
+    ret
 get_system_time  Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1051,14 +1054,16 @@ set_system_time_name    DB 'Set System Time',0
 
 set_system_time PROC far
     push ds
-    push bx
-    mov bx,time_data_sel
-    mov ds,bx
+    push ebx
+;    
+    mov ebx,time_data_sel
+    mov ds,ebx
     mov ds:t_system_time,eax
     mov ds:t_system_time+4,edx
-    pop bx
+;    
+    pop ebx
     pop ds
-    retf32
+    ret
 set_system_time ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1083,32 +1088,32 @@ timer_int:
     out INT0_CONTROL,al
     LeaveInt
 ;
-    pop ax
+    pop eax
     verr ax
     jz timer_fs_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 timer_fs_ok:
-    mov fs,ax
+    mov fs,eax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz timer_es_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 timer_es_ok:
-    mov es,ax
+    mov es,eax
 ;    
-    pop ax
+    pop eax
     verr ax
     jz timer_ds_ok
 ;
-    xor ax,ax
+    xor eax,eax
 
 timer_ds_ok:
-    mov ds,ax
+    mov ds,eax
 ;    
     popad
     iretd
@@ -1124,38 +1129,18 @@ timer_ds_ok:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-int_tab:
-
-ii0    DW      28h,    OFFSET timer_int
-ii_end DW      0FFFFh
-
-;
-; tabell offsets
-;
-ig_nr       EQU 0
-ig_entry    EQU 2
-
 SetupInts Proc near
     push ds
     pushad
 ;    
-    mov ax,cs
-    mov ds,ax
+    mov eax,cs
+    mov ds,eax
     xor bl,bl
-    mov di,OFFSET int_tab
-
-intLoop:
-    mov ax,cs:[di]
-    cmp ax,0FFFFh
-    jz intDone
-;
-    mov al,cs:[di].ig_nr
-    movzx esi, word ptr cs:[di].ig_entry
+;    
+    mov al,28h
+    mov esi, OFFSET timer_int
     SetupIntGate
-    add di,4
-    jmp intLoop
-    
-intDone:
+;    
     popad
     pop ds
     ret
@@ -1190,15 +1175,15 @@ iD DB 15
 iE DB -1
 
 SetupDefaultIrq Proc near
-    mov bx,OFFSET irq_tab
+    mov ebx,OFFSET irq_tab
 
 sdiLoop:
-    mov al,cs:[bx]
+    mov al,cs:[ebx]
     cmp al,-1
     je sdiDone
 ;
     call CreateIrq    
-    inc bx
+    inc ebx
     jmp sdiLoop
 
 sdiDone:
@@ -1216,7 +1201,13 @@ SetupDefaultIrq Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init    PROC far
+    public init_pic
+
+init_pic    PROC near
+    push ds
+    push es
+    pushad
+;    
     mov eax,2000h
     AllocateBigLinear
 ;
@@ -1236,24 +1227,24 @@ init    PROC far
     mov es:t_phys,eax
     mov es:t_phys+4,ebx
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ds:detected_irqs,0
 ;
-    mov cx,16
-    mov si,OFFSET global_int_arr
+    mov ecx,16
+    mov esi,OFFSET global_int_arr
     xor ax,ax
 
 init_global_int:
-    mov ds:[si],ax
-    add si,2
+    mov ds:[esi],ax
+    add esi,2
     loop init_global_int
 ;    
     call SetupDefaultIrq
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov esi,OFFSET request_irq_handler
     mov edi,OFFSET request_irq_handler_name
@@ -1315,8 +1306,8 @@ init_global_int:
     mov ax,set_system_time_nr
     RegisterOsGate
 ;
-    mov ax,cs
-    mov ds,ax
+    mov eax,cs
+    mov ds,eax
     xor bl,bl
 ;
     mov al,11h
@@ -1364,10 +1355,14 @@ init_global_int:
     jmp short $+2
 ;
     call SetupInts        
+;
+    popad
+    pop es
+    pop ds    
     ret
-init    ENDP
+init_pic    ENDP
 
 code    ENDS
 
-    END init
+    END
 
