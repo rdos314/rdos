@@ -539,6 +539,8 @@ InitApicTimer Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+hpet_tab    DB 'HPET'
+
     public init_timer
         
 init_timer    PROC near
@@ -585,18 +587,70 @@ init_timer    PROC near
     mov ax,has_global_timer_nr
     RegisterBimodalUserGate
 ;
-    popad
-    pop es
-    pop ds
-    ret
-init_timer    ENDP
+    mov eax,dword ptr cs:hpet_tab
+    call GetAcpiTable
+    jc init_hpet_obj
+;    
+    mov ebx,es:hpett_phys_base
+    jmp init_hpet_check
 
-    public setup_hpet_timer
+init_hpet_obj: 
+    mov ebx,0FED00000h
 
-setup_hpet_timer    Proc near
-    push ds
-    push es
-    pushad
+init_hpet_check:    
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,ebx
+    or ax,33h
+    xor ebx,ebx
+    SetPageEntry
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es,bx
+;
+    mov eax,es:hpet_period
+    or eax,eax
+    jz init_hpet_done
+;
+    cmp eax,5F5E100h
+    ja init_hpet_done
+;
+    mov eax,es:hpet_cap
+    or al,al
+    jz init_hpet_done
+;
+    mov ax,time_data_sel
+    mov ds,ax
+    mov ds:t_hpet_sel,es
+;    
+    mov eax,es:hpet_config
+    and al,NOT 2
+    mov es:hpet_config,eax
+;    
+    mov eax,es:hpet_period
+    mov ds:t_hpet_factor,eax
+;
+    mov eax,es:hpet_cap
+    mov al,ah
+    and ax,1Fh
+    inc ax
+    mov ds:t_hpet_counters,ax
+;
+    movzx ecx,ax
+    mov ebx,OFFSET hpet_counter_arr    
+
+init_hpet_loop:
+    mov eax,es:[ebx].hpetc_config
+    and ax,NOT 4004h
+    mov es:[ebx].hpetc_config,eax
+    add ebx,SIZE hpet_counter_struc
+    loop init_hpet_loop
+;    
+    mov eax,es:hpet_config
+    and al,NOT 3
+    or al,1
+    mov es:hpet_config,eax
 ;
     mov eax,cs
     mov ds,eax
@@ -607,12 +661,13 @@ setup_hpet_timer    Proc near
     xor dx,dx
     mov ax,get_system_time_nr
     RegisterBimodalUserGate
-;
+
+init_hpet_done:    
     popad
     pop es
     pop ds
     ret
-setup_hpet_timer   Endp
+init_timer    ENDP
 
 code    ENDS
 
