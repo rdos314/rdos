@@ -1743,10 +1743,54 @@ SetupInts Proc near
     SetupLongSpuriousInt
 
 siSpurOk:
+    mov al,40h
+    mov esi,OFFSET timer_int
+    SetupIntGate
+;    
+    mov ax,setup_long_timer_int_nr
+    IsValidOsGate
+    jc siTimerOk
+;    
+    mov al,40h
+    SetupLongTimerInt
+
+siTimerOk:
+    mov al,80h
+    mov esi,OFFSET preempt_int
+    SetupIntGate
+;    
+    mov ax,setup_long_preempt_int_nr
+    IsValidOsGate
+    jc siPreemptOk
+;    
+    mov al,80h
+    SetupLongPreemptInt
+
+siPreemptOk:
     mov al,25h
     mov esi,OFFSET tlb_int
     SetupIntGate
 ;        
+    mov ax,setup_long_schedule_int_nr
+    IsValidOsGate
+    jc siSchedOk
+;    
+    mov al,82h
+    SetupLongScheduleInt
+
+siSchedOk:
+    mov al,83h
+    mov esi,OFFSET timer_int
+    SetupIntGate
+;    
+    mov ax,setup_long_timer_int_nr
+    IsValidOsGate
+    jc siPreemptTimerOk
+;    
+    mov al,83h
+    SetupLongTimerInt
+
+siPreemptTimerOk:
     mov al,26h
     mov esi,OFFSET wakeup_int
     SetupIntGate
@@ -1755,73 +1799,6 @@ siSpurOk:
     pop ds
     ret
 SetupInts Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:           SetupTimerInts
-;
-;               DESCRIPTION:    Setup timer ints
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-SetupTimerInts Proc near
-    push ds
-    pushad
-
-    mov ax,cs
-    mov ds,ax
-    xor bl,bl
-;
-    mov al,40h
-    mov esi,OFFSET timer_int
-    SetupIntGate
-;    
-    mov ax,setup_long_timer_int_nr
-    IsValidOsGate
-    jc stiTimerOk
-;    
-    mov al,40h
-    SetupLongTimerInt
-
-stiTimerOk:
-    mov al,80h
-    mov esi,OFFSET preempt_int
-    SetupIntGate
-;    
-    mov ax,setup_long_preempt_int_nr
-    IsValidOsGate
-    jc stiPreemptOk
-;    
-    mov al,80h
-    SetupLongPreemptInt
-
-stiPreemptOk:
-    mov ax,setup_long_schedule_int_nr
-    IsValidOsGate
-    jc stiSchedOk
-;    
-    mov al,82h
-    SetupLongScheduleInt
-
-stiSchedOk:
-    mov al,83h
-    mov esi,OFFSET timer_int
-    SetupIntGate
-;    
-    mov ax,setup_long_timer_int_nr
-    IsValidOsGate
-    jc stiPreemptTimerOk
-;    
-    mov al,83h
-    SetupLongTimerInt
-
-stiPreemptTimerOk:
-    popad
-    pop ds
-    ret
-SetupTimerInts Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2534,7 +2511,6 @@ init_hpet_done:
 ;    
     call DisablePic    
     call SetupInts
-    call SetupTimerInts
     call InitIoApic
     call CreateIrqHandlers
     call ProcessApicTable
