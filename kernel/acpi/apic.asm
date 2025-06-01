@@ -153,7 +153,6 @@ code    SEGMENT byte public use32 'CODE'
     
     extern GetAcpiTable:near
     extern GetApicTable:near
-    extern InitApicTimer:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1995,7 +1994,6 @@ init_apic    PROC near
     call ProcessApicTable
     call SetupLocalApic
     call EnableDetect    
-    call InitApicTimer
 ;
     popad
     pop es

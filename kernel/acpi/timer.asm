@@ -443,11 +443,9 @@ reload_sys_preempt_timer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:                   InitApicTimer
+;               NAME:           Start timer
 ;
-;               DESCRIPTION:    Init APIC timer
-;
-;               PARAMETERS:             EAX     Physical base of timer
+;               DESCRIPTION:    start timer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -462,9 +460,9 @@ read_tics   MACRO
     xchg al,ah
             ENDM
 
-    public InitApicTimer
+    public start_timer
 
-InitApicTimer Proc near    
+start_timer Proc near    
     push ds
     push es
     pushad
@@ -528,7 +526,7 @@ init_tsc_wait_low_ok:
     pop es
     pop ds
     ret
-InitApicTimer Endp
+start_timer Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

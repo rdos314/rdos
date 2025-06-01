@@ -2705,6 +2705,7 @@ apic_tab    DB 'APIC'
     extern init_smp:near
     extern init_timer:near
     extern init_msi:near
+    extern start_timer:near
     extern start_smp:near
     
 init    Proc far
@@ -2927,6 +2928,7 @@ init_pic:
     call init_smp
     call init_timer
     call init_apic
+    call start_timer
     call start_smp
     clc
 ;
