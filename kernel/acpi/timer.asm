@@ -164,6 +164,219 @@ DelayMs Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetSystemTime
+;
+;           DESCRIPTION:    Read system time, PIT version
+;
+;           RETURNS:        EDX:EAX     System time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pit_time_name    DB 'Get System Time', 0
+
+get_pit_time  Proc far
+    push ds
+;
+    mov eax,time_data_sel
+    mov ds,eax
+
+gstSpinLock:    
+    mov ax,ds:t_spinlock
+    or ax,ax
+    je gstGet
+;
+    sti
+    pause
+    jmp gstSpinLock
+
+gstGet:
+    cli
+    inc ax
+    xchg ax,ds:t_spinlock
+    or ax,ax
+    jne gstSpinLock
+;
+    mov al,0
+    out TIMER_CONTROL,al
+    jmp short $+2
+    in al,TIMER0
+    mov ah,al
+    jmp short $+2
+    in al,TIMER0
+    xchg al,ah
+    mov dx,ax
+    xchg ax,ds:t_clock_tics
+    sub ax,dx
+    movzx eax,ax
+    add ds:t_system_time,eax
+    adc ds:t_system_time+4,0
+;    
+    mov eax,ds:t_system_time
+    mov edx,ds:t_system_time+4
+;
+    mov ds:ut_system_time+1000h,eax
+    mov ds:ut_system_time+1004h,edx
+;    
+    mov ds:t_spinlock,0
+    sti
+    pop ds
+    ret
+get_pit_time  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetSystemTime
+;
+;           DESCRIPTION:    Read system time, HPET version
+;
+;           RETURNS:        EDX:EAX     System time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_hpet_time_name    DB 'Get System Time', 0
+
+get_hpet_time  Proc far
+    push ecx
+    push ds
+    push es
+;
+    mov eax,time_data_sel
+    mov ds,eax
+    mov es,ds:t_hpet_sel
+
+ghtSpinLock:    
+    mov ax,ds:t_spinlock
+    or ax,ax
+    je ghtGet
+;
+    sti
+    pause
+    jmp ghtSpinLock
+
+ghtGet:
+    cli
+    inc ax
+    xchg ax,ds:t_spinlock
+    or ax,ax
+    jne ghtSpinLock
+;
+    mov eax,es:hpet_count
+    mov edx,eax
+    xchg edx,ds:t_prev_hpet
+    sub eax,edx
+    mul ds:t_hpet_factor
+    add eax,ds:t_hpet_guard
+    adc edx,0
+;
+    mov ecx,31F5C4EDh
+    div ecx
+    mov ds:t_hpet_guard,edx
+    add ds:t_system_time,eax
+    adc ds:t_system_time+4,0
+;    
+    mov eax,ds:t_system_time
+    mov edx,ds:t_system_time+4
+;
+    mov ds:ut_system_time+1000h,eax
+    mov ds:ut_system_time+1004h,edx
+;    
+    mov ds:t_spinlock,0
+    sti
+;
+    pop ecx
+    verr cx
+    jz hpet_time_es_ok
+;
+    xor ecx,ecx
+    
+hpet_time_es_ok:
+    mov es,ecx
+;
+    pop ecx
+    verr cx
+    jz hpet_time_ds_ok
+;
+    xor ecx,ecx
+    
+hpet_time_ds_ok:
+    mov ds,ecx
+    pop ecx
+    ret
+get_hpet_time  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SetSystemTime
+;
+;           DESCRIPTION:    Set system time. Must not be called after tasking is
+;                           started.
+;
+;           PARAMETERS:         EDX:EAX     Binary time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_system_time_name    DB 'Set System Time',0
+
+set_system_time PROC far
+    push ds
+    push ebx
+;
+    mov ebx,time_data_sel
+    mov ds,ebx
+    mov ds:t_system_time,eax
+    mov ds:t_system_time+4,edx
+;
+    pop ebx
+    pop ds
+    ret
+set_system_time ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           HasGlobalTimer
+;
+;           DESCRIPTION:    Check if system has global timer
+;
+;           RETURNS:        NC      Global timer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+has_local_timer_name    DB 'Has Global Timer', 0
+
+has_local_timer  Proc far
+    stc
+    ret
+has_local_timer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LongTimerHandler
+;
+;           DESCRIPTION:    Long timer int
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+long_timer_handler_name    DB 'Long Timer Handler', 0
+
+long_timer_handler      Proc far
+    mov al,-1
+    EnterInt    
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
+    mov eax,apic_mem_sel
+    mov ds,eax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    LeaveInt
+    ret
+long_timer_handler      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;               NAME:           StartSysPreemptTimer
 ;
 ;               DESCRIPTION:    Start mixed system and preempt timer
@@ -348,12 +561,58 @@ init_timer    PROC near
     xor cl,cl
     mov ax,reload_sys_preempt_timer_nr
     RegisterOsGate
+    mov esi,OFFSET set_system_time
+    mov edi,OFFSET set_system_time_name
+    xor cl,cl
+    mov ax,set_system_time_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET long_timer_handler
+    mov edi,OFFSET long_timer_handler_name
+    xor cl,cl
+    mov ax,long_timer_handler_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_pit_time
+    mov edi,OFFSET get_pit_time_name
+    xor dx,dx
+    mov ax,get_system_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET has_local_timer
+    mov edi,OFFSET has_local_timer_name
+    xor dx,dx
+    mov ax,has_global_timer_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es
     pop ds
     ret
 init_timer    ENDP
+
+    public setup_hpet_timer
+
+setup_hpet_timer    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax    
+;    
+    mov esi,OFFSET get_hpet_time
+    mov edi,OFFSET get_hpet_time_name
+    xor dx,dx
+    mov ax,get_system_time_nr
+    RegisterBimodalUserGate
+;
+    popad
+    pop es
+    pop ds
+    ret
+setup_hpet_timer   Endp
 
 code    ENDS
 
