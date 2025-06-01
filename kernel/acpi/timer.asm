@@ -439,6 +439,184 @@ reload_sys_preempt_timer    Proc far
     pop ds
     ret
 reload_sys_preempt_timer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           TimerInt
+;
+;               DESCRIPTION:    Timer interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timer_int:
+    pushad
+    push ds
+    push es
+    push fs
+;
+    mov al,-1
+    EnterInt    
+    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
+    mov eax,apic_mem_sel
+    mov ds,eax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    LeaveInt
+;
+    pop eax
+    verr ax
+    jz timer_fs_ok
+;
+    xor eax,eax
+
+timer_fs_ok:
+    mov fs,eax
+;    
+    pop eax
+    verr ax
+    jz timer_es_ok
+;
+    xor eax,eax
+
+timer_es_ok:
+    mov es,eax
+;    
+    pop eax
+    verr ax
+    jz timer_ds_ok
+;
+    xor eax,eax
+
+timer_ds_ok:
+    mov ds,eax
+;    
+    popad
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;               NAME:           PreemptInt
+;
+;               DESCRIPTION:    Preempt interrupt
+;
+;               PARAMETERS:             
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+preempt_int:
+    pushad
+    push ds
+    push es
+    push fs
+;
+    mov al,-1
+    EnterInt    
+    lock or fs:cs_flags,CS_FLAG_PREEMPT
+    mov eax,apic_mem_sel
+    mov ds,eax
+    xor eax,eax
+    mov ds:APIC_EOI,eax
+    LeaveInt
+;
+    pop eax
+    verr ax
+    jz preempt_fs_ok
+;
+    xor eax,eax
+
+preempt_fs_ok:
+    mov fs,eax
+;    
+    pop eax
+    verr ax
+    jz preempt_es_ok
+;
+    xor eax,eax
+
+preempt_es_ok:
+    mov es,eax
+;    
+    pop eax
+    verr ax
+    jz preempt_ds_ok
+;
+    xor eax,eax
+
+preempt_ds_ok:
+    mov ds,eax
+;    
+    popad
+    iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           SetupInts
+;
+;               DESCRIPTION:    Setup ints
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupInts Proc near
+    push ds
+    pushad
+
+    mov ax,cs
+    mov ds,ax
+    xor bl,bl
+;
+    mov al,40h
+    mov esi,OFFSET timer_int
+    SetupIntGate
+;    
+    mov ax,setup_long_timer_int_nr
+    IsValidOsGate
+    jc stiTimerOk
+;    
+    mov al,40h
+    SetupLongTimerInt
+
+stiTimerOk:
+    mov al,80h
+    mov esi,OFFSET preempt_int
+    SetupIntGate
+;    
+    mov ax,setup_long_preempt_int_nr
+    IsValidOsGate
+    jc stiPreemptOk
+;    
+    mov al,80h
+    SetupLongPreemptInt
+
+stiPreemptOk:
+    mov ax,setup_long_schedule_int_nr
+    IsValidOsGate
+    jc stiSchedOk
+;    
+    mov al,82h
+    SetupLongScheduleInt
+
+stiSchedOk:
+    mov al,83h
+    mov esi,OFFSET timer_int
+    SetupIntGate
+;    
+    mov ax,setup_long_timer_int_nr
+    IsValidOsGate
+    jc stiPreemptTimerOk
+;    
+    mov al,83h
+    SetupLongTimerInt
+
+stiPreemptTimerOk:
+    popad
+    pop ds
+    ret
+SetupInts Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -680,6 +858,8 @@ init_hpet_loop:
     RegisterBimodalUserGate
 
 init_hpet_done:    
+    call SetupInts
+;    
     popad
     pop es
     pop ds
