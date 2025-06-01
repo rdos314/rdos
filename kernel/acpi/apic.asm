@@ -1535,89 +1535,6 @@ timer_ds_ok:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;               NAME:           HpetInt
-;
-;               DESCRIPTION:    HPET interrupt
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hpet_int:
-    pushad
-    push ds
-    push es
-    push fs
-;
-    mov eax,time_data_sel
-    mov ds,eax
-    mov ds,ds:t_hpet_sel
-    mov edx,ds:hpet_int_status
-    mov ds:hpet_int_status,edx
-;    
-    mov al,-1
-    EnterInt    
-    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    mov eax,apic_mem_sel
-    mov ds,eax
-    xor eax,eax
-    mov ds:APIC_EOI,eax
-    LeaveInt
-;    
-    pop eax
-    verr ax
-    jz hpet_fs_ok
-;
-    xor eax,eax
-
-hpet_fs_ok:
-    mov fs,eax
-;    
-    pop eax
-    verr ax
-    jz hpet_es_ok
-;
-    xor eax,eax
-
-hpet_es_ok:
-    mov es,eax
-;    
-    pop eax
-    verr ax
-    jz hpet_ds_ok
-;
-    xor eax,eax
-
-hpet_ds_ok:
-    mov ds,eax
-;    
-    popad
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;               NAME:           HpetIoapicInt
-;
-;               DESCRIPTION:    HPET IOAPIC interrupt
-;
-;               PARAMETERS:             
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hpet_ioapic_int Proc far
-    lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    mov edx,time_data_sel
-    mov ds,edx
-    mov ds,ds:t_hpet_sel
-    mov edx,ds:hpet_int_status
-    mov ds:hpet_int_status,edx  
-    ret
-hpet_ioapic_int Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:           PreemptInt
 ;
 ;               DESCRIPTION:    Preempt interrupt
@@ -1862,18 +1779,6 @@ siPreemptOk:
     SetupLongScheduleInt
 
 siSchedOk:
-    mov al,82h
-    mov esi,OFFSET hpet_int
-    SetupIntGate
-;        
-    mov ax,setup_long_hpet_int_nr
-    IsValidOsGate
-    jc siHpetOk
-;    
-    mov al,82h
-    SetupLongHpetInt
-
-siHpetOk:
     mov al,83h
     mov esi,OFFSET timer_int
     SetupIntGate
