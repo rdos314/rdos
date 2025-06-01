@@ -40,6 +40,11 @@ INCLUDE ..\bios\vbe.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 
+ipause   MACRO
+    db 0F3h
+    db 90h
+    ENDM
+
 IA32_EFER       = 0C0000080h
 
 IFDEF __WASM__
@@ -436,6 +441,33 @@ ApInit:
 ;
     ShutdownCore
 
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;               NAME:           GetId
+;
+;               DESCRIPTION:    Get own ID
+;
+;       RETURNS:        EDX     Apic ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_id_name    DB 'Get Apic ID',0
+
+get_id  Proc far
+    push ds
+    push eax
+;    
+    mov eax,apic_mem_sel
+    mov ds,eax
+    mov edx,ds:APIC_ID
+    shr edx,24
+;
+    pop eax
+    pop ds
+    ret
+get_id Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -512,6 +544,86 @@ SendStartup Proc near
     pop ds    
     ret
 SendStartup Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SendNmi
+;
+;       DESCRIPTION:    Send NMI request
+;
+;       PARAMETERS:     FS      Destination processor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_nmi_name   DB 'Send NMI', 0
+
+send_nmi Proc far
+    push ds
+    push eax
+    push edx
+;    
+    mov edx,fs:cs_apic
+    shl edx,24
+    mov eax,apic_mem_sel
+    mov ds,eax
+    mov ds:APIC_ICR+10h,edx
+;
+    mov eax,4400h
+    mov ds:APIC_ICR,eax
+;
+    pop edx
+    pop eax
+    pop ds
+    ret
+send_nmi Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SendLockedInt
+;
+;       DESCRIPTION:    Send int to processor. Scheduler lock must be taken
+;
+;       PARAMETERS:     FS      Processor selector
+;                       AL      Int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_locked_int_name    DB 'Send Locked Int',0
+
+send_locked_int  Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+;    
+    mov edx,fs:cs_apic
+    shl edx,24
+    mov ecx,apic_mem_sel
+    mov ds,ecx
+
+siLoop:
+    mov ecx,ds:APIC_ICR
+    test cx,1000h
+    jz siDo
+;
+    ipause
+    jmp siLoop
+
+siDo:    
+    mov ds:APIC_ICR+10h,edx
+;
+    mov ah,40h
+    movzx eax,ax
+    mov ds:APIC_ICR,eax
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds    
+    ret
+send_locked_int  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1435,6 +1547,24 @@ init_apic_smp    PROC near
     mov edi,OFFSET boot_realtime_core_name
     xor cl,cl
     mov ax,boot_realtime_core_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_id
+    mov edi,OFFSET get_id_name
+    xor cl,cl
+    mov ax,get_apic_id_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_locked_int
+    mov edi,OFFSET send_locked_int_name
+    xor cl,cl
+    mov ax,send_locked_int_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET send_nmi
+    mov edi,OFFSET send_nmi_name
+    xor cl,cl
+    mov ax,send_nmi_nr
     RegisterOsGate
     ret
 init_apic_smp    ENDP
