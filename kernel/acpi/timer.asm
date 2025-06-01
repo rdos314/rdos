@@ -742,6 +742,15 @@ init_timer    PROC near
     xor al,al
     mov es:t_phys,eax
     mov es:t_phys+4,ebx
+;    
+    mov al,34h
+    out TIMER_CONTROL,al
+    jmp short $+2
+    mov al,0
+    out TIMER0,al
+    jmp short $+2
+    out TIMER0,al
+    jmp short $+2
 ;
     mov eax,cs
     mov ds,eax
