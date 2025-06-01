@@ -40,18 +40,6 @@ INCLUDE ..\bios\vbe.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 
-hpet_table  STRUC
-
-hpet_base       acpi_table <>
-
-hpett_event_block    DD ?
-hpett_flags          DD ?
-hpett_phys_base      DD ?,?
-hpett_nr             DB ?
-hpett_min_tics       DW ?
-
-hpet_table  ENDS
-
 ioapic_data_seg STRUC
 
 ioapic_regsel       DB ?
@@ -73,55 +61,12 @@ gi_trigger_mode     DB ?
 
 global_int_struc    ENDS
 
-hpet_counter_struc  STRUC
-
-hpetc_config        DD ?
-hpetc_int_mask      DD ?
-hpetc_compare       DD ?,?
-hpetc_msi_data      DD ?
-hpetc_msi_ads       DD ?
-hpetc_resv          DD ?,?
-
-hpet_counter_struc  ENDS
-
-hpet_struc      STRUC
-
-hpet_cap            DD ?
-hpet_period         DD ?
-hpet_resv1          DD ?,?
-hpet_config         DD ?,?,?,?
-hpet_int_status     DD ?,?,?,?
-
-hpet_resv2          DB 0C0h DUP(?)
-
-hpet_count          DD ?,?,?,?
-
-hpet_counter_arr    DB 32 * SIZE hpet_counter_struc DUP(?)
-
-hpet_struc      ENDS
-
 ioapic_core_irq_struc   STRUC
 
 ioapic_sel      DW ?
 ioapic_num      DB ?
 
 ioapic_core_irq_struc   ENDS
-
-time_seg  STRUC
-
-t_phys              DD ?,?
-t_spinlock          DW ?
-t_clock_tics        DW ?
-t_system_time       DD ?,?
-
-t_hpet_guard        DD ?
-t_prev_hpet         DD ?
-t_hpet_sel          DW ?
-t_hpet_factor       DD ?
-t_hpet_counters     DW ?
-
-time_seg  ENDS
-
 
 data    SEGMENT byte public 'DATA'
 
