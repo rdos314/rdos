@@ -2925,8 +2925,8 @@ init_pic:
 ;
     call init_msi
     call init_apic_smp
-    call init_apic
     call init_timer
+    call init_apic
     call StartupApCores
     clc
 ;
