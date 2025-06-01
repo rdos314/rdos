@@ -1917,6 +1917,10 @@ DisablePic  Endp
     public init_apic
         
 init_apic    PROC near
+    push ds
+    push es
+    pushad
+;    
     mov eax,SEG data
     mov ds,eax
     mov ds:ioapic_spinlock,0
@@ -1990,11 +1994,12 @@ init_apic    PROC near
     call CreateIrqHandlers
     call ProcessApicTable
     call SetupLocalApic
-    call EnableDetect
-;    
+    call EnableDetect    
     call InitApicTimer
-
-init_apic_gates_ok:     
+;
+    popad
+    pop es
+    pop ds        
     ret
 init_apic    ENDP
 
