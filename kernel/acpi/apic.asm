@@ -1227,13 +1227,12 @@ WiExitDs:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 SetupInts Proc near
     push ds
     pushad
 
-    mov ax,cs
-    mov ds,ax
+    mov eax,cs
+    mov ds,eax
     xor bl,bl
 ;
     mov al,0Fh
@@ -1268,8 +1267,6 @@ SetupInts Endp
 ;
 ;               DESCRIPTION:    Init IO-APIC
 ;
-;               PARAMETERS:     ES      Apic table
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitIoApic    Proc near
@@ -1277,15 +1274,15 @@ InitIoApic    Proc near
     mov ds,ax
     mov ds:ioapic_count,0
 ;
-    push es
     mov ax,SEG data
     mov es,ax
     mov ecx,256 * 4
     xor eax,eax
     mov edi,OFFSET global_int_arr
     rep stosd        
-    pop es
 ;
+    call GetApicTable    
+;    
     mov ecx,16
     mov edi,OFFSET global_int_arr
 
@@ -1447,13 +1444,12 @@ CreateIrqHandlers    Endp
 ;
 ;               DESCRIPTION:    Define basic APIC vars
 ;
-;               PARAMETERS:     ES      Apic table
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ProcessApicTable    Proc near
     mov eax,SEG data
     mov ds,eax
+    call GetApicTable
 ;
     mov edi,OFFSET apic_entries
     movzx ecx,es:act_size
@@ -1751,7 +1747,6 @@ init_apic    PROC near
     mov ax,request_irq_handler_nr
     RegisterOsGate
 ;    
-    call GetApicTable    
     call DisablePic    
     call SetupInts
     call InitIoApic
