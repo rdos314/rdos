@@ -1917,26 +1917,6 @@ DisablePic  Endp
     public init_apic
         
 init_apic    PROC near
-;
-    mov eax,2000h
-    AllocateBigLinear
-;
-    mov bx,time_data_sel
-    mov ecx,2000h
-    CreateDataSelector16
-;
-    mov es,ebx
-    xor edi,edi
-    mov ecx,800h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-;
-    add edx,1000h
-    GetPageEntry
-    xor al,al
-    mov es:t_phys,eax
-    mov es:t_phys+4,ebx
-;
     mov eax,SEG data
     mov ds,eax
     mov ds:ioapic_spinlock,0
