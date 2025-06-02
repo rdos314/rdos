@@ -22,5 +22,26 @@
     __parm [__edx] [__ecx] \
     __value [__eax]
 
+#pragma aux ServUacpiDisableIo = \
+    ServGate_uacpi_disable_io  \
+    "jc fail " \
+    "mov eax,1" \
+    "jmp done " \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    __parm [__edx] [__ecx] \
+    __value [__eax]
+
 #pragma aux ServUacpiStartPci = \
     ServGate_uacpi_start_pci
+
+#pragma aux ServUacpiHasApic = \
+    ServGate_uacpi_has_apic  \
+    "jc fail " \
+    "mov eax,1" \
+    "jmp done " \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    __value [__eax]

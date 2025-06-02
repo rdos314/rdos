@@ -2,4 +2,6 @@ uacpi_get_acpi_nr          = 1
 uacpi_map_nr               = 2
 uacpi_unmap_nr             = 3
 uacpi_enable_io_nr         = 4
-uacpi_start_pci_nr         = 5
+uacpi_disable_io_nr        = 5
+uacpi_start_pci_nr         = 6
+uacpi_has_apic_nr          = 7

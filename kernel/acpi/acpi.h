@@ -22,7 +22,9 @@ long long RDOSAPI ServUacpiGetAcpi();
 void *RDOSAPI ServUacpiMap(long long phys, int size);
 void RDOSAPI ServUacpiUnmap(void *base, int size);
 void RDOSAPI ServUacpiEnableIo(int base, int size);
+void RDOSAPI ServUacpiDisableIo(int base, int size);
 void RDOSAPI ServUacpiStartPci();
+int RDOSAPI ServUacpiHasApic();
 
 #ifdef __cplusplus
 }

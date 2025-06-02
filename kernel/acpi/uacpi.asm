@@ -66,6 +66,8 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
 
+    extern HasApic:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -915,6 +917,24 @@ uacpi_enable_io   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UacpiDisableIo
+;
+;       DESCRIPTION:    Disable IO
+;
+;       PARAMETERS:     EDX               Port
+;                       ECX               Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_disable_io_name DB 'uACPI Disable IO', 0
+
+uacpi_disable_io   PROC far
+    ret
+uacpi_disable_io   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UacpiStartPci
 ;
 ;       DESCRIPTION:    Start PCI hooks
@@ -946,6 +966,22 @@ uacpi_start_pci   PROC far
     pop ds
     ret
 uacpi_start_pci    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiHasApic
+;
+;       DESCRIPTION:    Check for APIC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_has_apic_name DB 'uACPI Has APIC', 0
+
+uacpi_has_apic   PROC far
+    call HasApic
+    ret
+uacpi_has_apic   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -988,10 +1024,22 @@ AcpiServer:
     mov ax,uacpi_enable_io_nr
     RegisterPrivateServGate
 ;
+    mov esi,OFFSET uacpi_disable_io
+    mov edi,OFFSET uacpi_disable_io_name
+    xor cl,cl
+    mov ax,uacpi_disable_io_nr
+    RegisterPrivateServGate
+;
     mov esi,OFFSET uacpi_start_pci
     mov edi,OFFSET uacpi_start_pci_name
     xor cl,cl
     mov ax,uacpi_start_pci_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET uacpi_has_apic
+    mov edi,OFFSET uacpi_has_apic_name
+    xor cl,cl
+    mov ax,uacpi_has_apic_nr
     RegisterPrivateServGate
 ;
     mov esi,OFFSET lpcmd
