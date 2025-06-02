@@ -1047,12 +1047,6 @@ AcpiServer:
     mov ax,4
     xor bx,bx
     LoadServer
-;
-    mov ax,1000
-    WaitMilliSec
-;
-    mov ax,3Eh+5
-    SetFocus
 
 aLoop:
     mov ax,250

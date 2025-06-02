@@ -6510,6 +6510,7 @@ exec_serv:
     mov ax,3Eh
 ;    mov ax,41h
     EnableFocus
+    SetFocus
     mov es:mod_key,al
 ;
     mov bx,es
