@@ -1037,6 +1037,9 @@
 #define usergate_set_adc_phase_limit 0x0000035D
 #define usergate_set_adc_channels 0x0000035E
 
+#define usergate_find_pci_class_handle 0x0000035F
+#define usergate_find_pci_prot_handle 0x00000360
+
 
 
 #ifdef __FLAT__
@@ -2079,6 +2082,9 @@
 #define CallGate_set_adc_phase_limit 0x55 0x67 0x9a 93 3 0 0 3 0 0x5d
 #define CallGate_set_adc_channels 0x55 0x67 0x9a 94 3 0 0 3 0 0x5d
 
+#define CallGate_find_pci_class_handle 0x55 0x67 0x9a 95 3 0 0 3 0 0x5d
+#define CallGate_find_pci_prot_handle 0x55 0x67 0x9a 96 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -3118,5 +3124,8 @@
 #define CallGate_set_adc_amp_limit 0x3e 0x67 0x9a 92 3 0 0 3 0
 #define CallGate_set_adc_phase_limit 0x3e 0x67 0x9a 93 3 0 0 3 0
 #define CallGate_set_adc_channels 0x3e 0x67 0x9a 94 3 0 0 3 0
+
+#define CallGate_find_pci_class_handle 0x3e 0x67 0x9a 95 3 0 0 3 0
+#define CallGate_find_pci_prot_handle 0x3e 0x67 0x9a 96 3 0 0 3 0
 
 #endif

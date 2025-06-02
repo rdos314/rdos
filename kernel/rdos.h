@@ -372,6 +372,9 @@ int RDOSAPI RdosGetPciMsiX(int Bus, int Dev, int Func, int *Reg, int *IrqCount);
 int RDOSAPI RdosGetPciDeviceName(int Bus, int Dev, int Func, char *AcpiName);
 int RDOSAPI RdosGetPciDeviceVendor(int Bus, int Dev, int Func, int *Vendor, int *Device);
 
+int RDOSAPI RdosFindPciClass(int Start, unsigned char ClassCode, unsigned char SubClass);
+int RDOSAPI RdosFindPciProtocol(int Start, unsigned char ClassCode, unsigned char SubClass, unsigned char Protocol);
+
 long RDOSAPI RdosGetAcpiStatus();
 int RDOSAPI RdosGetAcpiObject(int Index, char *AcpiName);
 int RDOSAPI RdosGetAcpiMethod(int Object, int Index, char *AcpiName);

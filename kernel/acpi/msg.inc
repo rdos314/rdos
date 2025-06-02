@@ -29,11 +29,11 @@
 ; IN  AL    Sub class
 ; IN  BX    Start handle
 ; OUT BX    Handle
-FIND_DEVICE_CLASS               = 0
+FIND_CLASS        = 0
 
 ; IN  AH    Class
 ; IN  AL    Sub class
-; IN  DL    Interface
+; IN  DL    Protocol
 ; IN  BX    Start handle
 ; OUT BX    Handle
-FIND_DEVICE_CLASS_INTERFACE     = 1
+FIND_PROTOCOL     = 1

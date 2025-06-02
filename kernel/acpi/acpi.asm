@@ -37,6 +37,7 @@ include acpi.def
 include acpi.inc
 INCLUDE pci.inc
 INCLUDE ..\os\core.inc
+INCLUDE msg.inc
 
 ; this structure should be 128 bytes!
 
@@ -140,6 +141,9 @@ ENDIF
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
+    
+    extern AllocateMsg:near
+    extern RunMsg:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -175,6 +179,77 @@ hook_init_pci   Proc far
     pop ds
     ret
 hook_init_pci   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindPciClass
+;
+;           DESCRIPTION:    Find PCI class
+;
+;           PARAMETERS:     AH      Class
+;                           AL      Subclass
+;                           BX      Start handle
+;
+;           RETURNS:        BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_pci_class_handle_name      DB 'Find PCI Class',0
+
+find_pci_class_handle   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,FIND_CLASS
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+find_pci_class_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindPciProtocol
+;
+;           DESCRIPTION:    Find PCI protocol
+;
+;           PARAMETERS:     AH      Class
+;                           AL      Subclass
+;                           DL      Protocol
+;                           BX      Start handle
+;
+;           RETURNS:        BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_pci_prot_handle_name      DB 'Find PCI Protocol',0
+
+find_pci_prot_handle   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,FIND_PROTOCOL
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+find_pci_prot_handle   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2825,6 +2900,21 @@ init    Proc far
     mov edi,OFFSET hook_init_pci_name
     mov ax,hook_init_pci_nr
     RegisterOsGate
+;
+    mov esi,OFFSET find_pci_class_handle
+    mov edi,OFFSET find_pci_class_handle_name
+    xor dx,dx
+    mov ax,find_pci_class_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET find_pci_prot_handle
+    mov edi,OFFSET find_pci_prot_handle_name
+    xor dx,dx
+    mov ax,find_pci_prot_handle_nr
+    RegisterBimodalUserGate
+
+;
+; legacy
 ;
     mov esi,OFFSET read_pci_byte
     mov edi,OFFSET read_pci_byte_name

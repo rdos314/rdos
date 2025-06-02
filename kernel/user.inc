@@ -4569,6 +4569,24 @@ AddWaitForSyslog      MACRO
 
 ;;;;;;;;;;; PCI ;;;;;;;;;;
 
+;   IN  AH          Class
+;   IN  AL          Sub class
+;   IN  BX          Start 
+;   OUT BX          Handle                   
+FindPciClassHandle      MACRO
+        UserGate find_pci_class_handle_nr
+                        ENDM
+
+;   IN  AH          Class
+;   IN  AL          Sub class
+;   IN  DL          Protocol
+;   IN  BX          Start 
+;   OUT BX          Handle                   
+FindPciProtocolHandle      MACRO
+        UserGate find_pci_prot_handle_nr
+                        ENDM
+
+
 ;   IN  BH          Bus #
 ;   OUT BH          Bus #
 ;   OUT BL          Device #

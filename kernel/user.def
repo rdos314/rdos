@@ -1037,4 +1037,7 @@ set_adc_amp_limit_nr              = 860
 set_adc_phase_limit_nr            = 861
 set_adc_channels_nr               = 862
 
+find_pci_class_handle_nr          = 863
+find_pci_prot_handle_nr           = 864
+
 usergate_entries                  = 880

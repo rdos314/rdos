@@ -135,6 +135,29 @@
     CallGate_create_uuid  \
     __parm [__edi]
 
+#pragma aux RdosFindPciClass = \
+    CallGate_find_pci_class_handle  \
+    "jc fail" \
+    "movzx ebx,bx" \
+    "jmp done" \
+    "fail: " \
+    "xor ebx,ebx" \
+    "done: " \
+    __parm [__ebx] [__ah] [__al] \
+    __value [__ebx]
+
+#pragma aux RdosFindPciProtocol = \
+    CallGate_find_pci_prot_handle  \
+    "jc fail" \
+    "movzx ebx,bx" \
+    "jmp done" \
+    "fail: " \
+    "xor ebx,ebx" \
+    "done: " \
+    __parm [__ebx] [__ah] [__al] [__dl] \
+    __value [__ebx]
+
+
 #pragma aux RdosGetPciBus = \
     "mov bh,al" \
     CallGate_get_pci_bus  \
@@ -3858,7 +3881,7 @@
 #pragma aux RdosSetAdcChannels = \
     CallGate_set_adc_channels  \
     __parm [__ebx] [__eax]
-        
+
 #pragma aux RdosStartAdcFreq = \
     CallGate_start_adc_freq  \
     __parm [__ebx]
