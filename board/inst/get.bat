@@ -6,7 +6,6 @@ copy ..\..\kernel\os\task.rdv files
 copy ..\..\kernel\freetype\freetype.rdv files
 copy ..\..\kernel\os\util.rdv files
 copy ..\..\kernel\acpi\acpi.rdv files
-copy ..\..\kernel\acpi-pre\acpi.rdv files\acpipre.rdv
 copy ..\..\kernel\os\fs.rdv files
 copy ..\..\kernel\os\inifile.rdv files
 copy ..\..\kernel\os\drive.rdv files
@@ -32,10 +31,7 @@ copy ..\..\kernel\bios\vga.rdv files
 copy ..\..\kernel\dosemu\emulate.rdv files
 copy ..\..\kernel\dosemu\dos.rdv files
 copy ..\..\kernel\dosemu\dpmi.rdv files
-copy ..\..\kernel\pcdev\pic.rdv files
-copy ..\..\kernel\pcdev\apic.rdv files
 copy ..\..\kernel\pcdev\rtc.rdv files
-copy ..\..\kernel\pcdev\pci.rdv files
 copy ..\..\kernel\pcdev\pnp.rdv files
 copy ..\..\kernel\pcdev\keymap.rdv files
 copy ..\..\kernel\pcdev\ps2key.rdv files
@@ -73,6 +69,7 @@ copy ..\..\kernel\audiodev\hda.rdv files
 copy ..\..\kernel\netdev\rtl8139.rdv files
 copy ..\..\kernel\netdev\rtl8169.rdv files
 copy ..\..\kernel\netdev\i2xx.rdv files
+copy \rdos-uacpi\rdos\uacpi.exe files
 copy ..\..\kernel\fs\parttool.exe files
 copy ..\..\kernel\fs\fat.exe files
 copy ..\..\kernel\ssl\ssl.rdv files
