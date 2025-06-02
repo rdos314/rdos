@@ -421,7 +421,7 @@ ci1:
     AllocateSmallLinear
     AllocateGdt
     mov ecx,eax
-    CreateCodeSelector16
+    CreateCodeSelector32
 ;
     mov eax,cs
     mov ds,eax
@@ -460,7 +460,7 @@ ci2:
     AllocateSmallLinear
     AllocateGdt
     mov ecx,eax
-    CreateCodeSelector16
+    CreateCodeSelector32
 ;
     mov eax,cs
     mov ds,eax
@@ -572,7 +572,7 @@ rihChain:
     pop edx
     pop ecx
     add ecx,OFFSET IrqChainEnd - OFFSET IrqChainStart
-    CreateCodeSelector16
+    CreateCodeSelector32
 ;    
     pop edi
     pop esi
