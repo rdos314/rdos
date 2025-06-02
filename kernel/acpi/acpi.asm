@@ -124,7 +124,7 @@ apic_table              DW ?
 pci_spinlock            spinlock_typ <>
 
 pci_init_hooks          DW ?
-pci_init_hook_arr       DD 32 DUP(?,?)
+pci_init_hook_arr       DD 64 DUP(?,?)
 
 pci_bus_arr             DW 256 DUP(?)
 

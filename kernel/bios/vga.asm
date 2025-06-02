@@ -628,7 +628,7 @@ init    PROC far
     mov es,ax
 ;    
     mov edi,OFFSET init_vbe_thread
-    HookInitPci
+    HookInitAcpi
 ;
     mov esi,OFFSET switch_video_mode
     mov edi,OFFSET switch_video_mode_name

@@ -558,8 +558,19 @@ V86_bios_int    Proc far
     mov es:list_link,ax
     mov ds:bios_list,es
     LeaveSection ds:bios_section
-;
+
+vbiLoop:
     mov bx,ds:bios_thread
+    or bx,bx
+    jnz vbiSignal
+;
+    push ax
+    mov ax,5
+    WaitMilliSec
+    pop ax
+    jmp vbiLoop
+
+vbiSignal:
     Signal
     WaitForSignal
 ;

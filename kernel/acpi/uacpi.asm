@@ -54,9 +54,52 @@ ELSE
     .386p
 ENDIF
 
+
+data    SEGMENT byte public 'DATA'
+
+acpi_init_hooks         DW ?
+acpi_init_hook_arr      DD 32 DUP(?,?)
+
+data    ENDS
+
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           HookInitAcpi
+;
+;           DESCRIPTION:    Hook init ACPI
+;
+;           PARAMETERS:     ES:EDI       CALLBACK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_init_acpi_name      DB 'Hook Init ACPI',0
+
+hook_init_acpi   Proc far
+    push ds
+    push eax
+    push ebx
+;    
+    mov eax,SEG data
+    mov ds,eax
+    mov ax,ds:acpi_init_hooks
+    mov bx,ax
+    shl bx,3
+    add bx,OFFSET acpi_init_hook_arr
+    mov [bx],edi
+    mov [bx+4],es
+    inc ax
+    mov ds:acpi_init_hooks,ax
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+hook_init_acpi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1014,6 +1057,26 @@ init_pci    Proc far
     push es
     pushad
 ;
+    mov eax,SEG data
+    mov ds,eax
+    movzx ecx,ds:acpi_init_hooks
+    or ecx,ecx
+    je ipLoad
+;
+    mov ebx,OFFSET acpi_init_hook_arr
+
+ipLoop:
+    push ds
+    push ebx
+    push ecx
+    call fword ptr [ebx]
+    pop ecx
+    pop ebx
+    pop ds
+    add ebx,8
+    loop ipLoop
+
+ipLoad:
     call LoadAcpiServer
 ;
     popad
@@ -1036,12 +1099,21 @@ init_pci    Endp
     public init_uacpi
 
 init_uacpi    Proc near
+    mov ebx,SEG data
+    mov ds,ebx
+    mov ds:acpi_init_hooks,0
+;
     mov eax,cs
     mov ds,eax
     mov es,eax
 ;
     mov edi,OFFSET init_pci
     HookInitTasking
+;
+    mov esi,OFFSET hook_init_acpi
+    mov edi,OFFSET hook_init_acpi_name
+    mov ax,hook_init_acpi_nr
+    RegisterOsGate
 ;
     call InitAcpiTable
     clc

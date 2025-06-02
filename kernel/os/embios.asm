@@ -726,7 +726,7 @@ init    PROC far
     mov ds,ax
     mov es,ax
     mov edi,OFFSET init_process
-    HookInitPci
+    HookInitAcpi
 ;
     mov esi,OFFSET v86_bios_int
     mov edi,OFFSET v86_bios_int_name

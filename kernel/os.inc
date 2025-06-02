@@ -4064,6 +4064,11 @@ HookInitPci      MACRO
     OsGate hook_init_pci_nr
                     ENDM
 
+;  IN  ES:EDI      INIT CALLBACK
+HookInitAcpi      MACRO
+    OsGate hook_init_acpi_nr
+                    ENDM
+
 BiosPciInt      MACRO
     OsGate bios_pci_int_nr
                     ENDM
