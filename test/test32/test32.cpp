@@ -9,12 +9,12 @@
 
 void main()
 {
-    int dev = RdosFindPciClass(0, 6, 4);
+    int dev = RdosFindPciProtocol(0, 12, 3, 48);
 
     while (dev)
     {
         printf("dev %d\r\n", dev);
-        dev = RdosFindPciClass(dev, 6, 4);
+        dev = RdosFindPciProtocol(dev, 12, 3, 48);
     }
 
 //    RdosTestGate(buf);

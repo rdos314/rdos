@@ -707,13 +707,13 @@ init_server    Proc near
     mov edi,OFFSET reply_dev_cmd_name
     xor cl,cl
     mov ax,uacpi_reply_cmd_nr
-    RegisterServGate
+    RegisterPrivateServGate
 ;
     mov esi,OFFSET reply_dev_data_cmd
     mov edi,OFFSET reply_dev_data_cmd_name
     xor cl,cl
     mov ax,uacpi_reply_data_cmd_nr
-    RegisterServGate
+    RegisterPrivateServGate
     ret
 init_server    Endp
 
