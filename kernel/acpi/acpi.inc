@@ -78,15 +78,15 @@ UacpiHasApic  MACRO
 ; IN  EBX              Dev handle
 ; OUT EDX              Cmd
 WaitForDevCmd  MACRO
-    ServGate wait_for_dev_cmd_nr
+    ServGate uacpi_wait_for_cmd_nr
                     ENDM
 
 ; IN  EBX              Dev handle
 ReplyDevCmd  MACRO    
-    ServGate reply_dev_cmd_nr
+    ServGate uacpi_reply_cmd_nr
                     ENDM
 
 ; IN  EBX              Dev handle
 ReplyDevDataCmd  MACRO    
-    ServGate reply_dev_data_cmd_nr
+    ServGate uacpi_reply_data_cmd_nr
                     ENDM
