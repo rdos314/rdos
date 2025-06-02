@@ -5,3 +5,8 @@ uacpi_enable_io_nr         = 4
 uacpi_disable_io_nr        = 5
 uacpi_start_pci_nr         = 6
 uacpi_has_apic_nr          = 7
+uacpi_wait_for_cmd_nr      = 8
+uacpi_reply_cmd_nr         = 9
+uacpi_reply_data_cmd_nr    = 10
+
+

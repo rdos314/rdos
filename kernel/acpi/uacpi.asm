@@ -66,6 +66,7 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
 
+    extern init_server:near
     extern HasApic:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -996,6 +997,8 @@ lpname DB 'uacpi', 0
 lpcmd  DB 0
 
 AcpiServer:
+    call init_server
+;    
     mov eax,cs
     mov ds,eax
     mov es,eax
@@ -1040,7 +1043,7 @@ AcpiServer:
     mov edi,OFFSET uacpi_has_apic_name
     xor cl,cl
     mov ax,uacpi_has_apic_nr
-    RegisterPrivateServGate
+    RegisterPrivateServGate    
 ;
     mov esi,OFFSET lpcmd
     mov edi,OFFSET lpname

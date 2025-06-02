@@ -61,6 +61,32 @@ UacpiEnableIo  MACRO
     ServGate uacpi_enable_io_nr
                     ENDM
 
+; IN  EDX               Base
+; IN  ECX               Size
+UacpiDisableIo  MACRO
+    ServGate uacpi_disable_io_nr
+                    ENDM
+
 UacpiStartPci  MACRO
     ServGate uacpi_start_pci_nr
+                    ENDM
+
+UacpiHasApic  MACRO
+    ServGate uacpi_has_apic_nr
+                    ENDM
+
+; IN  EBX              Dev handle
+; OUT EDX              Cmd
+WaitForDevCmd  MACRO
+    ServGate wait_for_dev_cmd_nr
+                    ENDM
+
+; IN  EBX              Dev handle
+ReplyDevCmd  MACRO    
+    ServGate reply_dev_cmd_nr
+                    ENDM
+
+; IN  EBX              Dev handle
+ReplyDevDataCmd  MACRO    
+    ServGate reply_dev_data_cmd_nr
                     ENDM
