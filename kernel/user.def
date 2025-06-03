@@ -1039,5 +1039,11 @@ set_adc_channels_nr               = 862
 
 find_pci_class_handle_nr          = 863
 find_pci_prot_handle_nr           = 864
+read_pci_config_byte_nr           = 865
+read_pci_config_word_nr           = 866
+read_pci_config_dword_nr          = 867
+write_pci_config_byte_nr          = 868
+write_pci_config_word_nr          = 869
+write_pci_config_dword_nr         = 870
 
 usergate_entries                  = 880

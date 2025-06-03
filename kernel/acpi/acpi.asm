@@ -205,7 +205,7 @@ find_pci_class_handle   Proc far
 ;
     call AllocateMsg
 ;    
-    mov eax,FIND_CLASS
+    mov eax,FIND_PCI_CLASS_CMD
     call RunMsg
 ;    
     pop ebp
@@ -241,7 +241,7 @@ find_pci_prot_handle   Proc far
 ;
     call AllocateMsg
 ;    
-    mov eax,FIND_PROTOCOL
+    mov eax,FIND_PCI_PROTOCOL_CMD
     call RunMsg
 ;    
     pop ebp
@@ -250,6 +250,231 @@ find_pci_prot_handle   Proc far
     pop ds
     ret
 find_pci_prot_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadPciConfigByte
+;
+;           DESCRIPTION:    Read PCI config byte
+;
+;           PARAMETERS:     BX      Handle
+;                           CX      Register
+;
+;           RETURNS:        AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_pci_config_byte_name      DB 'Read PCI Config Byte',0
+
+read_pci_config_byte   Proc far
+    push ds
+    push es
+    push edx
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,READ_PCI_CONFIG_BYTE_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop edx
+    pop es
+    pop ds
+    ret
+read_pci_config_byte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadPciConfigWord
+;
+;           DESCRIPTION:    Read PCI config word
+;
+;           PARAMETERS:     BX      Handle
+;                           CX      Register
+;
+;           RETURNS:        AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_pci_config_word_name      DB 'Read PCI Config Word',0
+
+read_pci_config_word   Proc far
+    push ds
+    push es
+    push edx
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,READ_PCI_CONFIG_WORD_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop edx
+    pop es
+    pop ds
+    ret
+read_pci_config_word   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadPciConfigDword
+;
+;           DESCRIPTION:    Read PCI config dword
+;
+;           PARAMETERS:     BX      Handle
+;                           CX      Register
+;
+;           RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_pci_config_dword_name      DB 'Read PCI Config Dword',0
+
+read_pci_config_dword   Proc far
+    push ds
+    push es
+    push edx
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,READ_PCI_CONFIG_DWORD_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop edx
+    pop es
+    pop ds
+    ret
+read_pci_config_dword   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WritePciConfigByte
+;
+;           DESCRIPTION:    Write PCI config byte
+;
+;           PARAMETERS:     BX      Handle
+;                           CX      Register
+;                           AL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_pci_config_byte_name      DB 'Write PCI Config Byte',0
+
+write_pci_config_byte   Proc far
+    push ds
+    push es
+    push edx
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,WRITE_PCI_CONFIG_BYTE_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop edx
+    pop es
+    pop ds
+    ret
+write_pci_config_byte   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WritePciConfigWord
+;
+;           DESCRIPTION:    Write PCI config word
+;
+;           PARAMETERS:     BX      Handle
+;                           CX      Register
+;                           AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_pci_config_word_name      DB 'Write PCI Config Word',0
+
+write_pci_config_word   Proc far
+    push ds
+    push es
+    push edx
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,WRITE_PCI_CONFIG_WORD_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop edx
+    pop es
+    pop ds
+    ret
+write_pci_config_word   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WritePciConfigDword
+;
+;           DESCRIPTION:    Write PCI config dword
+;
+;           PARAMETERS:     BX      Handle
+;                           CX      Register
+;                           EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_pci_config_dword_name      DB 'Write PCI Config Dword',0
+
+write_pci_config_dword   Proc far
+    push ds
+    push es
+    push edx
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,WRITE_PCI_CONFIG_DWORD_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop edx
+    pop es
+    pop ds
+    ret
+write_pci_config_dword   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2911,6 +3136,42 @@ init    Proc far
     mov edi,OFFSET find_pci_prot_handle_name
     xor dx,dx
     mov ax,find_pci_prot_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET read_pci_config_byte
+    mov edi,OFFSET read_pci_config_byte_name
+    xor dx,dx
+    mov ax,read_pci_config_byte_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET read_pci_config_word
+    mov edi,OFFSET read_pci_config_word_name
+    xor dx,dx
+    mov ax,read_pci_config_word_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET read_pci_config_dword
+    mov edi,OFFSET read_pci_config_dword_name
+    xor dx,dx
+    mov ax,read_pci_config_dword_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET write_pci_config_byte
+    mov edi,OFFSET write_pci_config_byte_name
+    xor dx,dx
+    mov ax,write_pci_config_byte_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET write_pci_config_word
+    mov edi,OFFSET write_pci_config_word_name
+    xor dx,dx
+    mov ax,write_pci_config_word_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET write_pci_config_dword
+    mov edi,OFFSET write_pci_config_dword_name
+    xor dx,dx
+    mov ax,write_pci_config_dword_nr
     RegisterBimodalUserGate
 
 ;

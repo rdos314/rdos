@@ -158,6 +158,33 @@
     __value [__ebx]
 
 
+#pragma aux RdosReadPciConfigByte = \
+    CallGate_read_pci_config_byte  \
+    __parm [__ebx] [__ecx] \
+    __value [__al]
+
+#pragma aux RdosReadPciConfigWord = \
+    CallGate_read_pci_config_word  \
+    __parm [__ebx] [__ecx] \
+    __value [__ax]
+
+#pragma aux RdosReadPciConfigDword = \
+    CallGate_read_pci_config_dword  \
+    __parm [__ebx] [__ecx] \
+    __value [__eax]
+
+#pragma aux RdosWritePciConfigByte = \
+    CallGate_write_pci_config_byte  \
+    __parm [__ebx] [__ecx] [__al]
+
+#pragma aux RdosWritePciConfigWord = \
+    CallGate_write_pci_config_word  \
+    __parm [__ebx] [__ecx] [__ax]
+
+#pragma aux RdosWritePciConfigDword = \
+    CallGate_write_pci_config_dword  \
+    __parm [__ebx] [__ecx] [__eax]
+
 #pragma aux RdosGetPciBus = \
     "mov bh,al" \
     CallGate_get_pci_bus  \

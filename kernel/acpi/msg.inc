@@ -29,11 +29,47 @@
 ; IN  AL    Sub class
 ; IN  BX    Start handle
 ; OUT BX    Handle
-FIND_CLASS        = 0
+FIND_PCI_CLASS_CMD         = 0
 
 ; IN  AH    Class
 ; IN  AL    Sub class
 ; IN  DL    Protocol
 ; IN  BX    Start handle
 ; OUT BX    Handle
-FIND_PROTOCOL     = 1
+FIND_PCI_PROTOCOL_CMD      = 1
+
+; IN  BX    Handle
+; IN  CX    Register
+; IN  DX    Issuer selector
+; OUT AL    Value
+READ_PCI_CONFIG_BYTE_CMD   = 2
+
+; IN  BX    Handle
+; IN  CX    Register
+; IN  DX    Issuer selector
+; OUT AX    Value
+READ_PCI_CONFIG_WORD_CMD   = 3
+
+; IN  BX    Handle
+; IN  CX    Register
+; IN  DX    Issuer selector
+; OUT EAX   Value
+READ_PCI_CONFIG_DWORD_CMD  = 4
+
+; IN  AL    Value
+; IN  BX    Handle
+; IN  CX    Register
+; IN  DX    Issuer selector
+WRITE_PCI_CONFIG_BYTE_CMD  = 5
+
+; IN  AX    Value
+; IN  BX    Handle
+; IN  CX    Register
+; IN  DX    Issuer selector
+WRITE_PCI_CONFIG_WORD_CMD  = 6
+
+; IN  EAX   Value
+; IN  BX    Handle
+; IN  CX    Register
+; IN  DX    Issuer selector
+WRITE_PCI_CONFIG_DWORD_CMD = 7

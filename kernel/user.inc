@@ -4586,6 +4586,47 @@ FindPciProtocolHandle      MACRO
         UserGate find_pci_prot_handle_nr
                         ENDM
 
+;   IN  BX          Handle
+;   IN  CX          Register
+;   OUT AL          Value                  
+ReadPciConfigByte      MACRO
+        UserGate read_pci_config_byte_nr
+                        ENDM
+
+;   IN  BX          Handle
+;   IN  CX          Register
+;   OUT AX          Value                  
+ReadPciConfigWord      MACRO
+        UserGate read_pci_config_word_nr
+                        ENDM
+
+;   IN  BX          Handle
+;   IN  CX          Register
+;   OUT EAX         Value                  
+ReadPciConfigDword      MACRO
+        UserGate read_pci_config_dword_nr
+                        ENDM
+
+;   IN  AL          Value                  
+;   IN  BX          Handle
+;   IN  CX          Register
+WritePciConfigByte      MACRO
+        UserGate write_pci_config_byte_nr
+                        ENDM
+
+;   IN  AX          Value                  
+;   IN  BX          Handle
+;   IN  CX          Register
+WritePciConfigWord      MACRO
+        UserGate write_pci_config_word_nr
+                        ENDM
+
+;   IN  EAX         Value                  
+;   IN  BX          Handle
+;   IN  CX          Register
+WritePciConfigDword      MACRO
+        UserGate write_pci_config_dword_nr
+                        ENDM
 
 ;   IN  BH          Bus #
 ;   OUT BH          Bus #
