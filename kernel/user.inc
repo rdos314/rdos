@@ -4586,6 +4586,36 @@ FindPciProtocolHandle      MACRO
         UserGate find_pci_prot_handle_nr
                         ENDM
 
+;   IN  CX          Device
+;   IN  DX          Vendor
+;   IN  BX          Start
+;   OUT BX          Handle                   
+FindPciDeviceHandle      MACRO
+        UserGate find_pci_device_handle_nr
+                        ENDM
+
+;   IN  BX          Handle
+;   OUT DH          Segment
+;   OUT DL          Bus
+;   OUT AH          Device
+;   OUT AL          Function                   
+GetPciHandleParam      MACRO
+        UserGate get_pci_handle_param_nr
+                        ENDM
+
+;   IN  BX          Handle
+;   OUT AL          IRQ                   
+GetPciHandleIrq      MACRO
+        UserGate get_pci_handle_irq_nr
+                        ENDM
+
+;   IN  BX          Handle
+;   IN  AL          Capability
+;   OUT AX          Register                  
+GetPciHandleCap      MACRO
+        UserGate get_pci_handle_cap_nr
+                        ENDM
+                        
 ;   IN  BX          Handle
 ;   IN  CX          Register
 ;   OUT AL          Value                  

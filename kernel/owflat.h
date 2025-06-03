@@ -157,6 +157,50 @@
     __parm [__ebx] [__ah] [__al] [__dl] \
     __value [__ebx]
 
+#pragma aux RdosFindPciDevice = \
+    CallGate_find_pci_device_handle  \
+    "jc fail" \
+    "movzx ebx,bx" \
+    "jmp done" \
+    "fail: " \
+    "xor ebx,ebx" \
+    "done: " \
+    __parm [__ebx] [__cx] [__dx] \
+    __value [__ebx]
+
+#pragma aux RdosGetPciHandleSegment = \
+    CallGate_get_pci_handle_param  \
+    __parm [__ebx] \
+    __value [__dh] \
+    __modify [__ax __dl]
+
+#pragma aux RdosGetPciHandleBus = \
+    CallGate_get_pci_handle_param  \
+    __parm [__ebx] \
+    __value [__dl] \
+    __modify [__ax __dh]
+
+#pragma aux RdosGetPciHandleDevice = \
+    CallGate_get_pci_handle_param  \
+    __parm [__ebx] \
+    __value [__ah] \
+    __modify [__al __dx]
+
+#pragma aux RdosGetPciHandleFunction = \
+    CallGate_get_pci_handle_param  \
+    __parm [__ebx] \
+    __value [__al] \
+    __modify [__ah __dx]
+
+#pragma aux RdosGetPciHandleIrq = \
+    CallGate_get_pci_handle_irq  \
+    __parm [__ebx] \
+    __value [__al]
+
+#pragma aux RdosGetPciHandleCap = \
+    CallGate_get_pci_handle_cap  \
+    __parm [__ebx] [__al] \
+    __value [__ax]
 
 #pragma aux RdosReadPciConfigByte = \
     CallGate_read_pci_config_byte  \

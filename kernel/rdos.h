@@ -374,6 +374,13 @@ int RDOSAPI RdosGetPciDeviceVendor(int Bus, int Dev, int Func, int *Vendor, int 
 
 int RDOSAPI RdosFindPciClass(int Start, unsigned char ClassCode, unsigned char SubClass);
 int RDOSAPI RdosFindPciProtocol(int Start, unsigned char ClassCode, unsigned char SubClass, unsigned char Protocol);
+int RDOSAPI RdosFindPciDevice(int Start, short int Device, short int Vendor);
+unsigned char RDOSAPI RdosGetPciHandleSegment(int Handle);
+unsigned char RDOSAPI RdosGetPciHandleBus(int Handle);
+unsigned char RDOSAPI RdosGetPciHandleDevice(int Handle);
+unsigned char RDOSAPI RdosGetPciHandleFunction(int Handle);
+unsigned char RDOSAPI RdosGetPciHandleIrq(int Handle);
+short int RDOSAPI RdosGetPciHandleCap(int Handle, unsigned short int Cap);
 unsigned char RDOSAPI RdosReadPciConfigByte(int Handle, int Register);
 short int RDOSAPI RdosReadPciConfigWord(int Handle, int Register);
 int RDOSAPI RdosReadPciConfigDword(int Handle, int Register);

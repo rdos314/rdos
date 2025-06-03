@@ -183,6 +183,41 @@ hook_init_pci   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FindPciDevice
+;
+;           DESCRIPTION:    Find PCI device
+;
+;           PARAMETERS:     CX      Device
+;                           DX      Vendor
+;                           BX      Start handle
+;
+;           RETURNS:        BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_pci_device_handle_name      DB 'Find PCI Device',0
+
+find_pci_device_handle   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,FIND_PCI_DEVICE_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+find_pci_device_handle   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           FindPciClass
 ;
 ;           DESCRIPTION:    Find PCI class
@@ -250,6 +285,110 @@ find_pci_prot_handle   Proc far
     pop ds
     ret
 find_pci_prot_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciHandleParam
+;
+;           DESCRIPTION:    Find PCI handle param
+;
+;           PARAMETERS:     BX      Handle
+;
+;           RETURNS:        DH      Segment
+;                           DL      Bus
+;                           AH      Device
+;                           AL      Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_handle_param_name      DB 'Get PCI Handle Param',0
+
+get_pci_handle_param   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_PARAM_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_handle_param   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciHandleIrq
+;
+;           DESCRIPTION:    Find PCI handle IRQ
+;
+;           PARAMETERS:     BX      Handle
+;
+;           RETURNS:        AL      Irq
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_handle_irq_name      DB 'Get PCI Handle IRQ',0
+
+get_pci_handle_irq   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_IRQ_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_handle_irq   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciHandleCap
+;
+;           DESCRIPTION:    Find PCI handle capability
+;
+;           PARAMETERS:     BX      Handle
+;                           AL      Capability
+;
+;           RETURNS:        AX      Register
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_handle_cap_name      DB 'Get PCI Handle Capability',0
+
+get_pci_handle_cap   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_CAP_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_handle_cap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3126,6 +3265,12 @@ init    Proc far
     mov ax,hook_init_pci_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET find_pci_device_handle
+    mov edi,OFFSET find_pci_device_handle_name
+    xor dx,dx
+    mov ax,find_pci_device_handle_nr
+    RegisterBimodalUserGate
+;
     mov esi,OFFSET find_pci_class_handle
     mov edi,OFFSET find_pci_class_handle_name
     xor dx,dx
@@ -3136,6 +3281,24 @@ init    Proc far
     mov edi,OFFSET find_pci_prot_handle_name
     xor dx,dx
     mov ax,find_pci_prot_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_handle_param
+    mov edi,OFFSET get_pci_handle_param_name
+    xor dx,dx
+    mov ax,get_pci_handle_param_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_handle_irq
+    mov edi,OFFSET get_pci_handle_irq_name
+    xor dx,dx
+    mov ax,get_pci_handle_irq_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_handle_cap
+    mov edi,OFFSET get_pci_handle_cap_name
+    xor dx,dx
+    mov ax,get_pci_handle_cap_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET read_pci_config_byte
