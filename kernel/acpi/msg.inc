@@ -76,37 +76,41 @@ GET_PCI_IRQ_CMD            = 6
 GET_PCI_CAP_CMD            = 7
 
 ; IN  BX    Handle
+;           Buffer
+GET_PCI_NAME_CMD           = 8
+
+; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
 ; OUT AL    Value
-READ_PCI_CONFIG_BYTE_CMD   = 8
+READ_PCI_CONFIG_BYTE_CMD   = 9
 
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
 ; OUT AX    Value
-READ_PCI_CONFIG_WORD_CMD   = 9
+READ_PCI_CONFIG_WORD_CMD   = 10
 
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
 ; OUT EAX   Value
-READ_PCI_CONFIG_DWORD_CMD  = 10
+READ_PCI_CONFIG_DWORD_CMD  = 11
 
 ; IN  AL    Value
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
-WRITE_PCI_CONFIG_BYTE_CMD  = 11
+WRITE_PCI_CONFIG_BYTE_CMD  = 12
 
 ; IN  AX    Value
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
-WRITE_PCI_CONFIG_WORD_CMD  = 12
+WRITE_PCI_CONFIG_WORD_CMD  = 13
 
 ; IN  EAX   Value
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
-WRITE_PCI_CONFIG_DWORD_CMD = 13
+WRITE_PCI_CONFIG_DWORD_CMD = 14

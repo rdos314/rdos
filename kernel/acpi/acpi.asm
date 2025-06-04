@@ -143,6 +143,7 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
     
     extern AllocateMsg:near
+    extern AddMsgBuffer:near
     extern RunMsg:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -427,7 +428,6 @@ get_pci_handle_irq   Proc far
     ret
 get_pci_handle_irq   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -461,6 +461,68 @@ get_pci_handle_cap   Proc far
     pop ds
     ret
 get_pci_handle_cap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           GetPciDeviceName16/32
+;
+;    DESCRIPTION:    Get PCI device name
+;
+;    PARAMETERS:     BX          Handle
+;                    ES:(E)DI    Name buffer
+;                    (E)CX       Size of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_device_name DB 'Get PCI Device Name', 0
+
+GetDevName  Proc near
+    push ds
+    push es
+    push gs
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
+;
+    push edi
+    call AllocateMsg
+    pop edi
+    jc gdnDone
+;
+    call AddMsgBuffer
+;    
+    mov eax,GET_PCI_NAME_CMD
+    call RunMsg
+
+gdnDone:    
+    pop ebp
+    pop edi
+    pop gs
+    pop es
+    pop ds
+    ret
+GetDevName   Endp
+
+get_pci_device_name16  Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call GetDevName
+;    
+    pop edi
+    pop ecx
+    ret
+get_pci_device_name16  Endp
+
+get_pci_device_name32  Proc far
+    call GetDevName
+    ret
+get_pci_device_name32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1381,78 +1443,6 @@ gpinDone:
     pop ds
     ret
 get_pci_interface   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;    NAME:           GetPciDeviceName16/32
-;
-;    DESCRIPTION:    Get PCI device name
-;
-;    PARAMETERS:     BH          Bus
-;                    BL          Device
-;                    CH          Function
-;                    ES:(E)DI    Name buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_pci_device_name DB 'Get PCI Device Name', 0
-
-GetDevName  Proc near
-    push ds
-    push eax
-    push esi
-;
-    mov eax,SEG data    
-    mov ds,eax
-;
-    movzx esi,bh
-    mov ax,ds:[2*esi].pci_bus_arr
-    or ax,ax
-    jz gpdnFail
-;
-    mov ds,ax
-    movzx esi,bl
-    mov ax,ds:[2*esi].pcib_device_arr
-    or ax,ax
-    jz gpdnFail
-;
-    mov ds,ax
-    movzx esi,ch
-    shl esi,7
-    add esi,OFFSET pcif_acpi_name
-
-gpdnLoop:
-    lods byte ptr ds:[esi]
-    stos byte ptr es:[edi]
-    or al,al
-    jnz gpdnLoop
-;
-    clc
-    jmp gpdnDone
-
-gpdnFail:
-    stc
-
-gpdnDone:
-    pop esi
-    pop eax
-    pop ds
-    ret
-GetDevName   Endp
-
-get_pci_device_name16  Proc far
-    push edi
-    movzx edi,di
-    call GetDevName
-    pop edi
-    ret
-get_pci_device_name16  Endp
-
-get_pci_device_name32  Proc far
-    call GetDevName
-    ret
-get_pci_device_name32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3338,6 +3328,13 @@ init    Proc far
     mov ax,get_pci_handle_cap_nr
     RegisterBimodalUserGate
 ;
+    mov ebx,OFFSET get_pci_device_name16
+    mov esi,OFFSET get_pci_device_name32
+    mov edi,OFFSET get_pci_device_name
+    mov dx,virt_es_in
+    mov ax,get_pci_device_name_nr
+    RegisterUserGate
+;
     mov esi,OFFSET read_pci_config_byte
     mov edi,OFFSET read_pci_config_byte_name
     xor dx,dx
@@ -3520,13 +3517,6 @@ init    Proc far
     xor dx,dx
     mov ax,get_pci_interface_nr
     RegisterBimodalUserGate
-;
-    mov ebx,OFFSET get_pci_device_name16
-    mov esi,OFFSET get_pci_device_name32
-    mov edi,OFFSET get_pci_device_name
-    mov dx,virt_es_in
-    mov ax,get_pci_device_name_nr
-    RegisterUserGate
 ;
     mov esi,OFFSET get_pci_device_vendor
     mov edi,OFFSET get_pci_device_vendor_name

@@ -321,14 +321,10 @@
     __modify [__ebx]
 
 #pragma aux RdosGetPciDeviceName = \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
     CallGate_get_pci_device_name  \
     CarryToBool \
-    __parm [__eax] [__ecx] [__edx] [__edi] \
-    __value [__eax] \
-    __modify [__ebx]
+    __parm [__ebx] [__edi] [__ecx] \
+    __value [__eax]
 
 #pragma aux RdosGetPciMsi = \
     "mov bh,al" \

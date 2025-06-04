@@ -4709,9 +4709,7 @@ GetPciInterface      MACRO
         UserGate get_pci_interface_nr
                         ENDM
 
-;   IN  BH          Bus #
-;   IN  BL          Device #
-;   IN  CH          Function #
+;   IN  BX          Handle
 ;   IN  ES:E(DI)    ACPI name buffer
 GetPciDeviceName      MACRO
         UserGate get_pci_device_name_nr

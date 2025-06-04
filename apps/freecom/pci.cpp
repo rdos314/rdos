@@ -109,11 +109,11 @@ void TPciCommand::PrintBusDevices(int Bus)
     int Class;
     int SubClass;
     int Irq;
-    int Msi = 0;
-    int MsiX = 0;
-    int MsiCount;
-    int MsiXCount;
-    int Used;
+//    int Msi = 0;
+//    int MsiX = 0;
+//    int MsiCount;
+//    int MsiXCount;
+//    int Used;
 
     Write("ACPI Name                     ");
     Write("Vendor/dev Class    Dev Func  Interrupt\r\n");
@@ -125,7 +125,7 @@ void TPciCommand::PrintBusDevices(int Bus)
             Handle = RdosGetPciHandle(0, Bus, Device, Function);
             if (Handle)
             {
-//                if (!RdosGetPciDeviceName(Bus, Device, Function, AcpiName))
+                if (!RdosGetPciDeviceName(Handle, AcpiName, 127))
                     AcpiName[0] = 0;
 
                 while (strlen(AcpiName) < 30)
@@ -223,9 +223,6 @@ void TPciCommand::PrintBus(int index)
 {
     unsigned char bus, dev, func;
     char Str[80];
-
-    int Handle;
-
 
     if (RdosGetPciBus(0, index, &bus, &dev, &func))
     {
