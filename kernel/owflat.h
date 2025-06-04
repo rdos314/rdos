@@ -165,7 +165,7 @@
     "fail: " \
     "xor ebx,ebx" \
     "done: " \
-    __parm [__ebx] [__cx] [__dx] \
+    __parm [__ebx] [__dx] [__cx] \
     __value [__ebx]
 
 #pragma aux RdosGetPciHandleSegment = \

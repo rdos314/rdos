@@ -9,26 +9,34 @@
 
 void main()
 {
-    int dev = RdosFindPciProtocol(0, 12, 3, 48);
+//    int dev = RdosFindPciDevice(0, 0x8086, 0x0F34);
     int val;
+    int dev;
 
-    val = RdosGetPciHandleSegment(dev);
-    printf("Seg: %d ", val);
+    for (dev = 1; dev < 25; dev++)
+    {
+        val = RdosGetPciHandleSegment(dev);
+        printf("Seg: %d ", val);
 
-    val = RdosGetPciHandleBus(dev);
-    printf("Bus: %d ", val);
+        val = RdosGetPciHandleBus(dev);
+        printf("Bus: %d ", val);
 
-    val = RdosGetPciHandleDevice(dev);
-    printf("Dev: %d ", val);
+        val = RdosGetPciHandleDevice(dev);
+        printf("Dev: %d ", val);
 
-    val = RdosGetPciHandleFunction(dev);
-    printf("Func: %d ", val);
+        val = RdosGetPciHandleFunction(dev);
+        printf("Func: %d ", val);
 
-    val = RdosGetPciHandleIrq(dev);
-    printf("IRQ: %d ", val);
+        val = RdosGetPciHandleIrq(dev);
+        printf("IRQ: %d ", val);
 
-    val = RdosGetPciHandleCap(dev, 1);
-    printf("Cap: %d ", val);
+        val = RdosGetPciHandleCap(dev, 1);
+        printf("Cap: %d\r\n", val);
+    }
+
+    for (;;)
+        RdosWaitMilli(500);
+
 
 //    RdosTestGate(buf);
 }
