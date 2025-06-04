@@ -1049,6 +1049,7 @@
 #define usergate_get_pci_handle_param 0x00000368
 #define usergate_get_pci_handle_irq 0x00000369
 #define usergate_get_pci_handle_cap 0x0000036A
+#define usergate_get_pci_handle 0x0000036B
 
 
 
@@ -2104,6 +2105,7 @@
 #define CallGate_get_pci_handle_param 0x55 0x67 0x9a 104 3 0 0 3 0 0x5d
 #define CallGate_get_pci_handle_irq 0x55 0x67 0x9a 105 3 0 0 3 0 0x5d
 #define CallGate_get_pci_handle_cap 0x55 0x67 0x9a 106 3 0 0 3 0 0x5d
+#define CallGate_get_pci_handle 0x55 0x67 0x9a 107 3 0 0 3 0 0x5d
 
 #else
 
@@ -3157,5 +3159,6 @@
 #define CallGate_get_pci_handle_param 0x3e 0x67 0x9a 104 3 0 0 3 0
 #define CallGate_get_pci_handle_irq 0x3e 0x67 0x9a 105 3 0 0 3 0
 #define CallGate_get_pci_handle_cap 0x3e 0x67 0x9a 106 3 0 0 3 0
+#define CallGate_get_pci_handle 0x3e 0x67 0x9a 107 3 0 0 3 0
 
 #endif

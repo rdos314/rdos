@@ -13,6 +13,8 @@ void main()
     int val;
     int dev;
 
+    dev = RdosGetPciHandle(0, 3, 0, 6);
+
     for (dev = 1; dev < 25; dev++)
     {
         val = RdosGetPciHandleSegment(dev);

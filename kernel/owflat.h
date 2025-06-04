@@ -168,6 +168,17 @@
     __parm [__ebx] [__dx] [__cx] \
     __value [__ebx]
 
+#pragma aux RdosGetPciHandle = \
+    CallGate_get_pci_handle  \
+    "jc fail" \
+    "movzx ebx,bx" \
+    "jmp done" \
+    "fail: " \
+    "xor ebx,ebx" \
+    "done: " \
+    __parm [__dh] [__dl] [__ah] [__al] \
+    __value [__ebx]
+
 #pragma aux RdosGetPciHandleSegment = \
     CallGate_get_pci_handle_param  \
     __parm [__ebx] \

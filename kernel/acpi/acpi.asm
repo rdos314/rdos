@@ -289,6 +289,42 @@ find_pci_prot_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetPciHandle
+;
+;           DESCRIPTION:    Get PCI handle
+;
+;           PARAMETERS:     DH      Segment
+;                           DL      Bus
+;                           AH      Device
+;                           AL      Function
+;
+;           RETURNS:        BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_handle_name      DB 'Get PCI Handle',0
+
+get_pci_handle   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_HANDLE_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetPciHandleParam
 ;
 ;           DESCRIPTION:    Find PCI handle param
@@ -3281,6 +3317,12 @@ init    Proc far
     mov edi,OFFSET find_pci_prot_handle_name
     xor dx,dx
     mov ax,find_pci_prot_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_handle
+    mov edi,OFFSET get_pci_handle_name
+    xor dx,dx
+    mov ax,get_pci_handle_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_pci_handle_param

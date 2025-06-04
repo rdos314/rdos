@@ -4594,6 +4594,15 @@ FindPciDeviceHandle      MACRO
         UserGate find_pci_device_handle_nr
                         ENDM
 
+;   IN  DH          Segment
+;   IN  DL          Bus
+;   IN  AH          Device
+;   IN  AL          Function
+;   OUT BX          Handle                   
+GetPciHandle      MACRO
+        UserGate get_pci_handle_nr
+                        ENDM
+
 ;   IN  BX          Handle
 ;   OUT DH          Segment
 ;   OUT DL          Bus
