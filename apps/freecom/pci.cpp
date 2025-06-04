@@ -98,6 +98,7 @@ TPciCommand::TPciCommand(TSession *session, const char *param)
 ##########################################################################*/
 void TPciCommand::PrintBusDevices(int Bus)
 {
+    int Handle;
     char AcpiName[128];
     char Str[100];
     int Device;
@@ -121,9 +122,10 @@ void TPciCommand::PrintBusDevices(int Bus)
     {
         for (Function = 0; Function < 8; Function++)
         {
-            if (RdosGetPciDeviceVendor(Bus, Device, Function, &VendorID, &DeviceID))
+            Handle = RdosGetPciHandle(0, Bus, Device, Function);
+            if (Handle)
             {
-                if (!RdosGetPciDeviceName(Bus, Device, Function, AcpiName))
+//                if (!RdosGetPciDeviceName(Bus, Device, Function, AcpiName))
                     AcpiName[0] = 0;
 
                 while (strlen(AcpiName) < 30)
@@ -131,18 +133,23 @@ void TPciCommand::PrintBusDevices(int Bus)
 
                 Write(AcpiName);
 
-                RdosGetPciClass(Bus, Device, Function, &Class, &SubClass);
-                Interface = RdosGetPciInterface(Bus, Device, Function);
-                Irq = RdosGetPciIrq(Bus, Device, Function);
-                Used = RdosIsPciFunctionUsed(Bus, Device, Function);
+                Class = RdosReadPciConfigByte(Handle, 11);
+                SubClass = RdosReadPciConfigByte(Handle, 10);
+                Interface = RdosReadPciConfigByte(Handle, 9);
+                VendorID = RdosReadPciConfigWord(Handle, 0);
+                DeviceID = RdosReadPciConfigWord(Handle, 2);
+                Irq = RdosGetPciHandleIrq(Handle);
 
-                RdosGetPciMsi(Bus, Device, Function, &Msi, &MsiCount);
-                RdosGetPciMsiX(Bus, Device, Function, &MsiX, &MsiXCount);
+//                Used = RdosIsPciFunctionUsed(Bus, Device, Function);
+//                RdosGetPciMsi(Bus, Device, Function, &Msi, &MsiCount);
+//                RdosGetPciMsiX(Bus, Device, Function, &MsiX, &MsiXCount);
 
                 sprintf(Str, "%04hX %04hX  %02hX%02hX%02hX  %4d %4d  ", VendorID, DeviceID, Class, SubClass, Interface, Device, Function);
                 Write(Str);
 
                 Str[0] = 0;
+
+/*
                 if (Used)
                 {
                     if (Msi)
@@ -187,6 +194,12 @@ void TPciCommand::PrintBusDevices(int Bus)
                         }
                     }
                 }
+*/
+
+                if (Irq)
+                    sprintf(Str, "IRQ    %02hX", Irq);
+
+
                 Write(Str);
                 Write("\r\n");
             }
@@ -211,6 +224,10 @@ void TPciCommand::PrintBus(int index)
     int bus, dev, func;
     char Str[80];
 
+    int Handle;
+
+
+/*
     if (RdosGetPciBus(index, &bus, &dev, &func))
     {
         if (!bus && !dev && !func)
@@ -223,6 +240,19 @@ void TPciCommand::PrintBus(int index)
             sprintf(Str, "Bus %d (Bus: %d, Device: %d, Function: %d)\r\n", index, bus, dev, func);
             Write(Str);
         }
+
+        PrintBusDevices(index);
+    }
+
+*/
+
+    Handle = RdosGetPciHandle(0, index, 0, 0);
+
+    if (Handle)
+    {
+        sprintf(Str, "Bus %d \r\n", index);
+        Write(Str);
+
         PrintBusDevices(index);
     }
 }
