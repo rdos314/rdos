@@ -325,6 +325,42 @@ get_pci_handle   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetPciBus
+;
+;           DESCRIPTION:    Get PCI bus
+;
+;           PARAMETERS:     DH          Segment
+;                           DL          Bus
+;
+;           RETURNS:        DL          Bus
+;                           AH          Device
+;                           AL          Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_bus_name DB 'Get Pci Bus',0
+
+get_pci_bus     Proc far    
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_BUS_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_bus     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetPciHandleParam
 ;
 ;           DESCRIPTION:    Find PCI handle param
@@ -3175,47 +3211,6 @@ HasApic  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetPciBus
-;
-;           DESCRIPTION:    Get PCI bus
-;
-;           PARAMETERS:     BH          Bus
-;
-;           RETURNS:        BH          Bus
-;                           BL          Device
-;                           CH          Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_pci_bus_name DB 'Get Pci Bus',0
-
-get_pci_bus     Proc far    
-    push ds
-    push esi
-;
-    mov esi,SEG data
-    mov ds,esi
-    movzx esi,bh
-    mov si,ds:[2*esi].pci_bus_arr
-    or si,si
-    stc
-    jz gpbDone
-;
-    mov ds,si
-    mov bh,ds:pcib_owner_bus
-    mov bl,ds:pcib_owner_dev
-    mov ch,ds:pcib_owner_func
-    clc
-    
-gpbDone:
-    pop esi
-    pop ds
-    ret
-get_pci_bus     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Init_pci_thread
 ;
 ;           DESCRIPTION:    Init_pci_thread
@@ -3378,6 +3373,12 @@ init    Proc far
     xor dx,dx
     mov ax,write_pci_config_dword_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_bus
+    mov edi,OFFSET get_pci_bus_name
+    xor dx,dx
+    mov ax,get_pci_bus_nr
+    RegisterBimodalUserGate
 
 ;
 ; legacy
@@ -3495,12 +3496,6 @@ init    Proc far
     xor cl,cl
     mov ax,setup_pci_msix_entry_nr
     RegisterOsGate
-;
-    mov esi,OFFSET get_pci_bus
-    mov edi,OFFSET get_pci_bus_name
-    xor dx,dx
-    mov ax,get_pci_bus_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_pci_irq
     mov edi,OFFSET get_pci_irq_name

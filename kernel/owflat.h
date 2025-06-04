@@ -241,21 +241,17 @@
     __parm [__ebx] [__ecx] [__eax]
 
 #pragma aux RdosGetPciBus = \
-    "mov bh,al" \
     CallGate_get_pci_bus  \
     "jc PciFail" \
-    "movzx eax,bh" \
-    "mov [edx],eax" \
-    "movzx eax,bl" \
-    "mov [esi],eax" \
-    "movzx eax,ch" \
-    "mov [edi],eax" \
+    "mov [ebx],dl" \
+    "mov [esi],ah" \
+    "mov [edi],al" \
     "mov eax,1" \
     "jmp PciDone" \
     "PciFail: " \
     "xor eax,eax" \
     "PciDone: " \
-    __parm [__eax] [__edx] [__esi] [__edi] \
+    __parm [__dh] [__dl] [__ebx] [__esi] [__edi] \
     __value [__eax]
 
 #pragma aux RdosIsPciFunctionUsed = \

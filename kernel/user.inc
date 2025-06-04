@@ -4667,10 +4667,11 @@ WritePciConfigDword      MACRO
         UserGate write_pci_config_dword_nr
                         ENDM
 
-;   IN  BH          Bus #
-;   OUT BH          Bus #
-;   OUT BL          Device #
-;   OUT CH          Function #
+;   IN  DH          Segment
+;   IN  DL          Bus
+;   OUT DL          Bus #
+;   OUT AH          Device #
+;   OUT AL          Function #
 GetPciBus      MACRO
         UserGate get_pci_bus_nr
                         ENDM

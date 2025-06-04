@@ -221,14 +221,13 @@ void TPciCommand::PrintBusDevices(int Bus)
 ##########################################################################*/
 void TPciCommand::PrintBus(int index)
 {
-    int bus, dev, func;
+    unsigned char bus, dev, func;
     char Str[80];
 
     int Handle;
 
 
-/*
-    if (RdosGetPciBus(index, &bus, &dev, &func))
+    if (RdosGetPciBus(0, index, &bus, &dev, &func))
     {
         if (!bus && !dev && !func)
         {
@@ -240,18 +239,6 @@ void TPciCommand::PrintBus(int index)
             sprintf(Str, "Bus %d (Bus: %d, Device: %d, Function: %d)\r\n", index, bus, dev, func);
             Write(Str);
         }
-
-        PrintBusDevices(index);
-    }
-
-*/
-
-    Handle = RdosGetPciHandle(0, index, 0, 0);
-
-    if (Handle)
-    {
-        sprintf(Str, "Bus %d \r\n", index);
-        Write(Str);
 
         PrintBusDevices(index);
     }

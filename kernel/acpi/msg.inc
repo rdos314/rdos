@@ -59,47 +59,54 @@ GET_PCI_HANDLE_CMD         = 3
 ; OUT AL    Function
 GET_PCI_PARAM_CMD          = 4
 
+; IN  DH    Segment
+; IN  DL    Bus
+; OUT DL    Bus
+; OUT AH    Device
+; OUT AL    Function
+GET_PCI_BUS_CMD            = 5
+
 ; IN  BX    Handle
 ; OUT AL    IRQ
-GET_PCI_IRQ_CMD            = 5
+GET_PCI_IRQ_CMD            = 6
 
 ; IN  BX    Handle
 ; IN  AL    Capability
 ; OUT AX    Register
-GET_PCI_CAP_CMD            = 6
+GET_PCI_CAP_CMD            = 7
 
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
 ; OUT AL    Value
-READ_PCI_CONFIG_BYTE_CMD   = 7
+READ_PCI_CONFIG_BYTE_CMD   = 8
 
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
 ; OUT AX    Value
-READ_PCI_CONFIG_WORD_CMD   = 8
+READ_PCI_CONFIG_WORD_CMD   = 9
 
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
 ; OUT EAX   Value
-READ_PCI_CONFIG_DWORD_CMD  = 9
+READ_PCI_CONFIG_DWORD_CMD  = 10
 
 ; IN  AL    Value
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
-WRITE_PCI_CONFIG_BYTE_CMD  = 10
+WRITE_PCI_CONFIG_BYTE_CMD  = 11
 
 ; IN  AX    Value
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
-WRITE_PCI_CONFIG_WORD_CMD  = 11
+WRITE_PCI_CONFIG_WORD_CMD  = 12
 
 ; IN  EAX   Value
 ; IN  BX    Handle
 ; IN  CX    Register
 ; IN  DX    Issuer selector
-WRITE_PCI_CONFIG_DWORD_CMD = 12
+WRITE_PCI_CONFIG_DWORD_CMD = 13
