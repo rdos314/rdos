@@ -114,3 +114,12 @@ WRITE_PCI_CONFIG_WORD_CMD  = 13
 ; IN  CX    Register
 ; IN  DX    Issuer selector
 WRITE_PCI_CONFIG_DWORD_CMD = 14
+
+; IN  BX     Handle
+; IN  DX     Issuer selector
+; IN  ES:EDI Name
+LOCK_PCI_CMD               = 15
+
+; IN  BX     Handle
+; IN  DX     Issuer selector
+UNLOCK_PCI_CMD             = 16

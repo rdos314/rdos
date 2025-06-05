@@ -4667,6 +4667,20 @@ WritePciConfigDword      MACRO
         UserGate write_pci_config_dword_nr
                         ENDM
 
+;   IN  BX          Handle
+;   IN  ES:EDI      Name
+LockPciHandle      MACRO
+        UserGate lock_pci_handle_nr
+                        ENDM
+
+;   IN  BX          Handle
+UnlockPciHandle      MACRO
+        UserGate unlock_pci_handle_nr
+                        ENDM
+
+;
+; legacy
+;
 ;   IN  DH          Segment
 ;   IN  DL          Bus
 ;   OUT DL          Bus #

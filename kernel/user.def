@@ -1050,5 +1050,7 @@ get_pci_handle_param_nr           = 872
 get_pci_handle_irq_nr             = 873
 get_pci_handle_cap_nr             = 874
 get_pci_handle_nr                 = 875
+lock_pci_handle_nr                = 876
+unlock_pci_handle_nr              = 877
 
 usergate_entries                  = 880

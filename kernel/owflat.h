@@ -240,6 +240,18 @@
     CallGate_write_pci_config_dword  \
     __parm [__ebx] [__ecx] [__eax]
 
+#pragma aux RdosLockPciHandle = \
+    CallGate_lock_pci_handle  \
+    CarryToBool \
+    __parm [__ebx] [__edi] \
+    __value [__eax]
+
+#pragma aux RdosUnlockPciHandle = \
+    CallGate_unlock_pci_handle  \
+    CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux RdosGetPciBus = \
     CallGate_get_pci_bus  \
     "jc PciFail" \
