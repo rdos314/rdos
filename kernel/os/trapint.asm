@@ -1989,20 +1989,6 @@ t13_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SpuriousApic
-;
-;           DESCRIPTION:    Spurious interrupt from APIC
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-apic_spur:
-    iretd
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           INIT_IDT_TRAPS
 ;
 ;           DESCRIPTION:    Install all trap-gates
@@ -2400,7 +2386,6 @@ pg11    DW      11,         OFFSET pretask11,           kernel_code,    0
 pg12    DW      12,         OFFSET pretask12,           kernel_code,    0
 pg13    DW      13,         OFFSET pretask13,           kernel_code,    0
 pg14    DW      14,         OFFSET prepaging14,         kernel_code,    0
-pg15    DW      15,         OFFSET apic_spur,           kernel_code,    0
 pg16    DW      16,         OFFSET pretask16,           kernel_code,    0
 rg66    DW      66h,    OFFSET int66,           kernel_code,    3
 rg67    DW      67h,    OFFSET int67,           kernel_code,    3
