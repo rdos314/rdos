@@ -117,7 +117,6 @@ acpi_table_arr          DD ?
 
 acpitab  ENDS
 
-
 data    SEGMENT byte public 'DATA'
 
 apic_table              DW ?
@@ -748,6 +747,123 @@ write_pci_config_dword   Proc far
     pop ds
     ret
 write_pci_config_dword   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           LockPciHandle16/32
+;
+;    DESCRIPTION:    Lock PCI handle
+;
+;    PARAMETERS:     BX          Handle
+;                    ES:(E)DI    Name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_pci_handle_name DB 'Lock PCI Handle', 0
+
+LockHandle  Proc near
+    push ds
+    push es
+    push fs
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov fs,eax
+    mov esi,edi
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;
+    push esi
+;
+    mov esi,ebp
+
+lhCopy:
+    lods byte ptr fs:[esi]
+    stosb
+    or al,al
+    jnz lhCopy
+;    
+    pop esi
+;    
+    mov eax,LOCK_PCI_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop fs
+    pop es
+    pop ds
+    ret
+LockHandle   Endp
+
+lock_pci_handle16  Proc far
+    push edx
+    mov edx,[esp+8]
+;    
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call LockHandle
+;    
+    pop edi
+    pop ecx
+    pop edx
+    ret
+lock_pci_handle16  Endp
+
+lock_pci_handle32  Proc far
+    push edx
+    mov edx,[esp+8]
+;
+    call LockHandle
+;
+    pop edx    
+    ret
+lock_pci_handle32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockPciHandle
+;
+;           DESCRIPTION:    Unlock PCI handle
+;
+;           PARAMETERS:     BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_pci_handle_name      DB 'Unlock PCI Handle',0
+
+unlock_pci_handle   Proc far
+    push ds
+    push es
+    push edx
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,UNLOCK_PCI_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop edx
+    pop es
+    pop ds
+    ret
+unlock_pci_handle   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3377,7 +3493,19 @@ init    Proc far
     xor dx,dx
     mov ax,get_pci_bus_nr
     RegisterBimodalUserGate
-
+;
+    mov ebx,OFFSET lock_pci_handle16
+    mov esi,OFFSET lock_pci_handle32
+    mov edi,OFFSET lock_pci_handle_name
+    mov dx,virt_es_in
+    mov ax,lock_pci_handle_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET unlock_pci_handle
+    mov edi,OFFSET unlock_pci_handle_name
+    xor dx,dx
+    mov ax,unlock_pci_handle_nr
+    RegisterBimodalUserGate
 ;
 ; legacy
 ;
