@@ -2000,46 +2000,6 @@ t13_end:
 apic_spur:
     iretd
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DEFAULT_INT1
-;
-;           DESCRIPTION:    Default int 1
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-default_int1:
-    push ax
-    mov al,20h
-    out INT0_CONTROL,al
-    pop ax
-    iretd
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DEFAULT_INT2
-;
-;           DESCRIPTION:    Default int 2
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-default_int2:
-    push ax
-    mov al,20h
-    out INT0_CONTROL,al
-    jmp short $+2
-    out INT1_CONTROL,al
-    pop ax
-    iretd
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2442,20 +2402,6 @@ pg13    DW      13,         OFFSET pretask13,           kernel_code,    0
 pg14    DW      14,         OFFSET prepaging14,         kernel_code,    0
 pg15    DW      15,         OFFSET apic_spur,           kernel_code,    0
 pg16    DW      16,         OFFSET pretask16,           kernel_code,    0
-ri1         DW      29h,    OFFSET default_int1,    kernel_code,    0
-ri2         DW      2Ah,    OFFSET default_int1,    kernel_code,    0
-ri3         DW      2Bh,    OFFSET default_int1,    kernel_code,    0
-ri4         DW      2Ch,    OFFSET default_int1,    kernel_code,    0
-ri5         DW      2Dh,    OFFSET default_int1,    kernel_code,    0
-ri6         DW      2Eh,    OFFSET default_int1,    kernel_code,    0
-ri7         DW      2Fh,    OFFSET default_int1,    kernel_code,    0
-ri10    DW      38h,    OFFSET default_int2,    kernel_code,    0
-ri11    DW      39h,    OFFSET default_int2,    kernel_code,    0
-ri12    DW      3Ah,    OFFSET default_int2,    kernel_code,    0
-ri13    DW      3Bh,    OFFSET default_int2,    kernel_code,    0
-ri14    DW      3Ch,    OFFSET default_int2,    kernel_code,    0
-ri15    DW      3Dh,    OFFSET default_int2,    kernel_code,    0
-ri17    DW      3Fh,    OFFSET default_int2,    kernel_code,    0
 rg66    DW      66h,    OFFSET int66,           kernel_code,    3
 rg67    DW      67h,    OFFSET int67,           kernel_code,    3
 rg9A    DW      9Ah,    OFFSET int9A,           kernel_code,    3
