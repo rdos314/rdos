@@ -2695,14 +2695,14 @@ init_trap_vectors       PROC near
     mov ds,bx
 ;
     xor bx,bx
-    mov cx,4
+    mov cx,2
 
 init_used_irq_loop:
     mov byte ptr ds:[bx],0FFh
     inc bx
     loop init_used_irq_loop
 ;
-    mov cx,32-4
+    mov cx,32-2
 
 init_avail_irq_loop:
     mov byte ptr ds:[bx],0
