@@ -771,24 +771,18 @@ LockHandle  Proc near
     push edi
     push ebp
 ;
-    mov eax,es
-    mov fs,eax
+    mov esi,es
+    mov fs,esi
     mov esi,edi
     mov edx,[esp+24]
 ;
     call AllocateMsg
-;
-    push esi
-;
-    mov esi,ebp
 
 lhCopy:
     lods byte ptr fs:[esi]
     stosb
     or al,al
     jnz lhCopy
-;    
-    pop esi
 ;    
     mov eax,LOCK_PCI_CMD
     call RunMsg
