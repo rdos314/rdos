@@ -2319,14 +2319,16 @@ SetObjTime Endp
 
 IsObjEof Proc far
     push ds
+    push edx
 ;
+    mov edx,ds:fui_pos
     mov ds,ds:fui_file_sel
     EnterReadSection ds:file_size_section
     mov eax,ds:file_size
     LeaveReadSection ds:file_size_section
 ;
-    sub eax,ds:fui_pos
-    jae ieYes
+    sub eax,edx
+    jbe ieYes
 
 ieNo:
     xor eax,eax
@@ -2338,10 +2340,10 @@ ieYes:
 ieDone:
     clc
 ;
+    pop edx
     pop ds
     retf32
 IsObjEof Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
