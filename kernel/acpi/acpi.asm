@@ -3249,6 +3249,7 @@ apic_tab    DB 'APIC'
 
     extern GetAcpiTable:near
 
+    extern init_irq:near
     extern init_bios:near
     extern init_uacpi:near
     extern init_apic:near
@@ -3553,6 +3554,7 @@ init    Proc far
     mov ds,eax
     mov ds:apic_table,es    
 ;    
+    call init_irq
     call init_msi
     call init_smp
     call init_timer

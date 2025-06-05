@@ -57,12 +57,6 @@ code32  EQU 40h
 
 op_extend       EQU 40h
 
-irq_data_seg     STRUC
-
-irq_bitmask         DB 32 DUP(?)
-
-irq_data_seg     ENDS
-
 IFDEF __WASM__
     .686p
     .xmm2
@@ -1995,39 +1989,6 @@ t13_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TRAP_16
-;
-;           DESCRIPTION:    Co-processor error
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_16:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    sti
-    push eax
-    push ebx
-    mov ax,16
-    push ax
-    push ds
-;
-    call emulate
-    pop eax
-    mov ds,ax
-    pop ebx
-    pop eax
-    and byte ptr [ebp+2].trap_eflags, NOT 1
-    pop ebp
-    add sp,4
-    iretd
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SpuriousApic
 ;
 ;           DESCRIPTION:    Spurious interrupt from APIC
@@ -2108,7 +2069,6 @@ tg10    DW      10,         OFFSET trap_10,         kernel_code,    0
 tg11    DW      11,         OFFSET trap_11,         kernel_code,    0
 tg12    DW      12,         OFFSET trap_12,         kernel_code,    0
 tg13    DW      13,         OFFSET trap_13,         kernel_code,    0
-tg16    DW      16,         OFFSET trap_16,         kernel_code,    0
 tg7_end DW      0FFFFh
 
 ;
@@ -2590,303 +2550,11 @@ init_idt    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupIntGate
-;
-;           description:    Setup int gate
-;
-;           PARAMETERS:     AL              Int #
-;                           BL              DPL
-;                           DS:ESI          Entry-point
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_int_gate_name DB 'Setup Int Gate',0
-
-setup_int_gate     Proc far
-    push ds
-    push ax
-    push bx
-;
-    call local_create_int_gate_sel
-    mov bx,irq_data_sel
-    mov ds,bx
-    mov bx,OFFSET irq_bitmask
-    movzx ax,al
-    bts [bx],ax
-;
-    pop bx
-    pop ax
-    pop ds    
-    retf32
-setup_int_gate  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupTrapGate
-;
-;           description:    Setup trap gate
-;
-;           PARAMETERS:     AL              Int #
-;                           BL              DPL
-;                           DS:ESI          Entry-point
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_trap_gate_name DB 'Setup Trap Gate',0
-
-setup_trap_gate     Proc far
-    push ds
-    push ax
-    push bx
-;
-    call local_create_trap_gate_sel
-    mov bx,irq_data_sel
-    mov ds,bx
-    mov bx,OFFSET irq_bitmask
-    movzx ax,al
-    bts [bx],ax
-;
-    pop bx
-    pop ax
-    pop ds    
-    retf32
-setup_trap_gate     Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AllocateInts
-;
-;       DESCRIPTION:    Allocate interrupts
-;
-;       PARAMETERS:     CX      Number of ints (1,2,4,8,16 or 32)
-;                       AL      Priority (0..31)
-;
-;       RETURNS:        AL      Base int #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_ints_name    DB 'Allocate Ints',0
-
-allocate_ints  Proc far
-    push ds
-    push cx
-    push edx
-    push si
-;    
-    mov dx,irq_data_sel
-    mov ds,dx
-;    
-    and al,1Fh
-    movzx si,al
-    add si,OFFSET irq_bitmask
-    shl al,3
-;
-    cmp cx,32
-    ja aiFailed
-;
-    cmp cx,16
-    jbe aiNot32
-
-ai32:
-    test al,1Fh
-    jnz aiFailed
-
-ai32Loop:
-    mov edx,ds:[si]
-    or edx,edx
-    jz ai32Ok
-;
-    add al,32
-    jc aiFailed
-;
-    add si,4
-    jmp ai32Loop
-    
-ai32Ok:
-    mov edx,-1
-    mov ds:[si],edx    
-    jmp aiOk
-
-aiNot32:    
-    cmp cx,8
-    jbe aiNot16
-
-ai16:
-    test al,0Fh
-    jnz aiFailed
-
-ai16Loop:
-    mov dx,ds:[si]
-    or dx,dx
-    jz ai16Ok
-;
-    add al,16
-    jc aiFailed
-;
-    add si,2
-    jmp ai16Loop
-    
-ai16Ok:
-    mov dx,-1
-    mov ds:[si],dx    
-    jmp aiOk
-
-aiNot16:
-    cmp cx,4
-    jbe aiNot8
-
-ai8:
-
-ai8Loop:
-    mov dl,ds:[si]
-    or dl,dl
-    jz ai8Ok
-;
-    add al,8
-    jc aiFailed
-;
-    inc si
-    jmp ai8Loop
-    
-ai8Ok:
-    mov dl,-1
-    mov ds:[si],dl
-    jmp aiOk
-        
-aiNot8:
-    cmp cx,2
-    jbe aiNot4
-
-ai4:
-
-ai4Loop:
-    mov dl,ds:[si]
-    mov dh,0Fh
-    test dl,dh
-    jz ai4Ok
-;
-    add al,4
-    shl dh,4
-    test dl,dh
-    jz ai4Ok
-;    
-    add al,4
-    jc aiFailed
-;
-    inc si
-    jmp ai4Loop
-
-ai4Ok:
-    or ds:[si],dh
-    jmp aiOk
-        
-aiNot4:
-    cmp cx,1
-    jbe ai1
-
-ai2:
-
-ai2Loop:
-    mov cx,4
-    mov dl,ds:[si]
-    mov dh,3
-
-ai2BitLoop:    
-    test dl,dh
-    jz ai2Ok
-;
-    add al,2
-    jc aiFailed
-;
-    shl dh,2
-    loop ai2BitLoop
-;
-    inc si
-    jmp ai2Loop
-
-ai2Ok:
-    or ds:[si],dh
-    jmp aiOk
-
-ai1:
-
-ai1Loop:
-    mov cx,8
-    mov dl,ds:[si]
-    mov dh,1
-
-ai1BitLoop:    
-    test dl,dh
-    jz ai1Ok
-;
-    add al,1
-    jc aiFailed
-;
-    shl dh,1
-    loop ai1BitLoop
-;
-    inc si
-    jmp ai1Loop
-
-ai1Ok:
-    or ds:[si],dh
-
-aiOk:
-    clc
-    jmp aiDone
-
-aiFailed:
-    stc
-
-aiDone:    
-    pop si
-    pop edx
-    pop cx
-    pop ds    
-    retf32
-allocate_ints  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FreeInt
-;
-;       DESCRIPTION:    Free a single int vector
-;
-;       PARAMETERS:     AL      Int #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_int_name    DB 'Free Int',0
-
-free_int  Proc far
-    push ds
-    push ax
-    push si
-;    
-    mov si,irq_data_sel
-    mov ds,si
-;
-    movzx ax,al
-    mov si,OFFSET irq_bitmask
-    btr ds:[si],ax
-;
-    pop si
-    pop ax
-    pop ds
-    retf32
-free_int    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SetupNmiHandler
 ;
 ;           DESCRIPTION:    Setup NMI handler
 ;
-;           PARAMETERS:     DS		Data
+;           PARAMETERS:     DS          Data
 ;                           ES:EDI      Handler
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2918,7 +2586,7 @@ setup_nmi_handler       Proc far
     pop es
     pop ds
     retf32
-setup_nmi_handler	Endp
+setup_nmi_handler       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2955,27 +2623,6 @@ irq_pm32:
     public init_trap_vectors
 
 init_trap_vectors       PROC near
-    xor eax,eax
-    mov ax,SIZE irq_data_seg
-    mov bx,irq_data_sel
-    AllocateFixedSystemMem
-    mov ds,bx
-;
-    mov bx,OFFSET irq_bitmask
-    mov cx,4
-
-init_used_irq_loop:
-    mov byte ptr ds:[bx],0FFh
-    inc bx
-    loop init_used_irq_loop
-;
-    mov cx,32-4
-
-init_avail_irq_loop:
-    mov byte ptr ds:[bx],0
-    inc bx
-    loop init_avail_irq_loop
-;
     xor cx,cx
     mov ax,cs
     mov ds,ax
@@ -3013,30 +2660,6 @@ init_avail_irq_loop:
     mov edi,OFFSET pm_exception_handler
     mov al,3
     HookProt32Int
-;
-    mov esi,OFFSET setup_int_gate
-    mov edi,OFFSET setup_int_gate_name
-    xor cl,cl
-    mov ax,setup_int_gate_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET setup_trap_gate
-    mov edi,OFFSET setup_trap_gate_name
-    xor cl,cl
-    mov ax,setup_trap_gate_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_ints
-    mov edi,OFFSET allocate_ints_name
-    xor cl,cl
-    mov ax,allocate_ints_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_int
-    mov edi,OFFSET free_int_name
-    xor cl,cl
-    mov ax,free_int_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET init_trap_gates
     mov edi,OFFSET init_trap_gates_name
