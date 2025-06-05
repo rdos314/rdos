@@ -15,6 +15,8 @@ void main()
     dev = RdosGetPciHandle(0, 3, 0, 6);
 
     RdosLockPciHandle(dev, "Test lock");
+    val = RdosReadPciConfigDword(dev, 0x10);
+    RdosWritePciConfigDword(dev, 0x10, val);
     RdosUnlockPciHandle(dev);
 
     for (;;)
