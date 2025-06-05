@@ -766,7 +766,6 @@ LockHandle  Proc near
     push ds
     push es
     push fs
-    push edx
     push esi
     push edi
     push ebp
@@ -774,8 +773,6 @@ LockHandle  Proc near
     mov esi,es
     mov fs,esi
     mov esi,edi
-    mov edx,[esp+24]
-;
     call AllocateMsg
 
 lhCopy:
@@ -790,7 +787,6 @@ lhCopy:
     pop ebp
     pop edi
     pop esi
-    pop edx
     pop fs
     pop es
     pop ds
