@@ -57,6 +57,12 @@ code32  EQU 40h
 
 op_extend       EQU 40h
 
+irq_data_seg     STRUC
+
+bm            DB 32 DUP(?)
+
+irq_data_seg     ENDS
+
 IFDEF __WASM__
     .686p
     .xmm2
@@ -1989,6 +1995,39 @@ t13_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           TRAP_16
+;
+;           DESCRIPTION:    Co-processor error
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_16:
+    push dword ptr 0
+    push ebp
+    mov ebp,esp
+    sti
+    push eax
+    push ebx
+    mov ax,16
+    push ax
+    push ds
+;
+    call emulate
+    pop eax
+    mov ds,ax
+    pop ebx
+    pop eax
+    and byte ptr [ebp+2].trap_eflags, NOT 1
+    pop ebp
+    add sp,4
+    iretd
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SpuriousApic
 ;
 ;           DESCRIPTION:    Spurious interrupt from APIC
@@ -2069,6 +2108,7 @@ tg10    DW      10,         OFFSET trap_10,         kernel_code,    0
 tg11    DW      11,         OFFSET trap_11,         kernel_code,    0
 tg12    DW      12,         OFFSET trap_12,         kernel_code,    0
 tg13    DW      13,         OFFSET trap_13,         kernel_code,    0
+tg16    DW      16,         OFFSET trap_16,         kernel_code,    0
 tg7_end DW      0FFFFh
 
 ;
@@ -2550,6 +2590,72 @@ init_idt    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupIntGate
+;
+;           description:    Setup int gate
+;
+;           PARAMETERS:     AL              Int #
+;                           BL              DPL
+;                           DS:ESI          Entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_int_gate_name DB 'Setup Int Gate',0
+
+setup_int_gate     Proc far
+    push ds
+    push ax
+    push bx
+;
+    call local_create_int_gate_sel
+    mov bx,irq_data_sel
+    mov ds,bx
+    xor bx,bx
+    movzx ax,al
+    bts [bx],ax
+;
+    pop bx
+    pop ax
+    pop ds    
+    retf32
+setup_int_gate  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupTrapGate
+;
+;           description:    Setup trap gate
+;
+;           PARAMETERS:     AL              Int #
+;                           BL              DPL
+;                           DS:ESI          Entry-point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_trap_gate_name DB 'Setup Trap Gate',0
+
+setup_trap_gate     Proc far
+    push ds
+    push ax
+    push bx
+;
+    call local_create_trap_gate_sel
+    mov bx,irq_data_sel
+    mov ds,bx
+    xor bx,bx
+    movzx ax,al
+    bts [bx],ax
+;
+    pop bx
+    pop ax
+    pop ds    
+    retf32
+setup_trap_gate     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetupNmiHandler
 ;
 ;           DESCRIPTION:    Setup NMI handler
@@ -2623,6 +2729,27 @@ irq_pm32:
     public init_trap_vectors
 
 init_trap_vectors       PROC near
+    xor eax,eax
+    mov ax,SIZE irq_data_seg
+    mov bx,irq_data_sel
+    AllocateFixedSystemMem
+    mov ds,bx
+;
+    xor bx,bx
+    mov cx,4
+
+init_used_irq_loop:
+    mov byte ptr ds:[bx],0FFh
+    inc bx
+    loop init_used_irq_loop
+;
+    mov cx,32-4
+
+init_avail_irq_loop:
+    mov byte ptr ds:[bx],0
+    inc bx
+    loop init_avail_irq_loop
+;
     xor cx,cx
     mov ax,cs
     mov ds,ax
@@ -2660,6 +2787,18 @@ init_trap_vectors       PROC near
     mov edi,OFFSET pm_exception_handler
     mov al,3
     HookProt32Int
+;
+    mov esi,OFFSET setup_int_gate
+    mov edi,OFFSET setup_int_gate_name
+    xor cl,cl
+    mov ax,setup_int_gate_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_trap_gate
+    mov edi,OFFSET setup_trap_gate_name
+    xor cl,cl
+    mov ax,setup_trap_gate_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET init_trap_gates
     mov edi,OFFSET init_trap_gates_name

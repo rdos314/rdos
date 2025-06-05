@@ -47,120 +47,9 @@ ELSE
     .386p
 ENDIF
 
-
-data    SEGMENT byte public 'DATA'
-
-irq_bitmask         DB 32 DUP(?)
-
-data    ENDS
-
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupIntGate
-;
-;           description:    Setup int gate
-;
-;           PARAMETERS:     AL              Int #
-;                           BL              DPL
-;                           DS:ESI          Entry-point
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_int_gate_name DB 'Setup Int Gate',0
-
-setup_int_gate     Proc far
-    push ds
-    push eax
-    push ebx
-    push edx
-    push ebp
-;
-    mov ebp,ds
-    mov edx,idt_sel
-    mov ds,edx
-;
-    mov ah,bl
-    movzx ebx,al
-    shl ebx,3
-    xor al,al
-    shl ah,5
-    or ah,8Eh
-    mov ds:[ebx+4],ax
-    mov ds:[ebx],esi
-    xchg bp,ds:[ebx+2]
-    mov ds:[ebx+6],bp
-;
-    mov ebx,SEG data
-    mov ds,ebx
-;    
-    mov ebx,OFFSET irq_bitmask
-    movzx eax,al
-    bts [ebx],eax
-;
-    pop ebp
-    pop edx
-    pop ebx
-    pop eax
-    pop ds    
-    ret
-setup_int_gate  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupTrapGate
-;
-;           description:    Setup trap gate
-;
-;           PARAMETERS:     AL              Int #
-;                           BL              DPL
-;                           DS:ESI          Entry-point
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_trap_gate_name DB 'Setup Trap Gate',0
-
-setup_trap_gate     Proc far
-    push ds
-    push eax
-    push ebx
-    push edx
-    push ebp
-;
-    mov ebp,ds
-    mov edx,idt_sel
-    mov ds,edx
-;
-    mov ah,bl
-    movzx ebx,al
-    shl ebx,3
-    xor al,al
-    shl ah,5
-    or ah,8Fh
-    mov ds:[ebx+4],ax
-    mov ds:[ebx],esi
-    xchg bp,ds:[ebx+2]
-    mov ds:[ebx+6],bp
-;
-    mov ebx,SEG data
-    mov ds,ebx
-;    
-    mov ebx,OFFSET irq_bitmask
-    movzx eax,al
-    bts [ebx],eax
-;
-    pop ebp
-    pop edx
-    pop ebx
-    pop eax
-    pop ds    
-    ret
-setup_trap_gate     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -184,12 +73,11 @@ allocate_ints  Proc far
     push edx
     push esi
 ;    
-    mov edx,SEG data
+    mov edx,irq_data_sel
     mov ds,edx
 ;    
     and al,1Fh
     movzx esi,al
-    add esi,OFFSET irq_bitmask
     shl al,3
 ;
     movzx ecx,cx
@@ -376,11 +264,11 @@ free_int  Proc far
     push eax
     push esi
 ;    
-    mov esi,SEG data
+    mov esi,irq_data_sel
     mov ds,esi
 ;
     movzx eax,al
-    mov esi,OFFSET irq_bitmask
+    xor esi,esi
     btr ds:[esi],eax
 ;
     pop esi
@@ -404,39 +292,10 @@ init_irq    PROC near
     push ds
     push es
     pushad
-;
-    mov eax,SEG data
-    mov ds,eax    
-    mov ebx,OFFSET irq_bitmask
-    mov ecx,4
-
-init_used_irq_loop:
-    mov byte ptr ds:[bx],0FFh
-    inc bx
-    loop init_used_irq_loop
-;
-    mov ecx,32-4
-
-init_avail_irq_loop:
-    mov byte ptr ds:[bx],0
-    inc bx
-    loop init_avail_irq_loop
 ;    
     mov eax,cs
     mov ds,eax
     mov es,eax
-;
-    mov esi,OFFSET setup_int_gate
-    mov edi,OFFSET setup_int_gate_name
-    xor cl,cl
-    mov ax,setup_int_gate_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET setup_trap_gate
-    mov edi,OFFSET setup_trap_gate_name
-    xor cl,cl
-    mov ax,setup_trap_gate_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET allocate_ints
     mov edi,OFFSET allocate_ints_name
