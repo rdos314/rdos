@@ -2709,6 +2709,16 @@ init_avail_irq_loop:
     inc bx
     loop init_avail_irq_loop
 ;
+    xor bx,bx
+    mov ax,66h
+    bts [bx],ax
+    mov ax,67h
+    bts [bx],ax
+    mov ax,9Ah
+    bts [bx],ax
+    mov ax,0E8h
+    bts [bx],ax
+;
     xor cx,cx
     mov ax,cs
     mov ds,ax
