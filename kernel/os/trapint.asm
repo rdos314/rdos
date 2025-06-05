@@ -57,12 +57,6 @@ code32  EQU 40h
 
 op_extend       EQU 40h
 
-irq_data_seg     STRUC
-
-bm            DB 32 DUP(?)
-
-irq_data_seg     ENDS
-
 IFDEF __WASM__
     .686p
     .xmm2
@@ -1995,39 +1989,6 @@ t13_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TRAP_16
-;
-;           DESCRIPTION:    Co-processor error
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-trap_16:
-    push dword ptr 0
-    push ebp
-    mov ebp,esp
-    sti
-    push eax
-    push ebx
-    mov ax,16
-    push ax
-    push ds
-;
-    call emulate
-    pop eax
-    mov ds,ax
-    pop ebx
-    pop eax
-    and byte ptr [ebp+2].trap_eflags, NOT 1
-    pop ebp
-    add sp,4
-    iretd
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SpuriousApic
 ;
 ;           DESCRIPTION:    Spurious interrupt from APIC
@@ -2108,7 +2069,6 @@ tg10    DW      10,         OFFSET trap_10,         kernel_code,    0
 tg11    DW      11,         OFFSET trap_11,         kernel_code,    0
 tg12    DW      12,         OFFSET trap_12,         kernel_code,    0
 tg13    DW      13,         OFFSET trap_13,         kernel_code,    0
-tg16    DW      16,         OFFSET trap_16,         kernel_code,    0
 tg7_end DW      0FFFFh
 
 ;
@@ -2729,8 +2689,7 @@ irq_pm32:
     public init_trap_vectors
 
 init_trap_vectors       PROC near
-    xor eax,eax
-    mov ax,SIZE irq_data_seg
+    mov eax,32
     mov bx,irq_data_sel
     AllocateFixedSystemMem
     mov ds,bx
