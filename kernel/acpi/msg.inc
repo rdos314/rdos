@@ -67,6 +67,7 @@ GET_PCI_PARAM_CMD          = 4
 GET_PCI_BUS_CMD            = 5
 
 ; IN  BX    Handle
+; IN  AX    Index
 ; OUT AL    IRQ
 GET_PCI_IRQ_CMD            = 6
 
@@ -123,3 +124,11 @@ LOCK_PCI_CMD               = 15
 ; IN  BX     Handle
 ; IN  DX     Issuer selector
 UNLOCK_PCI_CMD             = 16
+
+; IN  BX    Handle
+; OUT AL    Vectors
+GET_PCI_MSI_CMD            = 17
+
+; IN  BX    Handle
+; OUT AL    Vectors
+GET_PCI_MSIX_CMD           = 18

@@ -205,6 +205,16 @@
 
 #pragma aux RdosGetPciHandleIrq = \
     CallGate_get_pci_handle_irq  \
+    __parm [__ebx] [__eax] \
+    __value [__al]
+
+#pragma aux RdosGetPciHandleMsi = \
+    CallGate_get_pci_handle_msi  \
+    __parm [__ebx] \
+    __value [__al]
+
+#pragma aux RdosGetPciHandleMsiX = \
+    CallGate_get_pci_handle_msix  \
     __parm [__ebx] \
     __value [__al]
 

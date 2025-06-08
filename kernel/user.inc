@@ -4613,9 +4613,22 @@ GetPciHandleParam      MACRO
                         ENDM
 
 ;   IN  BX          Handle
+;   IN  AX          Irq number
 ;   OUT AL          IRQ                   
 GetPciHandleIrq      MACRO
         UserGate get_pci_handle_irq_nr
+                        ENDM
+
+;   IN  BX          Handle
+;   OUT AL          Number of vectors                   
+GetPciHandleMsi      MACRO
+        UserGate get_pci_handle_msi_nr
+                        ENDM
+
+;   IN  BX          Handle
+;   OUT AL          Number of vectors                   
+GetPciHandleMsiX      MACRO
+        UserGate get_pci_handle_msix_nr
                         ENDM
 
 ;   IN  BX          Handle

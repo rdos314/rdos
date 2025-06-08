@@ -1052,5 +1052,7 @@ get_pci_handle_cap_nr             = 874
 get_pci_handle_nr                 = 875
 lock_pci_handle_nr                = 876
 unlock_pci_handle_nr              = 877
+get_pci_handle_msi_nr             = 878
+get_pci_handle_msix_nr            = 879
 
 usergate_entries                  = 880

@@ -402,6 +402,7 @@ get_pci_handle_param   Endp
 ;           DESCRIPTION:    Find PCI handle IRQ
 ;
 ;           PARAMETERS:     BX      Handle
+;                           AX      Index
 ;
 ;           RETURNS:        AL      Irq
 ;
@@ -426,6 +427,72 @@ get_pci_handle_irq   Proc far
     pop ds
     ret
 get_pci_handle_irq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciHandleMsi
+;
+;           DESCRIPTION:    Get PCI MSI vectors
+;
+;           PARAMETERS:     BX      Handle
+;
+;           RETURNS:        AL      Vectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_handle_msi_name      DB 'Get PCI Handle MSI',0
+
+get_pci_handle_msi   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_MSI_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_handle_msi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciHandleMsiX
+;
+;           DESCRIPTION:    Get PCI MSI-X vectors
+;
+;           PARAMETERS:     BX      Handle
+;
+;           RETURNS:        AL      Vectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_handle_msix_name      DB 'Get PCI Handle MSI-X',0
+
+get_pci_handle_msix   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_MSIX_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_handle_msix   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3427,6 +3494,18 @@ init    Proc far
     mov edi,OFFSET get_pci_handle_irq_name
     xor dx,dx
     mov ax,get_pci_handle_irq_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_handle_msi
+    mov edi,OFFSET get_pci_handle_msi_name
+    xor dx,dx
+    mov ax,get_pci_handle_msi_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_handle_msix
+    mov edi,OFFSET get_pci_handle_msix_name
+    xor dx,dx
+    mov ax,get_pci_handle_msix_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_pci_handle_cap

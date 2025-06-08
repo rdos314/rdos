@@ -109,11 +109,11 @@ void TPciCommand::PrintBusDevices(int Bus)
     int Class;
     int SubClass;
     int Irq;
-//    int Msi = 0;
-//    int MsiX = 0;
+    int Msi = 0;
+    int MsiX = 0;
 //    int MsiCount;
 //    int MsiXCount;
-//    int Used;
+    bool Used;
 
     Write("ACPI Name                     ");
     Write("Vendor/dev Class    Dev Func  Interrupt\r\n");
@@ -138,20 +138,20 @@ void TPciCommand::PrintBusDevices(int Bus)
                 Interface = RdosReadPciConfigByte(Handle, 9);
                 VendorID = RdosReadPciConfigWord(Handle, 0);
                 DeviceID = RdosReadPciConfigWord(Handle, 2);
-                Irq = RdosGetPciHandleIrq(Handle);
 
+                Used = false;
 //                Used = RdosIsPciFunctionUsed(Bus, Device, Function);
-//                RdosGetPciMsi(Bus, Device, Function, &Msi, &MsiCount);
-//                RdosGetPciMsiX(Bus, Device, Function, &MsiX, &MsiXCount);
+                Msi = RdosGetPciHandleMsi(Handle);
+                MsiX = RdosGetPciHandleMsiX(Handle);
 
                 sprintf(Str, "%04hX %04hX  %02hX%02hX%02hX  %4d %4d  ", VendorID, DeviceID, Class, SubClass, Interface, Device, Function);
                 Write(Str);
 
                 Str[0] = 0;
 
-/*
                 if (Used)
                 {
+/*
                     if (Msi)
                     {
                         if (MsiCount == 1)
@@ -174,6 +174,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                                 sprintf(Str, "IRQ    %02hX", Irq);
                         }
                     }
+*/
                 }
                 else
                 {
@@ -189,16 +190,12 @@ void TPciCommand::PrintBusDevices(int Bus)
                             sprintf(Str, "MSI-X");
                         else
                         {
+                            Irq = RdosGetPciHandleIrq(Handle, 0);
                             if (Irq)
                                 sprintf(Str, "IRQ    %02hX", Irq);
                         }
                     }
                 }
-*/
-
-                if (Irq)
-                    sprintf(Str, "IRQ    %02hX", Irq);
-
 
                 Write(Str);
                 Write("\r\n");
