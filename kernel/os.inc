@@ -4059,6 +4059,22 @@ WritePnpByte     MACRO
 
 ;;;;;;;;;;;;; PCI ;;;;;;;;;;;;;;
 
+; IN  AH        Priority
+; IN  BX        Handle
+; IN  DS        Data passed to handler
+; IN  ES:EDI    Handler address
+SetupPciHandleIrq    MACRO
+    OsGate setup_pci_handle_irq_nr
+                    ENDM
+
+; IN  AH        Priority
+; IN  BX        Handle
+; IN  CX        Requested vectors
+; OUT CX        Allocated vectors
+SetupPciHandleMsi    MACRO
+    OsGate setup_pci_handle_msi_nr
+                    ENDM
+
 ;  IN  ES:EDI      INIT CALLBACK
 HookInitPci      MACRO
     OsGate hook_init_pci_nr

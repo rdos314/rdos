@@ -497,6 +497,75 @@ get_pci_handle_msix   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupPciHandleIrq
+;
+;           DESCRIPTION:    Setup for single IRQ
+;
+;           PARAMETERS:     AH      Priority
+;                           BX      Handle
+;                           DS      Data passed to handler
+;                           ES:EDI  Handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_pci_handle_irq_name      DB 'Setup PCI Handle IRQ',0
+
+setup_pci_handle_irq   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,SETUP_PCI_IRQ_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+setup_pci_handle_irq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupPciHandleMsi
+;
+;           DESCRIPTION:    Setup for MSI
+;
+;           PARAMETERS:     AH      Priority
+;                           BX      Handle
+;                           CX      Requested vectors
+;
+;           RETURNS:        CX      Allocated vectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_pci_handle_msi_name      DB 'Setup PCI Handle MSI',0
+
+setup_pci_handle_msi   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,SETUP_PCI_MSI_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+setup_pci_handle_msi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetPciHandleCap
 ;
 ;           DESCRIPTION:    Find PCI handle capability
@@ -3406,6 +3475,46 @@ hook_thread_loop:
 
 hook_thread_done:
     TerminateThread
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Test gate
+;
+;       DESCRIPTION:    Test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name DB 'Test', 0
+test_dev  DB 'Test Lock', 0
+
+test_gate    Proc far
+    push ds
+    push es
+    pushad
+;
+    xor bx,bx
+    mov ax,0C05h
+    FindPciClassHandle
+    jc tgDone
+;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET test_dev
+    LockPciHandle
+    jc tgDone
+;
+    mov ah,12h
+    SetupPciHandleIrq
+
+tgDone:
+    popad
+    pop es
+    pop ds
+    ret
+test_gate    Endp
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3458,6 +3567,24 @@ init    Proc far
     mov esi,OFFSET hook_init_pci
     mov edi,OFFSET hook_init_pci_name
     mov ax,hook_init_pci_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET setup_pci_handle_irq
+    mov edi,OFFSET setup_pci_handle_irq_name
+    xor cl,cl
+    mov ax,setup_pci_handle_irq_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_pci_handle_msi
+    mov edi,OFFSET setup_pci_handle_msi_name
+    xor cl,cl
+    mov ax,setup_pci_handle_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET find_pci_device_handle

@@ -132,3 +132,15 @@ GET_PCI_MSI_CMD            = 17
 ; IN  BX    Handle
 ; OUT AL    Vectors
 GET_PCI_MSIX_CMD           = 18
+
+; IN  AH    Priority
+; IN  BX    Handle
+; OUT AL    Vector
+; OUT AH    Mode, 0 = failed, 1 = IRQ, 2 = MSI
+SETUP_PCI_IRQ_CMD          = 19
+
+; IN  AH    Priority
+; IN  BX    Handle
+; IN  CX    Requested vectors
+; OUT CX    Allocated vectors
+SETUP_PCI_MSI_CMD          = 20

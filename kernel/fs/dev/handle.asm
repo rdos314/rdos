@@ -3340,64 +3340,6 @@ write_legacy_file16   Proc far
     pop ecx
     ret
 write_legacy_file16   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           Test gate
-;
-;       DESCRIPTION:    Test
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name DB 'Test', 0
-test_file      DB 'e:/test.bin', 0
-
-test_gate    Proc far
-    push ds
-    push es
-    push ecx
-    push edi
-;
-    mov ecx,cs
-    mov es,ecx
-    mov edi,OFFSET test_file
-    mov cx,O_RDWR
-    OpenKernelHandle
-    jc tgDone
-;
-    mov eax,1024
-    AllocateSmallGlobalMem
-    xor edi,edi
-;
-    xor edx,edx
-    xor eax,eax
-    mov ecx,25
-    ReadKernelHandle
-;
-    mov eax,15667
-    mov ecx,25
-    ReadKernelHandle
-;
-    mov eax,98877
-    mov ecx,25
-    ReadKernelHandle
-;
-    mov eax,5546
-    mov ecx,25
-    ReadKernelHandle
-;
-    mov ecx,123
-    CloseKernelHandle
-
-tgDone:
-    pop edi
-    pop ecx
-    pop es
-    pop ds
-    ret
-test_gate    Endp
-
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
