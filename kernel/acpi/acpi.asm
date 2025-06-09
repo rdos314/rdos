@@ -513,8 +513,11 @@ setup_pci_handle_irq_name      DB 'Setup PCI Handle IRQ',0
 setup_pci_handle_irq   Proc far
     push ds
     push es
+    push edx
     push edi
     push ebp
+;
+    mov edx,[esp+24]
 ;
     call AllocateMsg
 ;    
@@ -523,6 +526,7 @@ setup_pci_handle_irq   Proc far
 ;    
     pop ebp
     pop edi
+    pop edx
     pop es
     pop ds
     ret
@@ -548,8 +552,11 @@ setup_pci_handle_msi_name      DB 'Setup PCI Handle MSI',0
 setup_pci_handle_msi   Proc far
     push ds
     push es
+    push edx
     push edi
     push ebp
+;
+    mov edx,[esp+24]
 ;
     call AllocateMsg
 ;    
@@ -558,6 +565,7 @@ setup_pci_handle_msi   Proc far
 ;    
     pop ebp
     pop edi
+    pop edx
     pop es
     pop ds
     ret

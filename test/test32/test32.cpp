@@ -9,21 +9,7 @@
 
 void main()
 {
-    int val;
-    int dev;
-
-    dev = RdosGetPciHandle(0, 3, 0, 6);
-
-    RdosLockPciHandle(dev, "Test lock");
-    val = RdosReadPciConfigDword(dev, 0x10);
-    RdosWritePciConfigDword(dev, 0x10, val);
-    RdosUnlockPciHandle(dev);
-
-    for (;;)
-        RdosWaitMilli(500);
-
-
-//    RdosTestGate(buf);
+    RdosTestGate("");
 }
 
 
