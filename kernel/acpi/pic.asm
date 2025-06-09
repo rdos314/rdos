@@ -1310,6 +1310,9 @@ init_global_int:
     mov ds,eax
     xor bl,bl
 ;
+    pushfd
+    cli
+;
     mov al,11h
     out INT0_CONTROL,al
     jmp short $+2
@@ -1355,6 +1358,8 @@ init_global_int:
     jmp short $+2
 ;
     call SetupInts        
+;
+    popfd
 ;
     popad
     pop es
