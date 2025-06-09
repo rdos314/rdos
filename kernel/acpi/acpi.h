@@ -25,6 +25,10 @@ void RDOSAPI ServUacpiEnableIo(int base, int size);
 void RDOSAPI ServUacpiDisableIo(int base, int size);
 void RDOSAPI ServUacpiStartPci();
 int RDOSAPI ServUacpiHasApic();
+unsigned char RDOSAPI ServUacpiAllocateInts(int count, unsigned char prio);
+void RDOSAPI ServUacpiFreeInt(unsigned char irq);
+int RDOSAPI ServUacpiGetMsiAddress(int core);
+int RDOSAPI ServUacpiGetMsiData(unsigned char irq);
 
 #ifdef __cplusplus
 }

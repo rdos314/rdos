@@ -75,6 +75,30 @@ UacpiHasApic  MACRO
     ServGate uacpi_has_apic_nr
                     ENDM
 
+; IN  ECX               Vectors
+; IN  AL                Prio
+; OUT AL                Base vectors
+UacpiAllocateInts  MACRO    
+    ServGate uacpi_allocate_ints_nr
+                    ENDM
+
+; IN  AL                Vector
+UacpiFreeInt  MACRO    
+    ServGate uacpi_free_int_nr
+                    ENDM
+
+; IN  AX                Core
+; OUT EAX               Address
+UacpiGetMsiAddress  MACRO    
+    ServGate uacpi_get_msi_address_nr
+                    ENDM
+
+; IN  AL                IRQ
+; OUT EAX               Data
+UacpiGetMsiData  MACRO    
+    ServGate uacpi_get_msi_data_nr
+                    ENDM
+
 ; IN  EBX              Dev handle
 ; OUT EDX              Cmd
 WaitForDevCmd  MACRO

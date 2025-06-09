@@ -8,5 +8,7 @@ uacpi_has_apic_nr          = 7
 uacpi_wait_for_cmd_nr      = 8
 uacpi_reply_cmd_nr         = 9
 uacpi_reply_data_cmd_nr    = 10
-
-
+uacpi_allocate_ints_nr     = 11
+uacpi_free_int_nr          = 12
+uacpi_get_msi_address_nr   = 13
+uacpi_get_msi_data_nr      = 14

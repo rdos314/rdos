@@ -45,3 +45,22 @@
     "xor eax,eax" \
     "done: " \
     __value [__eax]
+
+#pragma aux ServUacpiAllocateInts = \
+    ServGate_uacpi_allocate_ints  \
+    __parm [__ecx] [__al] \
+    __value [__al]
+
+#pragma aux ServUacpiFreeInt = \
+    ServGate_uacpi_free_int  \
+    __parm [__al]
+
+#pragma aux ServUacpiGetMsiAddress = \
+    ServGate_uacpi_get_msi_address  \
+    __parm [__eax] \
+    __value [__eax]
+
+#pragma aux ServUacpiGetMsiData = \
+    ServGate_uacpi_get_msi_data  \
+    __parm [__eax] \
+    __value [__eax]
