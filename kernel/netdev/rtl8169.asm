@@ -4147,35 +4147,12 @@ SetupInts   Proc near
     push edx
     push edi
 ;    
-    GetPciMsi
-    jc siIrq
-
-siMsi:
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc siIrq
-;    
-    mov dl,1
-    SetupPciMsi
-;    
-    mov di,cs
-    mov es,di
+    mov edi,cs
+    mov es,edi
     mov edi,OFFSET NetInt
-    RequestMsiHandler
-    jmp siDone
-
-siIrq:
-    GetPciIrqNr
     mov ah,14h
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET NetInt    
-    RequestIrqHandler
-
-siDone:
+    SetupPciHandleIrq
+;
     pop edi
     pop edx
     pop cx
@@ -4746,7 +4723,7 @@ CreateMemSel    Endp
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
 ;
-;       PARAMETERS:     AX      Device number
+;       PARAMETERS:         BX          Handle
 ;
 ;           RETURNS:        NC          Adapter found
 ;
@@ -4772,22 +4749,21 @@ DevName1 DB 'RTL8169-1', 0
 DevName2 DB 'RTL8169-2', 0
 
 InitPrimaryPciAdapter   Proc near
-    mov bp,ax
     mov ax,cs
     mov es,ax
     mov ax,ether_data_sel
     mov ds,ax
     mov ds:Handle,0
     mov si,OFFSET PciVendorTab
+
 init_pci1_loop:
-    mov ax,bp
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
     jz init_pci1_done
 ;
-    FindPciDevice
+    FindPciDeviceHandle
     jnc init_pci1_found
 ;
     add si,6
@@ -4795,22 +4771,14 @@ init_pci1_loop:
 
 init_pci1_found:
     mov edi,OFFSET DevName1
-    PciPowerOn
-;
+    LockPciHandle
+    jc init_pci1_loop
+;    
     mov bp,bx
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr OR PCI_command_IO OR PCI_command_mem
-    WritePciWord
-;
-    mov cl,PCI_card_ExCa_base
-    ReadPciDword
-    test al,1
-    jz m_pci1
-
-io_pci1:
-    mov dx,ax
-    and dx,0FFE0h
+    xor al,al
+    GetPciBarIo
+    jc m_pci1
+;    
     mov ds:IoBase,dx
     mov ds:MemSel,0
     mov ds:Gphy,OCP_STD_PHY_BASE
@@ -4869,24 +4837,16 @@ ioinit_pci1_int_ok:
     CreateThread
     pop ds
 ;    
-    mov ax,bp   
+    mov bx,bp   
     clc
     jmp init_pci1_done
 
 m_pci1:
-    int 3
-    push ebx
-    xor ebx,ebx
-    test al,4
-    jz minit_pci1_next_base_ok
+    xor al,al
+    GetPciBarPhys
+    jc init_pci1_loop
 ;
-    push eax    
-    mov cl,14h
-    ReadPciDword
-    mov ebx,eax
-    pop eax
-
-minit_pci1_next_base_ok:
+    mov ebx,edx
     call CreateMemSel
     mov fs,bx
     mov ds:IoBase,0
@@ -4946,7 +4906,7 @@ minit_pci1_int_ok:
     CreateThread
     pop ds
 ;    
-    mov ax,bp   
+    mov bx,bp   
     clc
 
 init_pci1_done:
@@ -4954,13 +4914,13 @@ init_pci1_done:
 InitPrimaryPciAdapter   Endp
 
 InitSecondaryPciAdapter Proc near
-    mov bp,ax
     mov ax,cs
     mov es,ax
     mov ax,ether_data2_sel
     mov ds,ax
     mov ds:Handle,0
     mov si,OFFSET PciVendorTab
+
 init_pci2_loop:
     mov ax,bp
     mov dx,cs:[si]
@@ -4969,7 +4929,7 @@ init_pci2_loop:
     stc
     jz init_pci2_done
 ;
-    FindPciDevice
+    FindPciDeviceHandle
     jnc init_pci2_found
 ;
     add si,6
@@ -4977,22 +4937,14 @@ init_pci2_loop:
 
 init_pci2_found:
     mov edi,OFFSET DevName2
-    PciPowerOn
+    LockPciHandle
+    jc init_pci2_loop
 ;
     mov bp,bx
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr OR PCI_command_IO OR PCI_command_mem
-    WritePciWord
-;
-    mov cl,PCI_card_ExCa_base
-    ReadPciDword
-    test al,1
-    jz m_pci2
-
-io_pci2:
-    mov dx,ax
-    and dx,0FFE0h
+    xor al,al
+    GetPciBarIo
+    jc m_pci2
+;    
     mov ds:IoBase,dx
     mov ds:MemSel,0
     mov ds:Gphy,OCP_STD_PHY_BASE
@@ -5055,18 +5007,11 @@ ioinit_pci2_int_ok:
     jmp init_pci2_done
 
 m_pci2:
-    push ebx
-    xor ebx,ebx
-    test al,4
-    jz minit_pci2_next_base_ok
+    xor al,al
+    GetPciBarPhys
+    jc init_pci2_loop
 ;
-    push eax    
-    mov cl,14h
-    ReadPciDword
-    mov ebx,eax
-    pop eax
-
-minit_pci2_next_base_ok:
+    mov ebx,edx
     call CreateMemSel
     mov fs,bx
     mov ds:IoBase,0
@@ -5198,10 +5143,8 @@ init_net    Proc far
     push es
     pusha
 ;
-    xor ax,ax
+    xor bx,bx
     call InitPrimaryPciAdapter
-;
-    inc ax
     call InitSecondaryPciAdapter
 ;    
     popa
