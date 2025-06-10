@@ -108,11 +108,10 @@ void TPciCommand::PrintBusDevices(int Bus)
     int Interface;
     int Class;
     int SubClass;
+    int i;
     int Irq;
     int Msi = 0;
     int MsiX = 0;
-//    int MsiCount;
-//    int MsiXCount;
     bool Used;
 
     Write("ACPI Name                     ");
@@ -139,8 +138,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                 VendorID = RdosReadPciConfigWord(Handle, 0);
                 DeviceID = RdosReadPciConfigWord(Handle, 2);
 
-                Used = false;
-//                Used = RdosIsPciFunctionUsed(Bus, Device, Function);
+                Used = RdosIsPciHandleLocked(Handle);
                 Msi = RdosGetPciHandleMsi(Handle);
                 MsiX = RdosGetPciHandleMsiX(Handle);
 
@@ -151,30 +149,56 @@ void TPciCommand::PrintBusDevices(int Bus)
 
                 if (Used)
                 {
-/*
                     if (Msi)
                     {
-                        if (MsiCount == 1)
+                        Irq = RdosGetPciHandleIrq(Handle, 0);
+                        if (Msi == 1)
+                        {
                             sprintf(Str, "MSI    %02hX", Irq);
+                            Write(Str);
+                        }
                         else
-                            sprintf(Str, "MSI    %02hX-%02hX", Irq, Irq + MsiCount - 1);
+                        {
+                            sprintf(Str, "MSI    %02hX-%02hX", Irq, Irq + Msi - 1);
+                            Write(Str);
+                        }
                     }
                     else
                     {
                         if (MsiX)
                         {
-                            if (MsiXCount == 1)
+                            if (MsiX == 1)
+                            {
+                                Irq = RdosGetPciHandleIrq(Handle, 0);
                                 sprintf(Str, "MSI-X  %02hX", Irq);
+                                Write(Str);
+                            }
                             else
-                                sprintf(Str, "MSI-X  %02hX-%02hX", Irq, Irq + MsiXCount - 1);
+                            {
+                                sprintf(Str, "MSI-X  ");
+                                Write(Str);
+
+                                for (i = 0; i < MsiX; i++)
+                                {
+                                    Irq = RdosGetPciHandleIrq(Handle, i);
+                                    if (i == MsiX - 1)
+                                        sprintf(Str, "%02hX", Irq);
+                                    else
+                                        sprintf(Str, "%02hX, ", Irq);
+                                    Write(Str);
+                                }
+                            }
                         }
                         else
                         {
+                            Irq = RdosGetPciHandleIrq(Handle, 0);
                             if (Irq)
+                            {
                                 sprintf(Str, "IRQ    %02hX", Irq);
+                                Write(Str);
+                            }
                         }
                     }
-*/
                 }
                 else
                 {
@@ -195,9 +219,9 @@ void TPciCommand::PrintBusDevices(int Bus)
                                 sprintf(Str, "IRQ    %02hX", Irq);
                         }
                     }
+                    Write(Str);
                 }
 
-                Write(Str);
                 Write("\r\n");
             }
         }
