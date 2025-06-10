@@ -4075,6 +4075,20 @@ SetupPciHandleMsi    MACRO
     OsGate setup_pci_handle_msi_nr
                     ENDM
 
+; IN  AL        BAR #
+; IN  BX        Handle
+; OUT EDX:EAX   Physical address
+GetPciBarPhys    MACRO
+    OsGate get_pci_bar_phys_nr
+                    ENDM
+
+; IN  AL        BAR #
+; IN  BX        Handle
+; OUT DX        IO port
+GetPciBarIo    MACRO
+    OsGate get_pci_bar_io_nr
+                    ENDM
+
 ;  IN  ES:EDI      INIT CALLBACK
 HookInitPci      MACRO
     OsGate hook_init_pci_nr

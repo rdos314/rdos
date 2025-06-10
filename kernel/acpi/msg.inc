@@ -155,3 +155,13 @@ ENABLE_PCI_MSI_CMD         = 21
 
 ; IN  BX     Handle
 IS_PCI_LOCKED_CMD          = 22
+
+; IN  AL      Bar #
+; IN  BX      Handle
+; OUT EDX:EAX Physical address
+GET_PCI_BAR_PHYS_CMD       = 23
+
+; IN  AL      Bar #
+; IN  BX      Handle
+; OUT DX      IO port
+GET_PCI_BAR_IO_CMD         = 24

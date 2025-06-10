@@ -650,54 +650,23 @@ SetupCodecBuf   Endp
 ;
 ;           DESCRIPTION:    Setup PCI or MSI IRQ
 ;
-;       PARAMETERS:         BH    Bus
-;                           BL    Device
-;                           CH    Function
+;       PARAMETERS:         BX    PCI device
 ;                           DS    Hda sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupInts   Proc near
-    push ax
-    push bx
-    push cx
-    push edx
+    push eax
     push edi
-;    
-    GetPciMsi
-    jc siIrq
-
-siMsi:
-    push cx
-    mov cx,1
-    mov al,12h
-    AllocateInts
-    pop cx
-    jc siIrq
-;    
-    mov dl,1
-    SetupPciMsi
 ;    
     mov di,cs
     mov es,di
     mov edi,OFFSET HdaInt
-    RequestMsiHandler
-    jmp siDone
-
-siIrq:
-    GetPciIrqNr
     mov ah,12h
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET HdaInt    
-    RequestIrqHandler
-
-siDone:
+    SetupPciHandleIrq
+;
     pop edi
-    pop edx
-    pop cx
-    pop bx
-    pop ax
+    pop eax
     ret
 SetupInts    Endp
 
@@ -1584,8 +1553,7 @@ send_audio_out  Endp
 ;
 ;       DESCRIPTION:    Add HDA function
 ;
-;       PARAMETERS:     BX      Bus/device
-;                       CH      Function
+;       PARAMETERS:     BX      PCI handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1607,11 +1575,6 @@ AddFunction  Proc near
     mov ds:Req,0
     mov ds:CodecThread,0
 ;
-    mov cl,4h
-    ReadPciDword
-    or al,6
-    WritePciDword
-;
     call SetupInts
 ;
     push ecx
@@ -1619,22 +1582,12 @@ AddFunction  Proc near
     AllocateBigLinear
     pop ecx
 ;
-    mov cl,10h
-    ReadPciDword
-    test al,4
-    jz af32
-;
-    push eax
-    mov cl,14h
-    ReadPciDword
-    mov ebx,eax
-    pop eax
-    jmp afcom
-
-af32:
-    xor ebx,ebx
-
-afCom:
+    push edx
+    xor al,al
+    GetPciBarPhys
+    mov ebx,edx
+    pop edx
+;    
     and ax,0FFF0h
     or ax,13h
     SetPageEntry
@@ -1680,7 +1633,7 @@ InitPciAdapter  Proc near
     mov ds:HdaCount,0
 ;
     mov si,OFFSET PciVendorTab
-    xor ax,ax
+    xor bx,bx
 
 init_pci_probe_loop:
     mov dx,cs:[si]
@@ -1689,70 +1642,62 @@ init_pci_probe_loop:
     stc
     jz init_pci_probe_done
 ;
-    FindPciDevice
+    FindPciDeviceHandle
     jnc init_pci_probe_found
 ;
     add si,4
     jmp init_pci_probe_loop
 
 init_pci_probe_found:    
-    mov cl,10h
-    ReadPciDword
-    test al,1
-    jnz init_pci_probe_done
+    xor al,al
+    GetPciBarPhys
+    jc init_pci_probe_done
 ;    
     mov edi,OFFSET DevName
-    PciPowerOn
+    LockPciHandle
 ;
     mov ebp,eax
     call AddFunction
 
 init_pci_probe_done:    
-    xor ax,ax
-    mov bh,4
-    mov bl,3
-    xor ch,ch
-    FindPciClassInterface
+    xor bx,bx
+    mov ah,4
+    mov al,3
+    xor dl,dl
+    FindPciProtocolHandle
     jc init_pci_done
 ;
-    mov cl,10h
-    ReadPciDword
-    test al,1
-    jnz init_pci_more
+    xor al,al
+    GetPciBarPhys
+    jc init_pci_more
 ;    
     mov edi,OFFSET DevName
-    PciPowerOn
+    LockPciHandle
 ;
     mov ebp,eax
     call AddFunction
 
 init_pci_more:       
-    mov dx,1
-
-init_pci_loop:
-    mov ax,dx
-    mov bh,4
-    mov bl,3
-    xor ch,ch
-    FindPciClassInterface
+    mov ah,4
+    mov al,3
+    xor dh,dh
+    FindPciProtocolHandle
     jc init_pci_done
 ;       
-    mov cl,10h
-    ReadPciDword
-    test al,1
-    jnz init_pci_next
+    xor al,al
+    GetPciBarPhys
+    jc init_pci_next
 ;    
     cmp eax,ebp
     je init_pci_done
 ;       
     mov ebp,eax
     mov edi,OFFSET DevName
-    PciPowerOn
+    LockPciHandle
     call AddFunction
 
 init_pci_next:
-    inc dx
-    jmp init_pci_loop
+    jmp init_pci_more
     
 init_pci_done:
     ret

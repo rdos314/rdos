@@ -627,6 +627,74 @@ setup_pci_handle_msi   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetPciBarPhys
+;
+;           DESCRIPTION:    Get physical address for PCI BAR
+;
+;           PARAMETERS:     AL      Bar #
+;                           BX      Handle
+;
+;           RETURNS:        EDX:EAX Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_bar_phys_name      DB 'Get PCI Bar Phys',0
+
+get_pci_bar_phys   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_BAR_PHYS_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_bar_phys   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciBarIo
+;
+;           DESCRIPTION:    Get IO port for PCI BAR
+;
+;           PARAMETERS:     AL      Bar #
+;                           BX      Handle
+;
+;           RETURNS:        DX      IO port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_bar_io_name      DB 'Get PCI Bar IO',0
+
+get_pci_bar_io   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_BAR_IO_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+get_pci_bar_io   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetPciHandleCap
 ;
 ;           DESCRIPTION:    Find PCI handle capability
@@ -3666,6 +3734,18 @@ init    Proc far
     xor dx,dx
     mov ax,test_gate_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_bar_phys
+    mov edi,OFFSET get_pci_bar_phys_name
+    xor cl,cl
+    mov ax,get_pci_bar_phys_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_pci_bar_io
+    mov edi,OFFSET get_pci_bar_io_name
+    xor cl,cl
+    mov ax,get_pci_bar_io_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET setup_pci_handle_irq
     mov edi,OFFSET setup_pci_handle_irq_name
