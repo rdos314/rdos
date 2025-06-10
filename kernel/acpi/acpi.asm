@@ -511,6 +511,44 @@ get_pci_handle_msix   Endp
 setup_pci_handle_irq_name      DB 'Setup PCI Handle IRQ',0
 
 setup_pci_handle_irq   Proc far
+    push ecx
+;
+    push ds
+    push es
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov edx,[esp+32]
+;
+    push eax
+    GetCoreId
+    movzx esi,ax
+    pop eax
+;
+    call AllocateMsg
+;    
+    mov eax,SETUP_PCI_IRQ_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop es
+    pop ds
+;
+    or cl,cl
+    jz sphiFail
+;
+    cmp cl,1
+    je sphiIrq
+
+sphiMsi:
+    pop ecx
+    RequestMsiHandler
+;
     push ds
     push es
     push edx
@@ -521,7 +559,7 @@ setup_pci_handle_irq   Proc far
 ;
     call AllocateMsg
 ;    
-    mov eax,SETUP_PCI_IRQ_CMD
+    mov eax,ENABLE_PCI_MSI_CMD
     call RunMsg
 ;    
     pop ebp
@@ -529,6 +567,21 @@ setup_pci_handle_irq   Proc far
     pop edx
     pop es
     pop ds
+;
+    clc
+    jmp sphiDone
+
+sphiFail:
+    pop ecx
+    stc
+    jmp sphiDone
+
+sphiIrq:
+    pop ecx
+    RequestIrqHandler
+    clc
+
+sphiDone:
     ret
 setup_pci_handle_irq   Endp
 

@@ -136,13 +136,15 @@ GET_PCI_MSIX_CMD           = 18
 ; IN  AH     Priority
 ; IN  BX     Handle
 ; IN  DX     Issuer selector
+; IN  SI     Core ID
 ; OUT AL     Vector
-; OUT AH     Mode, 0 = failed, 1 = IRQ, 2 = MSI
+; OUT CL     Mode, 0 = failed, 1 = IRQ, 2 = MSI
 SETUP_PCI_IRQ_CMD          = 19
 
 ; IN  AH     Priority
 ; IN  BX     Handle
 ; IN  DX     Issuer selector
+; IN  SI     Core ID
 ; IN  CX     Requested vectors
 ; OUT CX     Allocated vectors
 SETUP_PCI_MSI_CMD          = 20
@@ -150,3 +152,6 @@ SETUP_PCI_MSI_CMD          = 20
 ; IN  BX     Handle
 ; IN  DX     Issuer selector
 ENABLE_PCI_MSI_CMD         = 21
+
+; IN  BX     Handle
+IS_PCI_LOCKED_CMD          = 22
