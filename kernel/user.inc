@@ -4691,6 +4691,11 @@ UnlockPciHandle      MACRO
         UserGate unlock_pci_handle_nr
                         ENDM
 
+;   IN  BX          Handle
+IsPciHandleLocked      MACRO
+        UserGate is_pci_handle_locked_nr
+                        ENDM
+
 ;
 ; legacy
 ;

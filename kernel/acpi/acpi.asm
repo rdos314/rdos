@@ -1051,6 +1051,37 @@ unlock_pci_handle   Proc far
     pop ds
     ret
 unlock_pci_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsPciHandleLocked
+;
+;           DESCRIPTION:    Check if PCI handle is locked
+;
+;           PARAMETERS:     BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_pci_handle_locked_name      DB 'Is PCI Handle Locked',0
+
+is_pci_handle_locked   Proc far
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    call AllocateMsg
+;    
+    mov eax,IS_PCI_LOCKED_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    ret
+is_pci_handle_locked   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3762,6 +3793,12 @@ init    Proc far
     mov edi,OFFSET unlock_pci_handle_name
     xor dx,dx
     mov ax,unlock_pci_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_pci_handle_locked
+    mov edi,OFFSET is_pci_handle_locked_name
+    xor dx,dx
+    mov ax,is_pci_handle_locked_nr
     RegisterBimodalUserGate
 ;
 ; legacy

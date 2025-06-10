@@ -262,6 +262,12 @@
     __parm [__ebx] \
     __value [__eax]
 
+#pragma aux RdosIsPciHandleLocked = \
+    CallGate_is_pci_handle_locked  \
+    CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux RdosGetPciBus = \
     CallGate_get_pci_bus  \
     "jc PciFail" \
