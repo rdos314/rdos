@@ -224,10 +224,7 @@ xhc_db_offset           DD ?
 xhc_port_offset         DD ?
 xhc_intr_offset         DD ?
 
-xhc_pci_bus             DB ?
-xhc_pci_dev             DB ?
-xhc_pci_func            DB ?
-xhc_pci_pad             DB ?
+xhc_pci_handle          DW ?
 
 xhc_has_64              DB ?
 xhc_int_base            DB ?
@@ -4262,11 +4259,9 @@ cetXhciDone:
     xor al,al
     stosb
 ;
-    mov bh,ds:xhc_pci_bus
-    mov bl,ds:xhc_pci_dev
-    mov ch,ds:xhc_pci_func
-    xor edi,edi
-    SetPciDeviceName
+	xor edi,edi
+    mov bx,ds:xhc_pci_handle
+    LockPciHandle
 ;
     mov bx,ds
     mov ax,cs
@@ -4312,9 +4307,7 @@ XhciInt Endp
 ;       DESCRIPTION:    Setup IRQs
 ;
 ;       PARAMETERS:     DS          Function sel
-;                       BH          Bus
-;                       BL          Device
-;                       CH          Function
+;                       BX          Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4324,58 +4317,14 @@ SetupIrq  Proc near
     push esi
     push edi
 ;
-    GetPciMsi
-    jc siCheckMsiX
-;
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc siIrq
-
-siMsiSetup:
-    mov ds:xhc_int_base,al
-    mov dx,1
-    SetupPciMsi
-    jmp siReg
-
-siCheckMsiX:
-    GetPciMsiX
-    jc siIrq
-;
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc siIrq
-;
-    EnablePciMsiX
-;
-    xor dl,dl
-    SetupPciMsiXEntry
-
-siReg:    
     mov di,ds:xhc_intr_sel
-    mov ds,di
-    mov di,cs
-    mov es,di
+    mov ds,edi
+    mov edi,cs
+    mov es,edi
     mov edi,OFFSET XhciInt
-    RequestMsiHandler
-    jmp siDone
-
-siIrq:
-    GetPciIrqNr
     mov ah,14h
-    mov di,ds:xhc_intr_sel
-    mov ds,di
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET XhciInt
-    RequestIrqHandler
-
-siDone:    
+    SetupPciHandleIrq
+;
     pop edi
     pop esi
     pop es
@@ -4636,10 +4585,7 @@ ifWaitReset:
 
 ifWaitReseted:        
     call SetupIrq
-;
-    mov ds:xhc_pci_bus,bh
-    mov ds:xhc_pci_dev,bl
-    mov ds:xhc_pci_func,ch
+    mov ds:xhc_pci_handle,bx
 ;
     mov edi,ds:xhc_oper_offset
     movzx eax,ds:xhc_slot_count
@@ -5173,40 +5119,6 @@ CreateFunction  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupPci
-;
-;           DESCRIPTION:    Setup PCI
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupPci  Proc near
-    push es
-    push eax
-    push edi
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET xhci_name
-    PciPowerOn
-;
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr
-    WritePciWord
-;
-    pop edi
-    pop eax
-    pop es
-    ret
-SetupPci  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -5217,72 +5129,32 @@ SetupPci  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+DevName   DB 'XHCI', 0
+
 InitPciAdapter  Proc near
-    xor ax,ax
-    mov bh,0Ch
-    mov bl,3
-    mov ch,30h
-    FindPciClassInterface
-    jc init_pci_done
-;
-    call SetupPci
-;
-    mov cl,10h
-    ReadPciDword
-    xor edx,edx
-    test al,4
-    jz init_pci_base_ok
-;
-    push eax    
-    mov cl,14h
-    ReadPciDword
-    mov edx,eax
-    pop eax
-
-init_pci_base_ok:
-    and ax,0FFF0h
-    mov ebp,eax
-    call CreateFunction
-    mov dx,1
-    jc init_pci_next_device
-;
-    call AddFunction
+    mov ax,cs
+    mov es,ax
+    xor bx,bx
     
-init_pci_next_device:
-    mov ax,dx
-    mov bh,0Ch
-    mov bl,3
-    mov ch,30h
-    FindPciClassInterface
+init_pci_loop:    
+    mov ah,0Ch
+    mov al,3
+    mov dl,30h
+    FindPciProtocolHandle
     jc init_pci_done
-;   
-    call SetupPci
 ;
-    mov si,dx
-    mov cl,10h
-    ReadPciDword
-    xor edx,edx
-    test al,4
-    jz init_pci_next_base_ok
+    xor al,al
+    GetPciBarPhys
+    jc init_pci_loop
 ;
-    push eax    
-    mov cl,14h
-    ReadPciDword
-    mov edx,eax
-    pop eax
-
-init_pci_next_base_ok:
-    and ax,0FFF0h
-    cmp eax,ebp
-    je init_pci_done
-;       
+    mov edi,OFFSET DevName
+    LockPciHandle
+;    
     call CreateFunction
-    mov dx,si
-    inc dx
-    jc init_pci_next_device
+    jc init_pci_loop
 ;
     call AddFunction
-    jmp init_pci_next_device
+    jmp init_pci_loop
     
 init_pci_done:
     ret
