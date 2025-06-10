@@ -75,14 +75,14 @@ UacpiHasApic  MACRO
     ServGate uacpi_has_apic_nr
                     ENDM
 
-; IN  ECX               Vectors
+; IN  ECX               IRQ count
 ; IN  AL                Prio
-; OUT AL                Base vectors
+; OUT AL                Base IRQ
 UacpiAllocateInts  MACRO    
     ServGate uacpi_allocate_ints_nr
                     ENDM
 
-; IN  AL                Vector
+; IN  AL                IRQ
 UacpiFreeInt  MACRO    
     ServGate uacpi_free_int_nr
                     ENDM

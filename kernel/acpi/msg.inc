@@ -146,3 +146,7 @@ SETUP_PCI_IRQ_CMD          = 19
 ; IN  CX     Requested vectors
 ; OUT CX     Allocated vectors
 SETUP_PCI_MSI_CMD          = 20
+
+; IN  BX     Handle
+; IN  DX     Issuer selector
+ENABLE_PCI_MSI_CMD         = 21

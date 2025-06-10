@@ -985,6 +985,96 @@ uacpi_has_apic   PROC far
 uacpi_has_apic   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiAllocateInts
+;
+;       DESCRIPTION:    Allocate IRQs
+;
+;       PARAMETERS:     ECX               Count
+;                       AL                Prio
+;
+;       RETURNS:        AL                Base IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_allocate_ints_name DB 'uACPI Allocate Ints', 0
+
+uacpi_allocate_ints   PROC far
+    call HasApic
+    jc uaiFail
+;
+    AllocateInts
+    jnc uaiDone
+
+uaiFail:
+    xor al,al
+
+uaiDone:
+    ret
+uacpi_allocate_ints   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiFreeInt
+;
+;       DESCRIPTION:    Free IRQ
+;
+;       PARAMETERS:     AL                IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_free_int_name DB 'uACPI Free Int', 0
+
+uacpi_free_int   PROC far
+    FreeInt
+    ret
+uacpi_free_int   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiGetMsiAddress
+;
+;       DESCRIPTION:    Get MSI address
+;
+;       PARAMETERS:     AX                Core
+;
+;       RETURNS:        EAX               Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_get_msi_address_name DB 'uACPI Get MSI Address', 0
+
+uacpi_get_msi_address   PROC far
+    movzx eax,ax
+    shl eax,12
+    or eax,0FEE00000h
+    ret
+uacpi_get_msi_address   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiGetMsiData
+;
+;       DESCRIPTION:    Get MSI data
+;
+;       PARAMETERS:     AL                IRQ
+;
+;       RETURNS:        EAX               Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_get_msi_data_name DB 'uACPI Get MSI Data', 0
+
+uacpi_get_msi_data   PROC far
+    movzx eax,al
+    ret
+uacpi_get_msi_data   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           AcpiServer
@@ -1043,6 +1133,30 @@ AcpiServer:
     mov edi,OFFSET uacpi_has_apic_name
     xor cl,cl
     mov ax,uacpi_has_apic_nr
+    RegisterPrivateServGate    
+;
+    mov esi,OFFSET uacpi_allocate_ints
+    mov edi,OFFSET uacpi_allocate_ints_name
+    xor cl,cl
+    mov ax,uacpi_allocate_ints_nr
+    RegisterPrivateServGate    
+;
+    mov esi,OFFSET uacpi_free_int
+    mov edi,OFFSET uacpi_free_int_name
+    xor cl,cl
+    mov ax,uacpi_free_int_nr
+    RegisterPrivateServGate    
+;
+    mov esi,OFFSET uacpi_get_msi_address
+    mov edi,OFFSET uacpi_get_msi_address_name
+    xor cl,cl
+    mov ax,uacpi_get_msi_address_nr
+    RegisterPrivateServGate    
+;
+    mov esi,OFFSET uacpi_get_msi_data
+    mov edi,OFFSET uacpi_get_msi_data_name
+    xor cl,cl
+    mov ax,uacpi_get_msi_data_nr
     RegisterPrivateServGate    
 ;
     mov esi,OFFSET lpcmd
