@@ -3557,7 +3557,7 @@ test_gate    Proc far
     pushad
 ;
     xor bx,bx
-    mov ax,0C05h
+    mov ax,0780h
     FindPciClassHandle
     jc tgDone
 ;
