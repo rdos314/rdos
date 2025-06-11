@@ -4697,6 +4697,8 @@ mstRecOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateMemSel    Proc near
+    pushad
+;
     and ax,0FFE0h
     push eax
     mov eax,1000h
@@ -4713,8 +4715,218 @@ CreateMemSel    Proc near
     AllocateGdt
     mov ecx,SIZE mem_struc
     CreateDataSelector16
+;
+    popad
     ret
 CreateMemSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitIoAdapter
+;
+;           DESCRIPTION:    Init IO adapter
+;
+;       PARAMETERS:         DS          Ether mem sel
+;                           BX          PCI handle
+;                           DX          IO base
+;                           CX          Type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DriverName1     DB 'Net RTL8169-1',0
+DriverName2     DB 'Net RTL8169-2',0
+
+SupervisorName1 DB 'Super RTL8169-1',0
+SupervisorName2 DB 'Super RTL8169-2',0
+
+InitIoAdapter   Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ds:IoBase,dx
+    mov ds:MemSel,0
+    mov ds:Gphy,OCP_STD_PHY_BASE
+    mov ds:IoCfg,cx
+;    
+    call SetupInts
+    call IoInitHardware
+    call IoFindHardware
+    call Config
+    mov ax,25
+    WaitMilliSec
+;    
+    mov dx,ds:IoBase
+    add dx,REG_ISR
+    in eax,dx
+;
+    mov ax,ds
+    cmp ax,ether_data_sel
+    je iia1
+;
+    cmp ax,ether_data2_sel
+    je iia2
+;
+    int 3
+
+iia1:
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET IoDispTable1
+    mov edi,OFFSET DriverName1
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
+;
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET io_super_thread
+    mov edi,OFFSET SupervisorName1
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+    jmp iiaDone
+
+iia2:
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET IoDispTable2
+    mov edi,OFFSET DriverName2
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
+;
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET io_super_thread
+    mov edi,OFFSET SupervisorName2
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+
+iiaDone:
+    popad
+    pop es
+    pop ds
+    ret
+InitIoAdapter   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitMemAdapter
+;
+;           DESCRIPTION:    Init IO adapter
+;
+;       PARAMETERS:         DS          Ether mem sel
+;                           BX          PCI handle
+;                           EDX:EAX     Phys base
+;                           CX          Type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitMemAdapter   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ebx,edx
+    call CreateMemSel
+    mov fs,bx
+    mov ds:IoBase,0
+    mov ds:MemSel,bx
+    mov ds:Gphy,OCP_STD_PHY_BASE
+    mov ds:IoCfg,cx
+;    
+    call SetupInts
+    call MemInitHardware
+    call MemFindHardware
+    call Config
+;
+    mov ax,25
+    WaitMilliSec
+;    
+    mov ax,fs:mem_isr
+;
+    mov ax,ds
+    cmp ax,ether_data_sel
+    je ima1
+;
+    cmp ax,ether_data2_sel
+    je ima2
+;
+    int 3
+
+ima1:
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET MemDispTable1
+    mov edi,OFFSET DriverName1
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
+;
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET mem_super_thread
+    mov edi,OFFSET SupervisorName1
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+    jmp imaDone
+
+ima2:
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET MemDispTable2
+    mov edi,OFFSET DriverName2
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
+;
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET mem_super_thread
+    mov edi,OFFSET SupervisorName2
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+
+imaDone:
+    popad
+    pop es
+    pop ds
+    ret
+InitMemAdapter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4729,12 +4941,6 @@ CreateMemSel    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName1     DB 'Net RTL8169-1',0
-DriverName2     DB 'Net RTL8169-2',0
-
-SupervisorName1 DB 'Super RTL8169-1',0
-SupervisorName2 DB 'Super RTL8169-2',0
-
 PciVendorTab:
 pci00   DW 10ECh, 8129h,    0
 pci01   DW 10ECh, 8136h,    2
@@ -4748,333 +4954,62 @@ pci07   DW 0,     0
 DevName1 DB 'RTL8169-1', 0
 DevName2 DB 'RTL8169-2', 0
 
-InitPrimaryPciAdapter   Proc near
+InitPciAdapter   Proc near
     mov ax,cs
     mov es,ax
     mov ax,ether_data_sel
     mov ds,ax
     mov ds:Handle,0
     mov si,OFFSET PciVendorTab
+    xor bx,bx
+    mov edi,OFFSET DevName1
 
-init_pci1_loop:
+init_pci_loop:
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
-    jz init_pci1_done
+    jz init_pci_done
 ;
     FindPciDeviceHandle
-    jnc init_pci1_found
+    jnc init_pci_found
 ;
     add si,6
-    jmp init_pci1_loop
+    jmp init_pci_loop
 
-init_pci1_found:
-    mov edi,OFFSET DevName1
+init_pci_found:
     LockPciHandle
-    jc init_pci1_loop
-;    
-    mov bp,bx
+    jc init_pci_loop
+;
     xor al,al
     GetPciBarIo
     jc m_pci1
 ;    
-    mov ds:IoBase,dx
-    mov ds:MemSel,0
-    mov ds:Gphy,OCP_STD_PHY_BASE
-    mov si,cs:[si+4]
-    mov ds:IoCfg,si
-;    
-    call SetupInts
-    call IoInitHardware
-    call IoFindHardware
-    call Config
-    mov ax,25
-    WaitMilliSec
-;    
-    mov dx,ds:IoBase
-    add dx,REG_ISR
-    in eax,dx
-    test eax,IR_SWInt
-    jz ioinit_pci1_int_ok
-;
-    jmp ioinit_pci1_int_ok
-    int 3
-;    
-    GetSystemTime    
-    add eax,1193
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET NetTimeout
-    mov bx,ds
-    mov cx,bx
-    StartTimer
-
-ioinit_pci1_int_ok:        
-    push ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET IoDispTable1
-    mov edi,OFFSET DriverName1
-    mov al,1
-    mov dx,0
-    mov ecx,1600
-    RegisterNetDriver
-    pop ds
-    mov ds:Handle,bx
-;
-    push ds
-    mov bx,ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET io_super_thread
-    mov edi,OFFSET SupervisorName1
-    mov ax,2
-    mov cx,1000h
-    CreateThread
-    pop ds
-;    
-    mov bx,bp   
-    clc
-    jmp init_pci1_done
+    mov cx,cs:[si+4]
+    call InitIoAdapter
+    jmp init_pci_next
 
 m_pci1:
     xor al,al
     GetPciBarPhys
-    jc init_pci1_loop
+    jc init_pci_loop
 ;
-    mov ebx,edx
-    call CreateMemSel
-    mov fs,bx
-    mov ds:IoBase,0
-    mov ds:MemSel,bx
-    mov ds:Gphy,OCP_STD_PHY_BASE
-    mov si,cs:[si+4]
-    mov ds:IoCfg,si
-    pop ebx
-;    
-    call SetupInts
-    call MemInitHardware
-    call MemFindHardware
-    call Config
-;
-    mov ax,25
-    WaitMilliSec
-;    
-    mov ax,fs:mem_isr
-    test ax,IR_SWInt
-    jz minit_pci1_int_ok
-;
-    int 3
-;    
-    GetSystemTime    
-    add eax,1193
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET NetTimeout
-    mov bx,ds
-    mov cx,bx
-    StartTimer
+    mov cx,cs:[si+4]
+    call InitMemAdapter
 
-minit_pci1_int_ok:        
-    push ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET MemDispTable1
-    mov edi,OFFSET DriverName1
-    mov al,1
-    mov dx,0
-    mov ecx,1600
-    RegisterNetDriver
-    pop ds
-    mov ds:Handle,bx
+init_pci_next:
+    mov ax,ds
+    cmp ax,ether_data_sel
+    jne init_pci_done
 ;
-    push ds
-    mov bx,ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET mem_super_thread
-    mov edi,OFFSET SupervisorName1
-    mov ax,2
-    mov cx,1000h
-    CreateThread
-    pop ds
-;    
-    mov bx,bp   
-    clc
-
-init_pci1_done:
-    ret
-InitPrimaryPciAdapter   Endp
-
-InitSecondaryPciAdapter Proc near
-    mov ax,cs
-    mov es,ax
     mov ax,ether_data2_sel
     mov ds,ax
-    mov ds:Handle,0
-    mov si,OFFSET PciVendorTab
-
-init_pci2_loop:
-    mov ax,bp
-    mov dx,cs:[si]
-    mov cx,cs:[si+2]
-    or dx,dx
-    stc
-    jz init_pci2_done
-;
-    FindPciDeviceHandle
-    jnc init_pci2_found
-;
-    add si,6
-    jmp init_pci2_loop
-
-init_pci2_found:
     mov edi,OFFSET DevName2
-    LockPciHandle
-    jc init_pci2_loop
-;
-    mov bp,bx
-    xor al,al
-    GetPciBarIo
-    jc m_pci2
-;    
-    mov ds:IoBase,dx
-    mov ds:MemSel,0
-    mov ds:Gphy,OCP_STD_PHY_BASE
+    jmp init_pci_loop
 
-    mov si,cs:[si+4]
-    mov ds:IoCfg,si
-;
-    call SetupInts
-    call IoInitHardware
-    call IoFindHardware
-    call Config
-;
-    mov ax,1
-    WaitMilliSec
-;    
-    mov dx,ds:IoBase
-    add dx,REG_ISR
-    in eax,dx
-    test eax,IR_SWInt
-    jz ioinit_pci2_int_ok
-;
-    GetSystemTime    
-    add eax,1193
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET NetTimeout
-    mov bx,ds
-    mov cx,bx
-    StartTimer
-
-ioinit_pci2_int_ok:        
-    push ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET IoDispTable2
-    mov edi,OFFSET DriverName2
-    mov al,1
-    mov dx,0
-    mov ecx,1600
-    RegisterNetDriver
-    pop ds
-    mov ds:Handle,bx
-;
-    push ds
-    mov bx,ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET io_super_thread
-    mov edi,OFFSET SupervisorName2
-    mov ax,2
-    mov cx,1000h
-    CreateThread
-    pop ds
-;
-    mov ax,bp   
-    clc
-    jmp init_pci2_done
-
-m_pci2:
-    xor al,al
-    GetPciBarPhys
-    jc init_pci2_loop
-;
-    mov ebx,edx
-    call CreateMemSel
-    mov fs,bx
-    mov ds:IoBase,0
-    mov ds:MemSel,bx
-    mov ds:Gphy,OCP_STD_PHY_BASE
-    mov si,cs:[si+4]
-    mov ds:IoCfg,si
-    pop ebx
-;
-    call SetupInts
-    call MemInitHardware
-    call MemFindHardware
-    call Config
-;
-    mov ax,1
-    WaitMilliSec
-;    
-    mov ax,fs:mem_isr
-    test ax,IR_SWInt
-    jz minit_pci2_int_ok
-;
-    GetSystemTime    
-    add eax,1193
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET NetTimeout
-    mov bx,ds
-    mov cx,bx
-    StartTimer
-
-minit_pci2_int_ok:        
-    push ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET MemDispTable2
-    mov edi,OFFSET DriverName2
-    mov al,1
-    mov dx,0
-    mov ecx,1600
-    RegisterNetDriver
-    pop ds
-    mov ds:Handle,bx
-;
-    push ds
-    mov bx,ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET mem_super_thread
-    mov edi,OFFSET SupervisorName2
-    mov ax,2
-    mov cx,1000h
-    CreateThread
-    pop ds
-;
-    mov ax,bp   
-    clc
-
-init_pci2_done:
+init_pci_done:
     ret
-InitSecondaryPciAdapter Endp
+InitPciAdapter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5143,9 +5078,7 @@ init_net    Proc far
     push es
     pusha
 ;
-    xor bx,bx
-    call InitPrimaryPciAdapter
-    call InitSecondaryPciAdapter
+    call InitPciAdapter
 ;    
     popa
     pop es
