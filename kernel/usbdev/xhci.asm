@@ -4314,19 +4314,70 @@ XhciInt Endp
 SetupIrq  Proc near
     push ds
     push es
+    push ebx
     push esi
     push edi
 ;
-    mov di,ds:xhc_intr_sel
-    mov ds,edi
-    mov edi,cs
-    mov es,edi
-    mov edi,OFFSET XhciInt
-    mov ah,14h
-    SetupPciHandleIrq
+    GetPciHandleParam
+    mov bh,dl
+    mov bl,ah
+    mov ch,al
 ;
+    GetPciMsi
+    jc siCheckMsiX
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc siIrq
+
+siMsiSetup:
+    mov ds:xhc_int_base,al
+    mov dx,1
+    SetupPciMsi
+    jmp siReg
+
+siCheckMsiX:
+    GetPciMsiX
+    jc siIrq
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc siIrq
+;
+    EnablePciMsiX
+;
+    xor dl,dl
+    SetupPciMsiXEntry
+
+siReg:    
+    mov di,ds:xhc_intr_sel
+    mov ds,di
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET XhciInt
+    RequestMsiHandler
+    jmp siDone
+
+siIrq:
+    GetPciIrqNr
+    mov ah,14h
+    mov di,ds:xhc_intr_sel
+    mov ds,di
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET XhciInt
+    RequestIrqHandler
+
+siDone:    
     pop edi
     pop esi
+    pop ebx
     pop es
     pop ds
     ret
