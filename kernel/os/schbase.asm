@@ -1177,11 +1177,11 @@ GetCoreInts_	Endp
 GetPciMsiBase_ PROC near
     push edx
 ;
-    GetPciMsiInfo
-    jc gpmbFail
+;    GetPciMsiInfo
+;    jc gpmbFail
 ;
-    movzx eax,al
-    jmp gpmbDone
+;    movzx eax,al
+;    jmp gpmbDone
 
 gpmbFail:
     xor eax,eax
@@ -1209,9 +1209,9 @@ MovePciMsi_ PROC near
     push fs
     push eax
 ;
-    GetCoreNumber
-    mov al,dl
-    MovePciMsi
+;    GetCoreNumber
+;    mov al,dl
+;    MovePciMsi
 ;
     pop eax
     pop fs

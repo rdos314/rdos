@@ -3656,9 +3656,12 @@ test_gate    Proc far
     pushad
 ;
     xor bx,bx
-    mov ax,0780h
+    mov ax,0200h
     FindPciClassHandle
     jc tgDone
+;
+    xor al,al
+    GetPciBarIo
 ;
     mov eax,cs
     mov es,eax
@@ -3666,7 +3669,7 @@ test_gate    Proc far
     LockPciHandle
     jc tgDone
 ;
-    mov ah,12h
+    mov ah,14h
     SetupPciHandleIrq
 
 tgDone:
