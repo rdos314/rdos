@@ -38,7 +38,6 @@ include acpi.inc
 INCLUDE pci.inc
 INCLUDE ..\os\core.inc
 INCLUDE msg.inc
-
 ; this structure should be 128 bytes!
 
 pci_func_struc   STRUC
@@ -123,6 +122,8 @@ apic_table              DW ?
 
 pci_spinlock            spinlock_typ <>
 
+reset_req               DW ?
+
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 64 DUP(?,?)
 
@@ -183,15 +184,14 @@ hook_init_pci   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DefaultReset
+;           NAME:           DoReset
 ;
 ;           DESCRIPTION:    Trigger a CPU soft reset through tripple fault
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DefaultReset:
+reset_timeout:
     cli
-;
     mov ecx,500    
 
 wait_gate1:
@@ -235,6 +235,16 @@ wait_gate_done2:
 
 reset_wait:
     jmp reset_wait
+
+DoReset:
+    call AllocateMsg
+;    
+    mov eax,RESET_CMD
+    call RunMsg
+;
+    mov ax,150
+    WaitMilliSec
+    jmp reset_timeout
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -247,17 +257,32 @@ reset_wait:
 
 soft_reset_name      DB 'Soft Reset',0
 
-soft_reset:
-    call AllocateMsg
+soft_reset  Proc far
+    push ds
+    push es
+    pushad
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov ds:reset_req,1
+;
+    GetSystemTime
+    add eax,1193 * 100
+    adc edx,0
 ;    
-    mov eax,RESET_CMD
-    call RunMsg
+    mov bx,cs
+    xor ecx,ecx
+    mov edi,cs
+    mov es,edi
+    mov edi,OFFSET reset_timeout
+    StartTimer
 ;
-    mov ax,50
-    WaitMilliSec
-;
-    jmp DefaultReset
-        
+    popad
+    pop es
+    pop ds
+    ret
+soft_reset  Endp
+     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3712,7 +3737,18 @@ hook_thread_loop:
     loop hook_thread_loop
 
 hook_thread_done:
-    TerminateThread
+    mov ax,ds:reset_req
+    or ax,ax
+    jz wait_reset
+;
+    jmp DoReset
+    
+wait_reset:
+    mov ax,25
+    WaitMilliSec
+    jmp hook_thread_done    
+
+;    TerminateThread
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3790,6 +3826,7 @@ init    Proc far
     mov ds,ebx
     mov es,ebx
 ;
+    mov ds:reset_req,0
     mov ds:apic_table,0
     mov ds:pci_init_hooks,0
     InitSpinlock ds:pci_spinlock
