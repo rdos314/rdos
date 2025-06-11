@@ -7600,64 +7600,6 @@ get_core_duty    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SoftReset
-;
-;           DESCRIPTION:    Trigger a CPU soft reset
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-soft_reset_name  DB 'Soft Reset',0
-
-soft_reset       PROC far
-    IsLongThread
-    cli
-    pushf
-;
-wait_gate1:
-    in al,64h
-    and al,2
-    jnz wait_gate1
-    mov al,0D1h
-    out 64h,al
-wait_gate2:
-    in al,64h
-    and al,2
-    jnz wait_gate2
-    mov al,0FEh
-    out 60h,al
-;
-    popf
-    jc prot_reset
-;
-    xor eax,eax
-    mov cr3,eax
-;    LongModeReset
-
-prot_reset:    
-    mov ax,idt_sel
-    mov ds,ax
-;    
-    mov bx,13 * 8
-    xor eax,eax
-    mov [bx],eax
-    mov [bx+4],eax
-;
-    mov bx,8 * 8
-    mov [bx],eax
-    mov [bx+4],eax
-;
-    mov ax,-1
-    mov ds,ax
-
-reset_wait:
-    jmp reset_wait
-    
-    retf32
-soft_reset       ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           HardReset
 ;
 ;           DESCRIPTION:    Trigger a CPU hard reset
@@ -11954,12 +11896,6 @@ timer_free_list_create:
     mov ax,do_flush_tlb_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET soft_reset
-    mov edi,OFFSET soft_reset_name
-    xor dx,dx
-    mov ax,fault_reset_nr
-    RegisterOsGate
-;
     mov ebx,OFFSET create_thread16
     mov esi,OFFSET create_thread32
     mov edi,OFFSET create_thread_name
@@ -12002,12 +11938,6 @@ timer_free_list_create:
     xor cl,cl
     mov ax,fork_process_nr
     RegisterOsGate
-;
-    mov esi,OFFSET soft_reset
-    mov edi,OFFSET soft_reset_name
-    xor dx,dx
-    mov ax,soft_reset_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET hard_reset
     mov edi,OFFSET hard_reset_name

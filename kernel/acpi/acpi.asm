@@ -179,6 +179,84 @@ hook_init_pci   Proc far
     pop ds
     ret
 hook_init_pci   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DefaultReset
+;
+;           DESCRIPTION:    Trigger a CPU soft reset through tripple fault
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DefaultReset:
+    cli
+;
+    mov ecx,500    
+
+wait_gate1:
+    in al,64h
+    and al,2
+    jz wait_gate_done1
+;
+    loop wait_gate1    
+
+wait_gate_done1:
+    mov al,0D1h
+    out 64h,al
+;    
+    mov ecx,500    
+
+wait_gate2:
+    in al,64h
+    and al,2
+    jz wait_gate_done2
+;
+    loop wait_gate2    
+    
+wait_gate_done2:    
+    mov al,0FEh
+    out 60h,al
+;
+    mov ax,idt_sel
+    mov ds,ax
+;    
+    mov bx,13 * 8
+    xor eax,eax
+    mov [bx],eax
+    mov [bx+4],eax
+;
+    mov bx,8 * 8
+    mov [bx],eax
+    mov [bx+4],eax
+;
+    mov ax,-1
+    mov ds,ax
+
+reset_wait:
+    jmp reset_wait
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SoftReset
+;
+;           DESCRIPTION:    Soft reset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+soft_reset_name      DB 'Soft Reset',0
+
+soft_reset:
+    call AllocateMsg
+;    
+    mov eax,RESET_CMD
+    call RunMsg
+;
+    mov ax,50
+    WaitMilliSec
+;
+    jmp DefaultReset
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3635,9 +3713,7 @@ hook_thread_loop:
 
 hook_thread_done:
     TerminateThread
-
-
-
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3738,6 +3814,12 @@ init    Proc far
     mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;
+    mov esi,OFFSET soft_reset
+    mov edi,OFFSET soft_reset_name
+    xor dx,dx
+    mov ax,fault_reset_nr
+    RegisterOsGate
+;
     mov esi,OFFSET get_pci_bar_phys
     mov edi,OFFSET get_pci_bar_phys_name
     xor cl,cl
@@ -3761,6 +3843,12 @@ init    Proc far
     xor cl,cl
     mov ax,setup_pci_handle_msi_nr
     RegisterOsGate
+;
+    mov esi,OFFSET soft_reset
+    mov edi,OFFSET soft_reset_name
+    xor dx,dx
+    mov ax,soft_reset_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET find_pci_device_handle
     mov edi,OFFSET find_pci_device_handle_name

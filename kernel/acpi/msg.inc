@@ -165,3 +165,5 @@ GET_PCI_BAR_PHYS_CMD       = 23
 ; IN  BX      Handle
 ; OUT DX      IO port
 GET_PCI_BAR_IO_CMD         = 24
+
+RESET_CMD                  = 25

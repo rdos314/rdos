@@ -1215,7 +1215,7 @@ init_pci    Proc far
     push ds
     push es
     pushad
-;
+;    
     mov eax,SEG data
     mov ds,eax
     movzx ecx,ds:acpi_init_hooks
