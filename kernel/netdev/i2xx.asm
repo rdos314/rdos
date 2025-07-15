@@ -759,6 +759,7 @@ GetBuffer Proc near
     push ebx
     push edx
     push esi
+    push ebp
 ;
     mov es,ds:TxRingSel
     EnterSection ds:TxSection
@@ -767,11 +768,19 @@ GetBuffer Proc near
     mov edx,ebx
     mov esi,ebx
     shl ebx,4
+    xor ebp,ebp
 
 gbRetry:
     mov al,es:[ebx].tx_sta
     test al,1
     jnz gbOk
+;
+    mov ax,5
+    WaitMilliSec    
+;
+    inc ebp
+    cmp ebp,1000
+    jb gbRetry
 ;
     int 3
     jmp gbRetry
@@ -796,6 +805,7 @@ gbUpd:
     mov es:[edi-2],si
     sub ecx,14
 ;
+    pop ebp
     pop esi
     pop edx
     pop ebx
