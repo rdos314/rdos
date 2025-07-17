@@ -1,3 +1,0 @@
-100 RCDATA LOADONCALL MOVEABLE DISCARDABLE "/rdos/kernel/boot/bootsec.bin"
-101 RCDATA LOADONCALL MOVEABLE DISCARDABLE "/rdos/kernel/boot/hdboot.bin"
-
