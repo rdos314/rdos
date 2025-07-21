@@ -536,6 +536,9 @@ alt_ether_data_sel  EQU 0C98h
 nvme_code_sel       EQU 0CA0h
 nvme_data_sel       EQU 0CA8h
 
+np_code_sel         EQU 0CB0h
+np_data_sel         EQU 0CB8h
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 

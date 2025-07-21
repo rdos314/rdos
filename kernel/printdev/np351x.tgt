@@ -24,8 +24,8 @@ MCommand
 0
 6
 MItem
-9
-kr203.rdv
+10
+np351x.rdv
 7
 WString
 5
@@ -48,7 +48,7 @@ rk???WLINK_op_codesel
 12
 WString
 5
-0xA80
+0xCB0
 13
 MVState
 14
@@ -64,7 +64,7 @@ rk???WLINK_op_datasel
 16
 WString
 5
-0xA88
+0xCB8
 17
 MCState
 18
@@ -131,8 +131,8 @@ WVList
 0
 32
 MItem
-9
-kr203.asm
+10
+np351x.asm
 33
 WString
 6
