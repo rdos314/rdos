@@ -704,6 +704,7 @@ reset_printer    Endp
 np_thread_name  DB 'NP-3511 ', 0
 
 printer_thread:
+    int 3
     mov ax,SEG data
     mov ds,ax
     GetThread
@@ -1110,7 +1111,6 @@ aTab:
 a01     DW 1051h,       1000h   ; NP-3511D-2
 
 usb_attach  Proc far
-    int 3
     push es
 ;    
     push ax
