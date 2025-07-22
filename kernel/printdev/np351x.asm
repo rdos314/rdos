@@ -923,7 +923,6 @@ prRestart:
     mov ds:np_dev_handle,bx
 ;
     call OpenPipes
-    int 3
     call SendInit
 ;    
     lock or ds:np_status,STATUS_OFFLINE
@@ -999,7 +998,7 @@ prLoop:
     mov ds:np_wait_thread,ax
 ;
     GetSystemTime
-    add eax,1500 * 1193
+    add eax,100 * 1193
     adc edx,0
     WaitForSignalWithTimeout
 ;
