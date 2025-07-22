@@ -53,6 +53,16 @@ FLAG_STATUS            = 20h
 
 STATUS_OFFLINE         = 100h
 
+STATUS_PAPER_JAM       = 1h
+STATUS_CUTTER_JAM      = 2h
+STATUS_NO_PAPER        = 4h
+STATUS_HEAD_LIFTED     = 8h
+STATUS_FEED_ERROR      = 10h
+STATUS_TEMP_ERROR      = 20h
+STATUS_PAPER_LOW       = 40h
+STATUS_PAPER_PRESENTER = 80h
+STATUS_OFFLINE         = 100h
+
 ENQ = 5
 ESC = 1Bh
 RS = 1Eh
@@ -94,13 +104,9 @@ np_in_pipe          DB ?
 np_section          section_typ <>
 
 np_status           DW ?
-np_sensors          DW ?
-
-np_width            DW ?
+np_space            DB ?
 
 np_flag             DB ?
-np_cmd              DB ?
-np_present_mm       DB ?
 
 np_reset_counter    DW ?
 np_status_errors    DW ?
@@ -119,6 +125,122 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
         assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateStatus
+;
+;       DESCRIPTION:    Update printer status
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateStatus   Proc near
+    push es
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    mov bx,ds:np_dev_handle
+    mov dl,ds:np_in_pipe
+    GetUsedUsbBuffers
+    or cx,cx
+    jz usDone
+;
+    mov es,ds:np_in_buffer
+    xor edi,edi
+    movzx ecx,ds:np_max_in
+    GetUsbPacketPipe
+    jc usError
+;
+    cmp cl,7
+    jne usError
+;
+    xor dx,dx
+    xor di,di
+    mov al,es:[edi+1]
+    cmp al,-1
+    jne usError
+;
+    mov al,es:[edi+2]
+    cmp al,1
+    jne usError
+;
+    mov al,es:[edi+6]
+    mov ds:np_space,al
+;
+    mov al,es:[edi]
+;
+    test al,40h
+    jz usNotPresent
+;
+    or dx,STATUS_PAPER_PRESENTER
+
+usNotPresent:
+    test al,20h
+    jz usNotFeed
+;
+    or dx,STATUS_FEED_ERROR
+
+usNotFeed:
+    test al,10h
+    jz usNotCutter
+;
+    or dx,STATUS_CUTTER_JAM
+
+usNotCutter:
+    test al,8
+    jz usNotTemp
+;
+    or dx,STATUS_TEMP_ERROR
+
+usNotTemp:
+    test al,4
+    jz usNoPaper
+;
+    or dx,STATUS_NO_PAPER
+
+usNoPaper:
+    test al,2
+    jz usNotHead
+;
+    or dx,STATUS_HEAD_LIFTED
+
+usNotHead:
+    test al,1
+    jz usNotLow
+;
+    or dx,STATUS_PAPER_LOW
+
+usNotLow:
+    mov ds:np_status,dx
+    mov ds:np_status_errors,0
+    clc
+    jmp usDone
+
+usError:
+    mov ax,ds:np_status_errors
+    inc ds:np_status_errors
+    cmp ax,10
+    jb usDone
+
+usResetUsb:
+    lock or ds:np_status,STATUS_OFFLINE
+    mov ds:np_status_errors,0
+    mov bx,ds:np_dev_handle
+    ResetUsbDevice
+
+usDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    ret
+UpdateStatus    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -162,6 +284,40 @@ hrDone:
     pop es
     ret
 DoHardReset    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendInit
+;
+;       DESCRIPTION:    Send init command
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendInit   Proc near
+    push es
+    pushad
+;
+    mov es,ds:np_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,40h
+    stosb
+;
+    mov cx,di
+    mov bx,ds:np_dev_handle
+    mov dl,ds:np_out_pipe
+    PostUsbRawPipe
+;
+    popad
+    pop es
+    ret
+SendInit    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -238,24 +394,6 @@ SendPresent   Proc near
     pop es
     ret
 SendPresent    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           NotifyUsbData
-;
-;       DESCRIPTION:    Handle incoming data
-;
-;       PARAMETERS:     DS      SEG data
-;                       CX      Size
-;                       ES      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyUsbData   Proc near
-    int 3
-    ret
-NotifyUsbData   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -704,7 +842,6 @@ reset_printer    Endp
 np_thread_name  DB 'NP-3511 ', 0
 
 printer_thread:
-    int 3
     mov ax,SEG data
     mov ds,ax
     GetThread
@@ -715,7 +852,6 @@ printer_thread:
     mov ds:np_reset_counter,0
     mov ds:np_status_errors,0
     mov ds:np_status,0
-    mov ds:np_sensors,0
 ;
     mov eax,SIZE usb_printer_struc
     AllocateSmallGlobalMem
@@ -787,6 +923,8 @@ prRestart:
     mov ds:np_dev_handle,bx
 ;
     call OpenPipes
+    int 3
+    call SendInit
 ;    
     lock or ds:np_status,STATUS_OFFLINE
 ;
@@ -797,9 +935,11 @@ prInitLoop:
     IsUsbDeviceConnected
     jc prDetached
 ;
+    call UpdateStatus
+    jnc prLoop
+;
     test ds:np_flag,FLAG_ATTACHED
-    jz prDetached
-    jmp prLoop
+    jnz prDetached
 
 prRetry:
     loop prInitLoop
@@ -851,7 +991,7 @@ prLoop:
     test ds:np_flag,FLAG_ATTACHED
     jz prDetached
 ;
-;    call UpdateStatus
+    call UpdateStatus
 ;    call SendBitmap
 ;    call SendCommand
 ;
