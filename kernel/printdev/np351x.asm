@@ -513,7 +513,30 @@ get_printer_name   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_jammed   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:np_flag,FLAG_ATTACHED
+    clc
+    jz ijDone
+;    
+    mov ax,ds:np_server_thread
+    or ax,ax
+    clc
+    jz ijDone
+;
+    mov ax,ds:np_status
+    test ax,STATUS_PAPER_JAM
+    clc
+    jz ijDone
+;
     stc
+    
+ijDone:
+    pop ax
+    pop ds
     ret
 is_jammed   Endp
 
@@ -531,7 +554,30 @@ is_jammed   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_paper_low   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:np_flag,FLAG_ATTACHED
+    clc
+    jz iplDone
+;
+    mov ax,ds:np_server_thread
+    or ax,ax
+    clc
+    jz iplDone
+;
+    mov ax,ds:np_status
+    test ax,STATUS_PAPER_LOW
+    clc
+    jz iplDone
+;
     stc
+    
+iplDone:
+    pop ax
+    pop ds
     ret
 is_paper_low   Endp
 
@@ -549,7 +595,30 @@ is_paper_low   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_paper_end   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:np_flag,FLAG_ATTACHED
     clc
+    jz ipeDone
+;    
+    mov ax,ds:np_server_thread
+    or ax,ax
+    clc
+    jz ipeDone
+;
+    mov ax,ds:np_status
+    test ax,STATUS_NO_PAPER
+    clc
+    jz ipeDone
+;
+    stc
+    
+ipeDone:
+    pop ax
+    pop ds
     ret
 is_paper_end   Endp
 
@@ -567,7 +636,30 @@ is_paper_end   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_cutter_jammed   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:np_flag,FLAG_ATTACHED
     clc
+    jz icjDone
+;
+    mov ax,ds:np_server_thread
+    or ax,ax
+    clc
+    jz icjDone
+;
+    mov ax,ds:np_status
+    test ax,STATUS_CUTTER_JAM
+    clc
+    jz icjDone
+;
+    stc
+    
+icjDone:
+    pop ax
+    pop ds
     ret
 is_cutter_jammed   Endp
 
@@ -599,7 +691,12 @@ is_ok   Proc far
     stc
     jz ioDone
 ;
+    mov ax,ds:np_status
+    test ax,STATUS_OFFLINE
     clc
+    jz ioDone
+;
+    stc
     
 ioDone:
     pop ax
@@ -621,7 +718,31 @@ is_ok   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 is_head_lifted   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:np_flag,FLAG_ATTACHED
     clc
+    jz ihlDone
+;    
+    mov ax,ds:np_server_thread
+    or ax,ax
+    clc
+    jz ihlDone
+;
+    mov ax,ds:np_status
+    test ax,STATUS_HEAD_LIFTED
+    clc
+    jz ihlDone
+;
+    stc
+    
+ihlDone:
+    pop ax
+    pop ds
+    ret
     ret
 is_head_lifted   Endp
 
@@ -657,7 +778,30 @@ has_paper_in_presenter   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 has_temp_error   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:np_flag,FLAG_ATTACHED
     clc
+    jz hteDone
+;
+    mov ax,ds:np_server_thread
+    or ax,ax
+    clc
+    jz hteDone
+;
+    mov ax,ds:np_status
+    test ax,STATUS_TEMP_ERROR
+    clc
+    jz hteDone
+;
+    stc
+    
+hteDone:
+    pop ax
+    pop ds
     ret
 has_temp_error   Endp
 
@@ -675,7 +819,30 @@ has_temp_error   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 has_feed_error   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SEG data
+    mov ds,ax
+    test ds:np_flag,FLAG_ATTACHED
     clc
+    jz hfeDone
+;
+    mov ax,ds:np_server_thread
+    or ax,ax
+    clc
+    jz hfeDone
+;
+    mov ax,ds:np_status
+    test ax,STATUS_FEED_ERROR
+    clc
+    jz hfeDone
+;
+    stc
+    
+hfeDone:
+    pop ax
+    pop ds
     ret
 has_feed_error   Endp
 
