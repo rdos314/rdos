@@ -398,6 +398,192 @@ SendPresent    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SendLine
+;
+;       DESCRIPTION:    Print a single line
+;
+;       PARAMETERS:     DS      Data
+;                       FS:ESI  Bitmap data
+;
+;       RETURNS:        FS:ESI  New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendLine   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    push ds
+    mov ax,es
+    mov es,ds:np_out_buffer
+    mov ds,ax
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;    
+    mov al,'b'
+    stosb
+;    
+    mov ax,fs:bs_line_size
+    stosb
+;
+    mov ax,1
+    stosw
+;
+    mov cx,fs:bs_line_size
+
+poCopy:
+    lods byte ptr fs:[esi]
+    not al
+    mov ah,al
+    xor al,al
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    rcr ah,1
+    rcl al,1
+    stosb
+    loop poCopy
+;
+    mov cx,di
+    pop ds
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+SendLine    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendFeed
+;
+;       DESCRIPTION:    Send feed command
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendFeed   Proc near
+    push es
+    pushad
+;
+    mov es,ds:np_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,'J'
+    stosb
+;
+    xor al,al
+    stosb
+;
+    clc
+;
+    mov cx,di
+    mov bx,ds:np_dev_handle
+    mov dl,ds:np_out_pipe
+    PostUsbRawPipe
+;
+    popad
+    pop es
+    ret
+SendFeed    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SendBitmap
+;
+;       DESCRIPTION:    Print bitmap
+;
+;       PARAMETERS:     DS      Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendBitmap    Proc near
+    pushad
+;
+    xor bx,bx
+    xchg bx,ds:np_bitmap
+    or bx,bx
+    jz sbDone
+;
+    int 3
+    push fs
+    mov fs,bx
+;
+    mov esi,OFFSET bs_data
+    xor dx,dx
+
+sbLoop:
+    test ds:np_flag,FLAG_ATTACHED
+    stc
+    jz sbFree
+
+sbDo:
+    call SendLine
+    call SendFeed
+    call UpdateStatus
+    inc dx
+;
+;    test dl,0Fh
+;    jnz sbNext
+;
+;    call SendPrint
+
+sbNext:
+    cmp dx,fs:bs_height
+    jnz sbLoop
+
+sbCut:
+    call SendCut
+    call UpdateStatus
+
+sbFree:
+    push es
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    pop es
+;
+    pop fs
+;
+    mov bx,ds:np_pr_thread
+    Signal
+
+sbDone:
+    popad
+    ret
+SendBitmap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:                   OpenPipes
 ;
 ;               DESCRIPTION:    Open USB pipes
@@ -876,7 +1062,18 @@ print_test    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_bitmap   Proc far
-    stc
+    push ax
+    push cx
+    push dx
+;
+    mov ax,1
+    mov cx,576
+    CreateBitmap
+    clc
+;
+    pop dx
+    pop cx
+    pop ax
     ret
 create_bitmap    Endp
 
@@ -893,7 +1090,71 @@ create_bitmap    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 print_bitmap   Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+    test ds:np_flag,FLAG_ATTACHED
     stc
+    jz pbDone
+;
+    mov ax,ds:np_server_thread
+    or ax,ax
+    stc
+    jz pbDone
+;
+    GetBitmapInfo
+    jc pbDone
+;
+    cmp al,1
+    jne pbDone
+;
+    or dx,dx
+    jz pbDone
+;
+    mov ax,es
+    mov ds,ax
+    movzx ebp,si
+;
+    push edx
+    movzx eax,dx
+    mul ebp
+    mov ecx,eax
+    add eax,OFFSET bs_data
+    mov esi,edi
+    AllocateSmallGlobalMem
+    pop edx
+;
+    mov es:bs_line_size,bp
+    mov es:bs_height,dx
+    mov edi,OFFSET bs_data
+    rep movsb
+    mov bx,es
+;
+    mov ax,SEG data
+    mov ds,ax
+    ClearSignal
+    GetThread
+    mov ds:np_pr_thread,ax
+    mov ds:np_bitmap,bx
+;
+    mov bx,ds:np_wait_thread
+    signal
+;
+    GetSystemTime
+    add eax,5000 * 1193
+    adc edx,0
+    WaitForSignalWithTimeout
+    clc
+
+pbDone:
+    popad
+    pop fs
+    pop es
+    pop ds
     ret
 print_bitmap    Endp
 
@@ -1158,8 +1419,7 @@ prLoop:
     jz prDetached
 ;
     call UpdateStatus
-;    call SendBitmap
-;    call SendCommand
+    call SendBitmap
 ;
     GetThread
     mov ds:np_wait_thread,ax
