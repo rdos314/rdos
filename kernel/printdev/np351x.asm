@@ -139,10 +139,7 @@ code    SEGMENT byte public 'CODE'
 
 UpdateStatus   Proc near
     push es
-    push eax
-    push ebx
-    push edx
-    push edi
+    pushad
 ;
     mov bx,ds:np_dev_handle
     mov dl,ds:np_in_pipe
@@ -234,10 +231,7 @@ usResetUsb:
     ResetUsbDevice
 
 usDone:
-    pop edi
-    pop edx
-    pop ebx
-    pop eax
+    popad
     pop es
     ret
 UpdateStatus    Endp
@@ -398,30 +392,23 @@ SendPresent    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SendLines
+;       NAME:           SendLineHeader
 ;
-;       DESCRIPTION:    Print a single line
+;       DESCRIPTION:    Print line header
 ;
 ;       PARAMETERS:     DS      Data
-;                       FS:ESI  Bitmap data
 ;                       ECX     Number of lines
-;
-;       RETURNS:        FS:ESI  New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendLines   Proc near
+SendLineHeader   Proc near
     push es
     push eax
     push ebx
     push ecx
     push edx
     push edi
-    push ebp
 ;
-    mov ebp,ecx
-;
-    mov ax,es
     mov es,ds:np_out_buffer
     xor edi,edi
 ;
@@ -434,26 +421,49 @@ SendLines   Proc near
     mov ax,fs:bs_line_size
     stosb
 ;
-    mov ax,bp
+    mov ax,cx
     stosw
+;
+    mov ecx,edi
+;    
+    mov bx,ds:np_dev_handle
+    mov dl,ds:np_out_pipe
+    PostUsbRawPipe
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+SendLineHeader    Endp
 
-poLine:
-    call UpdateStatus
-    test ds:np_flag,FLAG_ATTACHED
-    jz poDone
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-    test ds:np_status,STATUS_OFFLINE
-    jnz poDone
 ;
-    mov al,ds:np_space
-    cmp al,6
-    jae poStart
+;       NAME:           SendLine
 ;
-    mov ax,5
-    WaitMilliSec
-    jmp poLine
+;       DESCRIPTION:    Print a single line
+;
+;       PARAMETERS:     DS      Data
+;                       FS:ESI  Bitmap data
+;
+;       RETURNS:        FS:ESI  New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-poStart:
+SendLine   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    mov es,ds:np_out_buffer
+    xor edi,edi
+;
     movzx ecx,fs:bs_line_size
 
 poCopy:
@@ -480,9 +490,6 @@ poCopy:
     stosb
     loop poCopy
 ;
-    sub ebp,1
-    jnz poLine
-;
     mov ecx,edi
 ;    
     mov bx,ds:np_dev_handle
@@ -490,7 +497,6 @@ poCopy:
     PostUsbRawPipe
 
 poDone:
-    pop ebp
     pop edi
     pop edx
     pop ecx
@@ -498,7 +504,7 @@ poDone:
     pop eax
     pop es
     ret
-SendLines    Endp
+SendLine    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -565,21 +571,37 @@ SendBitmap    Proc near
     xor edx,edx
 
 sbLoop:
-    test ds:np_flag,FLAG_ATTACHED
-    stc
-    jz sbFree
-
-sbDo:
     movzx ecx,fs:bs_height
     sub ecx,edx
-    cmp ecx,16
+    cmp ecx,64
     jb sbSend
 ;
-    mov ecx,16
+    mov ecx,64
 
 sbSend:
-    add edx,ecx
-    call SendLines
+    call SendLineHeader
+
+sbLineLoop:
+    call UpdateStatus
+    test ds:np_flag,FLAG_ATTACHED
+    jz sbFree
+;
+    test ds:np_status,STATUS_OFFLINE
+    jnz sbFree
+;
+    mov al,ds:np_space
+    cmp al,6
+    jae sbLine
+;
+    mov ax,5
+    WaitMilliSec
+    jmp sbLineLoop
+
+sbLine:
+    call SendLine
+    inc edx
+    loop sbLineLoop
+;
     call SendFeed
 
 sbNext:
