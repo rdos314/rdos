@@ -463,6 +463,10 @@ poCopy:
 ;
     mov cx,di
     pop ds
+;    
+    mov bx,ds:np_dev_handle
+    mov dl,ds:np_out_pipe
+    PostUsbRawPipe
 ;
     pop edi
     pop edx
@@ -531,7 +535,6 @@ SendBitmap    Proc near
     or bx,bx
     jz sbDone
 ;
-    int 3
     push fs
     mov fs,bx
 ;
