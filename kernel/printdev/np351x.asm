@@ -568,17 +568,7 @@ SendBitmap    Proc near
     mov fs,bx
 ;
     mov esi,OFFSET bs_data
-    xor edx,edx
-
-sbLoop:
     movzx ecx,fs:bs_height
-    sub ecx,edx
-    cmp ecx,64
-    jb sbSend
-;
-    mov ecx,64
-
-sbSend:
     call SendLineHeader
 
 sbLineLoop:
@@ -605,8 +595,6 @@ sbLine:
     call SendFeed
 
 sbNext:
-    cmp dx,fs:bs_height
-    jb sbLoop
 
 sbCut:
     call SendCut
