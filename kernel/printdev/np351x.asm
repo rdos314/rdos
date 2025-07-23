@@ -41,7 +41,7 @@ include ..\usbdev\usb.inc
 
    .386p
 
-MAX_IN_SIZE  = 1000h
+MAX_IN_SIZE  = 10h
 MAX_OUT_SIZE = 260 * 16
 
 FLAG_ATTACHED          = 1
@@ -398,29 +398,31 @@ SendPresent    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SendLine
+;       NAME:           SendLines
 ;
 ;       DESCRIPTION:    Print a single line
 ;
 ;       PARAMETERS:     DS      Data
 ;                       FS:ESI  Bitmap data
+;                       ECX     Number of lines
 ;
 ;       RETURNS:        FS:ESI  New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendLine   Proc near
+SendLines   Proc near
     push es
     push eax
     push ebx
     push ecx
     push edx
     push edi
+    push ebp
 ;
-    push ds
+    mov ebp,ecx
+;
     mov ax,es
     mov es,ds:np_out_buffer
-    mov ds,ax
     xor edi,edi
 ;
     mov al,ESC
@@ -432,10 +434,27 @@ SendLine   Proc near
     mov ax,fs:bs_line_size
     stosb
 ;
-    mov ax,1
+    mov ax,bp
     stosw
+
+poLine:
+    call UpdateStatus
+    test ds:np_flag,FLAG_ATTACHED
+    jz poDone
 ;
-    mov cx,fs:bs_line_size
+    test ds:np_status,STATUS_OFFLINE
+    jnz poDone
+;
+    mov al,ds:np_space
+    cmp al,6
+    jae poStart
+;
+    mov ax,5
+    WaitMilliSec
+    jmp poLine
+
+poStart:
+    movzx ecx,fs:bs_line_size
 
 poCopy:
     lods byte ptr fs:[esi]
@@ -461,13 +480,17 @@ poCopy:
     stosb
     loop poCopy
 ;
-    mov cx,di
-    pop ds
+    sub ebp,1
+    jnz poLine
+;
+    mov ecx,edi
 ;    
     mov bx,ds:np_dev_handle
     mov dl,ds:np_out_pipe
     PostUsbRawPipe
-;
+
+poDone:
+    pop ebp
     pop edi
     pop edx
     pop ecx
@@ -475,7 +498,7 @@ poCopy:
     pop eax
     pop es
     ret
-SendLine    Endp
+SendLines    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -539,7 +562,7 @@ SendBitmap    Proc near
     mov fs,bx
 ;
     mov esi,OFFSET bs_data
-    xor dx,dx
+    xor edx,edx
 
 sbLoop:
     test ds:np_flag,FLAG_ATTACHED
@@ -547,19 +570,21 @@ sbLoop:
     jz sbFree
 
 sbDo:
-    call SendLine
+    movzx ecx,fs:bs_height
+    sub ecx,edx
+    cmp ecx,16
+    jb sbSend
+;
+    mov ecx,16
+
+sbSend:
+    add edx,ecx
+    call SendLines
     call SendFeed
-    call UpdateStatus
-    inc dx
-;
-;    test dl,0Fh
-;    jnz sbNext
-;
-;    call SendPrint
 
 sbNext:
     cmp dx,fs:bs_height
-    jnz sbLoop
+    jb sbLoop
 
 sbCut:
     call SendCut
@@ -602,7 +627,7 @@ OpenPipes   Proc near
 ;
     mov bx,ds:np_dev_handle
     mov dl,ds:np_in_pipe
-    mov cx,10
+    mov cx,1
     OpenUsbPacketPipe
 ;
     push es
