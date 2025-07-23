@@ -530,7 +530,10 @@ SendFeed   Proc near
     mov al,'J'
     stosb
 ;
-    xor al,al
+    mov al,80h
+    stosb
+;
+    mov al,0Ah
     stosb
 ;
     clc
@@ -593,10 +596,6 @@ sbLine:
     loop sbLineLoop
 ;
     call SendFeed
-
-sbNext:
-
-sbCut:
     call SendCut
     call UpdateStatus
 
