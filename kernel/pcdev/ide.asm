@@ -1739,8 +1739,8 @@ get_ide_disc    Endp
 ;
 ;           DESCRIPTION:    Check single PCI bar for valid IDE drive
 ;
-;       PARAMETERS:         SI      IO port
-;                           AL      IRQ
+;       PARAMETERS:         BX      PCI handle
+;                           DX      IO port
 ;                           FS      Data sel
 ;
 ;           RETURNS:        
@@ -1748,13 +1748,14 @@ get_ide_disc    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckPciBar    Proc near
-    or si,si
+    push ds
+    push di
+;
+    or dx,dx
     stc
     jz cpbDone
 ;    
-    push ax
     push dx
-    mov dx,si
     add dx,7
     in al,dx
     pop dx
@@ -1766,49 +1767,39 @@ CheckPciBar    Proc near
 
 cpbFailPop:    
     stc
-    pop ax
     jmp cpbDone
 
 cpbOk:
-    pop ax
-;    
     mov di,fs:ide_pci_count
     add di,di
-    mov fs:[di].ide_io_arr,si
+    mov fs:[di].ide_io_arr,dx
 ;
-    push ds
-    push ax    
     mov eax,SIZE ide_data
     AllocateSmallGlobalMem
     mov ax,es
     mov ds,ax
     InitSection ds:IdeSection
-    pop ax
 ;       
     mov ds:IdeThread,0
     mov ds:IdeIoBase,0
     mov ds:DriveSelArr,0
     mov ds:DriveSelArr+2,0
     mov fs:[di].ide_pci_arr,ds
-;
-    push bx
 ;    
-    mov ah,12h
-    mov bx,cs
-    mov es,bx
+    mov al,12h
+    mov di,cs
+    mov es,di
     mov edi,OFFSET ide_pci_int
-    RequestIrqHandler
-;
-    pop bx
-    pop ds
+    SetupPciHandleIrq
 ;
     inc fs:ide_pci_count
     clc
 
 cpbDone:
+    pop di
+    pop ds
     ret
 CheckPciBar Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1820,120 +1811,46 @@ CheckPciBar Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DevName1 DB 'IDE-1', 0
-DevName3 DB 'IDE-3', 0
 DevName2 DB 'IDE-2', 0
-DevName4 DB 'IDE-4', 0
 
 CheckPciIde Proc near
     mov ax,cs
     mov es,ax
 ;
-    xor ax,ax
-    mov bh,1
-    mov bl,1
-    FindPciClass
+    xor bx,bx
+
+cpiLoop:
+    mov ah,1
+    mov al,1
+    FindPciClassHandle
     jc cpiDone
 ;
-    mov cl,10h
-    ReadPciDword
-    mov cl,al    
-    and ax,0FFFCh
-    mov bp,ax
-;    
-    cmp ax,1F0h
-    je cpiBar1Done
-;    
-    test cl,1
-    jz cpiBar1Done
-;
-    mov si,ax
-    GetPciIrqNr
+    xor al,al
+    GetPciBarIo
     jc cpiBar1Done
+;    
+    cmp dx,1F0h
+    je cpiBar1Done
 ;
     mov edi,OFFSET DevName1
-    PciPowerOn
+    LockPciHandle
 ;
     call CheckPciBar
 
 cpiBar1Done:
-    mov cl,18h
-    ReadPciDword
-    mov cl,al    
-    and ax,0FFFCh
-;    
-    cmp ax,170h
-    je cpiBar3Done
-;    
-    test cl,1
-    jz cpiBar3Done
-;
-    mov si,ax
-    GetPciIrqNr
+    mov al,2
+    GetPciBarIo
     jc cpiBar3Done
 ;    
-    mov edi,OFFSET DevName3
-    PciPowerOn
+    cmp dx,170h
+    je cpiBar3Done
+;    
+    mov edi,OFFSET DevName2
+    LockPciHandle
 ;
     call CheckPciBar
 
 cpiBar3Done:
-    mov dx,1
-
-cpiLoop:
-    mov ax,dx
-    mov bh,1
-    mov bl,1
-    FindPciClass
-    jc cpiDone
-;   
-    mov cl,10h
-    ReadPciDword
-    mov cl,al
-    and ax,0FFFCh
-    cmp ax,bp
-    je cpiDone
-;    
-    cmp fs:ide_pci_count,MAX_PCI_COUNT
-    je cpiDone
-;    
-    cmp ax,1F0h
-    je cpiNextBar1Done
-;       
-    test cl,1
-    jz cpiNextBar1Done
-;
-    mov si,ax
-    GetPciIrqNr
-    jc cpiNextBar1Done
-;    
-    mov edi,OFFSET DevName2
-    PciPowerOn
-;
-    call CheckPciBar    
-
-cpiNextBar1Done:
-    mov cl,18h
-    ReadPciDword
-    mov cl,al
-    and ax,0FFFCh
-;       
-    test cl,1
-    jz cpiNextBar3Done
-;    
-    cmp ax,170h
-    je cpiNextBar3Done
-;
-    mov si,ax
-    GetPciIrqNr
-    jc cpiNextBar3Done
-;    
-    mov edi,OFFSET DevName4
-    PciPowerOn
-;    
-    call CheckPciBar
-
-cpiNextBar3Done:    
-    inc dx
     jmp cpiLoop
     
 cpiDone:
@@ -1950,120 +1867,46 @@ CheckPciIde Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SataName1 DB 'SATA-1', 0
-SataName3 DB 'SATA-3', 0
 SataName2 DB 'SATA-2', 0
-SataName4 DB 'SATA-4', 0
 
 CheckPciSata Proc near
     mov ax,cs
     mov es,ax
 ;
-    xor ax,ax
-    mov bh,1
-    mov bl,6
-    FindPciClass
+    xor bx,bx
+
+cpaLoop:
+    mov ah,1
+    mov al,6
+    FindPciClassHandle
     jc cpaDone
 ;
-    mov cl,10h
-    ReadPciDword
-    mov cl,al    
-    and ax,0FFFCh
-    mov bp,ax
-;    
-    cmp ax,1F0h
-    je cpaBar1Done
-;    
-    test cl,1
-    jz cpaBar1Done
-;
-    mov si,ax
-    GetPciIrqNr
+    xor al,al
+    GetPciBarIo
     jc cpaBar1Done
+;    
+    cmp dx,1F0h
+    je cpaBar1Done
 ;
     mov edi,OFFSET SataName1
-    PciPowerOn
+    LockPciHandle
 ;
     call CheckPciBar
 
 cpaBar1Done:
-    mov cl,18h
-    ReadPciDword
-    mov cl,al    
-    and ax,0FFFCh
-;    
-    cmp ax,170h
-    je cpaBar3Done
-;    
-    test cl,1
-    jz cpaBar3Done
-;
-    mov si,ax
-    GetPciIrqNr
+    mov al,2
+    GetPciBarIo
     jc cpaBar3Done
 ;
-    mov edi,OFFSET SataName3
-    PciPowerOn
+    cmp dx,170h
+    je cpaBar3Done
+;
+    mov edi,OFFSET SataName2
+    LockPciHandle
 ;    
     call CheckPciBar
 
 cpaBar3Done:
-    mov dx,1
-
-cpaLoop:
-    mov ax,dx
-    mov bh,1
-    mov bl,6
-    FindPciClass
-    jc cpaDone
-;   
-    mov cl,10h
-    ReadPciDword
-    mov cl,al
-    and ax,0FFFCh
-    cmp ax,bp
-    je cpaDone
-;    
-    cmp fs:ide_pci_count,MAX_PCI_COUNT
-    je cpaDone
-;    
-    cmp ax,1F0h
-    je cpaNextBar1Done
-;       
-    test cl,1
-    jz cpaNextBar1Done
-;
-    mov si,ax
-    GetPciIrqNr
-    jc cpaNextBar1Done
-;
-    mov edi,OFFSET SataName2
-    PciPowerOn
-;    
-    call CheckPciBar    
-
-cpaNextBar1Done:
-    mov cl,18h
-    ReadPciDword
-    mov cl,al
-    and ax,0FFFCh
-;       
-    test cl,1
-    jz cpaNextBar3Done
-;    
-    cmp ax,170h
-    je cpaNextBar3Done
-;
-    mov si,ax
-    GetPciIrqNr
-    jc cpaNextBar3Done
-;
-    mov edi,OFFSET SataName4
-    PciPowerOn
-;    
-    call CheckPciBar
-
-cpaNextBar3Done:    
-    inc dx
     jmp cpaLoop
     
 cpaDone:

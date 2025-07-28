@@ -231,7 +231,7 @@ xhc_intr_offset         DD ?
 xhc_pci_handle          DW ?
 
 xhc_has_64              DB ?
-xhc_int_base            DB ?
+xhc_pad1                DB ?
 
 xhc_slot_count          DB ?
 xhc_port_count          DB ?
@@ -4321,64 +4321,15 @@ SetupIrq  Proc near
     push ebx
     push esi
     push edi
-;
-    GetPciHandleParam
-    mov bh,dl
-    mov bl,ah
-    mov ch,al
-;
-    GetPciMsi
-    jc siCheckMsiX
-;
-    push cx
-    mov cx,1
+;    
     mov al,14h
-    AllocateInts
-    pop cx
-    jc siIrq
-
-siMsiSetup:
-    mov ds:xhc_int_base,al
-    mov dx,1
-    SetupPciMsi
-    jmp siReg
-
-siCheckMsiX:
-    GetPciMsiX
-    jc siIrq
-;
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc siIrq
-;
-    EnablePciMsiX
-;
-    xor dl,dl
-    SetupPciMsiXEntry
-
-siReg:    
     mov di,ds:xhc_intr_sel
     mov ds,di
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
-    RequestMsiHandler
-    jmp siDone
-
-siIrq:
-    GetPciIrqNr
-    mov ah,14h
-    mov di,ds:xhc_intr_sel
-    mov ds,di
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET XhciInt
-    RequestIrqHandler
-
-siDone:    
+    SetupPciHandleIrq
+;
     pop edi
     pop esi
     pop ebx

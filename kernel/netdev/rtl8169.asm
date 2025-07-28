@@ -4951,7 +4951,8 @@ pci03   DW 10ECh, 8168h,    1
 pci04   DW 10ECh, 8169h,    0
 pci05   DW 1186h, 4300h,    0
 pci06   DW 1186h, 4302h,    0
-pci07   DW 0,     0
+pci07   DW 10ECh, 5209h,    0
+pci08   DW 0,     0
 
 DevName1 DB 'RTL8169-1', 0
 DevName2 DB 'RTL8169-2', 0
