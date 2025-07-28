@@ -658,11 +658,12 @@ sphiMsi:
 ;
     push ds
     push es
+    push ecx
     push edx
     push edi
     push ebp
 ;
-    mov edx,[esp+24]
+    mov edx,[esp+28]
 ;
     call AllocateMsg
 ;    
@@ -672,6 +673,7 @@ sphiMsi:
     pop ebp
     pop edi
     pop edx
+    pop ecx
     pop es
     pop ds
 ;

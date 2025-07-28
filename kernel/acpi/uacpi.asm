@@ -1052,9 +1052,14 @@ uacpi_free_int   Endp
 uacpi_get_msi_address_name DB 'uACPI Get MSI Address', 0
 
 uacpi_get_msi_address   PROC far
-    movzx eax,ax
+    push fs
+;
+    GetCoreNumber
+    mov eax,fs:cs_apic
     shl eax,12
     or eax,0FEE00000h
+;
+    pop fs
     ret
 uacpi_get_msi_address   Endp
 

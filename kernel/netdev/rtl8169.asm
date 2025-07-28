@@ -4137,17 +4137,15 @@ MemDispTable2:
 ;
 ;           DESCRIPTION:    Setup PCI or MSI IRQ
 ;
-;       PARAMETERS:         BH    Bus
-;                           BL    Device
-;                           CH    Function
+;       PARAMETERS:         BX    PCI handle
 ;                           DS    Ether sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupInts   Proc near
-    push ax
-    push bx
-    push cx
+    push eax
+    push ebx
+    push ecx
     push edx
     push edi
 ;    
@@ -4159,9 +4157,9 @@ SetupInts   Proc near
 ;
     pop edi
     pop edx
-    pop cx
-    pop bx
-    pop ax
+    pop ecx
+    pop ebx
+    pop eax
     ret
 SetupInts    Endp
 
