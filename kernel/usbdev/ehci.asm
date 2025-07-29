@@ -97,9 +97,7 @@ ehc_dev_arr         DW 127 DUP(?)
 ehc_reg_sel         DW ?
 ehc_thread          DW ?
 
-ehc_bus             DB ?
-ehc_device          DB ?
-ehc_function        DB ?
+ehc_pci_handle      DW ?
 
 ehc_op_offs         DB ?
 ehc_eecp            DB ?
@@ -4429,11 +4427,9 @@ sfCopyDone:
     xor al,al
     stosb
 ;
-    mov bh,ds:ehc_bus
-    mov bl,ds:ehc_device
-    mov ch,ds:ehc_function
     xor edi,edi
-    SetPciDeviceName
+    mov bx,ds:ehc_pci_handle
+    LockPciHandle
 ;   
     pop si         
     mov bx,ds
@@ -4516,12 +4512,6 @@ ec1E DD OFFSET ReadRaw,            SEG code
 ec1F DD OFFSET WriteRaw,           SEG code
 ec20 DD OFFSET FinishRaw,          SEG code
 
-;
-;           PARAMETERS:         BH          Bus
-;                           BL          Device
-;                           CH          Function
-;               AL      Capability
-
 InitFunction    Proc near
     push ds
     push es
@@ -4556,9 +4546,7 @@ ifTabLoop:
     rep stosw
     pop es
 ;
-    mov bh,ds:ehc_bus
-    mov bl,ds:ehc_device
-    mov ch,ds:ehc_function
+    mov bx,ds:ehc_pci_handle
 ;    
     mov al,ds:ehc_eecp
     or al,al
@@ -4567,12 +4555,12 @@ ifTabLoop:
 
 ifCheckCap:    
     mov al,1
-    FindPciCapability
+    GetPciHandleCap
     jc ifLegacyOff
 
 ifLegacyFound:
     mov cl,al
-    ReadPciDword
+    ReadPciConfigDword
 ;
     cmp al,1
     jne ifCheckCap    
@@ -4584,10 +4572,10 @@ ifLegacyFound:
 ;
     inc cl
     mov al,1
-    WritePciByte
+    WritePciConfigByte
 ;
     dec cl    
-    ReadPciByte
+    ReadPciConfigByte
     or al,al
     jz ifLegacyDone
 ;
@@ -4595,9 +4583,9 @@ ifLegacyFound:
     WaitMilliSec
 ;    
     add cl,2
-    ReadPciDword
+    ReadPciConfigDword
     xor eax,eax
-    WritePciDword
+    WritePciConfigDword
 ;    
     mov fs,ds:ehc_reg_sel
     mov fs:HcConfig,0
@@ -4605,39 +4593,17 @@ ifLegacyFound:
     
 ifLegacyDone:
     add cl,2
-    ReadPciDword
+    ReadPciConfigDword
     xor eax,eax
-    WritePciDword
+    WritePciConfigDword
         
 ifLegacyOff:
-    GetPciMsi
-    jc ifIrq
-;
-    push cx
-    mov cx,1
     mov al,14h
-    AllocateInts
-    pop cx
-    jc ifIrq    
-;
-    SetupPciMsi
-;    
     mov di,cs
     mov es,di
     mov edi,OFFSET EhciInt
-    RequestMsiHandler
-    jmp ifIntDone
-
-ifIrq:
-    GetPciIrqNr
-    jc ifIrqFail
-;    
-    mov ah,14h
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET EhciInt
-    RequestIrqHandler
-    jmp ifIntDone
+    SetupPciHandleIrq
+    jnc ifIntDone
 
 ifIrqFail:
     mov ax,SEG data
@@ -4722,9 +4688,8 @@ InitFunction    Endp
 ;
 ;           DESCRIPTION:    Add EHCI function
 ;
-;       PARAMETERS:     BX      Bus/device
-;               CH      Function
-;               EAX     Register base
+;       PARAMETERS:         BX      PCI handle
+;                           EAX     Register base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4773,9 +4738,7 @@ AddFunction  Proc near
     pop cx
     pop bx
 ;
-    mov ds:ehc_bus,bh
-    mov ds:ehc_device,bl
-    mov ds:ehc_function,ch    
+    mov ds:ehc_pci_handle,bx
 ;
     mov ds:ehc_reg_sel,bp
     mov ds:ehc_async_head_va,0
@@ -4858,40 +4821,6 @@ AddFunction Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupPci
-;
-;           DESCRIPTION:    Setup PCI
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupPci  Proc near
-    push es
-    push eax
-    push edi
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET ehci_name
-    PciPowerOn
-;
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr
-    WritePciWord
-;
-    pop edi
-    pop eax
-    pop es
-    ret
-SetupPci  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -4903,44 +4832,28 @@ SetupPci  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitPciAdapter  Proc near
-    xor ax,ax
-    mov bh,0Ch
-    mov bl,3
-    mov ch,20h
-    FindPciClassInterface
-    jc init_pci_done
-;
-    call SetupPci
-;
-    mov cl,10h
-    ReadPciDword
-    and ax,0FF00h
-    mov ebp,eax
-    call AddFunction
-;       
-    mov dx,1
+    mov ax,cs
+    mov es,ax
+    xor bx,bx
 
-init_pci_next_device:
-    mov ax,dx
-    mov bh,0Ch
-    mov bl,3
-    mov ch,20h
-    FindPciClassInterface
-    jc init_pci_done
-;       
-    call SetupPci
+ipLoop:
+    mov ah,0Ch
+    mov al,3
+    mov dl,20h
+    FindPciProtocolHandle
+    jc ipDone
 ;
-    mov cl,10h
-    ReadPciDword
-    and ax,0F000h
-    cmp eax,ebp
-    je init_pci_done
-;       
+    xor al,al
+    GetPciBarPhys
+    jc ipLoop
+;
+    mov edi,OFFSET ehci_name
+    LockPciHandle
+;
     call AddFunction
-    inc dx
-    jmp init_pci_next_device
+    jmp ipLoop
     
-init_pci_done:
+ipDone:
     ret
 InitPciAdapter  Endp
 
