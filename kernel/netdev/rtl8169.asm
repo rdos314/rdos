@@ -4699,7 +4699,10 @@ mstRecOk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateMemSel    Proc near
-    pushad
+    push eax
+    push ecx
+    push edx
+    push esi
 ;
     and ax,0FFE0h
     push eax
@@ -4718,7 +4721,10 @@ CreateMemSel    Proc near
     mov ecx,SIZE mem_struc
     CreateDataSelector16
 ;
-    popad
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
     ret
 CreateMemSel    Endp
 
@@ -4847,6 +4853,7 @@ InitMemAdapter   Proc near
     push es
     pushad
 ;
+    push ebx
     mov ebx,edx
     call CreateMemSel
     mov fs,bx
@@ -4854,6 +4861,7 @@ InitMemAdapter   Proc near
     mov ds:MemSel,bx
     mov ds:Gphy,OCP_STD_PHY_BASE
     mov ds:IoCfg,cx
+    pop ebx
 ;    
     call SetupInts
     call MemInitHardware
@@ -4951,8 +4959,7 @@ pci03   DW 10ECh, 8168h,    1
 pci04   DW 10ECh, 8169h,    0
 pci05   DW 1186h, 4300h,    0
 pci06   DW 1186h, 4302h,    0
-pci07   DW 10ECh, 5209h,    0
-pci08   DW 0,     0
+pci07   DW 0,     0
 
 DevName1 DB 'RTL8169-1', 0
 DevName2 DB 'RTL8169-2', 0
