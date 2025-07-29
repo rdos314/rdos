@@ -131,10 +131,7 @@ ohc_thread          DW ?
 
 ohc_root_ports      DW ?
 
-ohc_usb_bus         DB ?
-ohc_usb_dev         DB ?
-ohc_usb_func        DB ?
-ohc_irq             DB ?
+ohc_pci_handle      DW ?
 
 ohc_fm_reg          DD ?
 
@@ -4100,11 +4097,9 @@ sfCopyDone:
     xor al,al
     stosb
 ;
-    mov bh,ds:ohc_usb_bus
-    mov bl,ds:ohc_usb_dev
-    mov ch,ds:ohc_usb_func
     xor edi,edi
-    SetPciDeviceName
+    mov bx,ds:ohc_pci_handle
+    LockPciHandle
 ;   
     pop si         
     mov bx,ds
@@ -4193,40 +4188,14 @@ InitFunction    Proc near
     push fs
     pushad
 ;
-    mov bh,ds:ohc_usb_bus
-    mov bl,ds:ohc_usb_dev
-    mov ch,ds:ohc_usb_func
-    GetPciMsi
-    jc ifIrq
-;
-    push cx
-    mov cx,1
+    mov bx,ds:ohc_pci_handle
     mov al,14h
-    AllocateInts
-    pop cx
-    jc ifIrq    
-;
-    SetupPciMsi
-;    
     mov di,cs
     mov es,di
     mov edi,OFFSET OhciInt
-    RequestMsiHandler
-    jmp ifIntDone
-
-ifIrq:
-    mov ds:ohc_irq,0
-    GetPciIrqNr
+    SetupPciHandleIrq
     jc ifIrqFail
-;    
-    mov ds:ohc_irq,al
-    mov ah,14h
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET OhciInt
-    RequestIrqHandler
-
-ifIntDone:
+;
     mov es,ds:ohc_reg_sel
     mov eax,80000002h
     mov es:HcInterruptEnable,eax    
@@ -4341,9 +4310,8 @@ InitFunction    Endp
 ;
 ;           DESCRIPTION:    Add OHCI function
 ;
-;       PARAMETERS:     BX      Bus/device
-;               CH      Function
-;               EAX     Register base
+;       PARAMETERS:         BX      PCI handle
+;                           EAX     Register base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4399,9 +4367,7 @@ AddFunction  Proc near
     pop cx
     pop bx
 ;    
-    mov ds:ohc_usb_bus,bh
-    mov ds:ohc_usb_dev,bl
-    mov ds:ohc_usb_func,ch
+    mov ds:ohc_pci_handle,bx
 ;
     GetPageEntry
     or ebx,ebx
@@ -4441,40 +4407,6 @@ AddFunction Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupPci
-;
-;           DESCRIPTION:    Setup PCI
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupPci  Proc near
-    push es
-    push eax
-    push edi
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET ohci_name
-    PciPowerOn
-;
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr
-    WritePciWord
-;
-    pop edi
-    pop eax
-    pop es
-    ret
-SetupPci  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -4486,44 +4418,28 @@ SetupPci  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitPciAdapter  Proc near
-    xor ax,ax
-    mov bh,0Ch
-    mov bl,3
-    mov ch,10h
-    FindPciClassInterface
-    jc init_pci_done
-;
-    call SetupPci
-;
-    mov cl,10h
-    ReadPciDword
-    and ax,0F000h
-    mov ebp,eax
-    call AddFunction
-;       
-    mov dx,1
+    mov ax,cs
+    mov es,ax
+    xor bx,bx
 
-init_pci_next_device:
-    mov ax,dx
-    mov bh,0Ch
-    mov bl,3
-    mov ch,10h
-    FindPciClassInterface
-    jc init_pci_done
-;       
-    call SetupPci
+ipLoop:
+    mov ah,0Ch
+    mov al,3
+    mov dl,10h
+    FindPciProtocolHandle
+    jc ipDone
 ;
-    mov cl,10h
-    ReadPciDword
-    and ax,0F000h
-    cmp eax,ebp
-    je init_pci_done
-;       
+    xor al,al
+    GetPciBarPhys
+    jc ipLoop
+;
+    mov edi,OFFSET ohci_name
+    LockPciHandle
+;
     call AddFunction
-    inc dx
-    jmp init_pci_next_device
+    jmp ipLoop
     
-init_pci_done:
+ipDone:
     ret
 InitPciAdapter  Endp
 
