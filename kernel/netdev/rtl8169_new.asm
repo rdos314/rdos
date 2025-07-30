@@ -4846,7 +4846,6 @@ mniLoop:
     or ax,ax
     jz mniDone
 ;
-    NotifyIrqActivity
     mov si,1
     mov fs:mem_isr,ax
     and ax,di
@@ -4897,7 +4896,6 @@ ioniLoop:
     or ax,ax
     jz ioniDone
 ;
-    NotifyIrqActivity
     mov si,1
     out dx,ax
     and ax,di

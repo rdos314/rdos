@@ -130,9 +130,9 @@ cs_tr_linear            DD ?
 ; these four bytes must be in this order!!
 
 cs_curr_irq_nr          DB ?
-cs_curr_irq_count       DB ?
 cs_curr_irq_retries     DB ?
 cs_curr_irq_spare       DB ?
+cs_curr_pad1            DB ?
 
 cs_nested_irq_count     DW ?
 cs_nested_irq_stack     DD MAX_IRQ_NESTING DUP(?)
@@ -157,9 +157,3 @@ cs_timer_free           DW ?
 cs_timer_entries        DB CORE_TIMER_COUNT * SIZE timer_struc DUP(?)
 
 core_seg   ENDS
-
-; FS        Core selector
-NotifyIrqActivity   Macro
-    inc fs:cs_curr_irq_count
-    Endm
-    

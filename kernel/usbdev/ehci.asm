@@ -319,7 +319,6 @@ eiNotError:
     jmp eiLoop
 
 eiSignal:        
-    NotifyIrqActivity    
     mov bx,ds:ehc_thread
     Signal
     jmp eiLoop

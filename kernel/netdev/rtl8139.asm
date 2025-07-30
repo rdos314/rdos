@@ -492,7 +492,6 @@ niNotUnderrun:
     test bx,RxOK OR RxErr OR RxUnderrun OR RxOverflow OR RxFIFOOver
     jz niNotRx
 ;
-    NotifyIrqActivity
     mov bx,ds:Handle
     or bx,bx
     jz niNotRx
@@ -504,7 +503,6 @@ niNotRx:
     test bx,TxOK OR TxErr
     jz niNotTx
 ;
-    NotifyIrqActivity
     mov bx,ds:TxThread
     or bx,bx
     jz niNotTx

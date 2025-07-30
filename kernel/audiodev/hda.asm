@@ -328,8 +328,6 @@ hdiLoop:
     int 3
 
 hdiNotError:
-    NotifyIrqActivity
-;
     test eax,40000000h
     jz hdiStream
 ;

@@ -885,7 +885,6 @@ keyb_int_loop:
     jmp keyb_int_done
 
 keyb_int_get_cmd:
-    NotifyIrqActivity
     test al,20h
     jz keyb_int_keyboard
 
@@ -895,7 +894,6 @@ keyb_int_mouse:
     jmp keyb_int_loop
 
 keyb_int_keyboard:
-    NotifyIrqActivity
     in al,60h
     ReleaseSpinlock ds:hw_spinlock
 ;

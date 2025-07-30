@@ -1077,7 +1077,6 @@ niLoop:
     test al,ACK_FRAME_RX
     jz niNotRx
 ;
-    NotifyIrqActivity
     mov bx,ds:Handle
     or bx,bx
     jz niNotRx
@@ -1091,7 +1090,6 @@ niNotRx:
     or al,al
     jz niDone
 ;    
-    NotifyIrqActivity
     mov bx,ds:WaitThread
     or bx,bx
     jz niLoop

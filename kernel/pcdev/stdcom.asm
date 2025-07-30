@@ -526,7 +526,6 @@ io_com_int_loop:
     int 3
 
 io_com_no_error:
-    NotifyIrqActivity
     mov bl,al
     xor bh,bh
     and bx,6
@@ -540,7 +539,6 @@ io_com_int_inactive:
     test al,1
     jnz io_com_int_done
 ;   
-    NotifyIrqActivity
     mov dx,ds:iopds_base
     add dx,6
     in al,dx
@@ -973,7 +971,6 @@ msBusyLoop:
     int 3
 
 msNotError:
-    NotifyIrqActivity
     jmp msRetry
 
 msDone:

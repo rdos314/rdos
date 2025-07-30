@@ -166,7 +166,6 @@ siNoError:
     or al,al
     jz sdiDone
 ;
-    NotifyIrqActivity
 ;    and word ptr es:REG_INT_STATUS_ENABLE, NOT 100h    
 ;    mov es:REG_INT_STATUS,al
 ;    or word ptr es:REG_INT_STATUS_ENABLE, 100h

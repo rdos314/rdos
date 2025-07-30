@@ -259,7 +259,6 @@ OhciInt Proc far
     jz oiQueueDone
 ;
     inc cx
-    NotifyIrqActivity
     mov bx,ds:ohc_thread
     Signal
 

@@ -149,7 +149,6 @@ IrqExit1:
     or ah,ah
     jz IrqExitCountOk1
 ;
-    mov fs:cs_curr_irq_count,0
     mov al,fs:cs_curr_irq_retries
     inc al
     mov fs:cs_curr_irq_retries,al
@@ -284,7 +283,6 @@ IrqExit2:
     or ah,ah
     jz IrqExitCountOk2
 ;
-    mov fs:cs_curr_irq_count,0
     mov al,fs:cs_curr_irq_retries
     inc al
     mov fs:cs_curr_irq_retries,al

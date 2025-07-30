@@ -129,8 +129,6 @@ aiLoop:
     int 3
 
 aiNotError:
-    NotifyIrqActivity
-;
     test ax,4
     jz aiNot0
 ;    

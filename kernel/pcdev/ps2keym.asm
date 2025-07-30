@@ -1133,7 +1133,6 @@ keyb_int_loop:
     jmp keyb_int_done
 
 keyb_int_get_cmd:
-    NotifyIrqActivity
     test al,20h
     jz keyb_int_keyboard
 

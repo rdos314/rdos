@@ -463,7 +463,6 @@ aiRetry:
     and eax,gs:hba_pi
     jz aiDone
 ;
-    NotifyIrqActivity
     mov si,OFFSET ad_port_arr
     mov edx,1
 

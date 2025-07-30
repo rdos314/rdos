@@ -337,7 +337,6 @@ ciReadLoop:
     or ax,ax
     jz ciWriteLoop    
 ;
-    NotifyIrqActivity
     mov cx,16
     mov bx,1
     mov dx,1
@@ -373,14 +372,12 @@ ciStatus:
     test ax,20h
     jnz ciSignal    
 ;
-    NotifyIrqActivity
     jmp ciWriteLoop
     
 ciReg:
     or eax,eax
     jz ciDone
 ;    
-    NotifyIrqActivity
     mov ebx,eax
     cmp ebx,10h
     jbe ciReadLoop

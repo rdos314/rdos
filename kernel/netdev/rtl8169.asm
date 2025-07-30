@@ -3096,7 +3096,6 @@ mniLoop:
     int 3
 
 mniNoError:
-    NotifyIrqActivity
     mov si,1
     mov fs:mem_isr,ax
     and ax,di
@@ -3162,7 +3161,6 @@ ioniLoop:
     int 3
 
 ioniNotError:
-    NotifyIrqActivity
     mov si,1
     out dx,ax
     and ax,di

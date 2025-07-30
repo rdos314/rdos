@@ -156,7 +156,6 @@ niLoop:
     jz niDone
 ;
     lock or ds:PendInt,eax
-    NotifyIrqActivity
 ;
     test eax,ICR_RXDW
     jz niNotRx

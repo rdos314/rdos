@@ -311,7 +311,6 @@ IsaIrqExit:
     or ah,ah
     jz IsaIrqExitCountOk
 ;
-    mov fs:cs_curr_irq_count,0
     mov al,fs:cs_curr_irq_retries
     inc al
     mov fs:cs_curr_irq_retries,al

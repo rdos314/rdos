@@ -3245,7 +3245,6 @@ icTimerListCreate:
     mov es:cs_log_entry,0
 ;
     mov es:cs_curr_irq_nr,0
-    mov es:cs_curr_irq_count,0
     mov es:cs_curr_irq_retries,0
     mov es:cs_nested_irq_count,0    
     mov es:cs_irq_count,0
