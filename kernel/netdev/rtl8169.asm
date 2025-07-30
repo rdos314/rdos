@@ -4984,6 +4984,7 @@ init_pci_loop:
     FindPciDeviceHandle
     jnc init_pci_found
 ;
+    xor bx,bx
     add si,6
     jmp init_pci_loop
 
