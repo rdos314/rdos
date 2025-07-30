@@ -4075,6 +4075,14 @@ SetupPciHandleIrq    MACRO
 ; IN  BX        Handle
 ; IN  CX        Requested vectors
 ; OUT CX        Allocated vectors
+ReqPciHandleMsi    MACRO
+    OsGate req_pci_handle_msi_nr
+                    ENDM
+
+; IN  BX        Handle
+; IN  DX        Entry
+; IN  DS        Data passed to handler
+; IN  ES:EDI    Handler address
 SetupPciHandleMsi    MACRO
     OsGate setup_pci_handle_msi_nr
                     ENDM

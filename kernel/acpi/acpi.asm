@@ -697,21 +697,21 @@ setup_pci_handle_irq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupPciHandleMsi
+;           NAME:           ReqPciHandleMsi
 ;
-;           DESCRIPTION:    Setup for MSI
+;           DESCRIPTION:    Req MSI vectors
 ;
 ;           PARAMETERS:     AH      Priority
 ;                           BX      Handle
 ;                           CX      Requested vectors
 ;
-;           RETURNS:        CX      Allocated vectors
+;           RETURNS:        CX      Setup vectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-setup_pci_handle_msi_name      DB 'Setup PCI Handle MSI',0
+req_pci_handle_msi_name      DB 'Req PCI Handle MSI',0
 
-setup_pci_handle_msi   Proc far
+req_pci_handle_msi   Proc far
     push ds
     push es
     push edx
@@ -730,6 +730,54 @@ setup_pci_handle_msi   Proc far
     pop edx
     pop es
     pop ds
+    ret
+req_pci_handle_msi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupPciHandleMsi
+;
+;           DESCRIPTION:    Setup MSI IRQ
+;
+;           PARAMETERS:     BX      Handle
+;                           DX      Entry
+;                           DS      Data passed to handler
+;                           ES:EDI  Handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_pci_handle_msi_name      DB 'Setup PCI Handle MSI',0
+
+setup_pci_handle_msi   Proc far
+    push eax
+;
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    mov ax,dx
+    call AllocateMsg
+;    
+    mov eax,GET_PCI_IRQ_CMD
+    call RunMsg
+;
+    pop ebp
+    pop edi
+    pop es
+    pop ds
+    jc sphmDone
+;
+    or al,al
+    stc
+    jz sphmDone
+;
+    RequestMsiHandler
+    clc
+
+sphmDone:    
+    pop eax
     ret
 setup_pci_handle_msi   Endp
 
@@ -3879,6 +3927,12 @@ init    Proc far
     mov edi,OFFSET setup_pci_handle_irq_name
     xor cl,cl
     mov ax,setup_pci_handle_irq_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET req_pci_handle_msi
+    mov edi,OFFSET req_pci_handle_msi_name
+    xor cl,cl
+    mov ax,req_pci_handle_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET setup_pci_handle_msi

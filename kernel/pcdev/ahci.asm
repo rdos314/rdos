@@ -321,10 +321,8 @@ ahci_device_struc   STRUC
 ad_hba_sel          DW ?
 ad_port_arr         DW 32 DUP(?)
 
+ad_pci_handle       DW ?
 ad_msi              DB ?
-ad_pci_bus          DB ?
-ad_pci_device       DB ?
-ad_pci_function     DB ?
 
 ahci_device_struc   ENDS
 
@@ -908,10 +906,7 @@ AddPort     Endp
 ;
 ;       PARAMETERS:     FS      HBA selector
 ;                       EDX     HBA linear
-;                       BH      PCI Bus
-;                       BL      PCI Device
-;                       CH      PCI Function
-
+;                       BX      PCI handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -925,9 +920,7 @@ AddDevice   Proc near
     AllocateSmallGlobalMem
     pop ax
     mov es:ad_hba_sel,fs
-    mov es:ad_pci_bus,bh
-    mov es:ad_pci_device,bl
-    mov es:ad_pci_function,ch
+    mov es:ad_pci_handle,bx
 ;
     mov cx,32
     mov eax,fs:hba_pi
@@ -990,20 +983,19 @@ ipaNameLoop:
     xor al,al
     stosb
 ;    
-    xor si,si
+    xor bx,bx
 
 ipaLoop: 
-    mov ax,si
-    mov bh,1
-    mov bl,6
-    FindPciClass
+    mov ah,1
+    mov al,6
+    FindPciClassHandle
     jc ipaDone
 ;
-    push cx
-    mov eax,2000h
-    AllocateBigLinear
-    pop cx
+    mov al,5
+    GetPciBarPhys
+    jc ipaLoop
 ;    
+    push eax
     mov ax,ds:ahci_dev_count
     add al,'0'
     mov di,ds:pci_name_ptr
@@ -1011,43 +1003,39 @@ ipaLoop:
     mov ax,ds
     mov es,ax
     mov edi,OFFSET pci_name_str
-    PciPowerOn
-;
-    mov cl,PCI_nbr_base_address5
-    ReadPciDword
+    LockPciHandle
+    pop eax
 ;
     push ebx
-    xor ebx,ebx
+    mov ebx,edx
+;
+    push eax
+    mov eax,2000h
+    AllocateBigLinear
+    pop eax
+;
     or al,13h
     SetPageEntry
-    pop ebx
 ;
-    push ebx
-    xor ebx,ebx
     add eax,1000h
     add edx,1000h
     SetPageEntry
     sub edx,1000h
-    pop ebx
 ;        
-    push bx
     AllocateGdt
-    push cx
     mov ecx,100h
     CreateDataSelector16
-    pop cx
     mov fs,bx
-    pop bx
     test fs:hba_ghc,HBA_GHC_AE
     jnz ipaAdd
 ;   
     mov fs:hba_ghc,HBA_GHC_AE
     
 ipaAdd:
+    pop ebx
     call AddDevice
 
 ipaNext:
-    inc si
     jmp ipaLoop
     
 ipaDone:
@@ -1208,126 +1196,58 @@ StartDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupInts Proc near
+    mov bx,ds:ad_pci_handle
+    GetPciHandleMsiX
+    jc siCheckMsi
+;
+    cmp al,1
+    ja siMulti
+
+siCheckMsi:
+    GetPciHandleMsi
+    jc siSingle
+;
+    cmp al,1
+    ja siMulti
+
+siSingle:
     mov ds:ad_msi,0
-    mov bh,ds:ad_pci_bus
-    mov bl,ds:ad_pci_device
-    mov ch,ds:ad_pci_function
-    GetPciMsi
-    jc siIrq
-;
-    cmp dl,1
-    je siAllocOne
-;
-    GetPciMsix
-    jc siMsiMany
-;
-    int 3
-    EnablePciMsiX
-;
-    mov ds:ad_msi,1
-;
-    movzx cx,dl
-    mov si,OFFSET ad_port_arr
-
-siMsiXLoop:
-    mov di,ds:[si]
-    or di,di
-    jz siMsiXNext
-
-siMsiXSetup:
-    push cx
-    mov cx,1
     mov al,14h
-    AllocateInts
-    pop cx
-    jc siMsiXNext
-;
-    push ds
-    push es
-    mov ds,dx
     mov di,cs
     mov es,di
-    mov edi,OFFSET AhciPortInt
-    RequestMsiHandler
-    pop es
-    pop ds
+    mov edi,OFFSET AhciInt
+    SetupPciHandleIrq
+    jmp siDone
+
+siMulti:
+    mov ah,14h
+    movzx cx,al
+    ReqPciHandleMsi    
+    jc siSingle
 ;
-    SetupPciMsiXEntry
-
-siMsiXNext:
-    inc dl
-    add si,2
-    loop siMsiXLoop
-;
-    jmp siOk
-
-siMsiMany:
-    GetPciMsi
-;
-    push cx
-    movzx cx,dl
-    mov al,14h
-    AllocateInts
-    pop cx
-    jnc siMsiHandlers
-
-siAllocOne:
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc siIrq    
-
-siMsiHandlers:
     mov ds:ad_msi,1
-    SetupPciMsi
-;
-    movzx cx,dl
-    cmp cx,1
-    je siMsiSingle
-
-siMsiMulti:
-    mov si,OFFSET ad_port_arr
+    xor edx,edx
 
 siMultiLoop:
-    mov dx,ds:[si]
-    or dx,dx
+    mov si,ds:[2 * edx].ad_port_arr
+    or si,si
     jz siMultiNext
 
 siMultiSetup:
     push ds
-    mov ds,dx
+    mov ds,si
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciPortInt
-    RequestMsiHandler
+    SetupPciHandleMsi
     pop ds
-    jmp siMultiNext
 
 siMultiNext:
     inc al
-    add si,2
+    inc dx
     loop siMultiLoop
-;
-    jmp siOk
-    
-siMsiSingle:
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET AhciInt
-    RequestMsiHandler
-    jmp siOk
 
-siIrq:
-    GetPciIrqNr
-    mov ah,14h
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET AhciInt
-    RequestIrqHandler
-
-siOk:    
+siDone:
     ret
 SetupInts Endp
 
