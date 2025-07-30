@@ -94,9 +94,7 @@ uhc_section      section_typ <>
 
 uhc_io_base      DW ?
 
-uhc_pci_bus_dev  DW ?
-uhc_pci_func     DB ?
-uhc_irq          DB ?
+uhc_pci_handle   DW ?
 uhc_has_int      DB ?
 uhc_has_timer    DB ?
 
@@ -3390,11 +3388,10 @@ UpdatePort   Endp
 BiosHandoff    Proc near
     pushad
 ;
-    mov bx,ds:uhc_pci_bus_dev
-    mov ch,ds:uhc_pci_func
+    mov bx,ds:uhc_pci_handle
     mov cl,0C0h
     mov ax,8F00h
-    WritePciWord    
+    WritePciConfigWord    
 ;
     popad
     ret
@@ -3966,10 +3963,9 @@ sfCopyDone:
     xor al,al
     stosb
 ;
-    mov bx,ds:uhc_pci_bus_dev
-    mov ch,ds:uhc_pci_func
+    mov bx,ds:uhc_pci_handle
     xor edi,edi
-    SetPciDeviceName
+    LockPciHandle
 ;   
     pop si         
     mov bx,ds
@@ -4058,52 +4054,16 @@ InitFunction    Proc near
     push fs
     pushad
 ;
-    mov bx,ds:uhc_pci_bus_dev
-    mov ch,ds:uhc_pci_func
-    cmp ch,2
-    jne ifNotLegacy
-;
-    mov cl,0C0h
-    xor ax,ax
-    WritePciWord   
-    
-ifNotLegacy:    
     mov ds:uhc_has_int,0
     mov ds:uhc_has_timer,0
 ;
-    mov bx,ds:uhc_pci_bus_dev
-    mov ch,ds:uhc_pci_func
-    GetPciMsi
-    jc ifIrq
-;
-    push cx
-    mov cx,1
+    mov bx,ds:uhc_pci_handle
     mov al,14h
-    AllocateInts
-    pop cx
-    jc ifIrq    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET UhciInt
+    SetupPciHandleIrq
 ;
-    SetupPciMsi
-;    
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET UhciInt
-    RequestMsiHandler
-    jmp ifIntDone
-
-ifIrq:
-    mov ds:uhc_irq,0
-    GetPciIrqNr
-    jc ifIntDone
-;    
-    mov ds:uhc_irq,al
-    mov ah,14h
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET UhciInt
-    RequestIrqHandler
-
-ifIntDone:
     mov si,OFFSET uhci_tab
     xor di,di
     mov cx,2*21h
@@ -4206,9 +4166,8 @@ InitFunction    Endp
 ;
 ;           DESCRIPTION:    Add UHCI function
 ;
-;       PARAMETERS:     BX      Bus/device
-;               CH      Function
-;               DX      IO base
+;       PARAMETERS:         BX      PCI handle
+;                           DX      IO base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4229,8 +4188,7 @@ AddFunction  Proc near
     mov ax,es
     mov ds,ax
     mov ds:uhc_io_base,dx
-    mov ds:uhc_pci_bus_dev,bx
-    mov ds:uhc_pci_func,ch
+    mov ds:uhc_pci_handle,bx
 ;    
     mov eax,1000h
     AllocateBigLinear
@@ -4297,41 +4255,6 @@ PollFunction  Proc near
     ret
 PollFunction    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupPci
-;
-;           DESCRIPTION:    Setup PCI
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupPci  Proc near
-    push es
-    push eax
-    push edi
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET uhci_name
-    PciPowerOn
-;
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr
-    WritePciWord
-;
-    pop edi
-    pop eax
-    pop es
-    ret
-SetupPci  Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4346,48 +4269,28 @@ SetupPci  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitPciAdapter  Proc near
-    xor ax,ax
-    mov bh,0Ch
-    mov bl,3
-    mov ch,0
-    FindPciClassInterface
-    jc init_pci_done
-;
-    call SetupPci
-;
-    mov cl,20h
-    ReadPciDword
-    mov dx,ax
-    and dx,0FFE0h
-    mov bp,ax
-    call AddFunction
-;       
-    mov dx,1
+    mov ax,cs
+    mov es,ax
+    xor bx,bx
 
-init_pci_next_device:
-    mov ax,dx
-    mov bh,0Ch
-    mov bl,3
-    mov ch,0
-    FindPciClassInterface
-    jc init_pci_done
-;       
-    call SetupPci
+ipLoop:
+    mov ah,0Ch
+    mov al,3
+    mov dl,0
+    FindPciProtocolHandle
+    jc ipDone
 ;
-    mov cl,20h
-    ReadPciDword
-    cmp ax,bp
-    je init_pci_done
-;       
-    push dx
-    mov dx,ax
-    and dx,0FFE0h
+    mov al,4
+    GetPciBarIo
+    jc ipLoop
+;
+    mov edi,OFFSET uhci_name
+    LockPciHandle
+;
     call AddFunction
-    pop dx
-    inc dx
-    jmp init_pci_next_device
+    jmp ipLoop
     
-init_pci_done:
+ipDone:
     ret
 InitPciAdapter  Endp
 
