@@ -784,37 +784,35 @@ init_dev    Proc far
     mov ds:IoBase,0
 ;    
     mov si,OFFSET PciVendorTab
-    xor ax,ax
-init_pci_loop:
+    xor bx,bx
+
+ipLoop:
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
-    jz init_pci_done
+    jz ipDone
 ;
-    FindPciDevice
-    jnc init_pci_found
+    FindPciDeviceHandle
+    jnc ipFound
 ;
     add si,4
-    jmp init_pci_loop
+    jmp ipLoop
 
-init_pci_found:
-    mov edi,OFFSET DevName
-    PciPowerOn
+ipFound:
+    xor al,al
+    GetPciBarIo
+    jc ipLoop
 ;
-    mov cl,PCI_card_ExCa_base
-    ReadPciDword
-    mov dx,ax
-    and dx,0FFE0h
+    mov edi,OFFSET DevName
+    LockPciHandle
     mov ds:IoBase,dx
 ;
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-    mov ah,1Ah
-    mov bx,cs
-    mov es,bx
+    mov al,1Ah
+    mov di,cs
+    mov es,di
     mov edi,OFFSET AudioInt
-    RequestIrqHandler
+    SetupPciHandleIrq
 ;
     mov dx,ds:IoBase
     mov cx,8
@@ -843,24 +841,12 @@ init_ch_loop:
     add ax,8
     loop init_ch_loop
 ;
-;    mov dx,ds:IoBase
-;    add dx,ACC_CODEC_CONTROL
-;    mov eax,20000h
-;    out dx,eax
-;    
-;    mov dx,ds:IoBase
-;    add dx,ACC_CODEC_STATUS
-;    in eax,dx
-;
-;    mov bx,0
-;    WriteCodec
-;
     mov ax,SEG data
     mov ds,ax
     mov bx,OFFSET Ac0
     call CreatePrdTable
 
-init_pci_done:
+ipDone:
 ;
     popa
     pop es
