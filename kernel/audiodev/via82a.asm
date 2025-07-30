@@ -697,41 +697,41 @@ init_dev    Proc far
     mov ds,ax
     mov ds:IoBase,0
     mov si,OFFSET PciVendorTab
-    xor ax,ax
-init_pci_loop:
+    xor bx,bx
+
+ipLoop:
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
-    jz init_pci_done
+    jz ipDone
 ;
-    FindPciDevice
-    jnc init_pci_found
+    FindPciDeviceHandle
+    jnc ipFound
 ;
     add si,4
-    jmp init_pci_loop
+    jmp ipLoop
 
-init_pci_found:
-    mov edi,OFFSET DevName
-    PciPowerOn
+ipFound:
+    xor al,al
+    GetPciBarIo
+    jc ipLoop
 ;
-    mov cl,PCI_card_ExCa_base
-    ReadPciDword
-    mov dx,ax
-    and dx,0FFE0h
+    mov edi,OFFSET DevName
+    LockPciHandle
     mov ds:IoBase,dx
 ;
     mov cl,41h
-    ReadPciByte
+    ReadPciConfigByte
+;
     mov al,0CCh
-    WritePciByte
-;    
-    GetPciIrqNr
-    mov ah,1Ah
-    mov bx,cs
-    mov es,bx
+    WritePciConfigByte
+; 
+    mov al,1Ah
+    mov di,cs
+    mov es,di
     mov edi,OFFSET AudioInt
-    RequestIrqHandler
+    SetupPciHandleIrq
 ;
     mov dx,ds:IoBase
     mov cx,3
@@ -762,7 +762,7 @@ init_ch_loop:
     add ax,10h
     loop init_ch_loop
 
-init_pci_done:
+ipDone:
     popa
     pop es
     pop ds
