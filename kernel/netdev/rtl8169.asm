@@ -3066,11 +3066,13 @@ MemResetHardware    Endp
 ;
 ;       PARAMETERS:     
 ;
-;           RETURNS:        
+;       RETURNS:            CY           Activity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt  Proc far
+    xor ecx,ecx
+;
     mov ax,ds:MemSel
     or ax,ax
     jz IoInt
@@ -3088,6 +3090,12 @@ mniLoop:
     or ax,ax
     jz mniDone
 ;
+    add ecx,1
+    jnz mniNoError
+;
+    int 3
+
+mniNoError:
     NotifyIrqActivity
     mov si,1
     mov fs:mem_isr,ax
@@ -3123,6 +3131,14 @@ mniDone:
     mov ax,di
     mov fs:mem_imr,ax
     pop fs
+;
+    or ecx,ecx
+    stc
+    jnz mniExit
+;
+    clc
+
+mniExit:
     retf32
 
 IoInt:
@@ -3140,6 +3156,12 @@ ioniLoop:
     or ax,ax
     jz ioniDone
 ;
+    add ecx,1
+    jnc ioniNotError
+;
+    int 3
+
+ioniNotError:
     NotifyIrqActivity
     mov si,1
     out dx,ax
@@ -3176,6 +3198,14 @@ ioniDone:
     add dx,REG_IMR
     mov ax,di
     out dx,ax
+;
+    or ecx,ecx
+    stc
+    jnz ioniExit
+;
+    clc
+
+ioniExit:
     retf32
 NetInt  Endp
 

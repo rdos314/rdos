@@ -246,16 +246,19 @@ ENDIF
 ;
 ;       PARAMETERS:     DS      Register selector
 ;
-;           RETURNS:        
+;       RETURNS:        CY           Activity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OhciInt Proc far
+    xor cx,cx
+;
     mov es,ds:ohc_reg_sel
     mov eax,es:HcInterruptStatus
     test al,2
     jz oiQueueDone
 ;
+    inc cx
     NotifyIrqActivity
     mov bx,ds:ohc_thread
     Signal
@@ -264,6 +267,7 @@ oiQueueDone:
     test al,20h
     jz oiHubDone
 ;
+    inc cx
     push ds
     mov bx,SEG data
     mov ds,bx
@@ -276,6 +280,13 @@ oiHubDone:
     mov es:HcInterruptStatus,eax
     or ds:ohc_int_status,eax
 ;
+    or cx,cx
+    stc
+    jnz oiExit
+;
+    clc
+
+oiExit:
     retf32
 OhciInt  Endp
 

@@ -213,6 +213,8 @@ ENDIF
 ;
 ;       PARAMETERS:     DS      Function sel
 ;
+;       RETURNS:        CY           Activity
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UhciInt Proc far
@@ -223,6 +225,7 @@ UhciInt Proc far
 ;
     in ax,dx    
     and al,3Fh
+    clc
     jz uiDone
 ;
     or ds:uhc_status,ax
@@ -230,6 +233,7 @@ UhciInt Proc far
 ;
     mov bx,ds:uhc_thread
     Signal
+    stc
 
 uiDone:
     retf32

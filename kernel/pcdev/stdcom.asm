@@ -495,6 +495,7 @@ io_trans    ENDP
 ;
 ;       DESCRIPTION:    Serial interrupt
 ;
+;       RETURNS:        CY           Activity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -505,6 +506,7 @@ ist_rx   DW OFFSET io_rec
 ist_li   DW OFFSET io_line_err
 
 io_com_int Proc far
+    xor ecx,ecx
     mov ax,ds:iopds_handle
     or ax,ax
     jz io_com_int_inactive
@@ -518,6 +520,12 @@ io_com_int_loop:
     test al,1
     jnz io_com_int_done
 ;   
+    add ecx,1
+    jnc io_com_no_error
+;
+    int 3
+
+io_com_no_error:
     NotifyIrqActivity
     mov bl,al
     xor bh,bh
@@ -556,6 +564,13 @@ io_com_int_inactive:
     Signal
 
 io_com_int_done:   
+    or ecx,ecx
+    stc
+    jnz io_com_int_exit
+;
+    clc
+
+io_com_int_exit:
     retf32
 io_com_int Endp
 
@@ -919,6 +934,7 @@ mem_msi_int Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mem_shared_int Proc far
+    xor ebp,ebp
 
 msRetry:
     mov cx,ds:ms_count
@@ -951,13 +967,25 @@ msBusyLoop:
     add bx,2
     loop msBusyLoop
 ;
+    add ebp,1
+    jnc msNotError
+;
+    int 3
+
+msNotError:
     NotifyIrqActivity
     jmp msRetry
 
 msDone:
+    or ebp,ebp
+    stc
+    jnz msExit
+;
+    clc
+
+msExit:
     retf32
 mem_shared_int Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2819,7 +2847,6 @@ AddIoPort Endp
 ;       DESCRIPTION:    Add MSI mem port to list of available ports
 ;
 ;       PARAMETERS:     DS:EBX  Base
-;                       AL      IRQ
 ;                       ECX     Baud base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2841,13 +2868,6 @@ AddMsiMemPort Proc near
     mov ax,es
     mov ds,ax
     pop ax
-;
-    push es
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET mem_msi_int
-    RequestMsiHandler
-    pop es
 ;
     mov ax,SEG data
     mov ds,ax
@@ -2997,8 +3017,13 @@ riLoop:
     push ds
     mov ds,dx
     mov al,ds:iopds_irq
+    or al,al
+    jz riSkip
+;
     mov ah,18h
     RequestIrqHandler
+
+riSkip:
     pop ds
 
 riNext:
@@ -3035,46 +3060,47 @@ pci03   DW 0,     0
 
 InitPciAdapter  Proc near
     mov si,OFFSET PciVendorTab
-init_pci_loop:
-    xor ax,ax
+    xor bx,bx
+
+ipLoop:
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
-    jz init_pci_done
+    jz ipDone
 ;
-    FindPciDevice
-    jnc init_pci_found
+    FindPciDeviceHandle
+    jnc ipFound
 ;
+    xor bx,bx
     add si,4
-    jmp init_pci_loop
+    jmp ipLoop
 
-init_pci_found:
-    xor ch,ch
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_IO OR PCI_command_busmstr
-    WritePciWord
+ipFound:
+    int 3
+    xor al,al
+    GetPciBarIo
+    jc ipLoop
 ;
-    mov cl,10h
-    ReadPciDword
-    mov dx,ax
-    and dx,0FF00h
+    mov edi,OFFSET DriverName
+    LockPciHandle
 ;
-    xor ch,ch
-    mov cl,PCI_interrupt_line
-    ReadPciByte
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET io_com_int
+    mov ah,19h
+    SetupPciHandleIrq
 ;
-    xor ah,ah
+    xor ax,ax
     mov ecx,921600
     call AddIoPort
 ;
-    xor ah,ah
+    xor ax,ax
     add dx,8
     call AddIoPort    
     clc
 
-init_pci_done:
+ipDone:
     ret
 InitPciAdapter  Endp
 
@@ -3097,35 +3123,36 @@ mpci01  DW 0,     0
 
 InitMemPci  Proc near
     mov si,OFFSET MemPciVendorTab
+    xor bx,bx
 
 mem_init_pci_loop:
-    xor ax,ax
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
     jz mem_init_pci_done
 ;
-    FindPciDevice
+    FindPciDeviceHandle
     jnc mem_init_pci_found
 ;
     add si,4
     jmp mem_init_pci_loop
 
 mem_init_pci_found:
-    push cx
-    mov eax,2000h
-    AllocateBigLinear
-    pop cx
-;
-    mov cl,10h
-    ReadPciDword
-    and al,0F0h
+    int 3
+    xor al,al
+    GetPciBarPhys
+    jc mem_init_pci_loop
 ;
     push ebx
-    push ecx
+;
+    mov ebx,edx
+;
+    push eax
+    mov eax,2000h
+    AllocateBigLinear
+    pop eax
 ;    
-    xor ebx,ebx
     mov al,13h
     SetPageEntry
 ;
@@ -3139,33 +3166,26 @@ mem_init_pci_found:
     CreateDataSelector16
     mov ds,bx
 ;
-    pop ecx
     pop ebx
 ;
     mov edx,ds:oxb_uart_count
     or edx,edx
     jz mem_init_pci_done        
 ;       
-    mov al,dl
-    GetPciMsiX
-    jc mem_init_irq
-;
-    cmp dl,al
-    jb mem_init_irq
-;    
-    EnablePciMsiX
-;
-    xor edx,edx
+; fix MSI-X first!
+    jmp mem_init_irq
+
+    GetPciHandleMsiX
+    or al,al
+    jz mem_init_irq
 
 mem_msi_setup:
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET mem_msi_int
+    mov ah,12h
+    SetupPciHandleIrq
     jc mem_init_pci_done
-;    
-    SetupPciMsiXEntry
 ;
     push ebx
     push ecx
@@ -3184,13 +3204,8 @@ mem_msi_setup:
     jmp mem_init_enable_irq
 
 mem_init_irq: 
-    GetPciIrqNr
-    jc mem_init_pci_done
-;
-    push eax
     mov eax,SIZE mem_share_struc
     AllocateSmallGlobalMem
-    pop eax
 ;    
     push ds
     mov bx,es
@@ -3198,9 +3213,9 @@ mem_init_irq:
     mov fs,bx
     mov bx,cs
     mov es,bx
-    mov ah,14h
+    mov ah,12h
     mov edi,OFFSET mem_shared_int
-    RequestIrqHandler
+    SetupPciHandleIrq
     pop ds
 ;  
     mov fs:ms_count,0
@@ -3210,6 +3225,7 @@ mem_irq_setup:
     push ebx
     push ecx
 ;
+    xor al,al
     mov ebx,edx
     shl ebx,9
     add ebx,1000h        

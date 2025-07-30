@@ -109,11 +109,12 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;       PARAMETERS:     
 ;
-;           RETURNS:        
+;           RETURNS:        CY           Activity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AudioInt    Proc far
+    xor ecx,ecx
 
 aiLoop:
     mov dx,ds:IoBase
@@ -122,6 +123,12 @@ aiLoop:
     test ax,3FCh
     jz aiDone
 ;
+    add ecx,1
+    jnc aiNotError
+;
+    int 3
+
+aiNotError:
     NotifyIrqActivity
 ;
     test ax,4
@@ -222,6 +229,13 @@ aiNot6:
 aiNot7:
 
 aiDone:
+    or ecx,ecx
+    stc
+    jnz aiExit
+;
+    clc
+
+aiExit:
     retf32
 AudioInt    Endp
 

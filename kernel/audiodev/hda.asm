@@ -309,9 +309,12 @@ get_jack_input  Endp
 ;
 ;       DESCRIPTION:    HDA interrupt
 ;
+;       RETURNS:        CY           Activity
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HdaInt  Proc far
+    xor ecx,ecx
 
 hdiLoop:
     mov es,ds:HdaSel
@@ -319,6 +322,12 @@ hdiLoop:
     test eax,80000000h
     jz hdiDone
 ;
+    add ecx,1
+    jnc hdiNotError
+;
+    int 3
+
+hdiNotError:
     NotifyIrqActivity
 ;
     test eax,40000000h
@@ -365,6 +374,8 @@ hdiNotResp:
     jmp hdiLoop
 
 hdiStream:
+    push ecx
+;
     movzx ecx,ds:StreamCnt
     mov ebx,OFFSET StreamArr
 
@@ -393,9 +404,17 @@ hdiStreamNext:
     add ebx,64
     loop hdiStreamLoop    
 ;    
+    pop ecx
     jmp hdiLoop
 
 hdiDone:           
+    or ecx,ecx
+    stc
+    jnz hdiExit
+;
+    clc
+
+hdiExit:
     ret
 HdaInt  Endp
 

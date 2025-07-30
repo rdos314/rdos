@@ -287,11 +287,12 @@ ENDIF
 ;
 ;       PARAMETERS:     DS      Function selector
 ;
-;           RETURNS:        
+;       RETURNS:        CY       Activity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EhciInt Proc far    
+    xor ecx,ecx
     mov es,ds:ehc_reg_sel
 
 eiLoop:    
@@ -300,6 +301,12 @@ eiLoop:
     mov es:HcStatus,eax
     jz eiDone
 ;    
+    add ecx,1
+    jnc eiNotError
+;
+    int 3
+
+eiNotError:
     test al,4
     jz eiSignal
 ;
@@ -318,6 +325,13 @@ eiSignal:
     jmp eiLoop
 
 eiDone:
+    or ecx,ecx
+    stc
+    jnz eiExit
+;
+    clc
+
+eiExit:
     retf32
 EhciInt  Endp
 

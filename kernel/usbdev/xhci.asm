@@ -197,6 +197,7 @@ ev_phys       DD ?,?
 ev_hdr_size   DW ?
 ev_thread     DW ?
 ev_ccs        DW ?
+ev_flag       DB ?
 
 event_seg   ENDS
 
@@ -4176,6 +4177,7 @@ event_thread:
     mov es,ds:xhc_intr_sel
     GetThread
     mov es:ev_thread,ax
+    mov es:ev_flag,0
 ;
     xor cl,cl
 
@@ -4191,6 +4193,7 @@ etPowerNext:
     mov si,es:ev_hdr_size
 
 etWait:
+    mov es:ev_flag,0
     WaitForSignal
 
 etNext:    
@@ -4293,13 +4296,22 @@ CreateEventThread   Endp
 ;
 ;       PARAMETERS:     DS      Event selector
 ;
-;       RETURNS:        
+;       RETURNS:        CY           Activity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 XhciInt Proc far 
+    mov al,1
+    xor al,ds:ev_flag
+    or al,al
+    clc
+    jz xiDone
+;
     mov bx,ds:ev_thread
     Signal
+    stc
+
+xiDone:
     retf32
 XhciInt Endp
 
@@ -4399,6 +4411,7 @@ CreateEventRing   Proc near
     mov eax,es:ev_phys+4
     mov es:ev_ers+4,eax
     mov es:ev_thread,0
+    mov es:ev_flag,0
 ;
     popad    
     ret

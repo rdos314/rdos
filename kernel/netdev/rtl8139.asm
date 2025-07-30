@@ -464,11 +464,13 @@ InitHardware    Endp
 ;
 ;       PARAMETERS:     
 ;
-;           RETURNS:        
+;       RETURNS:            CY           Activity
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt  Proc far
+    xor ecx,ecx
+
 niLoop:
     mov dx,ds:IoBase
     add dx,IntrStatus
@@ -496,7 +498,7 @@ niNotUnderrun:
     jz niNotRx
 ;
     NetReceived
-    jmp niLoop
+    jmp niRetry
 
 niNotRx:
     test bx,TxOK OR TxErr
@@ -508,10 +510,22 @@ niNotRx:
     jz niNotTx
 ;
     Signal
+
+niRetry:
+    add ecx,1
+    jnc niLoop
+;
+    int 3
     jmp niLoop
 
 niNotTx:
+    or ecx,ecx
+    stc
+    jnz niExit
+;
+    clc
 
+niExit:
     retf32
 NetInt  Endp
 
