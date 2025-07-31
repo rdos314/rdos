@@ -205,7 +205,6 @@ SetupReset    Proc near
     push ds
     push eax
 ;
-    int 3
     mov eax,SEG data
     mov ds,eax
     mov ds:reset_proc,esi
@@ -233,6 +232,26 @@ soft_reset:
     CrashGate
 ;
     cli
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,ds:reset_cr3
+    or eax,eax
+    jz srNotAcpi
+;
+    mov cr3,eax
+    mov eax,serv_data_sel
+    push eax
+    push ds:reset_stack
+    pushfd
+    mov eax,serv_code_sel
+    push eax
+    push ds:reset_proc
+    xor ebp,ebp
+    iretd
+
+srNotAcpi:
+
+
     mov ecx,500    
 
 wait_gate1:
