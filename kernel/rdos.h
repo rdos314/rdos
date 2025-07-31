@@ -767,6 +767,7 @@ int RDOSAPI RdosGetSelectorInfo(int CodeSel, int *Limit, int *Bitness);
 
 int RDOSAPI RdosHasPowerCard();
 int RDOSAPI RdosHasHardReset();
+void RDOSAPI RdosCheckReset();
 void RDOSAPI RdosSoftReset();
 void RDOSAPI RdosHardReset();
 int RDOSAPI RdosPowerFailure();

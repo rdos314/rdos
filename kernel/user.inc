@@ -474,6 +474,11 @@ IsEmergencyStopped        MACRO
         UserGate is_emergency_stopped_nr
                                                 ENDM
 
+
+DefaultReset        MACRO
+        UserGate default_reset_nr
+                                                ENDM
+
 SoftReset        MACRO
         UserGate soft_reset_nr
                                                 ENDM

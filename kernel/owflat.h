@@ -2347,6 +2347,9 @@
     CarryToBool \
     __value [__eax]
 
+#pragma aux RdosCheckReset = \
+    CallGate_default_reset
+
 #pragma aux RdosSoftReset = \
     CallGate_soft_reset
 

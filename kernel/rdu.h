@@ -1055,6 +1055,7 @@
 #define usergate_get_pci_handle_msi 0x0000036E
 #define usergate_get_pci_handle_msix 0x0000036F
 #define usergate_is_pci_handle_locked 0x00000370
+#define usergate_default_reset 0x00000371
 
 
 
@@ -2116,6 +2117,7 @@
 #define CallGate_get_pci_handle_msi 0x55 0x67 0x9a 110 3 0 0 3 0 0x5d
 #define CallGate_get_pci_handle_msix 0x55 0x67 0x9a 111 3 0 0 3 0 0x5d
 #define CallGate_is_pci_handle_locked 0x55 0x67 0x9a 112 3 0 0 3 0 0x5d
+#define CallGate_default_reset 0x55 0x67 0x9a 113 3 0 0 3 0 0x5d
 
 #else
 
@@ -3175,5 +3177,6 @@
 #define CallGate_get_pci_handle_msi 0x3e 0x67 0x9a 110 3 0 0 3 0
 #define CallGate_get_pci_handle_msix 0x3e 0x67 0x9a 111 3 0 0 3 0
 #define CallGate_is_pci_handle_locked 0x3e 0x67 0x9a 112 3 0 0 3 0
+#define CallGate_default_reset 0x3e 0x67 0x9a 113 3 0 0 3 0
 
 #endif

@@ -42,6 +42,25 @@ include acpi.inc
 INCLUDE pci.inc
 INCLUDE ..\os\core.inc
 INCLUDE msg.inc
+
+tib_data        STRUC
+
+pvFirstExcept           DD ?
+pvStackUserTop          DD ?
+pvStackUserBottom       DD ?
+pvLastError                     DD ?
+pvStackUserSize         DD ?
+pvArbitrary                     DD ?
+pvTEB                           DD ?
+pvProcessHandle         DD ?
+pvThreadHandle          DD ?
+pvModuleHandle          DD ?
+pvTLSBitmap                     DD ?
+pvTLSArray                      DD ?
+pvBase                          DD ?
+
+tib_data        ENDS
+
 ; this structure should be 128 bytes!
 
 pci_func_struc   STRUC
@@ -129,6 +148,10 @@ pci_spinlock            spinlock_typ <>
 reset_cr3               DD ?
 reset_proc              DD ?
 reset_stack             DD ?
+reset_size              DD ?
+reset_fs                DW ?
+reset_serv_sel          DW ?
+reset_pend              DW ?
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 64 DUP(?,?)
@@ -196,6 +219,7 @@ hook_init_pci   Endp
 ;
 ;           PARAMETERS:     ESI          User space reset proc
 ;                           EDI          User space stack top
+;                           ECX          User stack size
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -203,16 +227,51 @@ hook_init_pci   Endp
 
 SetupReset    Proc near
     push ds
-    push eax
+    push es
+    push fs
+    pushad
+;
+    mov eax,fs
+    mov ds,eax
+    mov ebp,edi
 ;
     mov eax,SEG data
-    mov ds,eax
-    mov ds:reset_proc,esi
-    mov ds:reset_stack,edi
+    mov fs,eax
+    mov fs:reset_proc,esi
     mov eax,cr3
-    mov ds:reset_cr3,eax
+    mov fs:reset_cr3,eax
 ;
-    pop eax
+    mov eax,ecx
+    AllocateBigLinear
+    AllocateGdt
+    or bx,3
+    mov ecx,eax     
+    CreateDataSelector32
+;
+    int 3
+    push ecx
+    mov es,ebx
+    xor esi,esi
+    xor edi,edi
+    mov ecx,400h
+    rep movsd
+    pop ecx
+;
+    mov es:pvFirstExcept,-1
+    mov es:pvStackUserBottom,ebp
+    mov es:pvStackUserSize,ecx
+    add ebp,ecx
+    mov fs:reset_stack,ebp
+    mov fs:reset_fs,es
+;
+    GetThread
+    mov es,eax
+    mov ax,es:p_serv_sel
+    mov fs:reset_serv_sel,ax
+;
+    popad
+    pop fs
+    pop es
     pop ds
     ret
 SetupReset    Endp
@@ -220,38 +279,15 @@ SetupReset    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SoftReset
+;           NAME:           DefaultReset
 ;
-;           DESCRIPTION:    Soft reset
+;           DESCRIPTION:    Run default reset if reset is pending
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-soft_reset_name      DB 'Soft Reset',0
+default_reset_name      DB 'Default Reset',0
 
-soft_reset:
-    CrashGate
-;
-    cli
-    mov eax,SEG data
-    mov ds,eax
-    mov eax,ds:reset_cr3
-    or eax,eax
-    jz srNotAcpi
-;
-    mov cr3,eax
-    mov eax,serv_data_sel
-    push eax
-    push ds:reset_stack
-    pushfd
-    mov eax,serv_code_sel
-    push eax
-    push ds:reset_proc
-    xor ebp,ebp
-    iretd
-
-srNotAcpi:
-
-
+do_reset:
     mov ecx,500    
 
 wait_gate1:
@@ -295,6 +331,66 @@ wait_gate_done2:
 
 reset_wait:
     jmp reset_wait
+
+default_reset   Proc far
+    push ds
+    push eax
+;
+    mov ds,eax
+    mov ax,ds:reset_pend
+    or ax,ax
+    jnz do_reset
+;
+    pop eax
+    pop ds
+    ret
+default_reset   Endp    
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SoftReset
+;
+;           DESCRIPTION:    Soft reset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+soft_reset_name      DB 'Soft Reset',0
+
+soft_reset:
+    cli
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,ds:reset_cr3
+    or eax,eax
+    jz srNotAcpi
+;
+    mov ds:reset_pend,1
+    GetThread
+    mov es,ebx
+    mov bx,ds:reset_serv_sel
+    mov es:p_serv_sel,bx
+;
+    CrashGate
+    mov cr3,eax
+    mov eax,serv_data_sel
+    push eax
+    push ds:reset_stack
+    pushfd
+    mov eax,serv_code_sel
+    push eax
+    push ds:reset_proc
+    xor ebp,ebp
+    mov fs,ds:reset_fs
+    mov eax,serv_data_sel
+    mov ds,eax
+    mov es,eax
+    iretd
+
+srNotAcpi:
+    DefaultReset
+
+
      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3840,6 +3936,7 @@ init    Proc far
     mov ds:reset_proc,0
     mov ds:reset_stack,0
     mov ds:reset_cr3,0
+    mov ds:reset_pend,0
 ;
     mov ds:apic_table,0
     mov ds:pci_init_hooks,0
@@ -4185,6 +4282,12 @@ init    Proc far
     mov edi,OFFSET get_pci_msix_name
     xor dx,dx
     mov ax,get_pci_msix_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET default_reset
+    mov edi,OFFSET default_reset_name
+    xor dx,dx
+    mov ax,default_reset_nr
     RegisterBimodalUserGate
 ;
     call init_bios

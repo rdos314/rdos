@@ -105,6 +105,7 @@ UacpiGetMsiData  MACRO
 
 ; IN  ESI               Server proc
 ; IN  EDI               Stack to use
+; IN  ECX               Stack size
 UacpiSetupReset  MACRO    
     ServGate uacpi_setup_reset_nr
                     ENDM
