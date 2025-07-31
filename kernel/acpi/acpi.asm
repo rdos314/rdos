@@ -126,7 +126,9 @@ apic_table              DW ?
 
 pci_spinlock            spinlock_typ <>
 
-reset_req               DW ?
+reset_cr3               DD ?
+reset_proc              DD ?
+reset_stack             DD ?
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 64 DUP(?,?)
@@ -188,13 +190,48 @@ hook_init_pci   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DoReset
+;           NAME:           SetupReset
 ;
-;           DESCRIPTION:    Trigger a CPU soft reset through tripple fault
+;           DESCRIPTION:    Setup reset
+;
+;           PARAMETERS:     ESI          User space reset proc
+;                           EDI          User space stack top
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_timeout:
+    public SetupReset
+
+SetupReset    Proc near
+    push ds
+    push eax
+;
+    int 3
+    mov eax,SEG data
+    mov ds,eax
+    mov ds:reset_proc,esi
+    mov ds:reset_stack,edi
+    mov eax,cr3
+    mov ds:reset_cr3,eax
+;
+    pop eax
+    pop ds
+    ret
+SetupReset    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SoftReset
+;
+;           DESCRIPTION:    Soft reset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+soft_reset_name      DB 'Soft Reset',0
+
+soft_reset:
+    CrashGate
+;
     cli
     mov ecx,500    
 
@@ -239,53 +276,6 @@ wait_gate_done2:
 
 reset_wait:
     jmp reset_wait
-
-DoReset:
-    call AllocateMsg
-;    
-    mov eax,RESET_CMD
-    call RunMsg
-;
-    mov ax,150
-    WaitMilliSec
-    jmp reset_timeout
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SoftReset
-;
-;           DESCRIPTION:    Soft reset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-soft_reset_name      DB 'Soft Reset',0
-
-soft_reset  Proc far
-    push ds
-    push es
-    pushad
-;
-    mov eax,SEG data
-    mov ds,eax
-    mov ds:reset_req,1
-;
-    GetSystemTime
-    add eax,1193 * 100
-    adc edx,0
-;    
-    mov bx,cs
-    xor ecx,ecx
-    mov edi,cs
-    mov es,edi
-    mov edi,OFFSET reset_timeout
-    StartTimer
-;
-    popad
-    pop es
-    pop ds
-    ret
-soft_reset  Endp
      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3791,59 +3781,7 @@ hook_thread_loop:
     loop hook_thread_loop
 
 hook_thread_done:
-    mov ax,ds:reset_req
-    or ax,ax
-    jz wait_reset
-;
-    jmp DoReset
-    
-wait_reset:
-    mov ax,25
-    WaitMilliSec
-    jmp hook_thread_done    
-
-;    TerminateThread
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           Test gate
-;
-;       DESCRIPTION:    Test
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name DB 'Test', 0
-test_dev  DB 'Test Lock', 0
-
-test_gate    Proc far
-    push ds
-    push es
-    pushad
-;
-    xor bx,bx
-    mov ax,0200h
-    FindPciClassHandle
-    jc tgDone
-;
-    xor al,al
-    GetPciBarIo
-;
-    mov eax,cs
-    mov es,eax
-    mov edi,OFFSET test_dev
-    LockPciHandle
-    jc tgDone
-;
-    mov ah,14h
-    SetupPciHandleIrq
-
-tgDone:
-    popad
-    pop es
-    pop ds
-    ret
-test_gate    Endp
+    TerminateThread
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3880,7 +3818,10 @@ init    Proc far
     mov ds,ebx
     mov es,ebx
 ;
-    mov ds:reset_req,0
+    mov ds:reset_proc,0
+    mov ds:reset_stack,0
+    mov ds:reset_cr3,0
+;
     mov ds:apic_table,0
     mov ds:pci_init_hooks,0
     InitSpinlock ds:pci_spinlock
@@ -3898,12 +3839,6 @@ init    Proc far
     mov edi,OFFSET hook_init_pci_name
     mov ax,hook_init_pci_nr
     RegisterOsGate
-;
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET soft_reset
     mov edi,OFFSET soft_reset_name

@@ -72,6 +72,7 @@ code    SEGMENT byte public use32 'CODE'
 
     extern init_server:near
     extern HasApic:near
+    extern SetupReset:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1098,7 +1099,7 @@ uacpi_get_msi_data   Endp
 uacpi_setup_reset_name DB 'uACPI Setup Reset', 0
 
 uacpi_setup_reset   PROC far
-    int 3
+    call SetupReset
     ret
 uacpi_setup_reset   Endp
 
