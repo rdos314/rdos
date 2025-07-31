@@ -1084,6 +1084,25 @@ uacpi_get_msi_data   PROC far
 uacpi_get_msi_data   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UacpiSetupReset
+;
+;       DESCRIPTION:    Setup RESET
+;
+;       PARAMETERS:     ESI               Reset proc
+;                       EDI               User mode stack
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+uacpi_setup_reset_name DB 'uACPI Setup Reset', 0
+
+uacpi_setup_reset   PROC far
+    int 3
+    ret
+uacpi_setup_reset   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           AcpiServer
@@ -1166,6 +1185,12 @@ AcpiServer:
     mov edi,OFFSET uacpi_get_msi_data_name
     xor cl,cl
     mov ax,uacpi_get_msi_data_nr
+    RegisterPrivateServGate    
+;
+    mov esi,OFFSET uacpi_setup_reset
+    mov edi,OFFSET uacpi_setup_reset_name
+    xor cl,cl
+    mov ax,uacpi_setup_reset_nr
     RegisterPrivateServGate    
 ;
     mov esi,OFFSET lpcmd

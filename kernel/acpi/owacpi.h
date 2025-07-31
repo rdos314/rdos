@@ -67,4 +67,4 @@
 
 #pragma aux ServUacpiSetupReset = \
     ServGate_uacpi_setup_reset  \
-    __parm [__esi __edi]
+    __parm [__esi] [__edi]
