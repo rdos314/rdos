@@ -232,56 +232,6 @@ CreateFuncSel  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupInts
-;
-;           DESCRIPTION:    Setup PCI or MSI IRQ
-;
-;       PARAMETERS:         BH    Bus
-;                           BL    Device
-;                           CH    Function
-;                           DS    Ether sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupInts   Proc near
-    pushad
-;    
-    GetPciMsi
-    jc siIrq
-
-siMsi:
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc siIrq
-;    
-    mov dl,1
-    SetupPciMsi
-;    
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET NetInt
-    RequestMsiHandler
-    jmp siDone
-
-siIrq:
-    GetPciIrqNr
-    mov ah,14h
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET NetInt    
-    RequestIrqHandler
-
-siDone:
-    popad
-    ret
-SetupInts    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CreateRxRing
 ;
 ;           DESCRIPTION:    Create RX ring
@@ -1087,12 +1037,6 @@ GetMac2 Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName1     DB 'Net i2xx-1',0
-DriverName2     DB 'Net i2xx-2',0
-
-SupervisorName1 DB 'Super i2xx-1',0
-SupervisorName2 DB 'Super i2xx-2',0
-
 MemDispTable1:
     DD OFFSET Preview1,         SEG code
     DD OFFSET Receive1,         SEG code
@@ -1125,7 +1069,7 @@ pci07   DW 0,     0
 DevName1 DB 'i2xx-1', 0
 DevName2 DB 'i2xx-2', 0
 
-InitPrimaryPciAdapter   Proc near
+InitPciAdapter   Proc near
     mov ax,cs
     mov es,ax
     xor ax,ax
@@ -1133,45 +1077,49 @@ InitPrimaryPciAdapter   Proc near
     mov ax,ether_data_sel
     mov ds,ax
     mov si,OFFSET PciVendorTab
+    mov edi,OFFSET DevName1
+    xor bx,bx
+    mov ebp,OFFSET MemDispTable1
 
-init_pci1_loop:
-    mov ax,bp
+ipLoop:
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
-    jz init_pci1_done
+    jz ipDone
 ;
-    FindPciDevice
-    jnc init_pci1_found
+    FindPciDeviceHandle
+    jnc ipFound
 ;
+    xor bx,bx
     add si,6
-    jmp init_pci1_loop
+    jmp ipLoop
 
-init_pci1_found:
-    mov edi,OFFSET DevName1
-    PciPowerOn
+ipFound:
+    LockPciHandle
+    jc ipLoop
 ;
-    mov bp,bx
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr OR PCI_command_IO OR PCI_command_mem
-    WritePciWord
-;
-    mov cl,PCI_card_ExCa_base
-    ReadPciDword
-    test al,1
-    stc
-    jnz init_pci1_done
+    xor al,al
+    GetPciBarPhys
+    jc ipLoop
 ;
     push eax
-    call SetupInts
+    push edx
+    push edi
 ;
-    mov cl,PCI_card_ExCa_base+4
-    ReadPciDword
+    mov edi,cs
+    mov es,edi
+    mov edi,OFFSET NetInt
+    mov ah,14h
+    SetupPciHandleIrq
 ;
-    mov ebx,eax
+    pop edi
+    pop edx
     pop eax
+    jc ipLoop
+;
+    push ebx
+    mov ebx,edx
 ;
     call CreateFuncSel
     mov ds:FuncSel,es
@@ -1179,110 +1127,36 @@ init_pci1_found:
     call InitFunc
 ;
     push ds
+    push esi
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET MemDispTable1
-    mov edi,OFFSET DriverName1
+    mov esi,ebp
     mov al,1
     mov dx,0
     mov ecx,1600
     RegisterNetDriver
+;
+    pop esi
     pop ds
     mov ds:Handle,bx
 ;
-    mov ax,bp   
-    clc
-    jmp init_pci1_done
-
-io_pci1:
-    int 3
-    mov ax,bp   
-    clc
-    jmp init_pci1_done
-
-init_pci1_done:
-    ret
-InitPrimaryPciAdapter   Endp
-
-InitSecondaryPciAdapter Proc near
-    mov bp,ax
-    mov ax,cs
-    mov es,ax
+    pop ebx
+;
+    mov ax,ds
+    cmp ax,ether_data_sel
+    jne ipDone
+;
     mov ax,ether_data2_sel
     mov ds,ax
-    mov si,OFFSET PciVendorTab
-
-init_pci2_loop:
-    mov ax,bp
-    mov dx,cs:[si]
-    mov cx,cs:[si+2]
-    or dx,dx
-    stc
-    jz init_pci2_done
-;
-    FindPciDevice
-    jnc init_pci2_found
-;
-    add si,6
-    jmp init_pci2_loop
-
-init_pci2_found:
     mov edi,OFFSET DevName2
-    PciPowerOn
-;
-    mov bp,bx
-    mov cl,PCI_command_reg
-    ReadPciWord
-    or al,PCI_command_busmstr OR PCI_command_IO OR PCI_command_mem
-    WritePciWord
-;
-    mov cl,PCI_card_ExCa_base
-    ReadPciDword
-    test al,1
-    stc
-    jnz init_pci2_done
-;
-    push eax
-    call SetupInts
-;
-    mov cl,PCI_card_ExCa_base+4
-    ReadPciDword
-;
-    mov ebx,eax
-    pop eax
-;
-    call CreateFuncSel
-    mov ds:FuncSel,es
-;
-    call InitFunc
-;
-    push ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET MemDispTable2
-    mov edi,OFFSET DriverName2
-    mov al,1
-    mov dx,0
-    mov ecx,1600
-    RegisterNetDriver
-    pop ds
-    mov ds:Handle,bx
-;
-    mov ax,bp   
-    clc
-    jmp init_pci2_done
+    mov ebp,OFFSET MemDispTable2
+    jmp ipLoop
 
-io_pci2:
-    int 3
-    mov ax,bp   
-    clc
-    jmp init_pci2_done
-
-init_pci2_done:
+ipDone:
     ret
-InitSecondaryPciAdapter Endp
+InitPciAdapter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1302,11 +1176,7 @@ init_net    Proc far
     push es
     pusha
 ;
-    xor ax,ax
-    call InitPrimaryPciAdapter
-;
-    inc ax
-    call InitSecondaryPciAdapter
+    call InitPciAdapter
 ;    
     popa
     pop es
