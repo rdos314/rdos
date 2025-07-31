@@ -475,10 +475,6 @@ IsEmergencyStopped        MACRO
                                                 ENDM
 
 
-DefaultReset        MACRO
-        UserGate default_reset_nr
-                                                ENDM
-
 SoftReset        MACRO
         UserGate soft_reset_nr
                                                 ENDM

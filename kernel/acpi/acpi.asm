@@ -206,25 +206,6 @@ hook_init_pci   Proc far
     pop ds
     ret
 hook_init_pci   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SetupReset
-;
-;           DESCRIPTION:    Setup reset
-;
-;           PARAMETERS:     ESI          User space reset proc
-;                           EDI          User space stack top
-;                           ECX          User stack size
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public SetupReset
-
-SetupReset    Proc near
-    ret
-SetupReset    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -234,8 +215,6 @@ SetupReset    Endp
 ;           DESCRIPTION:    Run default reset if reset is pending
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-default_reset_name      DB 'Default Reset',0
 
 do_reset   Proc near
     CrashGate
@@ -286,10 +265,6 @@ reset_wait:
     jmp reset_wait
 
 do_reset    ENDP
-
-default_reset   Proc far
-    ret
-default_reset   Endp    
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4249,12 +4224,6 @@ init    Proc far
     mov edi,OFFSET get_pci_msix_name
     xor dx,dx
     mov ax,get_pci_msix_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET default_reset
-    mov edi,OFFSET default_reset_name
-    xor dx,dx
-    mov ax,default_reset_nr
     RegisterBimodalUserGate
 ;
     call init_bios
