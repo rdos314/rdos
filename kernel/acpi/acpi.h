@@ -29,6 +29,7 @@ unsigned char RDOSAPI ServUacpiAllocateInts(int count, unsigned char prio);
 void RDOSAPI ServUacpiFreeInt(unsigned char irq);
 int RDOSAPI ServUacpiGetMsiAddress(int core);
 int RDOSAPI ServUacpiGetMsiData(unsigned char irq);
+int RDOSAPI ServUacpiSetupReset(void (*proc)(), void *stack);
 
 #ifdef __cplusplus
 }

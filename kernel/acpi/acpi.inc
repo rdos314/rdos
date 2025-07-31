@@ -103,6 +103,12 @@ UacpiGetMsiData  MACRO
     ServGate uacpi_get_msi_data_nr
                     ENDM
 
+; IN  ESI               Server proc
+; IN  EDI               Stack to use
+UacpiSetupReset  MACRO    
+    ServGate uacpi_setup_reset_nr
+                    ENDM
+
 ; IN  EBX              Dev handle
 ; OUT EDX              Cmd
 WaitForDevCmd  MACRO

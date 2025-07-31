@@ -64,3 +64,7 @@
     ServGate_uacpi_get_msi_data  \
     __parm [__eax] \
     __value [__eax]
+
+#pragma aux ServUacpiSetupReset = \
+    ServGate_uacpi_setup_reset  \
+    __parm [__esi __edi]

@@ -12,6 +12,7 @@
 #define serv_gate_uacpi_free_int 0x0000000C
 #define serv_gate_uacpi_get_msi_address 0x0000000D
 #define serv_gate_uacpi_get_msi_data 0x0000000E
+#define serv_gate_uacpi_setup_reset 0x0000000F
 #define ServGate_uacpi_get_acpi 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
 #define ServGate_uacpi_map 0x55 0x67 0x9a 2 0 0 0 4 0 0x5d
 #define ServGate_uacpi_unmap 0x55 0x67 0x9a 3 0 0 0 4 0 0x5d
@@ -26,3 +27,4 @@
 #define ServGate_uacpi_free_int 0x55 0x67 0x9a 12 0 0 0 4 0 0x5d
 #define ServGate_uacpi_get_msi_address 0x55 0x67 0x9a 13 0 0 0 4 0 0x5d
 #define ServGate_uacpi_get_msi_data 0x55 0x67 0x9a 14 0 0 0 4 0 0x5d
+#define ServGate_uacpi_setup_reset 0x55 0x67 0x9a 15 0 0 0 4 0 0x5d
