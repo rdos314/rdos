@@ -145,15 +145,10 @@ apic_table              DW ?
 
 pci_spinlock            spinlock_typ <>
 
-reset_cr3               DD ?
+has_reset               DB ?
+reset_data              DB ?
 reset_proc              DD ?
-reset_stack             DD ?
-reset_size              DD ?
-reset_fs                DW ?
-reset_serv_sel          DW ?
-reset_ldt_obj           DW ?
-reset_ldt               DW ?
-reset_pend              DW ?
+reset_addr              DD ?,?
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 64 DUP(?,?)
@@ -228,59 +223,6 @@ hook_init_pci   Endp
     public SetupReset
 
 SetupReset    Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov eax,fs
-    mov ds,eax
-    mov ebp,edi
-;
-    mov eax,SEG data
-    mov fs,eax
-    mov fs:reset_proc,esi
-    mov eax,cr3
-    mov fs:reset_cr3,eax
-;
-    mov eax,ecx
-    AllocateBigLinear
-    AllocateGdt
-    or bx,3
-    mov ecx,eax     
-    CreateDataSelector32
-;
-    push ecx
-    mov es,ebx
-    xor esi,esi
-    xor edi,edi
-    mov ecx,400h
-    rep movsd
-    pop ecx
-;
-    mov es:pvFirstExcept,-1
-    mov es:pvStackUserBottom,ebp
-    mov es:pvStackUserSize,ecx
-    add ebp,ecx
-    mov fs:reset_stack,ebp
-    mov fs:reset_fs,es
-;
-    GetThread
-    mov es,eax
-;
-    mov ax,es:p_serv_sel
-    mov fs:reset_serv_sel,ax
-;
-    mov ax,es:p_ldt_obj
-    mov fs:reset_ldt_obj,ax
-;
-    mov ax,es:p_ldt
-    mov fs:reset_ldt,ax
-;
-    popad
-    pop fs
-    pop es
-    pop ds
     ret
 SetupReset    Endp
         
@@ -346,20 +288,6 @@ reset_wait:
 do_reset    ENDP
 
 default_reset   Proc far
-    push ds
-    push eax
-;
-    mov eax,SEG data
-    mov ds,eax
-    mov ax,ds:reset_pend
-    or ax,ax
-    jz drDone
-;
-    call do_reset
-
-drDone:
-    pop eax
-    pop ds
     ret
 default_reset   Endp    
         
@@ -375,51 +303,6 @@ default_reset   Endp
 soft_reset_name      DB 'Soft Reset',0
 
 soft_reset:
-    cli
-    mov eax,SEG data
-    mov ds,eax
-    mov ebx,ds:reset_cr3
-    or ebx,ebx
-    jz srNotAcpi
-;
-    mov ds:reset_pend,1
-    GetThread
-    mov es,eax
-    mov ax,ds:reset_serv_sel
-    mov es:p_serv_sel,ax
-;
-    mov ax,ds:reset_ldt_obj
-    mov es:p_ldt_obj,ax
-;
-    mov ax,ds:reset_ldt
-    mov es:p_ldt,ax
-;
-    mov es:p_cr3,ebx
-;
-    mov cr3,ebx
-    lldt ax
-;
-    mov eax,serv_data_sel
-    push eax
-    push ds:reset_stack
-;
-    pushfd
-    pop eax
-    or ax,300h
-    push eax
-;
-    mov eax,serv_code_sel
-    push eax
-    push ds:reset_proc
-    xor ebp,ebp
-    mov fs,ds:reset_fs
-    mov eax,serv_data_sel
-    mov ds,eax
-    mov es,eax
-    iretd
-
-srNotAcpi:
-    DefaultReset
 
 
      
@@ -3930,6 +3813,56 @@ hook_thread_done:
     TerminateThread
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Test gate
+;
+;       DESCRIPTION:    Test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ResetMem	Proc near
+    ret
+ResetMem        Endp
+
+ResetIo	Proc near
+    ret
+ResetIo        Endp
+
+ResetPci	Proc near
+    ret
+ResetPci        Endp
+
+reset_tab:
+rt00 DD OFFSET ResetMem
+rt01 DD OFFSET ResetIo
+rt02 DD OFFSET ResetPci   
+
+test_gate_name  DB 'Test', 0
+
+
+test_gate    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov al,ds:has_reset
+    or al,al
+    jz tgDone
+;
+    call ds:reset_proc
+
+tgDone:
+    popad
+    pop es
+    pop ds
+    ret
+test_gate    Endp
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           init
@@ -3941,6 +3874,7 @@ hook_thread_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 apic_tab    DB 'APIC'
+fadt_tab    DB 'FACP'
 
     extern GetAcpiTable:near
 
@@ -3964,11 +3898,7 @@ init    Proc far
     mov ds,ebx
     mov es,ebx
 ;
-    mov ds:reset_proc,0
-    mov ds:reset_stack,0
-    mov ds:reset_cr3,0
-    mov ds:reset_pend,0
-;
+    mov ds:has_reset,0
     mov ds:apic_table,0
     mov ds:pci_init_hooks,0
     InitSpinlock ds:pci_spinlock
@@ -3986,6 +3916,12 @@ init    Proc far
     mov edi,OFFSET hook_init_pci_name
     mov ax,hook_init_pci_nr
     RegisterOsGate
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET soft_reset
     mov edi,OFFSET soft_reset_name
@@ -4331,7 +4267,50 @@ init    Proc far
     mov eax,SEG data
     mov ds,eax
     mov ds:apic_table,es    
-;    
+    mov ds:has_reset,0
+;
+    mov eax,dword ptr cs:fadt_tab
+    call GetAcpiTable
+    jc init_reset_done
+;
+    mov ax,es:act_size
+    cmp ax,130
+    jb init_reset_done
+;
+    mov edi,SIZE acpi_table
+;
+    mov eax,es:[edi+116-36]
+    cmp al,3
+    jae init_reset_done
+;
+    movzx ebx,al
+    mov ebx,cs:[4*ebx].reset_tab
+    mov ds:reset_proc,ebx
+;
+    shr eax,8
+    cmp al,8
+    jne init_reset_done
+;
+    shr eax,8
+    or al,al
+    jne init_reset_done
+;
+    shr eax,8
+    cmp al,1
+    jne init_reset_done
+;
+    mov ds:has_reset,1
+;
+    mov eax,es:[edi+120-36]
+    mov ds:reset_addr,eax
+;
+    mov eax,es:[edi+124-36]
+    mov ds:reset_addr+4,eax
+;
+    mov al,es:[edi+128-36]
+    mov ds:reset_data,al
+
+init_reset_done:    
     call init_irq
     call init_msi
     call init_smp
