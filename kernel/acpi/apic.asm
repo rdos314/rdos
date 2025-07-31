@@ -100,7 +100,6 @@ code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
     
-    extern GetAcpiTable:near
     extern GetApicTable:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

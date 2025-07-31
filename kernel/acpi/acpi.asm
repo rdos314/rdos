@@ -151,6 +151,8 @@ reset_stack             DD ?
 reset_size              DD ?
 reset_fs                DW ?
 reset_serv_sel          DW ?
+reset_ldt_obj           DW ?
+reset_ldt               DW ?
 reset_pend              DW ?
 
 pci_init_hooks          DW ?
@@ -265,8 +267,15 @@ SetupReset    Proc near
 ;
     GetThread
     mov es,eax
+;
     mov ax,es:p_serv_sel
     mov fs:reset_serv_sel,ax
+;
+    mov ax,es:p_ldt_obj
+    mov fs:reset_ldt_obj,ax
+;
+    mov ax,es:p_ldt
+    mov fs:reset_ldt,ax
 ;
     popad
     pop fs
@@ -340,6 +349,7 @@ default_reset   Proc far
     push ds
     push eax
 ;
+    mov eax,SEG data
     mov ds,eax
     mov ax,ds:reset_pend
     or ax,ax
@@ -377,13 +387,27 @@ soft_reset:
     mov es,eax
     mov ax,ds:reset_serv_sel
     mov es:p_serv_sel,ax
+;
+    mov ax,ds:reset_ldt_obj
+    mov es:p_ldt_obj,ax
+;
+    mov ax,ds:reset_ldt
+    mov es:p_ldt,ax
+;
     mov es:p_cr3,ebx
 ;
     mov cr3,ebx
+    lldt ax
+;
     mov eax,serv_data_sel
     push eax
     push ds:reset_stack
+;
     pushfd
+    pop eax
+    or ax,300h
+    push eax
+;
     mov eax,serv_code_sel
     push eax
     push ds:reset_proc
