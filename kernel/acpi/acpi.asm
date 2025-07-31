@@ -248,7 +248,6 @@ SetupReset    Proc near
     mov ecx,eax     
     CreateDataSelector32
 ;
-    int 3
     push ecx
     mov es,ebx
     xor esi,esi
@@ -287,7 +286,10 @@ SetupReset    Endp
 
 default_reset_name      DB 'Default Reset',0
 
-do_reset:
+do_reset   Proc near
+    CrashGate
+    ret
+
     mov ecx,500    
 
 wait_gate1:
@@ -332,6 +334,8 @@ wait_gate_done2:
 reset_wait:
     jmp reset_wait
 
+do_reset    ENDP
+
 default_reset   Proc far
     push ds
     push eax
@@ -339,8 +343,11 @@ default_reset   Proc far
     mov ds,eax
     mov ax,ds:reset_pend
     or ax,ax
-    jnz do_reset
+    jz drDone
 ;
+    call do_reset
+
+drDone:
     pop eax
     pop ds
     ret
@@ -361,18 +368,18 @@ soft_reset:
     cli
     mov eax,SEG data
     mov ds,eax
-    mov eax,ds:reset_cr3
-    or eax,eax
+    mov ebx,ds:reset_cr3
+    or ebx,ebx
     jz srNotAcpi
 ;
     mov ds:reset_pend,1
     GetThread
-    mov es,ebx
-    mov bx,ds:reset_serv_sel
-    mov es:p_serv_sel,bx
+    mov es,eax
+    mov ax,ds:reset_serv_sel
+    mov es:p_serv_sel,ax
+    mov es:p_cr3,ebx
 ;
-    CrashGate
-    mov cr3,eax
+    mov cr3,ebx
     mov eax,serv_data_sel
     push eax
     push ds:reset_stack

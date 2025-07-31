@@ -2078,6 +2078,8 @@ virt_exception  ENDP
 
 prot_exception:
     cld
+    DefaultReset
+;
     movzx ax,byte ptr [ebp].trap_exc_nr
     mov ebx,[ebp].trap_cs
     and bl,3

@@ -174,6 +174,8 @@ out_byte_done:
 OutByte Endp
 
 emulate PROC near
+    DefaultReset
+;
     mov ax,emulate_opcode_nr
     IsValidOsGate
     jc emulate_exception
