@@ -116,9 +116,7 @@ ENDIF
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
-    
-    extern GetAcpiTable:near
-   
+       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -795,9 +793,12 @@ init_timer    PROC near
     mov ax,has_global_timer_nr
     RegisterBimodalUserGate
 ;
-    mov eax,dword ptr cs:hpet_tab
-    call GetAcpiTable
-    jc init_hpet_obj
+    mov eax,system_data_sel
+    mov es,eax
+    mov ax,es:acpi_hpet_table
+    mov es,eax
+    or ax,ax
+    jz init_hpet_obj    
 ;    
     mov ebx,es:hpett_phys_base
     jmp init_hpet_check

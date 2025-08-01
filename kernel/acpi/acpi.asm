@@ -141,14 +141,7 @@ acpitab  ENDS
 
 data    SEGMENT byte public 'DATA'
 
-apic_table              DW ?
-
 pci_spinlock            spinlock_typ <>
-
-has_reset               DB ?
-reset_data              DB ?
-reset_proc              DD ?
-reset_addr              DD ?,?
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 64 DUP(?,?)
@@ -3711,9 +3704,9 @@ DetectDevices  Endp
 GetApicTable Proc near
     push eax
 ;
-    mov eax,SEG data
+    mov eax,system_data_sel
     mov es,eax
-    mov es,es:apic_table
+    mov es,es:acpi_apic_table
 ;
     pop eax
     ret
@@ -3736,9 +3729,9 @@ HasApic Proc near
     push ds
     push eax
 ;
-    mov eax,SEG data
+    mov eax,system_data_sel
     mov ds,eax
-    mov ax,ds:apic_table
+    mov ax,ds:acpi_apic_table
     or ax,ax
     stc
     jz haDone
@@ -3848,11 +3841,6 @@ test_gate    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-apic_tab    DB 'APIC'
-fadt_tab    DB 'FACP'
-
-    extern GetAcpiTable:near
-
     extern init_irq:near
     extern init_bios:near
     extern init_uacpi:near
@@ -3873,8 +3861,6 @@ init    Proc far
     mov ds,ebx
     mov es,ebx
 ;
-    mov ds:has_reset,0
-    mov ds:apic_table,0
     mov ds:pci_init_hooks,0
     InitSpinlock ds:pci_spinlock
 ;
@@ -4229,57 +4215,12 @@ init    Proc far
     call init_bios
     call init_uacpi
 ;
-    mov eax,dword ptr cs:apic_tab
-    call GetAcpiTable
-    jc use_pic
-;
-    mov eax,SEG data
+    mov eax,system_data_sel
     mov ds,eax
-    mov ds:apic_table,es    
-    mov ds:has_reset,0
+    mov ax,ds:acpi_apic_table
+    or ax,ax
+    jz use_pic
 ;
-    mov eax,dword ptr cs:fadt_tab
-    call GetAcpiTable
-    jc init_reset_done
-;
-    mov ax,es:act_size
-    cmp ax,130
-    jb init_reset_done
-;
-    mov edi,SIZE acpi_table
-;
-    mov eax,es:[edi+116-36]
-    cmp al,3
-    jae init_reset_done
-;
-    movzx ebx,al
-    mov ebx,cs:[4*ebx].reset_tab
-    mov ds:reset_proc,ebx
-;
-    shr eax,8
-    cmp al,8
-    jne init_reset_done
-;
-    shr eax,8
-    or al,al
-    jne init_reset_done
-;
-    shr eax,8
-    cmp al,1
-    jne init_reset_done
-;
-    mov ds:has_reset,1
-;
-    mov eax,es:[edi+120-36]
-    mov ds:reset_addr,eax
-;
-    mov eax,es:[edi+124-36]
-    mov ds:reset_addr+4,eax
-;
-    mov al,es:[edi+128-36]
-    mov ds:reset_data,al
-
-init_reset_done:    
     call init_irq
     call init_msi
     call init_smp

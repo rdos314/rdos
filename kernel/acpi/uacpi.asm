@@ -610,6 +610,8 @@ InitAcpiTable   PROC near
     mov eax,system_data_sel
     mov ds,eax
     mov ds:acpi_reset_method,-1
+    mov ds:acpi_apic_table,0
+    mov ds:acpi_hpet_table,0
 ;
     call GetRsdp
     jc iatDone
@@ -700,55 +702,6 @@ iatDone:
     pop ds
     ret
 InitAcpiTable   Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           GetAcpiTable
-;
-;           DESCRIPTION:    Get ACPI table
-;
-;       PARAMETERS:         EAX     Table ID
-;
-;       RETURNS:            NC      Ok
-;                           ES  Table selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetAcpiTable
-
-GetAcpiTable  Proc near
-    push ds
-    push ecx
-    push esi
-;
-    mov ecx,pci_acpi_sel
-    mov ds,ecx
-    mov ecx,ds:acpi_table_count
-    mov esi,OFFSET acpi_table_arr
-
-gtLoop:
-    mov es,[esi]
-    cmp eax,es:act_sign
-    je gtOk
-;    
-    add esi,2
-    loop gtLoop
-;
-    xor ecx,ecx
-    mov es,ecx
-    stc
-    jmp gtDone
-
-gtOk:
-    clc
-
-gtDone:
-    pop esi
-    pop ecx
-    pop ds
-    ret
-GetAcpiTable  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
