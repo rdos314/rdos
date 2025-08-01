@@ -640,17 +640,16 @@ AddFadtTable   PROC near
 ;
     mov eax,system_data_sel
     mov ds,eax
-
 ;
     mov ax,es:act_size
     cmp ax,130
-    jb aftDone
+    jb aftFree
 ;
     mov ebx,SIZE acpi_table
 ;
     mov eax,es:[ebx+116-36]
     cmp al,3
-    jae aftDone
+    jae aftFree
 ;
     mov ds:acpi_reset_method,al
 ;
@@ -678,6 +677,9 @@ AddFadtTable   PROC near
 
 aftFail:
     mov ds:acpi_reset_method,-1
+
+aftFree:
+    FreeMem
 
 aftDone:
     pop ebx
@@ -765,7 +767,7 @@ InitAcpiTable   PROC near
     je iatGet64
 ;
     cmp eax,'TDSR'
-    jne iatDone
+    jne iatFree
 
 iatGet32:    
     movzx ecx,ds:act_size
@@ -779,7 +781,7 @@ iatLoop32:
     call ProcessTable
     loop iatLoop32
 ;
-    jmp iatDone
+    jmp iatFree
 
 iatGet64:
     movzx ecx,ds:act_size
@@ -792,6 +794,9 @@ iatLoop64:
     add esi,8
     call ProcessTable
     loop iatLoop64
+
+iatFree:
+    FreeMem
 
 iatDone:
     popad
