@@ -98,8 +98,39 @@ code    SEGMENT byte public use32 'CODE'
 
 fake_idt  DD 0, 0
 
+MemReset   Proc near
+    ret
+MemReset   Endp
+
+IoReset   Proc near
+    mov edx,ds:acpi_reset_addr
+    mov al,ds:acpi_reset_data
+    out dx,al
+    ret
+IoReset   Endp
+
+PciReset   Proc near
+    ret
+PciReset   Endp
+
+reset_tab:
+rt00 DD OFFSET MemReset
+rt01 DD OFFSET IoReset
+rt02 DD OFFSET PciReset
+
 LocalCpuReset   Proc near
     cli
+    mov ax,mon_system_data_sel
+    mov ds,eax
+    mov al,ds:acpi_reset_method
+    cmp al,3
+    jae legacy_reset
+;
+    movzx ebx,al
+    call dword ptr cs:[4*ebx].reset_tab
+    jmp tripple_fault
+
+legacy_reset:
     mov ecx,10000h
 
 wait_gate1:
@@ -124,7 +155,8 @@ wait_gate2:
 done_gate2:
     mov al,0FEh
     out 60h,al
-;
+
+tripple_fault:
     mov ebx,OFFSET fake_idt
     lidt fword ptr cs:[ebx]
 ;
