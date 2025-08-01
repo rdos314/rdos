@@ -264,6 +264,11 @@ mon_fixed_lfb       DD ?
 nmi_data            DW ?
 nmi_proc            DD ?, ?
 
+acpi_apic_table     DW ?
+acpi_reset_method   DB ?
+acpi_reset_data     DB ?
+acpi_reset_addr     DD ?,?
+
 core_init           core_base_struc <>
 
 system_size                     DB ?

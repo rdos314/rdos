@@ -3822,6 +3822,10 @@ test_gate    Proc far
     push es
     pushad
 ;
+    mov eax,system_data_sel
+    mov ds,eax
+    mov esi,OFFSET system_size
+
     mov eax,SEG data
     mov ds,eax
     mov al,ds:has_reset
