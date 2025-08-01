@@ -445,6 +445,7 @@ init_system     Proc near
 ;
     mov bx,system_data_sel
     mov ds,bx
+    mov ds:acpi_reset_method,-1
     mov cx,OFFSET system_size
     movzx eax,cx
     mov bx,temp_sel

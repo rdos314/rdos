@@ -746,7 +746,7 @@ ProcessTable  ENDP
 InitAcpiTable   PROC near
     push ds
     push es
-    pushad
+    pushad    
 ;    
     mov eax,system_data_sel
     mov ds,eax
