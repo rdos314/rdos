@@ -132,13 +132,6 @@ act_oem_id      DD ?, ?
 
 acpi_table  ENDS
 
-acpitab STRUC
-
-acpi_table_count        DD ?
-acpi_table_arr          DD ?
-
-acpitab  ENDS
-
 data    SEGMENT byte public 'DATA'
 
 pci_spinlock            spinlock_typ <>
