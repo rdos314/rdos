@@ -43,14 +43,6 @@ INCLUDE pci.inc
 INCLUDE ..\os\core.inc
 INCLUDE acpitab.inc
 
-acpitab STRUC
-
-acpi_table_count        DD ?
-acpi_table_arr          DD ?
-
-acpitab  ENDS
-
-
 IFDEF __WASM__
     .686p
     .xmm2
@@ -720,52 +712,28 @@ InitAcpiTable   PROC near
 
 iatGet32:    
     movzx ecx,ds:act_size
-    shr ecx,1
-;    
-    mov eax,OFFSET acpi_table_arr
-    add eax,ecx
-    mov bx,pci_acpi_sel
-    AllocateFixedSystemMem
-    mov es,bx
-;
-    shr ecx,1
-    mov es:acpi_table_count,ecx
-;
+    shr ecx,2
     mov esi,SIZE acpi_table
-    mov edi,OFFSET acpi_table_arr
 
 iatLoop32:
     mov eax,[esi]
     xor ebx,ebx
     add si,4
     call ProcessTable
-    stos word ptr es:[edi]
     loop iatLoop32
 ;
     jmp iatDone
 
 iatGet64:
     movzx ecx,ds:act_size
-    shr ecx,2
-;    
-    mov eax,OFFSET acpi_table_arr
-    add eax,ecx
-    mov bx,pci_acpi_sel
-    AllocateFixedSystemMem
-    mov es,bx
-;
-    shr ecx,1
-    mov es:acpi_table_count,ecx
-;
+    shr ecx,3
     mov esi,SIZE acpi_table
-    mov edi,OFFSET acpi_table_arr
 
 iatLoop64:
     mov eax,[esi]
     mov ebx,[esi+4]
     add esi,8
     call ProcessTable
-    stos word ptr es:[edi]
     loop iatLoop64
 
 iatDone:
