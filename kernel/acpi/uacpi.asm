@@ -559,6 +559,38 @@ GetTable    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddApicTable
+;
+;           DESCRIPTION:    Add Apic table
+;
+;       PARAMETERS:         EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+AddApicTable   PROC near 
+    push ds
+    push es
+    push eax
+;
+    call GetTable
+    jc aatDone
+;
+    mov eax,system_data_sel
+    mov ds,eax
+;
+    mov ds:acpi_apic_table,es
+
+aatDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+AddApicTable   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddTable
 ;
 ;           DESCRIPTION:    Add ACPI table
@@ -582,14 +614,6 @@ AddTable   PROC near
     mov ds,eax
 ;
     mov eax,es:act_sign
-    cmp eax,dword ptr cs:apic_tab
-    jne atNotApic
-;
-    mov ds:acpi_apic_table,es
-    clc
-    jmp atDone
-
-atNotApic:
     cmp eax,dword ptr cs:hpet_tab
     jne atNotHpet
 ;
@@ -659,7 +683,13 @@ AddTable   Endp
 
 ProcessTable   PROC near
     call GetTableSign
+    cmp edx,dword ptr cs:apic_tab
+    jne ptNotApic
 ;
+    call AddApicTable
+    jmp ptDone
+
+ptNotApic:
     push es
     call GetTable
     mov ax,es
@@ -670,6 +700,8 @@ ProcessTable   PROC near
 
 ptSave:
     call AddTable
+
+ptDone:
     ret
 ProcessTable  ENDP
 
