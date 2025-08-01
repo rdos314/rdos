@@ -192,20 +192,52 @@ hook_init_pci   Proc far
     pop ds
     ret
 hook_init_pci   Endp
-        
+                
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DefaultReset
+;           NAME:           SoftReset
 ;
-;           DESCRIPTION:    Run default reset if reset is pending
+;           DESCRIPTION:    Soft reset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-do_reset   Proc near
+soft_reset_name      DB 'Soft Reset',0
+
+MemReset   Proc near
     CrashGate
     ret
+MemReset   Endp
 
+IoReset   Proc near
+    mov edx,ds:acpi_reset_addr
+    mov al,ds:acpi_reset_data
+    out dx,al
+    ret
+IoReset   Endp
+
+PciReset   Proc near
+    CrashGate
+    ret
+PciReset   Endp
+
+reset_tab:
+rt00 DD OFFSET MemReset
+rt01 DD OFFSET IoReset
+rt02 DD OFFSET PciReset
+
+soft_reset:
+    mov eax,system_data_sel
+    mov ds,eax
+    mov al,ds:acpi_reset_method
+    cmp al,3
+    jae legacy_reset
+;
+    movzx ebx,al
+    call dword ptr cs:[4*ebx].reset_tab
+    jmp tripple_fault
+
+legacy_reset:
     mov ecx,500    
 
 wait_gate1:
@@ -231,7 +263,8 @@ wait_gate2:
 wait_gate_done2:    
     mov al,0FEh
     out 60h,al
-;
+
+tripple_fault:
     mov ax,idt_sel
     mov ds,ax
 ;    
@@ -249,23 +282,6 @@ wait_gate_done2:
 
 reset_wait:
     jmp reset_wait
-
-do_reset    ENDP
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           SoftReset
-;
-;           DESCRIPTION:    Soft reset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-soft_reset_name      DB 'Soft Reset',0
-
-soft_reset:
-
-
      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3781,24 +3797,6 @@ hook_thread_done:
 ;       DESCRIPTION:    Test
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-ResetMem	Proc near
-    ret
-ResetMem        Endp
-
-ResetIo	Proc near
-    ret
-ResetIo        Endp
-
-ResetPci	Proc near
-    ret
-ResetPci        Endp
-
-reset_tab:
-rt00 DD OFFSET ResetMem
-rt01 DD OFFSET ResetIo
-rt02 DD OFFSET ResetPci   
 
 test_gate_name  DB 'Test', 0
 
