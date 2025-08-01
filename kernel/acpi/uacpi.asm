@@ -567,7 +567,6 @@ GetTable    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 AddApicTable   PROC near 
     push ds
     push es
@@ -599,7 +598,6 @@ AddApicTable   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 AddHpetTable   PROC near 
     push ds
     push es
@@ -623,55 +621,50 @@ AddHpetTable   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddTable
+;           NAME:           AddFadtTable
 ;
-;           DESCRIPTION:    Add ACPI table
+;           DESCRIPTION:    Add FADT table
 ;
-;           PARAMETERS:     AX     Table sel
+;       PARAMETERS:         EBX:EAX     Physical address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-apic_tab DB 'APIC'
-hpet_tab DB 'HPET'
-fadt_tab DB 'FACP'
-
-AddTable   PROC near 
+AddFadtTable   PROC near 
     push ds
     push es
     push eax
     push ebx
 ;
-    mov es,eax
+    call GetTable
+    jc aftDone
+;
     mov eax,system_data_sel
     mov ds,eax
-;
-    mov eax,es:act_sign
-    cmp eax,dword ptr cs:fadt_tab
-    jne atDone
+
 ;
     mov ax,es:act_size
     cmp ax,130
-    jb atDone
+    jb aftDone
 ;
     mov ebx,SIZE acpi_table
 ;
     mov eax,es:[ebx+116-36]
     cmp al,3
-    jae atDone
+    jae aftDone
 ;
     mov ds:acpi_reset_method,al
 ;
     shr eax,8
     cmp al,8
-    jne atFadtFail
+    jne aftFail
 ;
     shr eax,8
     or al,al
-    jne atFadtFail
+    jne aftFail
 ;
     shr eax,8
     cmp al,1
-    jne atFadtFail
+    jne aftFail
 ;
     mov eax,es:[ebx+120-36]
     mov ds:acpi_reset_addr,eax
@@ -681,18 +674,18 @@ AddTable   PROC near
 ;
     mov al,es:[ebx+128-36]
     mov ds:acpi_reset_data,al
-    jmp atDone
+    jmp aftDone
 
-atFadtFail:
+aftFail:
     mov ds:acpi_reset_method,-1
 
-atDone:
+aftDone:
     pop ebx
     pop eax
     pop es
     pop ds
     ret
-AddTable   Endp
+AddFadtTable   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -704,6 +697,10 @@ AddTable   Endp
 ;       PARAMETERS:         EBX:EAX     Physical address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+apic_tab DB 'APIC'
+hpet_tab DB 'HPET'
+fadt_tab DB 'FACP'
 
 ProcessTable   PROC near
     call GetTableSign
@@ -721,16 +718,13 @@ ptNotApic:
     jmp ptDone
 
 ptNotHpet:
-    push es
-    call GetTable
-    mov ax,es
-    pop es
-    jnc ptSave
-;    
-    xor ax,ax
+    cmp edx,dword ptr cs:fadt_tab
+    jne ptNotFadt
+;
+    call AddFadtTable
+    jmp ptDone
 
-ptSave:
-    call AddTable
+ptNotFadt:
 
 ptDone:
     ret
