@@ -313,6 +313,69 @@ GetRsdp Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetTableSign
+;
+;       DESCRIPTION:    Get a table signature
+;
+;       PARAMETERS:     EBX:EAX     Physical address
+;
+;       RETURNS:        NC      OK
+;                       EDX     Signature
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetTableSign Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push esi
+;   
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    movzx esi,ax
+    and si,0FFFh
+;
+    and ax,0F000h
+    or al,7    
+    SetPageEntry
+;    
+    push edx
+    add edx,esi
+    AllocateGdt    
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds,bx    
+    pop edx
+;
+    mov esi,ds:acpi_sign
+    push ebx
+    xor ebx,ebx
+    xor eax,eax
+    mov ds,ax
+    SetPageEntry
+    pop ebx
+;    
+    mov ecx,1000h
+    FreeLinear
+    FreeGdt
+;
+    mov edx,esi
+;
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+GetTableSign    Endp    
+      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GetTable
 ;
 ;           DESCRIPTION:    Get a table
@@ -648,6 +711,8 @@ iatLoop32:
     mov eax,[esi]
     xor ebx,ebx
     add si,4
+    call GetTableSign
+;
     push es
     call GetTable
     mov ax,es
@@ -683,6 +748,9 @@ iatLoop64:
     mov eax,[esi]
     mov ebx,[esi+4]
     add esi,8
+;
+    call GetTableSign
+;
     push es
     call GetTable
     mov ax,es
