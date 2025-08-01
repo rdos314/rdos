@@ -504,6 +504,96 @@ GetTable    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddTable
+;
+;           DESCRIPTION:    Add ACPI table
+;
+;           PARAMETERS:     AX     Table sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+apic_tab DB 'APIC'
+hpet_tab DB 'HPET'
+fadt_tab DB 'FACP'
+
+AddTable   PROC near 
+    push ds
+    push es
+    push eax
+    push ebx
+;
+    mov es,eax
+    mov eax,system_data_sel
+    mov ds,eax
+;
+    mov eax,es:act_sign
+    cmp eax,dword ptr cs:apic_tab
+    jne atNotApic
+;
+    mov ds:acpi_apic_table,es
+    clc
+    jmp atDone
+
+atNotApic:
+    cmp eax,dword ptr cs:hpet_tab
+    jne atNotHpet
+;
+    mov ds:acpi_hpet_table,es
+    clc
+    jmp atDone
+
+atNotHpet:
+    cmp eax,dword ptr cs:fadt_tab
+    jne atDone
+;
+    mov ax,es:act_size
+    cmp ax,130
+    jb atDone
+;
+    mov ebx,SIZE acpi_table
+;
+    mov eax,es:[ebx+116-36]
+    cmp al,3
+    jae atDone
+;
+    mov ds:acpi_reset_method,al
+;
+    shr eax,8
+    cmp al,8
+    jne atFadtFail
+;
+    shr eax,8
+    or al,al
+    jne atFadtFail
+;
+    shr eax,8
+    cmp al,1
+    jne atFadtFail
+;
+    mov eax,es:[ebx+120-36]
+    mov ds:acpi_reset_addr,eax
+;
+    mov eax,es:[ebx+124-36]
+    mov ds:acpi_reset_addr+4,eax
+;
+    mov al,es:[ebx+128-36]
+    mov ds:acpi_reset_data,al
+    jmp atDone
+
+atFadtFail:
+    mov ds:acpi_reset_method,-1
+
+atDone:
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+AddTable   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitAcpiTable
 ;
 ;           DESCRIPTION:    Init ACPI tables
@@ -517,6 +607,10 @@ InitAcpiTable   PROC near
     push es
     pushad
 ;    
+    mov eax,system_data_sel
+    mov ds,eax
+    mov ds:acpi_reset_method,-1
+;
     call GetRsdp
     jc iatDone
 ;    
@@ -561,6 +655,7 @@ iatLoop32:
     xor ax,ax
 
 iatSave32:
+    call AddTable
     stos word ptr es:[edi]
     loop iatLoop32
 ;
@@ -595,6 +690,7 @@ iatLoop64:
     xor ax,ax
 
 iatSave64:
+    call AddTable
     stos word ptr es:[edi]
     loop iatLoop64
 

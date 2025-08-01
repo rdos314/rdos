@@ -3824,15 +3824,11 @@ test_gate    Proc far
 ;
     mov eax,system_data_sel
     mov ds,eax
-    mov esi,OFFSET system_size
-
-    mov eax,SEG data
-    mov ds,eax
-    mov al,ds:has_reset
-    or al,al
-    jz tgDone
-;
-    call ds:reset_proc
+    mov ax,ds:acpi_apic_table
+    mov ax,ds:acpi_hpet_table
+    mov al,ds:acpi_reset_method
+    mov eax,ds:acpi_reset_addr
+    mov al,ds:acpi_reset_data
 
 tgDone:
     popad
