@@ -657,6 +657,33 @@ AddTable   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ProcessTable
+;
+;           DESCRIPTION:    Process table
+;
+;       PARAMETERS:         EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessTable   PROC near
+    call GetTableSign
+;
+    push es
+    call GetTable
+    mov ax,es
+    pop es
+    jnc ptSave
+;    
+    xor ax,ax
+
+ptSave:
+    call AddTable
+    ret
+ProcessTable  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitAcpiTable
 ;
 ;           DESCRIPTION:    Init ACPI tables
@@ -711,18 +738,7 @@ iatLoop32:
     mov eax,[esi]
     xor ebx,ebx
     add si,4
-    call GetTableSign
-;
-    push es
-    call GetTable
-    mov ax,es
-    pop es
-    jnc iatSave32
-;    
-    xor ax,ax
-
-iatSave32:
-    call AddTable
+    call ProcessTable
     stos word ptr es:[edi]
     loop iatLoop32
 ;
@@ -748,19 +764,7 @@ iatLoop64:
     mov eax,[esi]
     mov ebx,[esi+4]
     add esi,8
-;
-    call GetTableSign
-;
-    push es
-    call GetTable
-    mov ax,es
-    pop es
-    jnc iatSave64
-;    
-    xor ax,ax
-
-iatSave64:
-    call AddTable
+    call ProcessTable
     stos word ptr es:[edi]
     loop iatLoop64
 
