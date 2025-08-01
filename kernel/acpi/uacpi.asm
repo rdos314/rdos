@@ -591,6 +591,38 @@ AddApicTable   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AddHpetTable
+;
+;           DESCRIPTION:    Add HPET table
+;
+;       PARAMETERS:         EBX:EAX     Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+AddHpetTable   PROC near 
+    push ds
+    push es
+    push eax
+;
+    call GetTable
+    jc ahtDone
+;
+    mov eax,system_data_sel
+    mov ds,eax
+;
+    mov ds:acpi_hpet_table,es
+
+ahtDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+AddHpetTable   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddTable
 ;
 ;           DESCRIPTION:    Add ACPI table
@@ -614,14 +646,6 @@ AddTable   PROC near
     mov ds,eax
 ;
     mov eax,es:act_sign
-    cmp eax,dword ptr cs:hpet_tab
-    jne atNotHpet
-;
-    mov ds:acpi_hpet_table,es
-    clc
-    jmp atDone
-
-atNotHpet:
     cmp eax,dword ptr cs:fadt_tab
     jne atDone
 ;
@@ -690,6 +714,13 @@ ProcessTable   PROC near
     jmp ptDone
 
 ptNotApic:
+    cmp edx,dword ptr cs:hpet_tab
+    jne ptNotHpet
+;
+    call AddHpetTable
+    jmp ptDone
+
+ptNotHpet:
     push es
     call GetTable
     mov ax,es
