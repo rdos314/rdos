@@ -1246,6 +1246,8 @@ siMultiNext:
     inc al
     inc dx
     loop siMultiLoop
+;
+    EnablePciHandleMsi
 
 siDone:
     ret
