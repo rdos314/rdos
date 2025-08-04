@@ -662,37 +662,36 @@ InitMsg Endp
 DevName DB 'CAN', 0
 
 SetupDevice  Proc near
-    xor ax,ax
-    mov bh,0Ch
-    mov bl,9
-    FindPciClass
+    xor bx,bx
+    mov ah,0Ch
+    mov al,9
+    FindPciClassHandle
     jc sdDone
 ;
-    push es
-    push edi
+    mov al,1
+    GetPciBarPhys
+    jc sdDone
+;
+    push ebx
+;
+    push edx
+    push eax
+;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET DevName
-    PciPowerOn
-    pop edi
-    pop es
+    LockPciHandle
 ;
-    push cx
     mov eax,1000h    
     AllocateBigLinear
-    pop cx
-;        
-    mov cl,14h
-    ReadPciDword
 ;
-    push ebx
-    push ecx
+    pop eax
+    pop ebx
 ;
     mov si,ax
     and si,0E00h
     and ax,0F000h
     mov al,13h
-    xor ebx,ebx
     SetPageEntry
 ;
     AllocateGdt
@@ -704,38 +703,14 @@ SetupDevice  Proc near
     mov ds,bx
     mov ds:can_sel,es
 ;    
-    pop ecx
-    pop ebx    
+    pop ebx
 ;
-    GetPciMsi
-    jc sdIrq
-
-sdMsi:
-    push cx
-    mov cx,1
     mov al,12h
-    AllocateInts
-    pop cx
-    jc sdIrq
-;    
-    mov dl,1
-    SetupPciMsi
-;    
     mov di,cs
     mov es,di
     mov edi,OFFSET CanInt
-    RequestMsiHandler
-    jmp sdConf
-
-sdIrq:
-    GetPciIrqNr
-    mov ah,12h
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET CanInt    
-    RequestIrqHandler
-
-sdConf:
+    SetupPciHandleIrq
+;
     mov es,ds:can_sel
 ;
     mov al,16    ; TSEG 1
