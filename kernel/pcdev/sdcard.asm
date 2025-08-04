@@ -77,9 +77,7 @@ sd_serv_thread      DW ?
 sd_pend_error       DW ?
 sd_pend_int         DB ?
 sd_ok               DB ?
-sd_pci_bus          DB ?
-sd_pci_device       DB ?
-sd_pci_function     DB ?
+sd_pci_handle       DW ?
 sd_has_int          DW ?
 
 sd_disc_nr          DB ?
@@ -187,9 +185,7 @@ SdInt  Endp
 ;
 ;       PARAMETERS:     FS      Register selector
 ;                       EDX     Register linear
-;                       BH      PCI Bus
-;                       BL      PCI Device
-;                       CH      PCI Function
+;                       BX      PCI handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -202,9 +198,7 @@ AddDevice   Proc near
     AllocateSmallGlobalMem
     pop ax
     mov es:sd_reg_sel,fs
-    mov es:sd_pci_bus,bh
-    mov es:sd_pci_device,bl
-    mov es:sd_pci_function,ch
+    mov es:sd_pci_handle,bx
 ;
     mov ax,SEG data
     mov ds,ax
@@ -236,50 +230,47 @@ InitPciDev Proc near
     mov ds,ax
     mov ds:sd_dev_count,0
 ;    
-    xor si,si
+    xor bx,bx
 
 ipdLoop: 
-    mov ax,si
-    mov bh,8
-    mov bl,5
-    FindPciClass
+    mov ah,8
+    mov al,5
+    FindPciClassHandle
     jc ipdDone
 ;
-    push cx
-    mov eax,1000h
-    AllocateBigLinear
-    pop cx
+    xor al,al
+    GetPciBarPhys
+    jc ipdLoop
+;
+    push ebx
+;
+    push eax
+    push edx
 ;
     mov edi,OFFSET DevName
-    PciPowerOn    
+    LockPciHandle
 ;
-    mov cl,PCI_nbr_base_address0
-    ReadPciDword
+    mov eax,1000h
+    AllocateBigLinear
 ;    
-    push eax
-    and ax,0F000h
-    push ebx
-    xor ebx,ebx
-    mov al,13h
-    SetPageEntry
     pop ebx
     pop eax
+;
+    mov al,13h
+    SetPageEntry
 ;
     and eax,0E00h
     add edx,eax
 ;        
-    push bx
     AllocateGdt
-    push cx
     mov ecx,200h
     CreateDataSelector16
-    pop cx
     mov fs,bx
-    mov byte ptr fs:REG_RESET,1
-    pop bx
-    call AddDevice
 ;
-    inc si
+    mov byte ptr fs:REG_RESET,1
+    pop ebx
+;
+    call AddDevice
     jmp ipdLoop
 
 ipdDone:
@@ -300,41 +291,13 @@ InitPciDev  Endp
 SetupInts Proc near
     pushad
 ;    
-    mov bh,ds:sd_pci_bus
-    mov bl,ds:sd_pci_device
-    mov ch,ds:sd_pci_function
-    GetPciMsi
-    jc siIrq
-;    
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc siIrq    
-;    
-    SetupPciMsi
+    mov bx,ds:sd_pci_handle
+    mov al,12h
     mov di,cs
     mov es,di
     mov edi,OFFSET SdInt
-    RequestMsiHandler
-    jmp siOk
-
-siIrq:
-    GetPciIrqNr
-    cmp al,10
-    jnz siIrqOk
+    SetupPciHandleIrq
 ;
-    mov al,10h
-
-siIrqOk:    
-    mov ah,14h
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET SdInt
-    RequestIrqHandler
-
-siOk:    
     popad
     ret
 SetupInts   Endp
