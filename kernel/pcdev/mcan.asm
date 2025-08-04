@@ -130,11 +130,6 @@ cd_rx1_sel      DW ?
 cd_tx_sel       DW ?
 cd_tx_notify    DW TXB_ENTRIES DUP(?)
 
-cd_bus          DB ?
-cd_dev          DB ?
-cd_func         DB ?
-cd_resv         DB ?,?,?
-
 cd_ver          DB ?
 cd_rel          DB ?
 
@@ -633,43 +628,37 @@ SetupIdFilter    Endp
 DevName DB 'CAN', 0
 
 SetupDevice  Proc near
-    xor ax,ax
-    mov bh,0Ch
-    mov bl,9
-    FindPciClass
+    int 3
+    xor bx,bx
+    mov ah,0Ch
+    mov al,9
+    FindPciClassHandle
     jc sdDone
 ;
-    push es
-    push edi
+    xor al,al
+    GetPciBarPhys
+    jc sdDone
+;
+    push ebx
+;
+    push edx
+    push eax
+;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET DevName
-    PciPowerOn
-    pop edi
-    pop es
+    LockPciHandle
 ;
-    push cx
     mov eax,1000h    
     AllocateBigLinear
-    pop cx
 ;
-    mov cl,4h
-    ReadPciDword
-    or al,6
-    WritePciDword
-;
-    mov cl,14h
-    ReadPciDword
-    mov ebp,eax
-;
-    mov cl,10h
-    ReadPciDword
+    pop eax
+    pop ebx
 ;
     push ebx
-    push ecx
+    push eax
 ;
-    mov ebx,ebp
-    xor al,al
+    and ax,0F000h
     or ax,813h
     SetPageEntry
 ;
@@ -677,15 +666,15 @@ SetupDevice  Proc near
     mov ecx,1000h
     CreateDataSelector16
 ;
-    push eax
     mov eax,SIZE can_dev_struc
     AllocateSmallGlobalMem
     mov es:cd_reg,bx
-    pop eax
 ;
-    xor al,al
+    pop eax
+    pop ebx
+;
     mov es:cd_bar_phys,eax
-    mov es:cd_bar_phys+4,ebp
+    mov es:cd_bar_phys+4,ebx
 ;
     push ecx
     push edx
@@ -696,37 +685,19 @@ SetupDevice  Proc near
     pop edx
     pop ecx
 ;    
-    pop ecx
     pop ebx    
 ;
-    mov es:cd_bus,bh
-    mov es:cd_dev,bl
-    mov es:cd_func,ch
-;
-    GetPciMsi
-    jc sdFail
-
-sdMsi:
-    push cx
-    mov cx,1
-    mov al,12h
-    AllocateInts
-    pop cx
-    jc sdFail
-;    
-    mov dl,1
-    SetupPciMsi
-;    
-    push ds
     push es
+;
+    mov al,12h
     mov edi,es
     mov ds,edi
     mov edi,cs
     mov es,edi
     mov edi,OFFSET CanInt
-    RequestMsiHandler
+    SetupPciHandleIrq
+;
     pop es
-    pop ds
 ;
     mov ax,SEG data
     mov ds,eax
@@ -742,9 +713,7 @@ sdMsi:
     mov ds:cd_txe_count,0
     mov ds:cd_txb_count,0
 ;
-    mov bh,ds:cd_bus
-    mov bl,ds:cd_dev
-    mov ch,ds:cd_func
+    int 3
     mov eax,cs
     mov es,eax
     mov esi,OFFSET can_config_name
