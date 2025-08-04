@@ -1597,8 +1597,8 @@ DispTable2:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName1     DB '8255x-1',0
-DriverName2     DB '8255x-2',0
+DevName1     DB '8255x-1',0
+DevName2     DB '8255x-2',0
 
 PciVendorTab:
 pci00   DW 8086h, 1029h
@@ -1610,70 +1610,78 @@ pci05   DW 8086h, 1229h
 pci06   DW 8086h, 100Eh
 pci07   DW 0,     0
 
-InitPrimaryPciAdapter   Proc near
+InitPciAdapter   Proc near
     mov ax,cs
     mov es,ax
     mov ax,ether_data_sel
     mov ds,ax
     mov si,OFFSET PciVendorTab
-init_pci1_loop:
-    xor ax,ax
+    xor bx,bx
+    mov edi,OFFSET DevName1
+    mov ebp,OFFSET DispTable1
+
+init_pci_loop:
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
-    jz init_pci1_done
+    jz init_pci_done
 ;
-    FindPciDevice
-    jnc init_pci1_found
+    FindPciDeviceHandle
+    jnc init_pci_found
 ;
+    xor bx,bx
     add si,4
-    jmp init_pci1_loop
+    jmp init_pci_loop
 
-init_pci1_found:
-    mov edi,OFFSET DriverName1
-    PciPowerOn
+init_pci_found:
+    LockPciHandle
+    jc init_pci_loop
 ;
-    mov bp,bx
-    mov cx,PCI_revisionID
-    ReadPciByte
+    mov cl,PCI_revisionID
+    ReadPciConfigByte
     mov ds:RevID,al
 ;       
-    mov cx,10h
-    ReadPciDword
-    mov edx,eax
-    and dx,0FFE0h
-    mov ds:MemBase,edx
-;       
-    mov cx,14h
-    ReadPciDword
-    mov dx,ax
-    and dx,0FFE0h
-    mov ds:IoBase,dx
-;       
-    mov cx,18h
-    ReadPciDword
-    mov edx,eax
-    and dx,0FFE0h
-    mov ds:FlashBase,edx
+    xor al,al
+    GetPciBarPhys
+    jc init_io_dev
 ;
+    mov ds:MemBase,eax
+
+init_io_dev:
+    mov al,1
+    GetPciBarIo
+    jc init_flash_dev
+;       
+    mov ds:IoBase,dx
+
+init_flash_dev:
+    mov al,2
+    GetPciBarPhys
+    jc init_setup
+       
+    mov ds:FlashBase,eax
+
+init_setup:
     int 3
     call SetupAccess
     call Reset
 ;    
     call GetEeSize
-    jc init_pci1_done
+    jc init_pci_done
 ;    
     GetThread
     mov ds:WaitThread,ax
     mov ds:IntStat,0
 ;    
-    GetPciIrqNr
-    mov ah,14h
-    mov bx,cs
-    mov es,bx
-    mov di,OFFSET NetInt    
-    RequestIrqHandler
+;    GetPciIrqNr
+;    mov ah,14h
+;    mov bx,cs
+;    mov es,bx
+;    mov di,OFFSET NetInt    
+;    RequestIrqHandler
+;
+    push ebx
 ;
     call ReadEthernetAddress
     call InitCmd
@@ -1684,145 +1692,45 @@ init_pci1_found:
     call InitTx
 ;
     push ds
+    push esi
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET DispTable1
-    mov edi,OFFSET DriverName1
+    mov esi,ebp
     mov al,1
     mov dx,0
     mov ecx,1600
     RegisterNetDriver
+;
+    pop esi
     pop ds
     mov ds:Handle,bx
 ;       
     mov al,ds:IntStat
     test al,ACK_FRAME_RX
-    jz init_pci1_ok
+    jz init_pci_ok
 ;
     mov bx,ds:Handle
     NetReceived
 
-init_pci1_ok:
-    mov bx,bp   
-    clc
+init_pci_ok:
+    pop ebx
 
-init_pci1_done:
-    ret
-InitPrimaryPciAdapter   Endp
-
-InitSecondaryPciAdapter Proc near
-    mov bp,bx
-    mov ax,cs
-    mov es,ax
+init_pci_next:
+    mov ax,ds
+    cmp ax,ether_data_sel
+    jne init_pci_done
+;
     mov ax,ether_data2_sel
     mov ds,ax
-    mov si,OFFSET PciVendorTab
-init_pci2_loop:
-    xor ax,ax
+    mov edi,OFFSET DevName2
+    mov ebp,OFFSET DispTable2
+    jmp init_pci_loop
 
-init_pci2_retry:
-    mov dx,cs:[si]
-    mov cx,cs:[si+2]
-    or dx,dx
-    stc
-    jz init_pci2_done
-;
-    FindPciDevice
-    jc init_pci2_next
-;
-    cmp bx,bp
-    jne init_pci2_found 
-;
-    or ax,ax
-    jnz init_pci2_next
-; 
-    inc ax
-    jmp init_pci2_retry
-
-init_pci2_next:
-    add si,4
-    jmp init_pci2_loop
-
-init_pci2_found:
-    mov edi,OFFSET DriverName2
-    PciPowerOn
-;
-    mov bp,bx
-    mov cx,PCI_revisionID
-    ReadPciByte
-    mov ds:RevID,al
-;       
-    mov cx,10h
-    ReadPciDword
-    mov edx,eax
-    and dx,0FFE0h
-    mov ds:MemBase,edx
-;       
-    mov cx,14h
-    ReadPciDword
-    mov dx,ax
-    and dx,0FFE0h
-    mov ds:IoBase,dx
-;       
-    mov cx,18h
-    ReadPciDword
-    mov edx,eax
-    and dx,0FFE0h
-    mov ds:FlashBase,edx
-;
-    call SetupAccess
-    call Reset
-;    
-    call GetEeSize
-    jc init_pci2_done
-;    
-    GetThread
-    mov ds:WaitThread,ax
-    mov ds:IntStat,0
-;    
-    GetPciIrqNr
-    mov ah,14h
-    mov bx,cs
-    mov es,bx
-    mov di,OFFSET NetInt    
-    RequestIrqHandler
-;
-    call ReadEthernetAddress
-    call InitCmd
-    call Config
-    call SetupEthernetAddress
-    call InitRx
-    mov ds:WaitThread,0
-    call InitTx
-;
-    push ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET DispTable2
-    mov edi,OFFSET DriverName2
-    mov al,1
-    mov dx,0
-    mov ecx,1600
-    RegisterNetDriver
-    pop ds
-    mov ds:Handle,bx
-;       
-    mov al,ds:IntStat
-    test al,ACK_FRAME_RX
-    jz init_pci2_ok
-;
-    mov bx,ds:Handle
-    NetReceived
-
-init_pci2_ok:
-    mov bx,bp   
-    clc
-
-init_pci2_done:
+init_pci_done:
     ret
-InitSecondaryPciAdapter Endp
+InitPciAdapter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1888,12 +1796,8 @@ init_net    Proc far
     push es
     pusha
 ;
-    call InitPrimaryPciAdapter
-    jc dt_done
-;       
-    call InitSecondaryPciAdapter
-´
-dt_done:    
+    call InitPciAdapter
+;
     popa
     pop es
     pop ds
