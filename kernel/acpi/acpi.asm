@@ -942,27 +942,28 @@ get_pci_handle_dsd_config_name DB 'Get PCI Handle DSD Config', 0
 GetDsdConfig  Proc near
     push ds
     push es
-    push gs
+    push fs
+    push esi
     push edi
     push ebp
 ;
-    mov eax,es
-    mov gs,eax
-;
-    push edi
+    mov eax,ds
+    mov fs,eax
     call AllocateMsg
-    pop edi
-    jc gdcDone
-;
-    call AddMsgBuffer
-;    
-;    mov eax,GET_PCI_NAME_CMD
-;    call RunMsg
 
-gdcDone:    
+dsdInCopy:
+    lods byte ptr fs:[esi]
+    stosb
+    or al,al
+    jnz dsdInCopy
+;    
+    mov eax,GET_DSD_CONFIG_CMD
+    call RunMsg
+;    
     pop ebp
     pop edi
-    pop gs
+    pop esi
+    pop fs
     pop es
     pop ds
     ret

@@ -122,7 +122,7 @@ WRITE_PCI_CONFIG_DWORD_CMD = 14
 
 ; IN  BX     Handle
 ; IN  DX     Issuer selector
-; IN  ES:EDI Name
+; IN         Name
 LOCK_PCI_CMD               = 15
 
 ; IN  BX     Handle
@@ -169,3 +169,10 @@ GET_PCI_BAR_PHYS_CMD       = 23
 ; IN  BX      Handle
 ; OUT DX      IO port
 GET_PCI_BAR_IO_CMD         = 24
+
+; IN  BX     Handle
+; IN  ECX    Max entries
+; IN         Config Name
+; OUT        Packet data
+; OUT EAX    Entry count
+GET_DSD_CONFIG_CMD         = 25
