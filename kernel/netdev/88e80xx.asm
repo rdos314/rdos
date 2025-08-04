@@ -96,7 +96,7 @@ ENDIF
 ;
 ;       DESCRIPTION:    Init base memory
 ;
-;       PARAMETERS:     BH:BL:CH    PCI address
+;       PARAMETERS:     BX          PCI handle
 ;                       DS          Ethernet selector
 ;
 ;       RETURNS:        ES          Base mem selector
@@ -104,19 +104,10 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitBase    Proc near
-    mov cx,PCI_nbr_base_address0+4
-    ReadPciDword
-;
-    push eax
-    mov cx,PCI_nbr_base_address0
-    ReadPciDword
-    pop ebx
-    test al,4
-    jnz ibPhysOk
-;
-    xor ebx,ebx
+    xor al,al
+    GetPciBarPhys
+    jc ibDone
 
-ibPhysOk:
     push eax
     mov eax,4000h
     AllocateBigLinear
@@ -141,6 +132,8 @@ ibPhysLoop:
 ;
     mov ds:MemSel,bx
     mov es,bx
+
+ibDone:
     ret
 InitBase    Endp
 
@@ -400,83 +393,59 @@ InitController   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName1     DB '88E80xx-1',0
-DriverName2     DB '88E80xx-2',0
+DevName1     DB '88E80xx-1',0
+DevName2     DB '88E80xx-2',0
 
 PciVendorTab:
 pci00   DW 11ABh, 4380h
 pci01   DW 0,     0
 
-InitPrimaryPciAdapter   Proc near
+InitPciAdapter   Proc near
     mov bp,ax
     mov ax,cs
     mov es,ax
     mov ax,ether_data_sel
     mov ds,ax
     mov si,OFFSET PciVendorTab
-init_pci1_loop:
+    xor bx,bx
+    mov edi,OFFSET DevName1
+
+init_pci_loop:
     mov ax,bp
     mov dx,cs:[si]
     mov cx,cs:[si+2]
     or dx,dx
     stc
-    jz init_pci1_done
+    jz init_pci_done
 ;
-    FindPciDevice
-    jnc init_pci1_found
+    FindPciDeviceHandle
+    jnc init_pci_found
 ;
+    xor bx,bx
     add si,4
-    jmp init_pci1_loop
+    jmp init_pci_loop
 
-init_pci1_found:
-    mov edi,OFFSET DriverName1
-    PciPowerOn
+init_pci_found:
+    LockPciHandle
+    jc init_pci_loop
 ;
-    mov bp,bx
     call InitBase
     call InitController
 ;    
-    mov ax,bp   
-    clc
 
-init_pci1_done:
-    ret
-InitPrimaryPciAdapter   Endp
-
-InitSecondaryPciAdapter Proc near
-    mov bp,ax
-    mov ax,cs
-    mov es,ax
+init_pci_next:
+    mov ax,ds
+    cmp ax,ether_data_sel
+    jne init_pci_done
+;
     mov ax,ether_data2_sel
     mov ds,ax
-    mov si,OFFSET PciVendorTab
-init_pci2_loop:
-    mov ax,bp
-    mov dx,cs:[si]
-    mov cx,cs:[si+2]
-    or dx,dx
-    stc
-    jz init_pci2_done
-;
-    FindPciDevice
-    jnc init_pci2_found
-;
-    add si,4
-    jmp init_pci2_loop
+    mov edi,OFFSET DevName2
+    jmp init_pci_loop
 
-init_pci2_found:
-    mov edi,OFFSET DriverName2
-    PciPowerOn
-;
-    mov bp,bx
-    call InitBase
-    call InitController
-    mov ax,bp   
-    clc
-
-init_pci2_done:
+init_pci_done:
     ret
-InitSecondaryPciAdapter Endp
+InitPciAdapter   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -499,11 +468,7 @@ init_net    Proc far
     pusha
 ;
     int 3    
-    xor ax,ax
-    call InitPrimaryPciAdapter
-;
-    inc ax
-    call InitSecondaryPciAdapter
+    call InitPciAdapter
 ;    
     popa
     pop es
