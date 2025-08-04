@@ -337,9 +337,7 @@ nd_complete_queues       DW ?
 nd_nsid_count            DW ?
 nd_nsid_arr              DW MAX_NSID DUP(?)
 
-nd_pci_bus               DB ?
-nd_pci_device            DB ?
-nd_pci_function          DB ?
+nd_pci_handle            DW ?
 
 nd_complete_bit          DB ?
 
@@ -348,8 +346,7 @@ nd_submit_shift          DB ?
 nd_complete_shift        DB ?
 
 nd_int_count             DB ?
-nd_base_int              DB ?
-nd_curr_int              DB ?
+nd_curr_index            DB ?
 
 nd_vendor                DB 41 DUP(?)
 
@@ -1037,30 +1034,35 @@ CreateNameSpace  Proc near
     call GetId0
     jc cnsDone
 ;
-    mov al,es:nd_curr_int
     push ds
     push es
+    push eax
+    push ebx
     push edx
     push edi
 ;
-    mov edx,fs
-    mov ds,edx
-    mov edx,cs
-    mov es,edx
+    mov bx,es:nd_pci_handle
+    movzx dx,es:nd_curr_index
+    mov eax,fs
+    mov ds,eax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET NvmeInt
-    RequestMsiHandler
+    SetupPciHandleMsi
 ;
     pop edi
     pop edx
+    pop ebx
+    pop eax
     pop es
     pop ds
 ;
-    sub al,es:nd_base_int
+    mov al,es:nd_curr_index
     call CreateIoCompletionQueue
     jc cnsDone
 ;
     dec es:nd_int_count
-    inc es:nd_curr_int
+    inc es:nd_curr_index
 ;
     mov fs:ns_queue,bl
     mov fs:ns_complete_ptr,0
@@ -1224,11 +1226,10 @@ ConfigDevice  Endp
 ;
 ;   DESCRIPTION:    Create device
 ;
-;   PARAMETERS:     BH      PCI Bus
-;                   BL      PCI Device
-;                   CH      PCI Function
+;   PARAMETERS:     BX          PCI handle
+;                   EDX:EAX     Physical address
 ;
-;   RETURNS:        ES      Device sel
+;   RETURNS:        ES          Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1236,36 +1237,27 @@ CreateDevice  Proc near
     push ds
     pushad
 ;
+    push eax
+;
     mov ax,SEG data
     mov ds,eax
-;
     mov eax,SIZE nvme_device_struc
     AllocateSmallGlobalMem
 ;
-    mov es:nd_pci_bus,bh
-    mov es:nd_pci_device,bl
-    mov es:nd_pci_function,ch
+    pop eax
+;
+    mov es:nd_pci_handle,bx
     mov es:nd_complete_bit,0
+;
+    push edx
+    push eax
 ;
     mov eax,2000h    
     AllocateBigLinear
 ;
-    mov cl,10h
-    ReadPciDword
-    test al,4
-    jz cd32
-;
-    push eax
-    mov cl,14h
-    ReadPciDword
-    mov ebx,eax
     pop eax
-    jmp cdAlloc
-
-cd32:
-    xor ebx,ebx
-
-cdAlloc:
+    pop ebx
+;
     and ax,0F000h
     mov al,13h
     SetPageEntry
@@ -1320,7 +1312,8 @@ cdAlloc:
     CreateDataSelector16
     mov es:nd_admin_complete_sel,bx
     clc
-;
+
+cdExit:
     popad
     pop ds
     ret
@@ -1342,24 +1335,29 @@ SetupInts Proc near
     push es
     pushad
 ;
-    mov bh,es:nd_pci_bus
-    mov bl,es:nd_pci_device
-    mov ch,es:nd_pci_function
-    GetPciMsi
-    jc siIrq
+    mov bx,es:nd_pci_handle
+    GetPciHandleMsiX
+    jc siCheckMsi
 ;
-    push cx
-    movzx cx,dl
-    mov al,14h
-    AllocateInts
-    pop cx
-    jnc siMsiHandlers
+    cmp al,1
+    ja siMulti
 
-siMsiHandlers:
-    SetupPciMsi
-    dec dl
-    mov es:nd_int_count,dl
-    mov es:nd_base_int,al
+siCheckMsi:    
+    GetPciHandleMsi
+    jc siDone
+;
+    cmp al,1
+    jbe siDone
+
+siMulti:
+    mov ah,14h
+    movzx cx,al
+    ReqPciHandleMsi    
+    jc siDone
+;
+    dec cl
+    mov es:nd_int_count,cl
+    mov es:nd_curr_index,1
 ;
     push es
     mov edx,es
@@ -1367,26 +1365,13 @@ siMsiHandlers:
     mov edx,cs
     mov es,edx
     mov edi,OFFSET NvmeAdminInt
-    RequestMsiHandler
+    xor dx,dx
+    SetupPciHandleMsi
     pop es
 ;
-    inc al
-    mov es:nd_curr_int,al
-    jmp siOk
-
-siIrq:
-    int 3
-    GetPciIrqNr
-    mov ah,14h
-    mov eax,es
-    mov ds,eax
-    mov eax,cs
-    mov es,eax
-    mov edi,OFFSET NvmeInt
-    RequestIrqHandler
-
-siOk:    
     clc
+
+siDone:
     popad
     pop es
     pop ds
@@ -1817,6 +1802,11 @@ nvme_thread:
     GetThread
     mov es:nd_thread,ax
 ;
+    push ebx
+    mov bx,es:nd_pci_handle
+    EnablePciHandleMsi
+    pop ebx
+;
     call GetId1
     jc ntDone
 ;
@@ -1941,19 +1931,25 @@ SetupDevice  Proc near
     mov ax,SEG data
     mov fs,ax
     mov fs:nvme_dev_count,0
-    xor ebp,ebp
+    xor bp,bp
 
 sdLoop:
-    mov eax,ebp
-    mov bh,1
-    mov bl,8
-    FindPciClass
+    mov bx,bp
+    mov ah,1
+    mov al,8
+    FindPciClassHandle
     jc sdDone
 ;
+    xor al,al
+    GetPciBarPhys
+    jc sdLoop
+;
+    push eax
     mov eax,cs
     mov es,eax
     mov edi,OFFSET DevName
-    PciPowerOn
+    LockPciHandle
+    pop eax
 ;
     call CreateDevice
     jc sdNext
@@ -2008,7 +2004,6 @@ sdCopyDone:
     FreeMem
 
 sdNext:
-    inc ebp
     jmp sdLoop
 
 sdDone:

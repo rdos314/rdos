@@ -4087,6 +4087,11 @@ SetupPciHandleMsi    MACRO
     OsGate setup_pci_handle_msi_nr
                     ENDM
 
+; IN  BX        Handle
+EnablePciHandleMsi    MACRO
+    OsGate enable_pci_handle_msi_nr
+                    ENDM
+
 ; IN  AL        BAR #
 ; IN  BX        Handle
 ; OUT EDX:EAX   Physical address

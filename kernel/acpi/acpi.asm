@@ -710,11 +710,16 @@ req_pci_handle_msi_name      DB 'Req PCI Handle MSI',0
 req_pci_handle_msi   Proc far
     push ds
     push es
+    push fs
     push edx
+    push esi
     push edi
     push ebp
 ;
-    mov edx,[esp+24]
+    GetCore
+    mov si,fs:cs_id
+;
+    mov edx,[esp+32]
 ;
     call AllocateMsg
 ;    
@@ -723,7 +728,9 @@ req_pci_handle_msi   Proc far
 ;    
     pop ebp
     pop edi
+    pop esi
     pop edx
+    pop fs
     pop es
     pop ds
     ret
@@ -776,6 +783,41 @@ sphmDone:
     pop eax
     ret
 setup_pci_handle_msi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EnablePciHandleMsi
+;
+;           DESCRIPTION:    Enable PCI MSI handlers
+;
+;           PARAMETERS:     BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_pci_handle_msi_name      DB 'Enable PCI Handle MSI',0
+
+enable_pci_handle_msi   Proc far
+    push ds
+    push es
+    push edx
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,ENABLE_PCI_MSI_CMD
+    call RunMsg
+;    
+    pop ebp
+    pop edi
+    pop edx
+    pop es
+    pop ds
+    ret
+enable_pci_handle_msi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3909,6 +3951,12 @@ init    Proc far
     mov edi,OFFSET setup_pci_handle_msi_name
     xor cl,cl
     mov ax,setup_pci_handle_msi_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET enable_pci_handle_msi
+    mov edi,OFFSET enable_pci_handle_msi_name
+    xor cl,cl
+    mov ax,enable_pci_handle_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET soft_reset
