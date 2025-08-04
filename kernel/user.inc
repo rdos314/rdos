@@ -4608,6 +4608,15 @@ GetPciHandle      MACRO
         UserGate get_pci_handle_nr
                         ENDM
 
+;   IN  BX          Pci handle
+;   IN  DS:ESI      Config name
+;   IN  ES:EDI      Buffer
+;   IN  EAX         Max entries
+;   OUT EAX         Entry count
+GetPciHandleDsdConfig      MACRO
+        UserGate get_pci_handle_dsd_config_nr
+                        ENDM
+
 ;   IN  BX          Handle
 ;   OUT DH          Segment
 ;   OUT DL          Bus

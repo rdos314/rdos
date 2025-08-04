@@ -1055,5 +1055,6 @@ unlock_pci_handle_nr              = 877
 get_pci_handle_msi_nr             = 878
 get_pci_handle_msix_nr            = 879
 is_pci_handle_locked_nr           = 880
+get_pci_handle_dsd_config_nr      = 881
 
 usergate_entries                  = 900

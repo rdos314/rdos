@@ -626,6 +626,7 @@ SetupIdFilter    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DevName DB 'CAN', 0
+can_config_name DB 'bosch,mram-cfg', 0
 
 SetupDevice  Proc near
     int 3
@@ -714,14 +715,16 @@ SetupDevice  Proc near
     mov ds:cd_txb_count,0
 ;
     int 3
-    mov eax,cs
-    mov es,eax
-    mov esi,OFFSET can_config_name
+    push ds
     mov eax,ds
-    mov fs,eax
+    mov es,eax
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET can_config_name
     mov edi,OFFSET cd_sidf_offset
     mov eax,8
-    GetPciDsdConfig
+    GetPciHandleDsdConfig
+    pop ds
 ;
     mov eax,ds:cd_rxf0_count
     or eax,eax
@@ -1726,7 +1729,6 @@ HandleTxCancel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 can_thread_name DB 'Can', 0
-can_config_name DB 'bosch,mram-cfg', 0
 
 can_thread_pr:
     mov ax,SEG data
