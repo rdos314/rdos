@@ -629,7 +629,6 @@ DevName DB 'CAN', 0
 can_config_name DB 'bosch,mram-cfg', 0
 
 SetupDevice  Proc near
-    int 3
     xor bx,bx
     mov ah,0Ch
     mov al,9
@@ -722,7 +721,7 @@ SetupDevice  Proc near
     mov ds,eax
     mov esi,OFFSET can_config_name
     mov edi,OFFSET cd_sidf_offset
-    mov eax,8
+    mov ecx,8
     GetPciHandleDsdConfig
     pop ds
 ;

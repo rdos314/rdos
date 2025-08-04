@@ -924,6 +924,74 @@ get_pci_handle_cap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;    NAME:           GetPciHandleDsdConfig16/32
+;
+;    DESCRIPTION:    Get PCI DSD config
+;
+;    PARAMETERS:     BX          PCI Handle
+;                    DS:(E)SI    Config name
+;                    ES:(E)DI    Name buffer
+;                    (E)CX       Size of buffer
+;
+;    RETURNS:        EAX         Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_handle_dsd_config_name DB 'Get PCI Handle DSD Config', 0
+
+GetDsdConfig  Proc near
+    push ds
+    push es
+    push gs
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
+;
+    push edi
+    call AllocateMsg
+    pop edi
+    jc gdcDone
+;
+    call AddMsgBuffer
+;    
+;    mov eax,GET_PCI_NAME_CMD
+;    call RunMsg
+
+gdcDone:    
+    pop ebp
+    pop edi
+    pop gs
+    pop es
+    pop ds
+    ret
+GetDsdConfig   Endp
+
+get_pci_handle_dsd_config16  Proc far
+    push ecx
+    push esi
+    push edi
+;
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di
+    call GetDsdConfig
+;    
+    pop edi
+    pop esi
+    pop ecx
+    ret
+get_pci_handle_dsd_config16  Endp
+
+get_pci_handle_dsd_config32  Proc far
+    call GetDsdConfig
+    ret
+get_pci_handle_dsd_config32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;    NAME:           GetPciDeviceName16/32
 ;
 ;    DESCRIPTION:    Get PCI device name
@@ -4012,6 +4080,13 @@ init    Proc far
     xor dx,dx
     mov ax,get_pci_handle_msix_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_pci_handle_dsd_config16
+    mov esi,OFFSET get_pci_handle_dsd_config32
+    mov edi,OFFSET get_pci_handle_dsd_config_name
+    mov dx,virt_ds_in OR virt_es_in
+    mov ax,get_pci_handle_dsd_config_nr
+    RegisterUserGate
 ;
     mov esi,OFFSET get_pci_handle_cap
     mov edi,OFFSET get_pci_handle_cap_name
