@@ -846,7 +846,7 @@ get_pci_cap   Endp
 
 eval_pci_int_arr_name DB 'Eval PCI Int Arr', 0
 
-EvalPciIntArr  Proc near
+eval_pci_int_arr  Proc near
     push ds
     push es
     push fs
@@ -885,7 +885,7 @@ eiaInCopy:
     pop es
     pop ds
     ret
-EvalPciIntArr   Endp
+eval_pci_int_arr   Endp
 
 eval_pci_int_arr16  Proc far
     push ecx
@@ -895,7 +895,7 @@ eval_pci_int_arr16  Proc far
     movzx ecx,cx
     movzx esi,si
     movzx edi,di
-    call EvalPciIntArr
+    call eval_pci_int_arr
 ;    
     pop edi
     pop esi
@@ -904,7 +904,7 @@ eval_pci_int_arr16  Proc far
 eval_pci_int_arr16  Endp
 
 eval_pci_int_arr32  Proc far
-    call EvalPciIntArr
+    call eval_pci_int_arr
     ret
 eval_pci_int_arr32  Endp
 
