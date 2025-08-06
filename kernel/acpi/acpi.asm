@@ -2522,85 +2522,6 @@ move_pci_msi     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetPciMsiInfo
-;
-;           DESCRIPTION:    Get PCI MSI info
-;
-;           PARAMETERS:     AL          Irq #
-;
-;           RETURNS:        AL          Base int
-;                           DX          Core
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_pci_msi_info_name DB 'Get PCI MSI Info',0
-
-get_pci_msi_info     Proc far    
-    push es
-    push ebx
-    push ecx
-    push edi
-;
-    call FindIrq
-    jc gpmiDone
-;
-    mov bl,es:[edi].pcif_msi
-    or bl,bl
-    jz gpmiMsix
-;
-    mov al,es:[edi].pcif_irq
-    mov dx,es:[edi].pcif_msi_core
-    or dx,dx
-    stc
-    jz gpmiDone
-;
-    mov es,dx
-    mov dx,es:cs_id
-    clc
-    jmp gpmiDone
-
-gpmiMsix:
-    mov bl,es:[edi].pcif_msix
-    or bl,bl
-    stc
-    jz gpmiDone
-;
-    mov cx,es:[edi].pcif_msix_count
-    mov es,es:[edi].pcif_msix_irq_sel
-    xor di,di
-
-gpmiMsixLoop:
-    cmp al,es:[di]
-    je gpmiMsixFound
-;
-    add di,4
-    sub cx,1
-    jnz gpmiMsixLoop
-;
-    stc
-    jmp gpmiDone
-
-gpmiMsixFound:
-    mov dx,es:[di+2]
-    or dx,dx
-    stc
-    jz gpmiDone
-;
-    mov es,dx
-    mov dx,es:cs_id
-    clc
-
-gpmiDone:
-    pop edi
-    pop ecx
-    pop ebx
-    pop es
-    ret
-get_pci_msi_info      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetPciMsiX
 ;
 ;           DESCRIPTION:    Get PCI MSI-X interface
@@ -3581,12 +3502,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_pci_msi_info
-    mov edi,OFFSET get_pci_msi_info_name
-    xor cl,cl
-    mov ax,get_pci_msi_info_nr
     RegisterOsGate
 ;
     mov esi,OFFSET move_pci_msi

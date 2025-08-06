@@ -4206,13 +4206,6 @@ SetupPciMsiXEntry    MACRO
     OsGate setup_pci_msix_entry_nr
                     ENDM
 
-; IN  AL    Int #
-; OUT AL    Base int #
-; OUT DX    Core
-GetPciMsiInfo    MACRO
-    OsGate get_pci_msi_info_nr
-                    ENDM
-
 ;;;;;;;;;; ACPI ;;;;;;;;;
 
 ;   IN  EAX         PCI device #
