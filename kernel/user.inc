@@ -4710,9 +4710,6 @@ IsPciHandleLocked      MACRO
         UserGate is_pci_handle_locked_nr
                         ENDM
 
-;
-; legacy
-;
 ;   IN  DH          Segment
 ;   IN  DL          Bus
 ;   OUT DL          Bus #
@@ -4722,60 +4719,12 @@ GetPciBus      MACRO
         UserGate get_pci_bus_nr
                         ENDM
 
-;  IN  BH    Bus
-;  IN  BL    Device
-;  IN  CH    Function
-;  OUT AL    Global int #
-GetPciIrqNr     MACRO
-    UserGate get_pci_irq_nr
-                    ENDM
-
-;  IN  BH    Bus
-;  IN  BL    Device
-;  IN  CH    Function
-;  OUT AL    Pin #
-GetPciIrqPin     MACRO
-    UserGate get_pci_irq_pin_nr
-                    ENDM
-
-;   IN  BH          Bus #
-;   IN  BL          Device #
-;   IN  CH          Function #
-;   OUT AH          Class
-;   OUT AL          Sub class
-GetPciClass      MACRO
-        UserGate get_pci_class_nr
-                        ENDM
-
-;   IN  BH          Bus #
-;   IN  BL          Device #
-;   IN  CH          Function #
-;   OUT AL          Interface
-GetPciInterface      MACRO
-        UserGate get_pci_interface_nr
-                        ENDM
 
 ;   IN  BX          Handle
 ;   IN  ES:E(DI)    ACPI name buffer
 GetPciDeviceName      MACRO
         UserGate get_pci_device_name_nr
                         ENDM
-
-;   IN  BH          Bus #
-;   IN  BL          Device #
-;   IN  CH          Function #
-;   OUT AX          Vendor ID
-;   OUT DX          Device ID
-GetPciDeviceVendor      MACRO
-        UserGate get_pci_device_vendor_nr
-                        ENDM
-
-;  IN  BH    Bus
-;  IN  BL    Device
-;  IN  CH    Function
-IsPciFunctionUsedNr     MACRO
-    UserGate is_pci_function_used_nr
-                    ENDM
 
 ;;;;;;;;;;; ACPI ;;;;;;;;;;
 

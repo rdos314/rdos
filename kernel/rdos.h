@@ -392,14 +392,6 @@ void RDOSAPI RdosCreateUuid(char *uuid);
 
 void RDOSAPI RdosWaitAnio(int Irq);
 
-int RDOSAPI RdosIsPciFunctionUsed(int Bus, int Dev, int Func);
-int RDOSAPI RdosGetPciIrq(int Bus, int Dev, int Func);
-int RDOSAPI RdosGetPciClass(int Bus, int Dev, int Func, int *Class, int *Subclass);
-int RDOSAPI RdosGetPciInterface(int Bus, int Dev, int Func);
-int RDOSAPI RdosGetPciMsi(int Bus, int Dev, int Func, int *Reg, int *IrqCount);
-int RDOSAPI RdosGetPciMsiX(int Bus, int Dev, int Func, int *Reg, int *IrqCount);
-int RDOSAPI RdosGetPciDeviceVendor(int Bus, int Dev, int Func, int *Vendor, int *Device);
-
 int RDOSAPI RdosGetPciDeviceName(int Handle, char *AcpiName, int MaxSize);
 int RDOSAPI RdosGetPciBus(unsigned char ReqSeg, unsigned char ReqBus, unsigned char *Bus, unsigned char *Device, unsigned char *Function);
 int RDOSAPI RdosFindPciClass(int Start, unsigned char ClassCode, unsigned char SubClass);

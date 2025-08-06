@@ -282,98 +282,11 @@
     __parm [__dh] [__dl] [__ebx] [__esi] [__edi] \
     __value [__eax]
 
-#pragma aux RdosIsPciFunctionUsed = \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
-    CallGate_is_pci_function_used  \
-    "jc Fail" \
-    "mov eax,1" \
-    "jmp Done" \
-    "Fail:" \
-    "xor eax,eax" \
-    "Done:" \
-    __parm [__eax] [__ecx] [__edx] \
-    __value [__eax] \
-    __modify [__ebx]
-
-#pragma aux RdosGetPciIrq = \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
-    CallGate_get_pci_irq  \
-    "jc Fail" \
-    "movzx eax,al" \
-    "jmp Done" \
-    "Fail:" \
-    "xor eax,eax" \
-    "Done:" \
-    __parm [__eax] [__ecx] [__edx] \
-    __value [__eax] \
-    __modify [__ebx]
-
-#pragma aux RdosGetPciClass = \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
-    CallGate_get_pci_class  \
-    "jc Fail" \
-    "push edx" \
-    "movzx edx,ah" \
-    "mov [esi],edx" \
-    "movzx edx,al" \
-    "mov [edi],edx" \
-    "mov eax,1" \
-    "pop edx" \
-    "jmp Done" \
-    "Fail:" \
-    "xor eax,eax" \
-    "Done:" \
-    __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
-    __value [__eax] \
-    __modify [__ebx]
-
-#pragma aux RdosGetPciInterface = \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
-    CallGate_get_pci_interface  \
-    "jc Fail" \
-    "movzx eax,al" \
-    "jmp Done" \
-    "Fail:" \
-    "xor eax,eax" \
-    "Done:" \
-    __parm [__eax] [__ecx] [__edx] \
-    __value [__eax] \
-    __modify [__ebx]
-
 #pragma aux RdosGetPciDeviceName = \
     CallGate_get_pci_device_name  \
     CarryToBool \
     __parm [__ebx] [__edi] [__ecx] \
     __value [__eax]
-
-#pragma aux RdosGetPciDeviceVendor = \
-    "push edx" \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
-    CallGate_get_pci_device_vendor  \
-    "jc Fail" \
-    "movzx eax,ax" \
-    "mov [esi],eax" \
-    "movzx edx,dx" \
-    "mov [edi],edx" \
-    "mov eax,1" \
-    "jmp Done" \
-    "Fail:" \
-    "xor eax,eax" \
-    "Done:" \
-    "pop edx" \
-    __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
-    __value [__eax] \
-    __modify [__ebx]
 
 #pragma aux RdosGetAcpiStatus = \
     CallGate_get_acpi_status  \

@@ -955,13 +955,7 @@ has_power_card_nr                 = 790
 create_secure_connection_nr       = 791
 
 get_pci_bus_nr                    = 792
-get_pci_irq_nr                    = 793
-get_pci_class_nr                  = 794
 get_pci_device_name_nr            = 795
-get_pci_device_vendor_nr          = 796
-get_pci_irq_pin_nr                = 797
-get_pci_interface_nr              = 798
-is_pci_function_used_nr           = 801
 
 read_adc_chan_nr                  = 802
 
