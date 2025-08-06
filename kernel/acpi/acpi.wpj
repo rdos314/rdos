@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-400
-256
+896
+384
 8016
-9509
+9506
 2
 MProject
 3
@@ -39,5 +39,5 @@ WFileName
 8
 acpi.tgt
 0
-1
+2
 7

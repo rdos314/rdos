@@ -390,15 +390,15 @@ HandleOutputSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitOptionRom    Proc near
-    mov bx,300h
-    xor ax,ax
-    FindPciClass
+    mov ax,300h
+    xor bx,bx
+    FindPciClassHandle
     jc iorDone
 ;
-    mov cl,30h
+    mov cx,30h
     mov eax,0FFFFF000h
-    WritePciDword   
-    ReadPciDword
+    WritePciConfigDword   
+    ReadPciConfigDword
     
 iorDone:
     ret
