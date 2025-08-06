@@ -506,6 +506,10 @@ AhciInt  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+AhciIgnorePortInt   Proc far
+    retf32
+AhciIgnorePortInt   Endp
+
 AhciPortInt  Proc far
     mov es,ds:ap_hba_sel
     mov eax,es:hba_pxis
@@ -1231,7 +1235,7 @@ siMulti:
 siMultiLoop:
     mov si,ds:[2 * edx].ad_port_arr
     or si,si
-    jz siMultiNext
+    jz siMultiIgnore
 
 siMultiSetup:
     push ds
@@ -1241,6 +1245,13 @@ siMultiSetup:
     mov edi,OFFSET AhciPortInt
     SetupPciMsi
     pop ds
+    jmp siMultiNext
+
+siMultiIgnore:
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET AhciIgnorePortInt
+    SetupPciMsi
 
 siMultiNext:
     inc al
