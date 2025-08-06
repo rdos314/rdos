@@ -713,7 +713,6 @@ SetupDevice  Proc near
     mov ds:cd_txe_count,0
     mov ds:cd_txb_count,0
 ;
-    int 3
     push ds
     mov eax,ds
     mov es,eax
@@ -724,32 +723,6 @@ SetupDevice  Proc near
     mov ecx,8
     EvalPciHandleIntArr
     pop ds
-;
-; until this is working!
-;
-    mov eax,800h
-    stosd
-;
-    mov eax,80h
-    stosd
-;
-    mov eax,40h
-    stosd
-;
-    mov eax,40h
-    stosd
-;
-    mov eax,0
-    stosd
-;
-    mov eax,40h
-    stosd
-;
-    mov eax,10h
-    stosd
-;
-    mov eax,10h
-    stosd
 ;
     mov eax,ds:cd_rxf0_count
     or eax,eax
