@@ -4174,17 +4174,6 @@ WritePciDword   MACRO
     OsGate write_pci_dword_nr
                     ENDM
 
-; IN  BH      Bus
-; IN  BL      Device
-; IN  CH      Function
-; IN  ES:ESI  Config name
-; IN  FS:EDI  Array
-; IN  EAX     Max entries
-; OUT EAX     Entry count
-GetPciDsdConfig      MACRO
-        OsGate get_pci_dsd_config_nr
-                        ENDM
-
 ; IN  AL    IRQ
 ; IN  FS    Core
 MovePciMsi    MACRO
@@ -4261,15 +4250,6 @@ GetAcpiPciDeviceIrq      MACRO
 ;   OUT EAX         Memory base or 0
 GetAcpiPnpDeviceMem      MACRO
         OsGate get_acpi_pnp_device_mem_nr
-                        ENDM
-
-;   IN  EAX         PCI device #
-;   IN  ES:ESI      Config name
-;   IN  FS:EDI      Array
-;   IN  ECX         Max entries
-;   OUT EAX         Entry count
-GetAcpiPciDsd      MACRO
-        OsGate get_acpi_pci_dsd_nr
                         ENDM
 
 ;;;;;;;;;; Com port ;;;;;;;;;

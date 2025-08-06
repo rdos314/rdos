@@ -875,8 +875,6 @@ close_kernel_handle_nr      = 827
 
 start_tcp_conn_notify_nr    = 828
 stop_tcp_conn_notify_nr     = 829
-get_acpi_pci_dsd_nr         = 830
-get_pci_dsd_config_nr       = 831
 
 reset_can_modules_nr        = 832
 

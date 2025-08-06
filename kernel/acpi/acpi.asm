@@ -2176,60 +2176,6 @@ gpdvDone:
     pop ds
     ret
 get_pci_device_vendor  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetPciDsdConfig
-;
-;           DESCRIPTION:    Get PCI DSD config
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;                           ES:ESI      Config name
-;                           FS:EDI      Config array
-;                           EAX         Max config entries
-;
-;           RETURNS:        EAX         Entry count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_pci_dsd_config_name       DB 'Get PCI Device DSD Config',0
-
-get_pci_dsd_config    Proc far
-    push ds
-    push gs
-    push ebp
-;
-    mov ebp,eax
-    mov ax,SEG data    
-    mov gs,ax
-;
-    movzx eax,bh
-    mov ax,gs:[2*eax].pci_bus_arr
-    or ax,ax
-    jz gpdcDone
-;
-    mov gs,ax
-    movzx eax,bl
-    movzx eax,gs:[2*eax].pcib_device_arr
-    or eax,eax
-    jz gpdcDone
-;
-    mov gs,ax
-    movzx eax,ch
-    shl eax,7
-    mov eax,gs:[eax].pcif_acpi_index
-    mov ecx,ebp
-    GetAcpiPciDsd
-
-gpdcDone:
-    pop ebp
-    pop gs
-    pop ds
-    ret
-get_pci_dsd_config   ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3720,12 +3666,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_pci_dsd_config
-    mov edi,OFFSET get_pci_dsd_config_name
-    xor cl,cl
-    mov ax,get_pci_dsd_config_nr
     RegisterOsGate
 ;
     mov esi,OFFSET setup_pci_msi

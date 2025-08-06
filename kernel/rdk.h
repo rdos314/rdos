@@ -857,7 +857,6 @@
 
 #define osgate_link_usergate 815
 
-#define osgate_set_pci_device_name 816
 #define osgate_get_msi_vector 817
 
 #define osgate_add_wait_for_adc_chan 818
@@ -876,8 +875,6 @@
 
 #define osgate_start_tcp_conn_notify 828
 #define osgate_stop_tcp_conn_notify 829
-#define osgate_get_acpi_pci_dsd 830
-#define osgate_get_pci_dsd_config 831
 
 #define osgate_reset_can_modules 832
 
@@ -1790,7 +1787,6 @@
 
 #define OsGate_link_usergate 0x3E 0x67 0x9a 47 3 0 0 2 0
 
-#define OsGate_set_pci_device_name 0x3E 0x67 0x9a 48 3 0 0 2 0
 #define OsGate_get_msi_vector 0x3E 0x67 0x9a 49 3 0 0 2 0
 
 #define OsGate_add_wait_for_adc_chan 0x3E 0x67 0x9a 50 3 0 0 2 0
@@ -1809,8 +1805,6 @@
 
 #define OsGate_start_tcp_conn_notify 0x3E 0x67 0x9a 60 3 0 0 2 0
 #define OsGate_stop_tcp_conn_notify 0x3E 0x67 0x9a 61 3 0 0 2 0
-#define OsGate_get_acpi_pci_dsd 0x3E 0x67 0x9a 62 3 0 0 2 0
-#define OsGate_get_pci_dsd_config 0x3E 0x67 0x9a 63 3 0 0 2 0
 
 #define OsGate_reset_can_modules 0x3E 0x67 0x9a 64 3 0 0 2 0
 
