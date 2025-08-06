@@ -5159,7 +5159,7 @@ init_pci_loop:
     mov ah,0Ch
     mov al,3
     mov dl,30h
-    FindPciProtocolHandle
+    FindPciProtocol
     jc init_pci_done
 ;
     xor al,al

@@ -136,7 +136,7 @@
     __parm [__edi]
 
 #pragma aux RdosFindPciClass = \
-    CallGate_find_pci_class_handle  \
+    CallGate_find_pci_class  \
     "jc fail" \
     "movzx ebx,bx" \
     "jmp done" \
@@ -147,7 +147,7 @@
     __value [__ebx]
 
 #pragma aux RdosFindPciProtocol = \
-    CallGate_find_pci_prot_handle  \
+    CallGate_find_pci_prot  \
     "jc fail" \
     "movzx ebx,bx" \
     "jmp done" \

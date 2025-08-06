@@ -235,7 +235,7 @@ InitPciDev Proc near
 ipdLoop: 
     mov ah,8
     mov al,5
-    FindPciClassHandle
+    FindPciClass
     jc ipdDone
 ;
     xor al,al

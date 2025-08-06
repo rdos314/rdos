@@ -1937,7 +1937,7 @@ sdLoop:
     mov bx,bp
     mov ah,1
     mov al,8
-    FindPciClassHandle
+    FindPciClass
     jc sdDone
 ;
     xor al,al

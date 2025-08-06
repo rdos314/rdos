@@ -1037,8 +1037,8 @@
 #define usergate_set_adc_phase_limit 0x0000035D
 #define usergate_set_adc_channels 0x0000035E
 
-#define usergate_find_pci_class_handle 0x0000035F
-#define usergate_find_pci_prot_handle 0x00000360
+#define usergate_find_pci_class 0x0000035F
+#define usergate_find_pci_prot 0x00000360
 #define usergate_read_pci_config_byte 0x00000361
 #define usergate_read_pci_config_word 0x00000362
 #define usergate_read_pci_config_dword 0x00000363
@@ -1055,6 +1055,7 @@
 #define usergate_get_pci_handle_msi 0x0000036E
 #define usergate_get_pci_handle_msix 0x0000036F
 #define usergate_is_pci_handle_locked 0x00000370
+#define usergate_eval_pci_int_arr 0x00000371
 
 
 
@@ -2098,8 +2099,8 @@
 #define CallGate_set_adc_phase_limit 0x55 0x67 0x9a 93 3 0 0 3 0 0x5d
 #define CallGate_set_adc_channels 0x55 0x67 0x9a 94 3 0 0 3 0 0x5d
 
-#define CallGate_find_pci_class_handle 0x55 0x67 0x9a 95 3 0 0 3 0 0x5d
-#define CallGate_find_pci_prot_handle 0x55 0x67 0x9a 96 3 0 0 3 0 0x5d
+#define CallGate_find_pci_class 0x55 0x67 0x9a 95 3 0 0 3 0 0x5d
+#define CallGate_find_pci_prot 0x55 0x67 0x9a 96 3 0 0 3 0 0x5d
 #define CallGate_read_pci_config_byte 0x55 0x67 0x9a 97 3 0 0 3 0 0x5d
 #define CallGate_read_pci_config_word 0x55 0x67 0x9a 98 3 0 0 3 0 0x5d
 #define CallGate_read_pci_config_dword 0x55 0x67 0x9a 99 3 0 0 3 0 0x5d
@@ -2116,6 +2117,7 @@
 #define CallGate_get_pci_handle_msi 0x55 0x67 0x9a 110 3 0 0 3 0 0x5d
 #define CallGate_get_pci_handle_msix 0x55 0x67 0x9a 111 3 0 0 3 0 0x5d
 #define CallGate_is_pci_handle_locked 0x55 0x67 0x9a 112 3 0 0 3 0 0x5d
+#define CallGate_eval_pci_int_arr 0x55 0x67 0x9a 113 3 0 0 3 0 0x5d
 
 #else
 
@@ -3157,8 +3159,8 @@
 #define CallGate_set_adc_phase_limit 0x3e 0x67 0x9a 93 3 0 0 3 0
 #define CallGate_set_adc_channels 0x3e 0x67 0x9a 94 3 0 0 3 0
 
-#define CallGate_find_pci_class_handle 0x3e 0x67 0x9a 95 3 0 0 3 0
-#define CallGate_find_pci_prot_handle 0x3e 0x67 0x9a 96 3 0 0 3 0
+#define CallGate_find_pci_class 0x3e 0x67 0x9a 95 3 0 0 3 0
+#define CallGate_find_pci_prot 0x3e 0x67 0x9a 96 3 0 0 3 0
 #define CallGate_read_pci_config_byte 0x3e 0x67 0x9a 97 3 0 0 3 0
 #define CallGate_read_pci_config_word 0x3e 0x67 0x9a 98 3 0 0 3 0
 #define CallGate_read_pci_config_dword 0x3e 0x67 0x9a 99 3 0 0 3 0
@@ -3175,5 +3177,6 @@
 #define CallGate_get_pci_handle_msi 0x3e 0x67 0x9a 110 3 0 0 3 0
 #define CallGate_get_pci_handle_msix 0x3e 0x67 0x9a 111 3 0 0 3 0
 #define CallGate_is_pci_handle_locked 0x3e 0x67 0x9a 112 3 0 0 3 0
+#define CallGate_eval_pci_int_arr 0x3e 0x67 0x9a 113 3 0 0 3 0
 
 #endif

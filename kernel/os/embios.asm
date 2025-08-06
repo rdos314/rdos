@@ -392,7 +392,7 @@ HandleOutputSel Endp
 InitOptionRom    Proc near
     mov ax,300h
     xor bx,bx
-    FindPciClassHandle
+    FindPciClass
     jc iorDone
 ;
     mov cx,30h

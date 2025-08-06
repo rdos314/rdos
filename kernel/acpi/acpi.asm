@@ -333,9 +333,9 @@ find_pci_device_handle   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-find_pci_class_handle_name      DB 'Find PCI Class',0
+find_pci_class_name      DB 'Find PCI Class',0
 
-find_pci_class_handle   Proc far
+find_pci_class   Proc far
     push ds
     push es
     push edi
@@ -351,7 +351,7 @@ find_pci_class_handle   Proc far
     pop es
     pop ds
     ret
-find_pci_class_handle   Endp
+find_pci_class   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -369,9 +369,9 @@ find_pci_class_handle   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-find_pci_prot_handle_name      DB 'Find PCI Protocol',0
+find_pci_prot_name      DB 'Find PCI Protocol',0
 
-find_pci_prot_handle   Proc far
+find_pci_prot   Proc far
     push ds
     push es
     push edi
@@ -387,7 +387,7 @@ find_pci_prot_handle   Proc far
     pop es
     pop ds
     ret
-find_pci_prot_handle   Endp
+find_pci_prot   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3853,16 +3853,16 @@ init    Proc far
     mov ax,find_pci_device_handle_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET find_pci_class_handle
-    mov edi,OFFSET find_pci_class_handle_name
+    mov esi,OFFSET find_pci_class
+    mov edi,OFFSET find_pci_class_name
     xor dx,dx
-    mov ax,find_pci_class_handle_nr
+    mov ax,find_pci_class_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET find_pci_prot_handle
-    mov edi,OFFSET find_pci_prot_handle_name
+    mov esi,OFFSET find_pci_prot
+    mov edi,OFFSET find_pci_prot_name
     xor dx,dx
-    mov ax,find_pci_prot_handle_nr
+    mov ax,find_pci_prot_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_pci_handle

@@ -988,7 +988,7 @@ ipaNameLoop:
 ipaLoop: 
     mov ah,1
     mov al,6
-    FindPciClassHandle
+    FindPciClass
     jc ipaDone
 ;
     mov al,5

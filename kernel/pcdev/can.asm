@@ -665,7 +665,7 @@ SetupDevice  Proc near
     xor bx,bx
     mov ah,0Ch
     mov al,9
-    FindPciClassHandle
+    FindPciClass
     jc sdDone
 ;
     mov al,1

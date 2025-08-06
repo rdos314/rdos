@@ -4853,7 +4853,7 @@ ipLoop:
     mov ah,0Ch
     mov al,3
     mov dl,20h
-    FindPciProtocolHandle
+    FindPciProtocol
     jc ipDone
 ;
     xor al,al

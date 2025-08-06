@@ -1685,7 +1685,7 @@ init_pci_probe_done:
     mov ah,4
     mov al,3
     xor dl,dl
-    FindPciProtocolHandle
+    FindPciProtocol
     jc init_pci_done
 ;
     xor al,al
@@ -1702,7 +1702,7 @@ init_pci_more:
     mov ah,4
     mov al,3
     xor dh,dh
-    FindPciProtocolHandle
+    FindPciProtocol
     jc init_pci_done
 ;       
     xor al,al
