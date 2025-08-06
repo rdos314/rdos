@@ -507,7 +507,7 @@ get_pci_msix_irqs   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupPciHandleIrq
+;           NAME:           SetupPciIrq
 ;
 ;           DESCRIPTION:    Setup for single IRQ
 ;
@@ -518,9 +518,9 @@ get_pci_msix_irqs   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-setup_pci_handle_irq_name      DB 'Setup PCI Handle IRQ',0
+setup_pci_irq_name      DB 'Setup PCI IRQ',0
 
-setup_pci_handle_irq   Proc far
+setup_pci_irq   Proc far
     push ecx
 ;
     push ds
@@ -595,7 +595,7 @@ sphiIrq:
 
 sphiDone:
     ret
-setup_pci_handle_irq   Endp
+setup_pci_irq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1612,10 +1612,10 @@ init    Proc far
     mov ax,get_pci_bar_io_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET setup_pci_handle_irq
-    mov edi,OFFSET setup_pci_handle_irq_name
+    mov esi,OFFSET setup_pci_irq
+    mov edi,OFFSET setup_pci_irq_name
     xor cl,cl
-    mov ax,setup_pci_handle_irq_nr
+    mov ax,setup_pci_irq_nr
     RegisterOsGate
 ;
     mov esi,OFFSET req_pci_handle_msi

@@ -4181,7 +4181,7 @@ SetupInts   Proc near
     mov es,edi
     mov edi,OFFSET NetInt
     mov ah,14h
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     pop edi
     pop edx

@@ -695,7 +695,7 @@ SetupDevice  Proc near
     mov edi,cs
     mov es,edi
     mov edi,OFFSET CanInt
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     pop es
 ;

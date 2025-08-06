@@ -709,7 +709,7 @@ SetupDevice  Proc near
     mov di,cs
     mov es,di
     mov edi,OFFSET CanInt
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     mov es,ds:can_sel
 ;

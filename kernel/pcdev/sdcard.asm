@@ -296,7 +296,7 @@ SetupInts Proc near
     mov di,cs
     mov es,di
     mov edi,OFFSET SdInt
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     popad
     ret

@@ -905,7 +905,7 @@ register_priv_serv_gate_nr  = 863
 
 hook_init_acpi_nr           = 864
 
-setup_pci_handle_irq_nr     = 865
+setup_pci_irq_nr            = 865
 req_pci_handle_msi_nr       = 866
 get_pci_bar_phys_nr         = 867
 get_pci_bar_io_nr           = 868

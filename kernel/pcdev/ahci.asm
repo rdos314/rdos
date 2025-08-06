@@ -1216,7 +1216,7 @@ siSingle:
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciInt
-    SetupPciHandleIrq
+    SetupPciIrq
     jmp siDone
 
 siMulti:

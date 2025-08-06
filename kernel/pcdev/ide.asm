@@ -1800,7 +1800,7 @@ cpbOk:
     mov di,cs
     mov es,di
     mov edi,OFFSET ide_pci_int
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     inc fs:ide_pci_count
     clc

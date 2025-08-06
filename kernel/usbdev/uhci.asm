@@ -4066,7 +4066,7 @@ InitFunction    Proc near
     mov di,cs
     mov es,di
     mov edi,OFFSET UhciInt
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     mov si,OFFSET uhci_tab
     xor di,di

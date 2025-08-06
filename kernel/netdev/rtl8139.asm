@@ -1107,7 +1107,7 @@ ipFound:
 ;
     mov edi,OFFSET NetInt
     mov ah,14h
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     call ReadEthernetAddress
     call AllocateRing

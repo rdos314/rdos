@@ -4203,7 +4203,7 @@ InitFunction    Proc near
     mov di,cs
     mov es,di
     mov edi,OFFSET OhciInt
-    SetupPciHandleIrq
+    SetupPciIrq
     jc ifIrqFail
 ;
     mov es,ds:ohc_reg_sel

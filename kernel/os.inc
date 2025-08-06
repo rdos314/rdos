@@ -4067,8 +4067,8 @@ WritePnpByte     MACRO
 ; IN  BX        Handle
 ; IN  DS        Data passed to handler
 ; IN  ES:EDI    Handler address
-SetupPciHandleIrq    MACRO
-    OsGate setup_pci_handle_irq_nr
+SetupPciIrq    MACRO
+    OsGate setup_pci_irq_nr
                     ENDM
 
 ; IN  AH        Priority

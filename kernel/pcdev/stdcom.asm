@@ -3086,7 +3086,7 @@ ipFound:
     mov es,di
     mov edi,OFFSET io_com_int
     mov ah,19h
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     xor ax,ax
     mov ecx,921600
@@ -3181,7 +3181,7 @@ mem_msi_setup:
     mov es,di
     mov edi,OFFSET mem_msi_int
     mov ah,12h
-    SetupPciHandleIrq
+    SetupPciIrq
     jc mem_init_pci_done
 ;
     push ebx
@@ -3212,7 +3212,7 @@ mem_init_irq:
     mov es,bx
     mov ah,12h
     mov edi,OFFSET mem_shared_int
-    SetupPciHandleIrq
+    SetupPciIrq
     pop ds
 ;  
     mov fs:ms_count,0

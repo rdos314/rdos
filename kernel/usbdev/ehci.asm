@@ -4615,7 +4615,7 @@ ifLegacyOff:
     mov di,cs
     mov es,di
     mov edi,OFFSET EhciInt
-    SetupPciHandleIrq
+    SetupPciIrq
     jnc ifIntDone
 
 ifIrqFail:

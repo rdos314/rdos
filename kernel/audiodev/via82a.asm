@@ -743,7 +743,7 @@ ipFound:
     mov di,cs
     mov es,di
     mov edi,OFFSET AudioInt
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     mov dx,ds:IoBase
     mov cx,3

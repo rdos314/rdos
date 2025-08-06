@@ -4340,7 +4340,7 @@ SetupIrq  Proc near
     mov di,cs
     mov es,di
     mov edi,OFFSET XhciInt
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     pop edi
     pop esi

@@ -684,7 +684,7 @@ SetupInts   Proc near
     mov es,di
     mov edi,OFFSET HdaInt
     mov ah,12h
-    SetupPciHandleIrq
+    SetupPciIrq
 ;
     pop edi
     pop eax
