@@ -4177,14 +4177,6 @@ WritePciDword   MACRO
 ; IN  BH      Bus
 ; IN  BL      Device
 ; IN  CH      Function
-; IN  ES:EDI  Device name
-SetPciDeviceName       MACRO
-    OsGate set_pci_device_name_nr
-                    ENDM
-
-; IN  BH      Bus
-; IN  BL      Device
-; IN  CH      Function
 ; IN  ES:ESI  Config name
 ; IN  FS:EDI  Array
 ; IN  EAX     Max entries

@@ -2180,63 +2180,6 @@ get_pci_device_vendor  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetPciDeviceName
-;
-;           DESCRIPTION:    Set PCI device name
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;                           ES:EDI      Device name
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_pci_device_name_name       DB 'Set PCI Device Name',0
-
-set_pci_device_name    Proc far
-    push ds
-    push es
-    pushad
-;
-    mov ax,es
-    mov ds,ax
-    mov esi,edi
-;
-    mov ax,SEG data    
-    mov es,ax
-;
-    movzx edi,bh
-    mov ax,es:[2*edi].pci_bus_arr
-    or ax,ax
-    jz spdnDone
-;
-    mov es,ax
-    movzx edi,bl
-    mov ax,es:[2*edi].pcib_device_arr
-    or ax,ax
-    jz spdnDone
-;
-    mov es,ax
-    movzx edi,ch
-    shl edi,7
-    add edi,OFFSET pcif_acpi_name
-
-spdnCopyName:
-    lods byte ptr ds:[esi]
-    stos byte ptr es:[edi]
-    or al,al
-    jnz spdnCopyName
-
-spdnDone:
-    popad
-    pop es
-    pop ds
-    ret
-set_pci_device_name    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetPciDsdConfig
 ;
 ;           DESCRIPTION:    Get PCI DSD config
@@ -3777,12 +3720,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET set_pci_device_name
-    mov edi,OFFSET set_pci_device_name_name
-    xor cl,cl
-    mov ax,set_pci_device_name_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_pci_dsd_config
