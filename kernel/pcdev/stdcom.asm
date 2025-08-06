@@ -3172,7 +3172,7 @@ mem_init_pci_found:
 ; fix MSI-X first!
     jmp mem_init_irq
 
-    GetPciHandleMsiX
+    GetPciMsiXIrqs
     or al,al
     jz mem_init_irq
 

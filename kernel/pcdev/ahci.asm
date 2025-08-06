@@ -1197,14 +1197,14 @@ StartDevice Endp
 
 SetupInts Proc near
     mov bx,ds:ad_pci_handle
-    GetPciHandleMsiX
+    GetPciMsiXIrqs
     jc siCheckMsi
 ;
     cmp al,1
     ja siMulti
 
 siCheckMsi:
-    GetPciHandleMsi
+    GetPciMsiIrqs
     jc siSingle
 ;
     cmp al,1

@@ -1039,13 +1039,13 @@ write_pci_config_word_nr          = 869
 write_pci_config_dword_nr         = 870
 find_pci_device_nr                = 871
 get_pci_param_nr                  = 872
-get_pci_handle_irq_nr             = 873
+get_pci_irq_nr                    = 873
 get_pci_cap_nr                    = 874
 get_pci_handle_nr                 = 875
 lock_pci_handle_nr                = 876
 unlock_pci_handle_nr              = 877
-get_pci_handle_msi_nr             = 878
-get_pci_handle_msix_nr            = 879
+get_pci_msi_irqs_nr               = 878
+get_pci_msix_irqs_nr              = 879
 is_pci_handle_locked_nr           = 880
 eval_pci_int_arr_nr               = 881
 

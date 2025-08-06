@@ -1336,14 +1336,14 @@ SetupInts Proc near
     pushad
 ;
     mov bx,es:nd_pci_handle
-    GetPciHandleMsiX
+    GetPciMsiXIrqs
     jc siCheckMsi
 ;
     cmp al,1
     ja siMulti
 
 siCheckMsi:    
-    GetPciHandleMsi
+    GetPciMsiIrqs
     jc siDone
 ;
     cmp al,1

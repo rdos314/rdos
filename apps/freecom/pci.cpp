@@ -143,8 +143,8 @@ void TPciCommand::PrintBusDevices(int Bus)
                 DeviceID = RdosReadPciConfigWord(Handle, 2);
 
                 Used = RdosIsPciHandleLocked(Handle);
-                Msi = RdosGetPciHandleMsi(Handle);
-                MsiX = RdosGetPciHandleMsiX(Handle);
+                Msi = RdosGetPciMsiIrqs(Handle);
+                MsiX = RdosGetPciMsiXIrqs(Handle);
 
                 sprintf(Str, "%04hX %04hX  %02hX%02hX%02hX  %4d %4d  ", VendorID, DeviceID, Class, SubClass, Interface, Device, Function);
                 Write(Str);
@@ -155,7 +155,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                 {
                     if (Msi)
                     {
-                        Irq = RdosGetPciHandleIrq(Handle, 0);
+                        Irq = RdosGetPciIrq(Handle, 0);
                         if (Msi == 1)
                         {
                             sprintf(Str, "MSI    %02hX", Irq);
@@ -173,7 +173,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                         {
                             if (MsiX == 1)
                             {
-                                Irq = RdosGetPciHandleIrq(Handle, 0);
+                                Irq = RdosGetPciIrq(Handle, 0);
                                 sprintf(Str, "MSI-X  %02hX", Irq);
                                 Write(Str);
                             }
@@ -184,7 +184,7 @@ void TPciCommand::PrintBusDevices(int Bus)
 
                                 for (i = 0; i < MsiX; i++)
                                 {
-                                    Irq = RdosGetPciHandleIrq(Handle, i);
+                                    Irq = RdosGetPciIrq(Handle, i);
                                     if (i == MsiX - 1)
                                         sprintf(Str, "%02hX", Irq);
                                     else
@@ -195,7 +195,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                         }
                         else
                         {
-                            Irq = RdosGetPciHandleIrq(Handle, 0);
+                            Irq = RdosGetPciIrq(Handle, 0);
                             if (Irq)
                             {
                                 sprintf(Str, "IRQ    %02hX", Irq);
@@ -218,7 +218,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                             sprintf(Str, "MSI-X");
                         else
                         {
-                            Irq = RdosGetPciHandleIrq(Handle, 0);
+                            Irq = RdosGetPciIrq(Handle, 0);
                             if (Irq)
                                 sprintf(Str, "IRQ    %02hX", Irq);
                         }

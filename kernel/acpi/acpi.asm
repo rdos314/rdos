@@ -407,9 +407,9 @@ get_pci_param   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetPciHandleIrq
+;           NAME:           GetPciIrq
 ;
-;           DESCRIPTION:    Find PCI handle IRQ
+;           DESCRIPTION:    Find PCI IRQ
 ;
 ;           PARAMETERS:     BX      Handle
 ;                           AX      Index
@@ -418,9 +418,9 @@ get_pci_param   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pci_handle_irq_name      DB 'Get PCI Handle IRQ',0
+get_pci_irq_name      DB 'Get PCI IRQ',0
 
-get_pci_handle_irq   Proc far
+get_pci_irq   Proc far
     push ds
     push es
     push edi
@@ -436,14 +436,14 @@ get_pci_handle_irq   Proc far
     pop es
     pop ds
     ret
-get_pci_handle_irq   Endp
+get_pci_irq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetPciHandleMsi
+;           NAME:           GetPciMsiInts
 ;
-;           DESCRIPTION:    Get PCI MSI vectors
+;           DESCRIPTION:    Get PCI MSI IRQs
 ;
 ;           PARAMETERS:     BX      Handle
 ;
@@ -451,9 +451,9 @@ get_pci_handle_irq   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pci_handle_msi_name      DB 'Get PCI Handle MSI',0
+get_pci_msi_irqs_name      DB 'Get PCI MSI IRQs',0
 
-get_pci_handle_msi   Proc far
+get_pci_msi_irqs   Proc far
     push ds
     push es
     push edi
@@ -469,14 +469,14 @@ get_pci_handle_msi   Proc far
     pop es
     pop ds
     ret
-get_pci_handle_msi   Endp
+get_pci_msi_irqs   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetPciHandleMsiX
+;           NAME:           GetPciMsiXIrqs
 ;
-;           DESCRIPTION:    Get PCI MSI-X vectors
+;           DESCRIPTION:    Get PCI MSI-X IRQs
 ;
 ;           PARAMETERS:     BX      Handle
 ;
@@ -484,9 +484,9 @@ get_pci_handle_msi   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pci_handle_msix_name      DB 'Get PCI Handle MSI-X',0
+get_pci_msix_irqs_name      DB 'Get PCI MSI-X IRQs',0
 
-get_pci_handle_msix   Proc far
+get_pci_msix_irqs   Proc far
     push ds
     push es
     push edi
@@ -502,7 +502,7 @@ get_pci_handle_msix   Proc far
     pop es
     pop ds
     ret
-get_pci_handle_msix   Endp
+get_pci_msix_irqs   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1672,22 +1672,22 @@ init    Proc far
     mov ax,get_pci_param_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_pci_handle_irq
-    mov edi,OFFSET get_pci_handle_irq_name
+    mov esi,OFFSET get_pci_irq
+    mov edi,OFFSET get_pci_irq_name
     xor dx,dx
-    mov ax,get_pci_handle_irq_nr
+    mov ax,get_pci_irq_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_pci_handle_msi
-    mov edi,OFFSET get_pci_handle_msi_name
+    mov esi,OFFSET get_pci_msi_irqs
+    mov edi,OFFSET get_pci_msi_irqs_name
     xor dx,dx
-    mov ax,get_pci_handle_msi_nr
+    mov ax,get_pci_msi_irqs_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_pci_handle_msix
-    mov edi,OFFSET get_pci_handle_msix_name
+    mov esi,OFFSET get_pci_msix_irqs
+    mov edi,OFFSET get_pci_msix_irqs_name
     xor dx,dx
-    mov ax,get_pci_handle_msix_nr
+    mov ax,get_pci_msix_irqs_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET eval_pci_int_arr16

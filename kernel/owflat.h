@@ -203,18 +203,18 @@
     __value [__al] \
     __modify [__ah __dx]
 
-#pragma aux RdosGetPciHandleIrq = \
-    CallGate_get_pci_handle_irq  \
+#pragma aux RdosGetPciIrq = \
+    CallGate_get_pci_irq  \
     __parm [__ebx] [__eax] \
     __value [__al]
 
-#pragma aux RdosGetPciHandleMsi = \
-    CallGate_get_pci_handle_msi  \
+#pragma aux RdosGetPciMsiIrqs = \
+    CallGate_get_pci_msi_irqs  \
     __parm [__ebx] \
     __value [__al]
 
-#pragma aux RdosGetPciHandleMsiX = \
-    CallGate_get_pci_handle_msix  \
+#pragma aux RdosGetPciMsiXIrqs = \
+    CallGate_get_pci_msix_irqs  \
     __parm [__ebx] \
     __value [__al]
 
