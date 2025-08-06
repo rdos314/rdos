@@ -4210,25 +4210,6 @@ PciPowerOn       MACRO
     OsGate pci_power_on_nr
                     ENDM
 
-; IN  BH    Class
-; IN  BL    Sub class
-; IN  CH    Interface
-; IN  AX    Device number
-; OUT BH    Bus
-; OUT BL    Device
-FindPciClassInterface    MACRO
-    OsGate find_pci_class_interface_nr
-                    ENDM
-
-; IN  BH    Class
-; IN  BL    Sub class
-; IN  AX    Device number
-; OUT BH    Bus
-; OUT BL    Device
-FindPciClass MACRO
-    OsGate find_pci_class_nr
-                    ENDM
-
 ; IN  CX    Device ID
 ; IN  DX    Vendor ID
 ; IN  AX    Device number

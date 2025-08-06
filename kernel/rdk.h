@@ -183,7 +183,6 @@
 #define osgate_write_pci_byte 193
 #define osgate_write_pci_word 194
 #define osgate_write_pci_dword 195
-#define osgate_find_pci_class_interface 196
 #define osgate_find_pci_device 197
 
 #define osgate_install_static_disc 199
@@ -364,15 +363,11 @@
 
 #define osgate_is_net_address_valid 375
 
-#define osgate_get_acpi_table 376
-
 #define osgate_allocate_debug_local_linear 377
 
 #define osgate_process_key_scan 378
 
 #define osgate_get_debug_thread_sel 379
-
-#define osgate_find_pci_class 380
 
 #define osgate_show_proc_debug 381
 
@@ -924,6 +919,21 @@
 
 #define osgate_init_user_timer 859
 
+#define osgate_ipi_wakeup 860
+#define osgate_set_thread_irq 861
+#define osgate_init_pci_msix_entry 862
+
+#define osgate_register_priv_serv_gate 863
+
+#define osgate_hook_init_acpi 864
+
+#define osgate_setup_pci_handle_irq 865
+#define osgate_req_pci_handle_msi 866
+#define osgate_get_pci_bar_phys 867
+#define osgate_get_pci_bar_io 868
+#define osgate_setup_pci_handle_msi 869
+#define osgate_enable_pci_handle_msi 870
+
 
 
 
@@ -1111,7 +1121,6 @@
 #define OsGate_write_pci_byte 0x3E 0x67 0x9a 193 0 0 0 2 0
 #define OsGate_write_pci_word 0x3E 0x67 0x9a 194 0 0 0 2 0
 #define OsGate_write_pci_dword 0x3E 0x67 0x9a 195 0 0 0 2 0
-#define OsGate_find_pci_class_interface 0x3E 0x67 0x9a 196 0 0 0 2 0
 #define OsGate_find_pci_device 0x3E 0x67 0x9a 197 0 0 0 2 0
 
 #define OsGate_install_static_disc 0x3E 0x67 0x9a 199 0 0 0 2 0
@@ -1292,15 +1301,11 @@
 
 #define OsGate_is_net_address_valid 0x3E 0x67 0x9a 119 1 0 0 2 0
 
-#define OsGate_get_acpi_table 0x3E 0x67 0x9a 120 1 0 0 2 0
-
 #define OsGate_allocate_debug_local_linear 0x3E 0x67 0x9a 121 1 0 0 2 0
 
 #define OsGate_process_key_scan 0x3E 0x67 0x9a 122 1 0 0 2 0
 
 #define OsGate_get_debug_thread_sel 0x3E 0x67 0x9a 123 1 0 0 2 0
-
-#define OsGate_find_pci_class 0x3E 0x67 0x9a 124 1 0 0 2 0
 
 #define OsGate_show_proc_debug 0x3E 0x67 0x9a 125 1 0 0 2 0
 
@@ -1851,4 +1856,19 @@
 #define OsGate_get_kernel_handle_time 0x3E 0x67 0x9a 90 3 0 0 2 0
 
 #define OsGate_init_user_timer 0x3E 0x67 0x9a 91 3 0 0 2 0
+
+#define OsGate_ipi_wakeup 0x3E 0x67 0x9a 92 3 0 0 2 0
+#define OsGate_set_thread_irq 0x3E 0x67 0x9a 93 3 0 0 2 0
+#define OsGate_init_pci_msix_entry 0x3E 0x67 0x9a 94 3 0 0 2 0
+
+#define OsGate_register_priv_serv_gate 0x3E 0x67 0x9a 95 3 0 0 2 0
+
+#define OsGate_hook_init_acpi 0x3E 0x67 0x9a 96 3 0 0 2 0
+
+#define OsGate_setup_pci_handle_irq 0x3E 0x67 0x9a 97 3 0 0 2 0
+#define OsGate_req_pci_handle_msi 0x3E 0x67 0x9a 98 3 0 0 2 0
+#define OsGate_get_pci_bar_phys 0x3E 0x67 0x9a 99 3 0 0 2 0
+#define OsGate_get_pci_bar_io 0x3E 0x67 0x9a 100 3 0 0 2 0
+#define OsGate_setup_pci_handle_msi 0x3E 0x67 0x9a 101 3 0 0 2 0
+#define OsGate_enable_pci_handle_msi 0x3E 0x67 0x9a 102 3 0 0 2 0
 

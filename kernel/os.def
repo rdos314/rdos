@@ -183,7 +183,6 @@ read_pci_dword_nr                       = 192
 write_pci_byte_nr                       = 193
 write_pci_word_nr                       = 194
 write_pci_dword_nr                      = 195
-find_pci_class_interface_nr             = 196
 find_pci_device_nr                      = 197
 
 install_static_disc_nr                  = 199
@@ -369,8 +368,6 @@ allocate_debug_local_linear_nr  = 377
 process_key_scan_nr         = 378
 
 get_debug_thread_sel_nr     = 379
-
-find_pci_class_nr           = 380
 
 show_proc_debug_nr          = 381
 
