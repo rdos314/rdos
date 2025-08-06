@@ -4622,8 +4622,8 @@ EvalPciHandleIntArr      MACRO
 ;   OUT DL          Bus
 ;   OUT AH          Device
 ;   OUT AL          Function                   
-GetPciHandleParam      MACRO
-        UserGate get_pci_handle_param_nr
+GetPciParam      MACRO
+        UserGate get_pci_param_nr
                         ENDM
 
 ;   IN  BX          Handle

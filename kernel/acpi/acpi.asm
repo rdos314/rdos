@@ -371,7 +371,7 @@ get_pci_bus     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetPciHandleParam
+;           NAME:           GetPciParam
 ;
 ;           DESCRIPTION:    Find PCI handle param
 ;
@@ -384,9 +384,9 @@ get_pci_bus     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pci_handle_param_name      DB 'Get PCI Handle Param',0
+get_pci_param_name      DB 'Get PCI Param',0
 
-get_pci_handle_param   Proc far
+get_pci_param   Proc far
     push ds
     push es
     push edi
@@ -402,7 +402,7 @@ get_pci_handle_param   Proc far
     pop es
     pop ds
     ret
-get_pci_handle_param   Endp
+get_pci_param   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1666,10 +1666,10 @@ init    Proc far
     mov ax,get_pci_handle_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_pci_handle_param
-    mov edi,OFFSET get_pci_handle_param_name
+    mov esi,OFFSET get_pci_param
+    mov edi,OFFSET get_pci_param_name
     xor dx,dx
-    mov ax,get_pci_handle_param_nr
+    mov ax,get_pci_param_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_pci_handle_irq

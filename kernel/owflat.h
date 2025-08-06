@@ -180,25 +180,25 @@
     __value [__ebx]
 
 #pragma aux RdosGetPciHandleSegment = \
-    CallGate_get_pci_handle_param  \
+    CallGate_get_pci_param  \
     __parm [__ebx] \
     __value [__dh] \
     __modify [__ax __dl]
 
 #pragma aux RdosGetPciHandleBus = \
-    CallGate_get_pci_handle_param  \
+    CallGate_get_pci_param  \
     __parm [__ebx] \
     __value [__dl] \
     __modify [__ax __dh]
 
 #pragma aux RdosGetPciHandleDevice = \
-    CallGate_get_pci_handle_param  \
+    CallGate_get_pci_param  \
     __parm [__ebx] \
     __value [__ah] \
     __modify [__al __dx]
 
 #pragma aux RdosGetPciHandleFunction = \
-    CallGate_get_pci_handle_param  \
+    CallGate_get_pci_param  \
     __parm [__ebx] \
     __value [__al] \
     __modify [__ah __dx]
