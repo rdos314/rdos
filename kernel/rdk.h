@@ -760,8 +760,6 @@
 #define osgate_allocate_2m_physical_64 735
 #define osgate_free_2m_physical 736
 
-#define osgate_move_pci_msi 741
-
 #define osgate_create_phys_bitmap 742
 
 #define osgate_get_net_address 743
@@ -1687,8 +1685,6 @@
 
 #define OsGate_allocate_2m_physical_64 0x3E 0x67 0x9a 223 2 0 0 2 0
 #define OsGate_free_2m_physical 0x3E 0x67 0x9a 224 2 0 0 2 0
-
-#define OsGate_move_pci_msi 0x3E 0x67 0x9a 229 2 0 0 2 0
 
 #define OsGate_create_phys_bitmap 0x3E 0x67 0x9a 230 2 0 0 2 0
 

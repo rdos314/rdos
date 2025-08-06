@@ -4174,12 +4174,6 @@ WritePciDword   MACRO
     OsGate write_pci_dword_nr
                     ENDM
 
-; IN  AL    IRQ
-; IN  FS    Core
-MovePciMsi    MACRO
-    OsGate move_pci_msi_nr
-                    ENDM
-
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function

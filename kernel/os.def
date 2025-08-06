@@ -760,8 +760,6 @@ run_realtime_nr             = 734
 allocate_2m_physical_64_nr  = 735
 free_2m_physical_nr         = 736
 
-move_pci_msi_nr             = 741
-
 create_phys_bitmap_nr       = 742
 
 get_net_address_nr          = 743

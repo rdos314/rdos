@@ -2446,82 +2446,6 @@ FindIrq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           MovePciMsi
-;
-;           DESCRIPTION:    Move MSI to new core
-;
-;           PARAMETERS:     AL          Int base
-;                           FS          Core
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-move_pci_msi_name DB 'Move PCI MSI',0
-
-move_pci_msi     Proc far    
-    push es
-    pushad
-;    
-    call FindIrq
-    jc mpmDone
-;
-    mov cl,es:[edi].pcif_msi
-    or cl,cl
-    jz mpmMsix
-;
-    mov es:[edi].pcif_msi_core,fs
-;
-    mov al,es:[edi].pcif_irq
-    call SetupMsiVector
-    clc
-    jmp mpmDone
-
-mpmMsix:
-    mov cl,es:[edi].pcif_msix
-    or cl,cl
-    jz mpmDone
-;    
-    push ds
-;
-    mov ds,es:[edi].pcif_msix_irq_sel
-    xor si,si
-    mov cx,es:[edi].pcif_msix_count
-
-mpmMsixIrq:
-    cmp al,ds:[si]
-    je mpmMsixFound
-;
-    add si,4
-    sub cx,1
-    jnz mpmMsixIrq
-;
-    int 3
-
-mpmMsixFound:
-    mov ds:[si+2],fs
-    shl si,2
-    mov es,es:[edi].pcif_msix_data_sel
-;
-    GetMsiVector
-;
-    mov es:[si],edx
-    movzx eax,ax
-    mov es:[si+8],eax
-;
-    xor eax,eax
-    mov es:[si+4],eax
-    mov es:[si+12],eax    
-;
-    pop ds
-
-mpmDone:
-    popad
-    pop es
-    ret
-move_pci_msi     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetPciMsiX
 ;
 ;           DESCRIPTION:    Get PCI MSI-X interface
@@ -3502,12 +3426,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET move_pci_msi
-    mov edi,OFFSET move_pci_msi_name
-    xor cl,cl
-    mov ax,move_pci_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET enable_pci_msix
