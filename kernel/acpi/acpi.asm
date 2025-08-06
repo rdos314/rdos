@@ -2287,86 +2287,6 @@ gpdcDone:
     pop ds
     ret
 get_pci_dsd_config   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PciPowerOn
-;
-;           DESCRIPTION:    Set PCI device to D0 power state
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;                           ES:EDI      Device name
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-pci_power_on_name       DB 'PCI Power On',0
-
-pci_power_on    Proc far
-    push ds
-    push es
-    pushad
-;
-    mov ax,es
-    mov ds,ax
-    mov esi,edi
-;
-    mov ax,SEG data    
-    mov es,ax
-;
-    movzx edi,bh
-    mov ax,es:[2*edi].pci_bus_arr
-    or ax,ax
-    jz ppoStart
-;
-    mov es,ax
-    movzx edi,bl
-    mov ax,es:[2*edi].pcib_device_arr
-    or ax,ax
-    jz ppoStart
-;
-    mov es,ax
-    movzx edi,ch
-    shl edi,7
-    mov es:[di].pcif_used,1
-    add edi,OFFSET pcif_acpi_name
-
-ppoCopyName:
-    lods byte ptr ds:[esi]
-    stos byte ptr es:[edi]
-    or al,al
-    jnz ppoCopyName
-
-ppoStart:
-    mov al,1
-;    FindPciCapability
-    jmp ppoDone
-;
-    mov cl,al
-    add cl,4
-    ReadPciWord
-    and al,3
-    jz ppoInD0
-;
-    mov ax,8000h
-    WritePciWord
-;
-    mov ax,10
-    WaitMilliSec
-    jmp ppoDone
-
-ppoInD0:
-    mov ax,8000h
-    WritePciWord
-
-ppoDone:
-    popad
-    pop es
-    pop ds
-    ret
-pci_power_on    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3857,12 +3777,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET pci_power_on
-    mov edi,OFFSET pci_power_on_name
-    xor cl,cl
-    mov ax,pci_power_on_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_pci_device_name

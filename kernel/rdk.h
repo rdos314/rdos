@@ -740,8 +740,6 @@
 
 #define osgate_set_disc_lba_param 715
 
-#define osgate_pci_power_on 716
-
 #define osgate_setup_nmi_handler 717
 
 #define osgate_allocate_usb_address 720
@@ -1674,8 +1672,6 @@
 #define OsGate_get_device_cmd_line 0x3E 0x67 0x9a 202 2 0 0 2 0
 
 #define OsGate_set_disc_lba_param 0x3E 0x67 0x9a 203 2 0 0 2 0
-
-#define OsGate_pci_power_on 0x3E 0x67 0x9a 204 2 0 0 2 0
 
 #define OsGate_setup_nmi_handler 0x3E 0x67 0x9a 205 2 0 0 2 0
 

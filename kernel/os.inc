@@ -4193,14 +4193,6 @@ GetPciDsdConfig      MACRO
         OsGate get_pci_dsd_config_nr
                         ENDM
 
-; IN  BH      Bus
-; IN  BL      Device
-; IN  CH      Function
-; IN  ES:EDI  Device name
-PciPowerOn       MACRO
-    OsGate pci_power_on_nr
-                    ENDM
-
 ; IN  AL    IRQ
 ; IN  FS    Core
 MovePciMsi    MACRO
