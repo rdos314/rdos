@@ -487,39 +487,3 @@ UacpiIn  MACRO
 UacpiOut  MACRO
     ServGate uacpi_out_nr
                     ENDM
-
-; IN  EBX               Dev
-; OUT AL                Value
-UacpiReadPciByte  MACRO
-    ServGate uacpi_read_pci_byte_nr
-                    ENDM
-
-; IN  EBX               Dev
-; OUT AX                Value
-UacpiReadPciWord  MACRO
-    ServGate uacpi_read_pci_word_nr
-                    ENDM
-
-; IN  EBX               Dev
-; OUT EAX               Value
-UacpiReadPciDword  MACRO
-    ServGate uacpi_read_pci_dword_nr
-                    ENDM
-
-; IN  EBX               Dev
-; IN  AL                Value
-UacpiWritePciByte  MACRO
-    ServGate uacpi_write_pci_byte_nr
-                    ENDM
-
-; IN  EBX               Dev
-; IN  AX                Value
-UacpiWritePciWord  MACRO
-    ServGate uacpi_write_pci_word_nr
-                    ENDM
-
-; IN  EBX               Dev
-; IN  EAX               Value
-UacpiWritePciDword  MACRO
-    ServGate uacpi_write_pci_dword_nr
-                    ENDM
