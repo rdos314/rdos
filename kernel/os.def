@@ -177,12 +177,6 @@ check_dos_device_nr                 = 174
 get_focus_thread_nr                     = 185
 
 bios_pci_int_nr                         = 189
-read_pci_byte_nr                        = 190
-read_pci_word_nr                        = 191
-read_pci_dword_nr                       = 192
-write_pci_byte_nr                       = 193
-write_pci_word_nr                       = 194
-write_pci_dword_nr                      = 195
 
 install_static_disc_nr                  = 199
 register_disc_change_nr         = 200

@@ -177,12 +177,6 @@
 #define osgate_get_focus_thread 185
 
 #define osgate_bios_pci_int 189
-#define osgate_read_pci_byte 190
-#define osgate_read_pci_word 191
-#define osgate_read_pci_dword 192
-#define osgate_write_pci_byte 193
-#define osgate_write_pci_word 194
-#define osgate_write_pci_dword 195
 
 #define osgate_install_static_disc 199
 #define osgate_register_disc_change 200
@@ -553,8 +547,6 @@
 #define osgate_send_can_bus_block 548
 
 #define osgate_get_disc_vendor_info_buf 549
-
-#define osgate_setup_pci_msix_entry 552
 
 #define osgate_update_tcp_mtu 553
 
@@ -1101,12 +1093,6 @@
 #define OsGate_get_focus_thread 0x3E 0x67 0x9a 185 0 0 0 2 0
 
 #define OsGate_bios_pci_int 0x3E 0x67 0x9a 189 0 0 0 2 0
-#define OsGate_read_pci_byte 0x3E 0x67 0x9a 190 0 0 0 2 0
-#define OsGate_read_pci_word 0x3E 0x67 0x9a 191 0 0 0 2 0
-#define OsGate_read_pci_dword 0x3E 0x67 0x9a 192 0 0 0 2 0
-#define OsGate_write_pci_byte 0x3E 0x67 0x9a 193 0 0 0 2 0
-#define OsGate_write_pci_word 0x3E 0x67 0x9a 194 0 0 0 2 0
-#define OsGate_write_pci_dword 0x3E 0x67 0x9a 195 0 0 0 2 0
 
 #define OsGate_install_static_disc 0x3E 0x67 0x9a 199 0 0 0 2 0
 #define OsGate_register_disc_change 0x3E 0x67 0x9a 200 0 0 0 2 0
@@ -1477,8 +1463,6 @@
 #define OsGate_send_can_bus_block 0x3E 0x67 0x9a 36 2 0 0 2 0
 
 #define OsGate_get_disc_vendor_info_buf 0x3E 0x67 0x9a 37 2 0 0 2 0
-
-#define OsGate_setup_pci_msix_entry 0x3E 0x67 0x9a 40 2 0 0 2 0
 
 #define OsGate_update_tcp_mtu 0x3E 0x67 0x9a 41 2 0 0 2 0
 

@@ -4120,60 +4120,6 @@ BiosPciInt      MACRO
     OsGate bios_pci_int_nr
                     ENDM
 
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; OUT AL    Data
-ReadPciByte     MACRO
-    OsGate read_pci_byte_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; OUT AX    Data
-ReadPciWord     MACRO
-    OsGate read_pci_word_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; OUT EAX       Data
-ReadPciDword    MACRO
-    OsGate read_pci_dword_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; IN  AL    Data
-WritePciByte    MACRO
-    OsGate write_pci_byte_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; IN  AX    Data
-WritePciWord    MACRO
-    OsGate write_pci_word_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  CL    Register
-; IN  EAX       Data
-WritePciDword   MACRO
-    OsGate write_pci_dword_nr
-                    ENDM
-
 ;;;;;;;;;; ACPI ;;;;;;;;;
 
 ;   IN  EAX         PCI device #
