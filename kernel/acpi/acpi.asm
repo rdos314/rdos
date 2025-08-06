@@ -2504,111 +2504,6 @@ get_pci_msix     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           EnablePciMsiX
-;
-;           DESCRIPTION:    Enable PCI MSI-X function
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-enable_pci_msix_name DB 'Enable PCI MSI-X',0
-
-enable_pci_msix     Proc far    
-    push ds
-    pushad
-;
-    mov ax,SEG data    
-    mov ds,ax
-;
-    movzx esi,bh
-    mov ax,ds:[2*esi].pci_bus_arr
-    or ax,ax
-    jz epmxFail
-;
-    mov ds,ax
-    movzx esi,bl
-    mov ax,ds:[2*esi].pcib_device_arr
-    or ax,ax
-    jz epmxFail
-;
-    mov ds,ax
-    movzx esi,ch
-    shl esi,7
-    mov al,ds:[esi].pcif_msix
-    or al,al
-    jz epmxFail
-
-epmxOk:
-    mov eax,1000h
-    AllocateBigLinear
-;    
-    mov cl,ds:[esi].pcif_msix
-    push esi
-;
-    ReadPciWord
-    or ax,8000h
-    WritePciWord
-    mov si,ax
-;
-    add cl,2
-    ReadPciDword
-    mov edi,eax
-    and di,0FFF8h
-;
-    mov cl,al
-    and cl,7
-    shl cl,2
-    add cl,10h
-    ReadPciDword
-    and al,0F0h
-    add eax,edi
-;
-    push eax
-    and ax,0F000h
-    push ebx
-    xor ebx,ebx
-    mov al,13h
-    SetPageEntry
-    pop ebx
-    pop eax
-;
-    and eax,0FFFh
-    add edx,eax
-;    
-    AllocateGdt
-    mov cx,si
-    and cx,1FFh
-    inc cx
-    shl cx,4
-    CreateDataSelector16
-    mov es,bx
-;
-    xor edi,edi
-    xor al,al
-    rep stos byte ptr es:[edi]
-;
-    pop esi
-    mov ds:[esi].pcif_msix_data_sel,bx
-    clc
-    jmp epmxDone
-
-epmxFail:
-    stc
-    xor bx,bx
-    mov es,bx    
-
-epmxDone:
-    popad
-    pop ds
-    ret
-enable_pci_msix     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           InitPciMsiXEntry
 ;
 ;           DESCRIPTION:    Init PCI MSI-X entry
@@ -3426,12 +3321,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET enable_pci_msix
-    mov edi,OFFSET enable_pci_msix_name
-    xor cl,cl
-    mov ax,enable_pci_msix_nr
     RegisterOsGate
 ;
     mov esi,OFFSET init_pci_msix_entry

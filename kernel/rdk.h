@@ -554,7 +554,6 @@
 
 #define osgate_get_disc_vendor_info_buf 549
 
-#define osgate_enable_pci_msix 551
 #define osgate_setup_pci_msix_entry 552
 
 #define osgate_update_tcp_mtu 553
@@ -1480,7 +1479,6 @@
 
 #define OsGate_get_disc_vendor_info_buf 0x3E 0x67 0x9a 37 2 0 0 2 0
 
-#define OsGate_enable_pci_msix 0x3E 0x67 0x9a 39 2 0 0 2 0
 #define OsGate_setup_pci_msix_entry 0x3E 0x67 0x9a 40 2 0 0 2 0
 
 #define OsGate_update_tcp_mtu 0x3E 0x67 0x9a 41 2 0 0 2 0

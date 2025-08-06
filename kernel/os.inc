@@ -4177,14 +4177,6 @@ WritePciDword   MACRO
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function
-; OUT ES    Int vector selector
-EnablePciMsiX    MACRO
-    OsGate enable_pci_msix_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
 ; IN  AL    Int #
 ; IN  DL    Entry #
 InitPciMsiXEntry    MACRO
