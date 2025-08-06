@@ -1222,7 +1222,7 @@ siSingle:
 siMulti:
     mov ah,14h
     movzx cx,al
-    ReqPciHandleMsi    
+    ReqPciMsi    
     jc siSingle
 ;
     mov ds:ad_msi,1
@@ -1239,7 +1239,7 @@ siMultiSetup:
     mov di,cs
     mov es,di
     mov edi,OFFSET AhciPortInt
-    SetupPciHandleMsi
+    SetupPciMsi
     pop ds
 
 siMultiNext:
@@ -1247,7 +1247,7 @@ siMultiNext:
     inc dx
     loop siMultiLoop
 ;
-    EnablePciHandleMsi
+    EnablePciMsi
 
 siDone:
     ret

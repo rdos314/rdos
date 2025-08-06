@@ -600,7 +600,7 @@ setup_pci_irq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReqPciHandleMsi
+;           NAME:           ReqPciMsi
 ;
 ;           DESCRIPTION:    Req MSI vectors
 ;
@@ -612,9 +612,9 @@ setup_pci_irq   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-req_pci_handle_msi_name      DB 'Req PCI Handle MSI',0
+req_pci_msi_name      DB 'Req PCI MSI',0
 
-req_pci_handle_msi   Proc far
+req_pci_msi   Proc far
     push ds
     push es
     push fs
@@ -641,12 +641,12 @@ req_pci_handle_msi   Proc far
     pop es
     pop ds
     ret
-req_pci_handle_msi   Endp
+req_pci_msi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupPciHandleMsi
+;           NAME:           SetupPciMsi
 ;
 ;           DESCRIPTION:    Setup MSI IRQ
 ;
@@ -657,9 +657,9 @@ req_pci_handle_msi   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-setup_pci_handle_msi_name      DB 'Setup PCI Handle MSI',0
+setup_pci_msi_name      DB 'Setup PCI MSI',0
 
-setup_pci_handle_msi   Proc far
+setup_pci_msi   Proc far
     push eax
 ;
     push ds
@@ -689,12 +689,12 @@ setup_pci_handle_msi   Proc far
 sphmDone:    
     pop eax
     ret
-setup_pci_handle_msi   Endp
+setup_pci_msi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           EnablePciHandleMsi
+;           NAME:           EnablePciMsi
 ;
 ;           DESCRIPTION:    Enable PCI MSI handlers
 ;
@@ -702,9 +702,9 @@ setup_pci_handle_msi   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_pci_handle_msi_name      DB 'Enable PCI Handle MSI',0
+enable_pci_msi_name      DB 'Enable PCI MSI',0
 
-enable_pci_handle_msi   Proc far
+enable_pci_msi   Proc far
     push ds
     push es
     push edx
@@ -724,7 +724,7 @@ enable_pci_handle_msi   Proc far
     pop es
     pop ds
     ret
-enable_pci_handle_msi   Endp
+enable_pci_msi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1618,22 +1618,22 @@ init    Proc far
     mov ax,setup_pci_irq_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET req_pci_handle_msi
-    mov edi,OFFSET req_pci_handle_msi_name
+    mov esi,OFFSET req_pci_msi
+    mov edi,OFFSET req_pci_msi_name
     xor cl,cl
-    mov ax,req_pci_handle_msi_nr
+    mov ax,req_pci_msi_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET setup_pci_handle_msi
-    mov edi,OFFSET setup_pci_handle_msi_name
+    mov esi,OFFSET setup_pci_msi
+    mov edi,OFFSET setup_pci_msi_name
     xor cl,cl
-    mov ax,setup_pci_handle_msi_nr
+    mov ax,setup_pci_msi_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET enable_pci_handle_msi
-    mov edi,OFFSET enable_pci_handle_msi_name
+    mov esi,OFFSET enable_pci_msi
+    mov edi,OFFSET enable_pci_msi_name
     xor cl,cl
-    mov ax,enable_pci_handle_msi_nr
+    mov ax,enable_pci_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET soft_reset

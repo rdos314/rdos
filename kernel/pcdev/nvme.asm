@@ -1048,7 +1048,7 @@ CreateNameSpace  Proc near
     mov eax,cs
     mov es,eax
     mov edi,OFFSET NvmeInt
-    SetupPciHandleMsi
+    SetupPciMsi
 ;
     pop edi
     pop edx
@@ -1352,7 +1352,7 @@ siCheckMsi:
 siMulti:
     mov ah,14h
     movzx cx,al
-    ReqPciHandleMsi    
+    ReqPciMsi    
     jc siDone
 ;
     dec cl
@@ -1366,7 +1366,7 @@ siMulti:
     mov es,edx
     mov edi,OFFSET NvmeAdminInt
     xor dx,dx
-    SetupPciHandleMsi
+    SetupPciMsi
     pop es
 ;
     clc
@@ -1804,7 +1804,7 @@ nvme_thread:
 ;
     push ebx
     mov bx,es:nd_pci_handle
-    EnablePciHandleMsi
+    EnablePciMsi
     pop ebx
 ;
     call GetId1
