@@ -248,7 +248,7 @@ ipdLoop:
     push edx
 ;
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
 ;
     mov eax,1000h
     AllocateBigLinear

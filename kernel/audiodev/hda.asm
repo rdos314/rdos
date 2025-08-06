@@ -1675,7 +1675,7 @@ init_pci_probe_found:
     jc init_pci_probe_done
 ;    
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
 ;
     mov ebp,eax
     call AddFunction
@@ -1693,7 +1693,7 @@ init_pci_probe_done:
     jc init_pci_more
 ;    
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
 ;
     mov ebp,eax
     call AddFunction
@@ -1714,7 +1714,7 @@ init_pci_more:
 ;       
     mov ebp,eax
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
     call AddFunction
 
 init_pci_next:

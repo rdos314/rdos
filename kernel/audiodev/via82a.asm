@@ -730,7 +730,7 @@ ipFound:
     jc ipLoop
 ;
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
     mov ds:IoBase,dx
 ;
     mov cl,41h

@@ -817,7 +817,7 @@ ipFound:
     jc ipLoop
 ;
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
     mov ds:IoBase,dx
 ;
     mov al,1Ah

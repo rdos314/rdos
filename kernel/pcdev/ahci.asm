@@ -1003,7 +1003,7 @@ ipaLoop:
     mov ax,ds
     mov es,ax
     mov edi,OFFSET pci_name_str
-    LockPciHandle
+    LockPci
     pop eax
 ;
     push ebx

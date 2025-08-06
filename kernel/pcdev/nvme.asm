@@ -1948,7 +1948,7 @@ sdLoop:
     mov eax,cs
     mov es,eax
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
     pop eax
 ;
     call CreateDevice

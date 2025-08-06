@@ -647,7 +647,7 @@ SetupDevice  Proc near
     mov ax,cs
     mov es,ax
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
 ;
     mov eax,1000h    
     AllocateBigLinear

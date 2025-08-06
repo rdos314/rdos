@@ -412,9 +412,9 @@ int RDOSAPI RdosReadPciConfigDword(int Handle, int Register);
 void RDOSAPI RdosWritePciConfigByte(int Handle, int Register, unsigned char Value);
 void RDOSAPI RdosWritePciConfigWord(int Handle, int Register, short int Value);
 void RDOSAPI RdosWritePciConfigDword(int Handle, int Register, int Value);
-int RDOSAPI RdosLockPciHandle(int Handle, char *Name);
-int RDOSAPI RdosUnlockPciHandle(int Handle);
-int RDOSAPI RdosIsPciHandleLocked(int Handle);
+int RDOSAPI RdosLockPci(int Handle, char *Name);
+int RDOSAPI RdosUnlockPci(int Handle);
+int RDOSAPI RdosIsPciLocked(int Handle);
 
 long RDOSAPI RdosGetAcpiStatus();
 int RDOSAPI RdosGetAcpiObject(int Index, char *AcpiName);

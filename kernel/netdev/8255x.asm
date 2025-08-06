@@ -1635,7 +1635,7 @@ init_pci_loop:
     jmp init_pci_loop
 
 init_pci_found:
-    LockPciHandle
+    LockPci
     jc init_pci_loop
 ;
     mov cl,PCI_revisionID

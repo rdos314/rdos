@@ -3080,7 +3080,7 @@ ipFound:
     jc ipLoop
 ;
     mov edi,OFFSET DriverName
-    LockPciHandle
+    LockPci
 ;
     mov di,cs
     mov es,di

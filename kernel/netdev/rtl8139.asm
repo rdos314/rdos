@@ -1093,7 +1093,7 @@ ipLoop:
     jmp ipLoop
 
 ipFound:
-    LockPciHandle
+    LockPci
     jc ipLoop
 ;
     xor al,al

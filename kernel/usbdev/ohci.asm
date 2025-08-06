@@ -4109,7 +4109,7 @@ sfCopyDone:
 ;
     xor edi,edi
     mov bx,ds:ohc_pci_handle
-    LockPciHandle
+    LockPci
 ;   
     pop si         
     mov bx,ds
@@ -4444,7 +4444,7 @@ ipLoop:
     jc ipLoop
 ;
     mov edi,OFFSET ohci_name
-    LockPciHandle
+    LockPci
 ;
     call AddFunction
     jmp ipLoop

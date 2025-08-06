@@ -4696,18 +4696,18 @@ WritePciConfigDword      MACRO
 
 ;   IN  BX          Handle
 ;   IN  ES:EDI      Name
-LockPciHandle      MACRO
-        UserGate lock_pci_handle_nr
+LockPci      MACRO
+        UserGate lock_pci_nr
                         ENDM
 
 ;   IN  BX          Handle
-UnlockPciHandle      MACRO
-        UserGate unlock_pci_handle_nr
+UnlockPci      MACRO
+        UserGate unlock_pci_nr
                         ENDM
 
 ;   IN  BX          Handle
-IsPciHandleLocked      MACRO
-        UserGate is_pci_handle_locked_nr
+IsPciLocked      MACRO
+        UserGate is_pci_locked_nr
                         ENDM
 
 ;   IN  DH          Segment

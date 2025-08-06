@@ -250,20 +250,20 @@
     CallGate_write_pci_config_dword  \
     __parm [__ebx] [__ecx] [__eax]
 
-#pragma aux RdosLockPciHandle = \
-    CallGate_lock_pci_handle  \
+#pragma aux RdosLockPci = \
+    CallGate_lock_pci  \
     CarryToBool \
     __parm [__ebx] [__edi] \
     __value [__eax]
 
-#pragma aux RdosUnlockPciHandle = \
-    CallGate_unlock_pci_handle  \
+#pragma aux RdosUnlockPci = \
+    CallGate_unlock_pci  \
     CarryToBool \
     __parm [__ebx] \
     __value [__eax]
 
-#pragma aux RdosIsPciHandleLocked = \
-    CallGate_is_pci_handle_locked  \
+#pragma aux RdosIsPciLocked = \
+    CallGate_is_pci_locked  \
     CarryToBool \
     __parm [__ebx] \
     __value [__eax]

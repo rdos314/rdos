@@ -1843,7 +1843,7 @@ cpiLoop:
     je cpiBar1Done
 ;
     mov edi,OFFSET DevName1
-    LockPciHandle
+    LockPci
 ;
     call CheckPciBar
 
@@ -1856,7 +1856,7 @@ cpiBar1Done:
     je cpiBar3Done
 ;    
     mov edi,OFFSET DevName2
-    LockPciHandle
+    LockPci
 ;
     call CheckPciBar
 
@@ -1899,7 +1899,7 @@ cpaLoop:
     je cpaBar1Done
 ;
     mov edi,OFFSET SataName1
-    LockPciHandle
+    LockPci
 ;
     call CheckPciBar
 
@@ -1912,7 +1912,7 @@ cpaBar1Done:
     je cpaBar3Done
 ;
     mov edi,OFFSET SataName2
-    LockPciHandle
+    LockPci
 ;    
     call CheckPciBar
 

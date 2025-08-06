@@ -1198,16 +1198,16 @@ write_pci_config_dword   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;    NAME:           LockPciHandle16/32
+;    NAME:           LockPci16/32
 ;
-;    DESCRIPTION:    Lock PCI handle
+;    DESCRIPTION:    Lock PCI
 ;
 ;    PARAMETERS:     BX          Handle
 ;                    ES:(E)DI    Name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lock_pci_handle_name DB 'Lock PCI Handle', 0
+lock_pci_name DB 'Lock PCI', 0
 
 LockHandle  Proc near
     push ds
@@ -1240,7 +1240,7 @@ lhCopy:
     ret
 LockHandle   Endp
 
-lock_pci_handle16  Proc far
+lock_pci16  Proc far
     push edx
     mov edx,[esp+8]
 ;    
@@ -1255,9 +1255,9 @@ lock_pci_handle16  Proc far
     pop ecx
     pop edx
     ret
-lock_pci_handle16  Endp
+lock_pci16  Endp
 
-lock_pci_handle32  Proc far
+lock_pci32  Proc far
     push edx
     mov edx,[esp+8]
 ;
@@ -1265,22 +1265,22 @@ lock_pci_handle32  Proc far
 ;
     pop edx    
     ret
-lock_pci_handle32  Endp
+lock_pci32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           UnlockPciHandle
+;           NAME:           UnlockPci
 ;
-;           DESCRIPTION:    Unlock PCI handle
+;           DESCRIPTION:    Unlock PCI
 ;
 ;           PARAMETERS:     BX      Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-unlock_pci_handle_name      DB 'Unlock PCI Handle',0
+unlock_pci_name      DB 'Unlock PCI',0
 
-unlock_pci_handle   Proc far
+unlock_pci   Proc far
     push ds
     push es
     push edx
@@ -1300,22 +1300,22 @@ unlock_pci_handle   Proc far
     pop es
     pop ds
     ret
-unlock_pci_handle   Endp
+unlock_pci   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           IsPciHandleLocked
+;           NAME:           IsPciLocked
 ;
-;           DESCRIPTION:    Check if PCI handle is locked
+;           DESCRIPTION:    Check if PCI is locked
 ;
 ;           PARAMETERS:     BX      Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-is_pci_handle_locked_name      DB 'Is PCI Handle Locked',0
+is_pci_locked_name      DB 'Is PCI Locked',0
 
-is_pci_handle_locked   Proc far
+is_pci_locked   Proc far
     push ds
     push es
     push edi
@@ -1331,7 +1331,7 @@ is_pci_handle_locked   Proc far
     pop es
     pop ds
     ret
-is_pci_handle_locked   Endp
+is_pci_locked   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1752,23 +1752,23 @@ init    Proc far
     mov ax,get_pci_bus_nr
     RegisterBimodalUserGate
 ;
-    mov ebx,OFFSET lock_pci_handle16
-    mov esi,OFFSET lock_pci_handle32
-    mov edi,OFFSET lock_pci_handle_name
+    mov ebx,OFFSET lock_pci16
+    mov esi,OFFSET lock_pci32
+    mov edi,OFFSET lock_pci_name
     mov dx,virt_es_in
-    mov ax,lock_pci_handle_nr
+    mov ax,lock_pci_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET unlock_pci_handle
-    mov edi,OFFSET unlock_pci_handle_name
+    mov esi,OFFSET unlock_pci
+    mov edi,OFFSET unlock_pci_name
     xor dx,dx
-    mov ax,unlock_pci_handle_nr
+    mov ax,unlock_pci_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET is_pci_handle_locked
-    mov edi,OFFSET is_pci_handle_locked_name
+    mov esi,OFFSET is_pci_locked
+    mov edi,OFFSET is_pci_locked_name
     xor dx,dx
-    mov ax,is_pci_handle_locked_nr
+    mov ax,is_pci_locked_nr
     RegisterBimodalUserGate
 ;
     call init_uacpi

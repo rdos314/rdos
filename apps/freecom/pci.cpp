@@ -142,7 +142,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                 VendorID = RdosReadPciConfigWord(Handle, 0);
                 DeviceID = RdosReadPciConfigWord(Handle, 2);
 
-                Used = RdosIsPciHandleLocked(Handle);
+                Used = RdosIsPciLocked(Handle);
                 Msi = RdosGetPciMsiIrqs(Handle);
                 MsiX = RdosGetPciMsiXIrqs(Handle);
 

@@ -4268,7 +4268,7 @@ cetXhciDone:
 ;
 	xor edi,edi
     mov bx,ds:xhc_pci_handle
-    LockPciHandle
+    LockPci
 ;
     mov bx,ds
     mov ax,cs
@@ -5167,7 +5167,7 @@ init_pci_loop:
     jc init_pci_loop
 ;
     mov edi,OFFSET DevName
-    LockPciHandle
+    LockPci
 ;    
     call CreateFunction
     jc init_pci_loop

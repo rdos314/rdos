@@ -1042,11 +1042,11 @@
 #define usergate_get_pci_irq 0x00000369
 #define usergate_get_pci_cap 0x0000036A
 #define usergate_get_pci_handle 0x0000036B
-#define usergate_lock_pci_handle 0x0000036C
-#define usergate_unlock_pci_handle 0x0000036D
+#define usergate_lock_pci 0x0000036C
+#define usergate_unlock_pci 0x0000036D
 #define usergate_get_pci_msi_irqs 0x0000036E
 #define usergate_get_pci_msix_irqs 0x0000036F
-#define usergate_is_pci_handle_locked 0x00000370
+#define usergate_is_pci_locked 0x00000370
 #define usergate_eval_pci_int_arr 0x00000371
 
 
@@ -2096,11 +2096,11 @@
 #define CallGate_get_pci_irq 0x55 0x67 0x9a 105 3 0 0 3 0 0x5d
 #define CallGate_get_pci_cap 0x55 0x67 0x9a 106 3 0 0 3 0 0x5d
 #define CallGate_get_pci_handle 0x55 0x67 0x9a 107 3 0 0 3 0 0x5d
-#define CallGate_lock_pci_handle 0x55 0x67 0x9a 108 3 0 0 3 0 0x5d
-#define CallGate_unlock_pci_handle 0x55 0x67 0x9a 109 3 0 0 3 0 0x5d
+#define CallGate_lock_pci 0x55 0x67 0x9a 108 3 0 0 3 0 0x5d
+#define CallGate_unlock_pci 0x55 0x67 0x9a 109 3 0 0 3 0 0x5d
 #define CallGate_get_pci_msi_irqs 0x55 0x67 0x9a 110 3 0 0 3 0 0x5d
 #define CallGate_get_pci_msix_irqs 0x55 0x67 0x9a 111 3 0 0 3 0 0x5d
-#define CallGate_is_pci_handle_locked 0x55 0x67 0x9a 112 3 0 0 3 0 0x5d
+#define CallGate_is_pci_locked 0x55 0x67 0x9a 112 3 0 0 3 0 0x5d
 #define CallGate_eval_pci_int_arr 0x55 0x67 0x9a 113 3 0 0 3 0 0x5d
 
 #else
@@ -3148,11 +3148,11 @@
 #define CallGate_get_pci_irq 0x3e 0x67 0x9a 105 3 0 0 3 0
 #define CallGate_get_pci_cap 0x3e 0x67 0x9a 106 3 0 0 3 0
 #define CallGate_get_pci_handle 0x3e 0x67 0x9a 107 3 0 0 3 0
-#define CallGate_lock_pci_handle 0x3e 0x67 0x9a 108 3 0 0 3 0
-#define CallGate_unlock_pci_handle 0x3e 0x67 0x9a 109 3 0 0 3 0
+#define CallGate_lock_pci 0x3e 0x67 0x9a 108 3 0 0 3 0
+#define CallGate_unlock_pci 0x3e 0x67 0x9a 109 3 0 0 3 0
 #define CallGate_get_pci_msi_irqs 0x3e 0x67 0x9a 110 3 0 0 3 0
 #define CallGate_get_pci_msix_irqs 0x3e 0x67 0x9a 111 3 0 0 3 0
-#define CallGate_is_pci_handle_locked 0x3e 0x67 0x9a 112 3 0 0 3 0
+#define CallGate_is_pci_locked 0x3e 0x67 0x9a 112 3 0 0 3 0
 #define CallGate_eval_pci_int_arr 0x3e 0x67 0x9a 113 3 0 0 3 0
 
 #endif
