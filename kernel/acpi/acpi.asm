@@ -1516,38 +1516,6 @@ hook_thread_done:
     TerminateThread
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           Test gate
-;
-;       DESCRIPTION:    Test
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name  DB 'Test', 0
-
-
-test_gate    Proc far
-    push ds
-    push es
-    pushad
-;
-    mov eax,system_data_sel
-    mov ds,eax
-    mov ax,ds:acpi_apic_table
-    mov ax,ds:acpi_hpet_table
-    mov al,ds:acpi_reset_method
-    mov eax,ds:acpi_reset_addr
-    mov al,ds:acpi_reset_data
-
-tgDone:
-    popad
-    pop es
-    pop ds
-    ret
-test_gate    Endp
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           init
@@ -1587,12 +1555,6 @@ init    Proc far
     mov edi,OFFSET hook_init_pci_name
     mov ax,hook_init_pci_nr
     RegisterOsGate
-;
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET soft_reset
     mov edi,OFFSET soft_reset_name
