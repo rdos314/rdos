@@ -3955,7 +3955,6 @@ test_gate    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     extern init_irq:near
-    extern init_bios:near
     extern init_uacpi:near
     extern init_apic:near
     extern init_smp:near
@@ -4338,7 +4337,6 @@ init    Proc far
     mov ax,get_pci_msix_nr
     RegisterBimodalUserGate
 ;
-    call init_bios
     call init_uacpi
 ;
     mov eax,system_data_sel
