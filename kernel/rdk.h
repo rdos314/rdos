@@ -908,7 +908,6 @@
 
 #define osgate_ipi_wakeup 860
 #define osgate_set_thread_irq 861
-#define osgate_init_pci_msix_entry 862
 
 #define osgate_register_priv_serv_gate 863
 
@@ -1833,7 +1832,6 @@
 
 #define OsGate_ipi_wakeup 0x3E 0x67 0x9a 92 3 0 0 2 0
 #define OsGate_set_thread_irq 0x3E 0x67 0x9a 93 3 0 0 2 0
-#define OsGate_init_pci_msix_entry 0x3E 0x67 0x9a 94 3 0 0 2 0
 
 #define OsGate_register_priv_serv_gate 0x3E 0x67 0x9a 95 3 0 0 2 0
 

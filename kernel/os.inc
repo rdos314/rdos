@@ -4179,15 +4179,6 @@ WritePciDword   MACRO
 ; IN  CH    Function
 ; IN  AL    Int #
 ; IN  DL    Entry #
-InitPciMsiXEntry    MACRO
-    OsGate init_pci_msix_entry_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  AL    Int #
-; IN  DL    Entry #
 SetupPciMsiXEntry    MACRO
     OsGate setup_pci_msix_entry_nr
                     ENDM

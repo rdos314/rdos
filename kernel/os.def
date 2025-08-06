@@ -908,7 +908,6 @@ init_user_timer_nr          = 859
 
 ipi_wakeup_nr               = 860
 set_thread_irq_nr           = 861
-init_pci_msix_entry_nr      = 862
 
 register_priv_serv_gate_nr  = 863
 

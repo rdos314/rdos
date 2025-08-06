@@ -2504,72 +2504,6 @@ get_pci_msix     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitPciMsiXEntry
-;
-;           DESCRIPTION:    Init PCI MSI-X entry
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;                           DL          Entry #
-;                           AL          Int #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_pci_msix_entry_name DB 'Init PCI MSI-X Entry',0
-
-init_pci_msix_entry     Proc far    
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov bp,ax
-    mov eax,SEG data    
-    mov ds,eax
-;
-    movzx esi,bh
-    mov ax,ds:[2*esi].pci_bus_arr
-    or ax,ax
-    jz ipmxFail
-;
-    mov ds,ax
-    movzx esi,bl
-    mov ax,ds:[2*esi].pcib_device_arr
-    or ax,ax
-    jz ipmxFail
-;
-    mov ds,ax
-    movzx esi,ch
-    shl esi,7
-    cmp dl,byte ptr ds:[esi].pcif_msix_count
-    jae ipmxFail
-;
-    mov ax,bp
-    mov es,ds:[esi].pcif_msix_irq_sel
-    movzx di,dl
-    shl di,2
-    mov es:[di],al
-;
-    GetCore
-    mov es:[di+2],fs
-    clc
-    jmp ipmxDone
-
-ipmxFail:
-    stc
-
-ipmxDone:
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-init_pci_msix_entry    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SetupPciMsiXEntry
 ;
 ;           DESCRIPTION:    Setup PCI MSI-X entry
@@ -3321,12 +3255,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET init_pci_msix_entry
-    mov edi,OFFSET init_pci_msix_entry_name
-    xor cl,cl
-    mov ax,init_pci_msix_entry_nr
     RegisterOsGate
 ;
     mov esi,OFFSET setup_pci_msix_entry
