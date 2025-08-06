@@ -2504,87 +2504,6 @@ get_pci_msix     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupPciMsiXEntry
-;
-;           DESCRIPTION:    Setup PCI MSI-X entry
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;                           DL          Entry #
-;                           AL          Int #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_pci_msix_entry_name DB 'Setup PCI MSI-X Entry',0
-
-setup_pci_msix_entry     Proc far    
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov bp,ax
-    mov eax,SEG data    
-    mov ds,eax
-;
-    movzx esi,bh
-    mov ax,ds:[2*esi].pci_bus_arr
-    or ax,ax
-    jz spmxFail
-;
-    mov ds,ax
-    movzx esi,bl
-    mov ax,ds:[2*esi].pcib_device_arr
-    or ax,ax
-    jz spmxFail
-;
-    mov ds,ax
-    movzx esi,ch
-    shl esi,7
-    cmp dl,byte ptr ds:[esi].pcif_msix_count
-    jae spmxFail
-;
-    mov ax,bp
-    mov es,ds:[esi].pcif_msix_irq_sel
-    movzx di,dl
-    shl di,2
-    mov es:[di],al
-;
-    GetCore
-    mov es:[di+2],fs
-;    
-    mov es,ds:[esi].pcif_msix_data_sel
-;    
-    movzx esi,dl
-    shl esi,4
-;
-    GetMsiVector
-;
-    mov es:[esi],edx
-    movzx eax,ax
-    mov es:[esi+8],eax
-;
-    xor eax,eax
-    mov es:[esi+4],eax
-    mov es:[esi+12],eax    
-    clc
-    jmp spmxDone
-
-spmxFail:
-    stc
-
-spmxDone:
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-setup_pci_msix_entry    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           ScanPciDevice
 ;
 ;           DESCRIPTION:    Scan PCI device
@@ -3255,12 +3174,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET setup_pci_msix_entry
-    mov edi,OFFSET setup_pci_msix_entry_name
-    xor cl,cl
-    mov ax,setup_pci_msix_entry_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_pci_irq

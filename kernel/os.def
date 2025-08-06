@@ -554,8 +554,6 @@ send_can_bus_block_nr       = 548
 
 get_disc_vendor_info_buf_nr = 549
 
-setup_pci_msix_entry_nr     = 552
-
 update_tcp_mtu_nr           = 553
 
 notify_lon_data_nr          = 554

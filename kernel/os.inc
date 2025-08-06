@@ -4174,15 +4174,6 @@ WritePciDword   MACRO
     OsGate write_pci_dword_nr
                     ENDM
 
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  AL    Int #
-; IN  DL    Entry #
-SetupPciMsiXEntry    MACRO
-    OsGate setup_pci_msix_entry_nr
-                    ENDM
-
 ;;;;;;;;;; ACPI ;;;;;;;;;
 
 ;   IN  EAX         PCI device #
