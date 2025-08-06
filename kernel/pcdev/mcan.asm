@@ -626,7 +626,7 @@ SetupIdFilter    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DevName DB 'CAN', 0
-can_config_name DB 'bosch,mram-cfg', 0
+can_config_name DB '_DSD.bosch,mram-cfg', 0
 
 SetupDevice  Proc near
     xor bx,bx
@@ -722,8 +722,34 @@ SetupDevice  Proc near
     mov esi,OFFSET can_config_name
     mov edi,OFFSET cd_sidf_offset
     mov ecx,8
-    GetPciHandleDsdConfig
+    EvalPciHandleIntArr
     pop ds
+;
+; until this is working!
+;
+    mov eax,800h
+    stosd
+;
+    mov eax,80h
+    stosd
+;
+    mov eax,40h
+    stosd
+;
+    mov eax,40h
+    stosd
+;
+    mov eax,0
+    stosd
+;
+    mov eax,40h
+    stosd
+;
+    mov eax,10h
+    stosd
+;
+    mov eax,10h
+    stosd
 ;
     mov eax,ds:cd_rxf0_count
     or eax,eax

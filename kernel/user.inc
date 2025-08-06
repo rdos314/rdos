@@ -4609,12 +4609,12 @@ GetPciHandle      MACRO
                         ENDM
 
 ;   IN  BX          Pci handle
-;   IN  DS:E(SI)    Config name
+;   IN  DS:E(SI)    ACPI name + config name
 ;   IN  ES:E(DI)    Buffer
 ;   IN  E(CX)       Max entries
 ;   OUT EAX         Entry count
-GetPciHandleDsdConfig      MACRO
-        UserGate get_pci_handle_dsd_config_nr
+EvalPciHandleIntArr      MACRO
+        UserGate eval_pci_int_arr_nr
                         ENDM
 
 ;   IN  BX          Handle

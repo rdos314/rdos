@@ -924,52 +924,63 @@ get_pci_handle_cap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;    NAME:           GetPciHandleDsdConfig16/32
+;    NAME:           EvalPciIntArr16/32
 ;
-;    DESCRIPTION:    Get PCI DSD config
+;    DESCRIPTION:    Evaluate int array
 ;
 ;    PARAMETERS:     BX          PCI Handle
-;                    DS:(E)SI    Config name
-;                    ES:(E)DI    Name buffer
+;                    DS:(E)SI    ACPI name + config name
+;                    ES:(E)DI    Int array
 ;                    (E)CX       Size of buffer
 ;
 ;    RETURNS:        EAX         Count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pci_handle_dsd_config_name DB 'Get PCI Handle DSD Config', 0
+eval_pci_int_arr_name DB 'Eval PCI Int Arr', 0
 
-GetDsdConfig  Proc near
+EvalPciIntArr  Proc near
     push ds
     push es
     push fs
+    push gs
     push esi
     push edi
     push ebp
 ;
+    mov eax,es
+    mov gs,eax
+    mov ebp,edi
     mov eax,ds
     mov fs,eax
     call AllocateMsg
 
-dsdInCopy:
+eiaInCopy:
     lods byte ptr fs:[esi]
     stosb
     or al,al
-    jnz dsdInCopy
+    jnz eiaInCopy
+;
+    push ecx
+    shl ecx,2
+    mov edi,ebp
+    call AddMsgBuffer
+    pop ecx
 ;    
-    mov eax,GET_DSD_CONFIG_CMD
+    mov eax,EVAL_INT_ARR_CMD
     call RunMsg
 ;    
     pop ebp
     pop edi
     pop esi
+    pop gs
     pop fs
     pop es
     pop ds
     ret
-GetDsdConfig   Endp
+EvalPciIntArr   Endp
 
-get_pci_handle_dsd_config16  Proc far
+eval_pci_int_arr16  Proc far
     push ecx
     push esi
     push edi
@@ -977,18 +988,18 @@ get_pci_handle_dsd_config16  Proc far
     movzx ecx,cx
     movzx esi,si
     movzx edi,di
-    call GetDsdConfig
+    call EvalPciIntArr
 ;    
     pop edi
     pop esi
     pop ecx
     ret
-get_pci_handle_dsd_config16  Endp
+eval_pci_int_arr16  Endp
 
-get_pci_handle_dsd_config32  Proc far
-    call GetDsdConfig
+eval_pci_int_arr32  Proc far
+    call EvalPciIntArr
     ret
-get_pci_handle_dsd_config32  Endp
+eval_pci_int_arr32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4082,11 +4093,11 @@ init    Proc far
     mov ax,get_pci_handle_msix_nr
     RegisterBimodalUserGate
 ;
-    mov ebx,OFFSET get_pci_handle_dsd_config16
-    mov esi,OFFSET get_pci_handle_dsd_config32
-    mov edi,OFFSET get_pci_handle_dsd_config_name
+    mov ebx,OFFSET eval_pci_int_arr16
+    mov esi,OFFSET eval_pci_int_arr32
+    mov edi,OFFSET eval_pci_int_arr_name
     mov dx,virt_ds_in OR virt_es_in
-    mov ax,get_pci_handle_dsd_config_nr
+    mov ax,eval_pci_int_arr_nr
     RegisterUserGate
 ;
     mov esi,OFFSET get_pci_handle_cap

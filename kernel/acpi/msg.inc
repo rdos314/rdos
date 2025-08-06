@@ -172,7 +172,7 @@ GET_PCI_BAR_IO_CMD         = 24
 
 ; IN  BX     Handle
 ; IN  ECX    Max entries
-; IN         Config Name
+; IN         ACPI name + config Name
 ; OUT        Packet data
 ; OUT EAX    Entry count
-GET_DSD_CONFIG_CMD         = 25
+EVAL_INT_ARR_CMD         = 25
