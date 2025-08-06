@@ -183,7 +183,6 @@
 #define osgate_write_pci_byte 193
 #define osgate_write_pci_word 194
 #define osgate_write_pci_dword 195
-#define osgate_find_pci_device 197
 
 #define osgate_install_static_disc 199
 #define osgate_register_disc_change 200
@@ -287,8 +286,6 @@
 
 #define osgate_setup_irq_detect 296
 #define osgate_poll_irq_detect 297
-
-#define osgate_find_pci_cap 298
 
 #define osgate_wait_for_signal_timeout 299
 
@@ -1121,7 +1118,6 @@
 #define OsGate_write_pci_byte 0x3E 0x67 0x9a 193 0 0 0 2 0
 #define OsGate_write_pci_word 0x3E 0x67 0x9a 194 0 0 0 2 0
 #define OsGate_write_pci_dword 0x3E 0x67 0x9a 195 0 0 0 2 0
-#define OsGate_find_pci_device 0x3E 0x67 0x9a 197 0 0 0 2 0
 
 #define OsGate_install_static_disc 0x3E 0x67 0x9a 199 0 0 0 2 0
 #define OsGate_register_disc_change 0x3E 0x67 0x9a 200 0 0 0 2 0
@@ -1225,8 +1221,6 @@
 
 #define OsGate_setup_irq_detect 0x3E 0x67 0x9a 40 1 0 0 2 0
 #define OsGate_poll_irq_detect 0x3E 0x67 0x9a 41 1 0 0 2 0
-
-#define OsGate_find_pci_cap 0x3E 0x67 0x9a 42 1 0 0 2 0
 
 #define OsGate_wait_for_signal_timeout 0x3E 0x67 0x9a 43 1 0 0 2 0
 

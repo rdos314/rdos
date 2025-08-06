@@ -418,7 +418,7 @@ init_pci_loop:
     stc
     jz init_pci_done
 ;
-    FindPciDeviceHandle
+    FindPciDevice
     jnc init_pci_found
 ;
     xor bx,bx

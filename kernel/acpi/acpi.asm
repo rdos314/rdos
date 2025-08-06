@@ -298,9 +298,9 @@ reset_wait:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-find_pci_device_handle_name      DB 'Find PCI Device',0
+find_pci_device_name      DB 'Find PCI Device',0
 
-find_pci_device_handle   Proc far
+find_pci_device   Proc far
     push ds
     push es
     push edi
@@ -316,7 +316,7 @@ find_pci_device_handle   Proc far
     pop es
     pop ds
     ret
-find_pci_device_handle   Endp
+find_pci_device   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -890,9 +890,9 @@ get_pci_bar_io   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetPciHandleCap
+;           NAME:           GetPciCapability
 ;
-;           DESCRIPTION:    Find PCI handle capability
+;           DESCRIPTION:    Find PCI capability
 ;
 ;           PARAMETERS:     BX      Handle
 ;                           AL      Capability
@@ -901,9 +901,9 @@ get_pci_bar_io   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pci_handle_cap_name      DB 'Get PCI Handle Capability',0
+get_pci_cap_name      DB 'Get PCI Capability',0
 
-get_pci_handle_cap   Proc far
+get_pci_cap   Proc far
     push ds
     push es
     push edi
@@ -919,7 +919,7 @@ get_pci_handle_cap   Proc far
     pop es
     pop ds
     ret
-get_pci_handle_cap   Endp
+get_pci_cap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2180,161 +2180,6 @@ get_pci_device_vendor  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FindPciDevice
-;
-;           DESCRIPTION:    Find a PCI device
-;
-;           PARAMETERS:     CX          Device ID
-;                           DX          Vendor ID
-;                           AH:AL       Bus & device to start scanning
-;
-;           RETURNS:        NC          Success
-;                           BH          Bus
-;                           BL          Device
-;                           CH          Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-find_pci_device_name    DB 'Find PCI Device',0
-
-find_pci_device Proc far
-    push ds
-    push es
-    push fs
-    push esi
-;
-    mov ebx,SEG data
-    mov ds,ebx
-;
-    mov bx,ax
-
-fpdBusLoop:
-    movzx esi,bh
-    mov ax,ds:[2*esi].pci_bus_arr
-    or ax,ax
-    jz fpdBusNext
-;
-    mov es,ax
-
-fpdDevLoop:
-    movzx esi,bl
-    mov ax,es:[2*esi].pcib_device_arr
-    or ax,ax
-    jz fpdDevNext
-;
-    mov fs,ax
-    xor al,al
-
-fpdFuncLoop:
-    movzx esi,al
-    shl esi,7
-    add esi,OFFSET pcid_func_arr
-;
-    cmp dx,word ptr fs:[esi].pcif_vendor_dev
-    jne fpdFuncNext
-;
-    cmp cx,word ptr fs:[esi].pcif_vendor_dev+2
-    jne fpdFuncNext
-;
-    mov ch,al
-    clc
-    jmp fpdDone
-
-fpdFuncNext:
-    inc al
-    cmp al,8
-    jne fpdFuncLoop
-
-fpdDevNext:
-    inc bl
-    cmp bl,20h
-    jne fpdDevLoop
-
-fpdBusNext:
-    xor bl,bl
-    inc bh
-    or bh,bh
-    jnz fpdBusLoop
-;
-    stc
-
-fpdDone:
-    pop esi
-    pop fs
-    pop es
-    pop ds
-    ret
-find_pci_device Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FindPciCapability
-;
-;           DESCRIPTION:    Find a PCI capability
-;
-;           PARAMETERS:         BH          Bus
-;                           BL          Device
-;                           CH          Function
-;               AL      Capability
-;
-;           RETURNS:        AL      Index
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-find_pci_cap_name       DB 'Find PCI Capability',0
-
-find_pci_cap    Proc far
-    push edx
-;
-    mov dl,al
-    mov cl,6
-    ReadPciWord
-    test al,10h
-    stc
-    jz fpcDone
-;
-    mov cl,34h
-    ReadPciByte
-;
-    mov cl,al
-    mov dh,48
-
-fpcLoop:
-    and cl,NOT 3
-    cmp cl,40h
-    jc fpcDone
-;
-    ReadPciByte
-    cmp al,-1
-    stc
-    jz fpcDone
-;
-    cmp al,dl
-    je fpcOk
-;
-    inc cl
-    ReadPciByte
-    mov cl,al
-;
-    sub dh,1    
-    jnz fpcLoop            
-;
-    stc
-    jmp fpcDone    
-
-fpcOk:
-    mov al,cl
-    clc
-
-fpcDone:    
-    pop edx
-    ret
-find_pci_cap    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SetPciDeviceName
 ;
 ;           DESCRIPTION:    Set PCI device name
@@ -2496,8 +2341,8 @@ ppoCopyName:
 
 ppoStart:
     mov al,1
-    FindPciCapability
-    jc ppoDone
+;    FindPciCapability
+    jmp ppoDone
 ;
     mov cl,al
     add cl,4
@@ -3425,8 +3270,8 @@ spdAdd:
     mov es:[edi].pcif_irq,al
 ;
     mov al,5
-    FindPciCapability
-    jc spMsiDone
+;    FindPciCapability
+    jmp spMsiDone
 ;
     add al,2
     mov es:[edi].pcif_msi,al
@@ -3443,8 +3288,8 @@ spdAdd:
 
 spMsiDone:
     mov al,11h
-    FindPciCapability
-    jc spMsiXDone
+;    FindPciCapability
+    jmp spMsiXDone
 ;
     add al,2
     mov es:[edi].pcif_msix,al
@@ -3847,10 +3692,10 @@ init    Proc far
     mov ax,soft_reset_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET find_pci_device_handle
-    mov edi,OFFSET find_pci_device_handle_name
+    mov esi,OFFSET find_pci_device
+    mov edi,OFFSET find_pci_device_name
     xor dx,dx
-    mov ax,find_pci_device_handle_nr
+    mov ax,find_pci_device_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET find_pci_class
@@ -3902,10 +3747,10 @@ init    Proc far
     mov ax,eval_pci_int_arr_nr
     RegisterUserGate
 ;
-    mov esi,OFFSET get_pci_handle_cap
-    mov edi,OFFSET get_pci_handle_cap_name
+    mov esi,OFFSET get_pci_cap
+    mov edi,OFFSET get_pci_cap_name
     xor dx,dx
-    mov ax,get_pci_handle_cap_nr
+    mov ax,get_pci_cap_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_pci_device_name16
@@ -4012,18 +3857,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET find_pci_device
-    mov edi,OFFSET find_pci_device_name
-    xor cl,cl
-    mov ax,find_pci_device_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET find_pci_cap
-    mov edi,OFFSET find_pci_cap_name
-    xor cl,cl
-    mov ax,find_pci_cap_nr
     RegisterOsGate
 ;
     mov esi,OFFSET pci_power_on

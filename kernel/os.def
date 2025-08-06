@@ -183,7 +183,6 @@ read_pci_dword_nr                       = 192
 write_pci_byte_nr                       = 193
 write_pci_word_nr                       = 194
 write_pci_dword_nr                      = 195
-find_pci_device_nr                      = 197
 
 install_static_disc_nr                  = 199
 register_disc_change_nr         = 200
@@ -287,8 +286,6 @@ register_swap_proc_nr       = 294
 
 setup_irq_detect_nr         = 296
 poll_irq_detect_nr          = 297
-
-find_pci_cap_nr             = 298
 
 wait_for_signal_timeout_nr  = 299
 

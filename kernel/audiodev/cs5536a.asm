@@ -805,7 +805,7 @@ ipLoop:
     stc
     jz ipDone
 ;
-    FindPciDeviceHandle
+    FindPciDevice
     jnc ipFound
 ;
     add si,4

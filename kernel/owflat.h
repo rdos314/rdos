@@ -158,7 +158,7 @@
     __value [__ebx]
 
 #pragma aux RdosFindPciDevice = \
-    CallGate_find_pci_device_handle  \
+    CallGate_find_pci_device  \
     "jc fail" \
     "movzx ebx,bx" \
     "jmp done" \
@@ -218,8 +218,8 @@
     __parm [__ebx] \
     __value [__al]
 
-#pragma aux RdosGetPciHandleCap = \
-    CallGate_get_pci_handle_cap  \
+#pragma aux RdosGetPciCapability = \
+    CallGate_get_pci_cap  \
     __parm [__ebx] [__al] \
     __value [__ax]
 

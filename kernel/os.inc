@@ -4174,15 +4174,6 @@ WritePciDword   MACRO
     OsGate write_pci_dword_nr
                     ENDM
 
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; IN  AL    Capability
-; OUT AL    Index
-FindPciCapability       MACRO
-    OsGate find_pci_cap_nr
-                    ENDM
-
 ; IN  BH      Bus
 ; IN  BL      Device
 ; IN  CH      Function
@@ -4208,15 +4199,6 @@ GetPciDsdConfig      MACRO
 ; IN  ES:EDI  Device name
 PciPowerOn       MACRO
     OsGate pci_power_on_nr
-                    ENDM
-
-; IN  CX    Device ID
-; IN  DX    Vendor ID
-; IN  AX    Device number
-; OUT BH    Bus
-; OUT BL    Device
-FindPciDevice   MACRO
-    OsGate find_pci_device_nr
                     ENDM
 
 ; IN  AL    IRQ

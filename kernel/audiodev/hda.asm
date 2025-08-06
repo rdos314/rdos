@@ -1663,7 +1663,7 @@ init_pci_probe_loop:
     stc
     jz init_pci_probe_done
 ;
-    FindPciDeviceHandle
+    FindPciDevice
     jnc init_pci_probe_found
 ;
     add si,4

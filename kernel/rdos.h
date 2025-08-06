@@ -413,7 +413,7 @@ unsigned char RDOSAPI RdosGetPciHandleFunction(int Handle);
 unsigned char RDOSAPI RdosGetPciHandleIrq(int Handle, int Index);
 unsigned char RDOSAPI RdosGetPciHandleMsi(int Handle);
 unsigned char RDOSAPI RdosGetPciHandleMsiX(int Handle);
-short int RDOSAPI RdosGetPciHandleCap(int Handle, unsigned short int Cap);
+short int RDOSAPI RdosGetPciCapability(int Handle, unsigned short int Cap);
 unsigned char RDOSAPI RdosReadPciConfigByte(int Handle, int Register);
 short int RDOSAPI RdosReadPciConfigWord(int Handle, int Register);
 int RDOSAPI RdosReadPciConfigDword(int Handle, int Register);

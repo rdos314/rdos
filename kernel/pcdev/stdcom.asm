@@ -3066,7 +3066,7 @@ ipLoop:
     stc
     jz ipDone
 ;
-    FindPciDeviceHandle
+    FindPciDevice
     jnc ipFound
 ;
     xor bx,bx
@@ -3129,7 +3129,7 @@ mem_init_pci_loop:
     stc
     jz mem_init_pci_done
 ;
-    FindPciDeviceHandle
+    FindPciDevice
     jnc mem_init_pci_found
 ;
     add si,4

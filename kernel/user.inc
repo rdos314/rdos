@@ -4595,8 +4595,8 @@ FindPciProtocol      MACRO
 ;   IN  DX          Vendor
 ;   IN  BX          Start
 ;   OUT BX          Handle                   
-FindPciDeviceHandle      MACRO
-        UserGate find_pci_device_handle_nr
+FindPciDevice        MACRO
+        UserGate find_pci_device_nr
                         ENDM
 
 ;   IN  DH          Segment
@@ -4648,8 +4648,8 @@ GetPciHandleMsiX      MACRO
 ;   IN  BX          Handle
 ;   IN  AL          Capability
 ;   OUT AX          Register                  
-GetPciHandleCap      MACRO
-        UserGate get_pci_handle_cap_nr
+GetPciCapability      MACRO
+        UserGate get_pci_cap_nr
                         ENDM
                         
 ;   IN  BX          Handle

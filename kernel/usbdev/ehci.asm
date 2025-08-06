@@ -4568,7 +4568,7 @@ ifTabLoop:
 
 ifCheckCap:    
     mov al,1
-    GetPciHandleCap
+    GetPciCapability
     jc ifLegacyOff
 
 ifLegacyFound:

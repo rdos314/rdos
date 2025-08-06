@@ -1085,7 +1085,7 @@ ipLoop:
     stc
     jz ipDone
 ;
-    FindPciDeviceHandle
+    FindPciDevice
     jnc ipFound
 ;
     xor bx,bx
