@@ -4183,16 +4183,6 @@ MovePciMsi    MACRO
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function
-; IN  CL    MSI Register base
-; IN  AL    Int base
-; IN  DL    Allocated vectors
-SetupPciMsi    MACRO
-    OsGate setup_pci_msi_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
 ; OUT ES    Int vector selector
 EnablePciMsiX    MACRO
     OsGate enable_pci_msix_nr

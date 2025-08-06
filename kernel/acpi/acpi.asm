@@ -2446,91 +2446,6 @@ FindIrq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupPciMsi
-;
-;           DESCRIPTION:    Setup PCI MSI interface
-;
-;           PARAMETERS:     BH          Bus
-;                           BL          Device
-;                           CH          Function
-;                           CL          MSI register base
-;                           AL          Int base
-;                           DL          Allocated ints
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-setup_pci_msi_name DB 'Setup PCI MSI',0
-
-setup_pci_msi     Proc far    
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov di,ax
-    mov eax,SEG data
-    mov ds,eax
-;
-    movzx esi,bh
-    mov ax,ds:[2*esi].pci_bus_arr
-    or ax,ax
-    jz spmDone
-;
-    mov es,ax
-    movzx esi,bl
-    mov ax,es:[2*esi].pcib_device_arr
-    or ax,ax
-    jz spmDone
-;
-    mov es,ax
-    movzx esi,ch
-    shl esi,7
-    mov ax,di
-    mov es:[esi].pcif_irq,al
-;
-    cmp dl,es:[esi].pcif_msi_count
-    jbe spmCountOk
-;
-    mov dl,es:[esi].pcif_msi_count
-
-spmCountOk:
-    mov es:[esi].pcif_msi_count,dl
-;
-    xor ah,ah
-
-spmAllocLoop:
-    shr dl,1
-    jc spmAllocDone
-;
-    inc ah
-    jmp spmAllocLoop
-
-spmAllocDone:
-    mov dl,ah
-    shl dl,4
-    ReadPciWord
-    and al,NOT 70h
-    or al,dl
-    or al,1
-    WritePciWord
-;
-    GetCore
-    mov es:[esi].pcif_msi_core,fs
-;
-    mov al,es:[esi].pcif_irq
-    call SetupMsiVector
-
-spmDone:
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-setup_pci_msi     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           MovePciMsi
 ;
 ;           DESCRIPTION:    Move MSI to new core
@@ -3666,12 +3581,6 @@ init    Proc far
     mov edi,OFFSET write_pci_dword_name
     xor cl,cl
     mov ax,write_pci_dword_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET setup_pci_msi
-    mov edi,OFFSET setup_pci_msi_name
-    xor cl,cl
-    mov ax,setup_pci_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_pci_msi_info
