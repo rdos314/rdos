@@ -2307,14 +2307,6 @@ GetMsiVector    MACRO
     OsGate get_msi_vector_nr
                     ENDM
 
-; IN  AL        Int base
-; IN  AH        Priority
-; IN  DS        Data passed to handler
-; IN  ES:EDI    Handler address
-RequestMsiHandler    MACRO
-    OsGate request_msi_handler_nr
-                    ENDM
-
 ; IN  AL        Global int #
 ; IN  AH        Priority
 ; IN  DS        Data passed to handler

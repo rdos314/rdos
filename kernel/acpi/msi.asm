@@ -295,9 +295,9 @@ get_msi_vector  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-request_msi_handler_name    DB 'Request MSI Handler',0
+    public RequestMsiHandler
 
-request_msi_handler  Proc far
+RequestMsiHandler  Proc near
     push ebx
     push esi
 ;    
@@ -328,7 +328,7 @@ rmhDone:
     pop esi
     pop ebx
     ret
-request_msi_handler  Endp
+RequestMsiHandler  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -354,12 +354,6 @@ init_msi    PROC near
     mov edi,OFFSET get_msi_vector_name
     xor cl,cl
     mov ax,get_msi_vector_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET request_msi_handler
-    mov edi,OFFSET request_msi_handler_name
-    xor cl,cl
-    mov ax,request_msi_handler_nr
     RegisterOsGate
 ;
     popad

@@ -405,7 +405,6 @@
 
 #define osgate_enter_c3 418
 
-#define osgate_request_msi_handler 421
 #define osgate_request_irq_handler 422
 #define osgate_notify_irq 423
 
@@ -1321,7 +1320,6 @@
 
 #define OsGate_enter_c3 0x3E 0x67 0x9a 162 1 0 0 2 0
 
-#define OsGate_request_msi_handler 0x3E 0x67 0x9a 165 1 0 0 2 0
 #define OsGate_request_irq_handler 0x3E 0x67 0x9a 166 1 0 0 2 0
 #define OsGate_notify_irq 0x3E 0x67 0x9a 167 1 0 0 2 0
 

@@ -64,6 +64,7 @@ code    SEGMENT byte public use32 'CODE'
     extern AllocateMsg:near
     extern AddMsgBuffer:near
     extern RunMsg:near
+    extern RequestMsiHandler:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -557,7 +558,7 @@ setup_pci_irq   Proc far
 
 sphiMsi:
     pop ecx
-    RequestMsiHandler
+    call RequestMsiHandler
 ;
     push ds
     push es
@@ -675,7 +676,7 @@ rpmMsi:
     mov edi,OFFSET default_int
 
 rpmDefaultLoop:
-    RequestMsiHandler
+    call RequestMsiHandler
     inc al
     loop rpmDefaultLoop
 ;
@@ -731,7 +732,7 @@ setup_pci_msi   Proc far
     stc
     jz sphmDone
 ;
-    RequestMsiHandler
+    call RequestMsiHandler
     clc
 
 sphmDone:    

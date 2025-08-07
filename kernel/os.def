@@ -405,7 +405,6 @@ update_pstate_nr            = 417
 
 enter_c3_nr                 = 418
 
-request_msi_handler_nr      = 421
 request_irq_handler_nr      = 422
 notify_irq_nr               = 423
 
