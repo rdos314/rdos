@@ -1580,7 +1580,6 @@ hook_thread_done:
     extern init_apic:near
     extern init_smp:near
     extern init_timer:near
-    extern init_msi:near
     extern start_timer:near
     extern start_smp:near
     extern init_pic:near
@@ -1791,7 +1790,6 @@ init    Proc far
     jz use_pic
 ;
     call init_irq
-    call init_msi
     call init_smp
     call init_timer
     call init_apic

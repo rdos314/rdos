@@ -843,8 +843,6 @@
 
 #define osgate_link_usergate 815
 
-#define osgate_get_msi_vector 817
-
 #define osgate_add_wait_for_adc_chan 818
 
 #define osgate_create_blk 819
@@ -1757,8 +1755,6 @@
 #define OsGate_setup_net_cachable 0x3E 0x67 0x9a 46 3 0 0 2 0
 
 #define OsGate_link_usergate 0x3E 0x67 0x9a 47 3 0 0 2 0
-
-#define OsGate_get_msi_vector 0x3E 0x67 0x9a 49 3 0 0 2 0
 
 #define OsGate_add_wait_for_adc_chan 0x3E 0x67 0x9a 50 3 0 0 2 0
 

@@ -843,8 +843,6 @@ setup_net_cachable_nr       = 814
 
 link_usergate_nr            = 815
 
-get_msi_vector_nr           = 817
-
 add_wait_for_adc_chan_nr    = 818
 
 create_blk_nr               = 819

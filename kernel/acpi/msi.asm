@@ -256,32 +256,7 @@ SetupMsiHandler   Proc near
     pop fs    
     ret
 SetupMsiHandler   Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetMsiVector
-;
-;       DESCRIPTION:    Get MSI vector
-;
-;       PARAMETERS:     AL      IRQ
-;                       FS      Core
-;
-;       RETURNS:        EDX     MSI address
-;                       AX      MSI data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_msi_vector_name    DB 'Get MSI Vector',0
-
-get_msi_vector  Proc far
-    movzx ax,al
-    mov edx,fs:cs_apic
-    shl edx,12
-    or edx,0FEE00000h
-    ret
-get_msi_vector  Endp
-   
+      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -329,38 +304,6 @@ rmhDone:
     pop ebx
     ret
 RequestMsiHandler  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;               NAME:                   Init
-;
-;               DESCRIPTION:    Init apic mp module
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_msi
-        
-init_msi    PROC near
-    push ds
-    push es
-    pushad
-;    
-    mov eax,cs
-    mov ds,eax
-    mov es,eax
-;
-    mov esi,OFFSET get_msi_vector
-    mov edi,OFFSET get_msi_vector_name
-    xor cl,cl
-    mov ax,get_msi_vector_nr
-    RegisterOsGate
-;
-    popad
-    pop es
-    pop ds
-    ret
-init_msi    ENDP
 
 code    ENDS
 

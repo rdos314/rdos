@@ -2299,14 +2299,6 @@ DisableAllIrq   MACRO
     OsGate disable_all_irq_nr
                     ENDM
 
-; IN  AL        IRQ
-; IN  FS        Core
-; OUT EDX       MSI address
-; OUT AX        MSI data
-GetMsiVector    MACRO
-    OsGate get_msi_vector_nr
-                    ENDM
-
 ; IN  AL        Global int #
 ; IN  AH        Priority
 ; IN  DS        Data passed to handler
