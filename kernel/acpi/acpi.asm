@@ -614,7 +614,13 @@ setup_pci_irq   Endp
 
 req_pci_msi_name      DB 'Req PCI MSI',0
 
+default_int	Proc far
+    ret
+default_int     Endp
+
 req_pci_msi   Proc far
+    push eax
+;
     push ds
     push es
     push fs
@@ -626,7 +632,7 @@ req_pci_msi   Proc far
     GetCore
     mov si,fs:cs_id
 ;
-    mov edx,[esp+32]
+    mov edx,[esp+36]
 ;
     call AllocateMsg
 ;    
@@ -640,6 +646,48 @@ req_pci_msi   Proc far
     pop fs
     pop es
     pop ds
+;
+    or al,al
+    stc
+    jz rpmDone
+;
+    or cl,cl
+    jne rpmMsi
+
+rpmMsiX:
+    movzx cx,al
+    clc
+    jmp rpmDone
+
+rpmMsi:
+    xchg al,cl
+    movzx ecx,cl
+;
+    push ds
+    push es
+    push ecx
+    push edi
+;
+    xor edi,edi
+    mov ds,edi
+    mov edi,cs
+    mov es,edi
+    mov edi,OFFSET default_int
+
+rpmDefaultLoop:
+    RequestMsiHandler
+    inc al
+    loop rpmDefaultLoop
+;
+    pop edi
+    pop ecx
+    pop es
+    pop ds
+;
+    clc
+
+rpmDone:
+    pop eax
     ret
 req_pci_msi   Endp
 

@@ -142,7 +142,7 @@ GET_PCI_MSIX_CMD           = 18
 ; IN  DX     Issuer selector
 ; IN  SI     Core ID
 ; OUT AL     Vector
-; OUT CL     Mode, 0 = failed, 1 = IRQ, 2 = MSI
+; OUT CL     Mode, 0 = failed, 1 = IRQ, 2 = MSI or MSI-X
 SETUP_PCI_IRQ_CMD          = 19
 
 ; IN  AH     Priority
@@ -150,7 +150,8 @@ SETUP_PCI_IRQ_CMD          = 19
 ; IN  DX     Issuer selector
 ; IN  SI     Core ID
 ; IN  CX     Requested vectors
-; OUT CX     Allocated vectors
+; OUT AL     Allocated vectors
+; OUT CL     0 = MSI-X, other = MSI base vector
 SETUP_PCI_MSI_CMD          = 20
 
 ; IN  BX     Handle
