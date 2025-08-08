@@ -143,37 +143,46 @@ GET_PCI_MSIX_CMD           = 18
 ; IN  SI     Core ID
 ; OUT AL     Vector
 ; OUT CL     Mode, 0 = failed, 1 = IRQ, 2 = MSI or MSI-X
-SETUP_PCI_IRQ_CMD          = 19
+SETUP_PCI_IRQ_CMD         = 19
 
-; IN  AH     Priority
 ; IN  BX     Handle
+; IN  AH     Priority
 ; IN  DX     Issuer selector
 ; IN  SI     Core ID
-; IN  CX     Requested vectors
+; IN  CL     Requested vectors
 ; OUT AL     Allocated vectors
 ; OUT CL     0 = MSI-X, other = MSI base vector
-SETUP_PCI_MSI_CMD          = 20
+REQ_PCI_MSI_CMD           = 20
 
 ; IN  BX     Handle
+; IN  AH     Priority
+; IN  AL     Entry number
+; IN  SI     Core ID
 ; IN  DX     Issuer selector
-ENABLE_PCI_MSI_CMD         = 21
+; OUT AL     Vector
+SETUP_PCI_MSI_CMD         = 21
 
 ; IN  BX     Handle
-IS_PCI_LOCKED_CMD          = 22
+; IN  AL     Entry number
+; IN  DX     Issuer selector
+ENABLE_PCI_MSI_CMD        = 22
+
+; IN  BX     Handle
+IS_PCI_LOCKED_CMD         = 23
 
 ; IN  AL      Bar #
 ; IN  BX      Handle
 ; OUT EDX:EAX Physical address
-GET_PCI_BAR_PHYS_CMD       = 23
+GET_PCI_BAR_PHYS_CMD      = 24
 
 ; IN  AL      Bar #
 ; IN  BX      Handle
 ; OUT DX      IO port
-GET_PCI_BAR_IO_CMD         = 24
+GET_PCI_BAR_IO_CMD        = 25
 
 ; IN  BX     Handle
 ; IN  ECX    Max entries
 ; IN         ACPI name + config Name
 ; OUT        Packet data
 ; OUT EAX    Entry count
-EVAL_INT_ARR_CMD         = 25
+EVAL_INT_ARR_CMD         = 26

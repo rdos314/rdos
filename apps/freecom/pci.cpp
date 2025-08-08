@@ -117,6 +117,7 @@ void TPciCommand::PrintBusDevices(int Bus)
     int Msi = 0;
     int MsiX = 0;
     bool Used;
+    bool First;
 
     Write("ACPI Name                     ");
     Write("Vendor/dev Class    Dev Func  Interrupt\r\n");
@@ -171,25 +172,21 @@ void TPciCommand::PrintBusDevices(int Bus)
                     {
                         if (MsiX)
                         {
-                            if (MsiX == 1)
-                            {
-                                Irq = RdosGetPciIrq(Handle, 0);
-                                sprintf(Str, "MSI-X  %02hX", Irq);
-                                Write(Str);
-                            }
-                            else
-                            {
-                                sprintf(Str, "MSI-X  ");
-                                Write(Str);
+                            sprintf(Str, "MSI-X  ");
+                            Write(Str);
+                            First = true;
 
-                                for (i = 0; i < MsiX; i++)
+                            for (i = 0; i < MsiX; i++)
+                            {
+                                Irq = RdosGetPciIrq(Handle, i);
+                                if (Irq)
                                 {
-                                    Irq = RdosGetPciIrq(Handle, i);
-                                    if (i == MsiX - 1)
+                                    if (First)
                                         sprintf(Str, "%02hX", Irq);
                                     else
-                                        sprintf(Str, "%02hX, ", Irq);
+                                        sprintf(Str, ", %02hX", Irq);
                                     Write(Str);
+                                    First = false;
                                 }
                             }
                         }

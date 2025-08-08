@@ -567,6 +567,7 @@ sphiMsi:
     push edi
     push ebp
 ;
+    xor al,al
     mov edx,[esp+28]
 ;
     call AllocateMsg
@@ -607,7 +608,7 @@ setup_pci_irq   Endp
 ;
 ;           PARAMETERS:     AH      Priority
 ;                           BX      Handle
-;                           CX      Requested vectors
+;                           CL      Requested vectors
 ;
 ;           RETURNS:        CX      Setup vectors
 ;
@@ -624,27 +625,27 @@ req_pci_msi   Proc far
 ;
     push ds
     push es
-    push fs
     push edx
     push esi
     push edi
     push ebp
 ;
-    GetCore
-    mov si,fs:cs_id
+    push eax
+    GetCoreId
+    movzx esi,ax
+    pop eax
 ;
-    mov edx,[esp+36]
+    mov edx,[esp+32]
 ;
     call AllocateMsg
 ;    
-    mov eax,SETUP_PCI_MSI_CMD
+    mov eax,REQ_PCI_MSI_CMD
     call RunMsg
 ;    
     pop ebp
     pop edi
     pop esi
     pop edx
-    pop fs
     pop es
     pop ds
 ;
@@ -699,8 +700,9 @@ req_pci_msi   Endp
 ;
 ;           DESCRIPTION:    Setup MSI IRQ
 ;
-;           PARAMETERS:     BX      Handle
-;                           DX      Entry
+;           PARAMETERS:     AH      Prio
+;                           BX      Handle
+;                           AL      Entry
 ;                           DS      Data passed to handler
 ;                           ES:EDI  Handler address
 ;
@@ -713,17 +715,27 @@ setup_pci_msi   Proc far
 ;
     push ds
     push es
+    push edx
+    push esi
     push edi
     push ebp
 ;
-    mov ax,dx
+    push eax
+    GetCoreId
+    movzx esi,ax
+    pop eax
+;
+    mov edx,[esp+32]
+;
     call AllocateMsg
 ;    
-    mov eax,GET_PCI_IRQ_CMD
+    mov eax,SETUP_PCI_MSI_CMD
     call RunMsg
 ;
     pop ebp
     pop edi
+    pop esi
+    pop edx
     pop es
     pop ds
     jc sphmDone
@@ -733,6 +745,26 @@ setup_pci_msi   Proc far
     jz sphmDone
 ;
     call RequestMsiHandler
+;
+    pop eax
+    push eax
+;
+    push ds
+    push es
+    push edi
+    push ebp
+;
+    mov edx,[esp+24]
+;
+    call AllocateMsg
+;    
+    mov eax,ENABLE_PCI_MSI_CMD
+    call RunMsg
+;
+    pop ebp
+    pop edi
+    pop es
+    pop ds
     clc
 
 sphmDone:    
@@ -1638,12 +1670,6 @@ init    Proc far
     mov edi,OFFSET setup_pci_msi_name
     xor cl,cl
     mov ax,setup_pci_msi_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET enable_pci_msi
-    mov edi,OFFSET enable_pci_msi_name
-    xor cl,cl
-    mov ax,enable_pci_msi_nr
     RegisterOsGate
 ;
     mov esi,OFFSET soft_reset

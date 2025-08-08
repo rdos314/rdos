@@ -907,7 +907,6 @@
 #define osgate_get_pci_bar_phys 867
 #define osgate_get_pci_bar_io 868
 #define osgate_setup_pci_msi 869
-#define osgate_enable_pci_msi 870
 
 
 
@@ -1820,5 +1819,4 @@
 #define OsGate_get_pci_bar_phys 0x3E 0x67 0x9a 99 3 0 0 2 0
 #define OsGate_get_pci_bar_io 0x3E 0x67 0x9a 100 3 0 0 2 0
 #define OsGate_setup_pci_msi 0x3E 0x67 0x9a 101 3 0 0 2 0
-#define OsGate_enable_pci_msi 0x3E 0x67 0x9a 102 3 0 0 2 0
 

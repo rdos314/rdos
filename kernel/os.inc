@@ -4063,17 +4063,13 @@ ReqPciMsi    MACRO
     OsGate req_pci_msi_nr
                     ENDM
 
+; IN  AH        Priority
 ; IN  BX        Handle
 ; IN  DX        Entry
 ; IN  DS        Data passed to handler
 ; IN  ES:EDI    Handler address
 SetupPciMsi    MACRO
     OsGate setup_pci_msi_nr
-                    ENDM
-
-; IN  BX        Handle
-EnablePciMsi    MACRO
-    OsGate enable_pci_msi_nr
                     ENDM
 
 ; IN  AL        BAR #

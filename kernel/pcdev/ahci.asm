@@ -1226,10 +1226,10 @@ siMulti:
     jc siSingle
 ;
     mov ds:ad_msi,1
-    xor edx,edx
+    xor eax,eax
 
 siMultiLoop:
-    mov si,ds:[2 * edx].ad_port_arr
+    mov si,ds:[2 * eax].ad_port_arr
     or si,si
     jz siMultiNext
 
@@ -1243,11 +1243,8 @@ siMultiSetup:
     pop ds
 
 siMultiNext:
-    inc al
-    inc dx
+    inc eax
     loop siMultiLoop
-;
-    EnablePciMsi
 
 siDone:
     ret

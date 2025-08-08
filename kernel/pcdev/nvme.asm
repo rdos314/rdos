@@ -1042,11 +1042,13 @@ CreateNameSpace  Proc near
     push edi
 ;
     mov bx,es:nd_pci_handle
-    movzx dx,es:nd_curr_index
-    mov eax,fs
-    mov ds,eax
-    mov eax,cs
-    mov es,eax
+    mov al,es:nd_curr_index
+    mov ah,0Ch
+;
+    mov edx,fs
+    mov ds,edx
+    mov edx,cs
+    mov es,edx
     mov edi,OFFSET NvmeInt
     SetupPciMsi
 ;
@@ -1350,7 +1352,7 @@ siCheckMsi:
     jbe siDone
 
 siMulti:
-    mov ah,14h
+    mov ah,0Ch
     movzx cx,al
     ReqPciMsi    
     jc siDone
@@ -1365,7 +1367,7 @@ siMulti:
     mov edx,cs
     mov es,edx
     mov edi,OFFSET NvmeAdminInt
-    xor dx,dx
+    xor al,al
     SetupPciMsi
     pop es
 ;
@@ -1801,11 +1803,6 @@ nvme_thread:
 ;
     GetThread
     mov es:nd_thread,ax
-;
-    push ebx
-    mov bx,es:nd_pci_handle
-    EnablePciMsi
-    pop ebx
 ;
     call GetId1
     jc ntDone
