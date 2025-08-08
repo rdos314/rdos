@@ -46,6 +46,17 @@ include acpi.def
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
+data    SEGMENT byte public 'DATA'
+
+task_linear        DD ?
+task_phys          DD ?,?
+task_sel           DW ?
+task_wr_ptr        DW ?
+task_wait_thread   DW ?
+task_section       section_typ <>
+
+data    ENDS
+
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
@@ -64,6 +75,27 @@ code    SEGMENT byte public 'CODE'
 get_task_queue_name DB 'Get Task Queue', 0
 
 get_task_queue   Proc far
+    push ds
+    push ebx
+    push edx
+;
+    mov eax,SEG data
+    mov ds,eax
+;
+    mov eax,1000h
+    AllocateLocalLinear
+;
+    mov eax,ds:task_phys
+    mov ebx,ds:task_phys+4
+    or ax,867h
+    SetPageEntry
+;
+    mov eax,edx
+    clc
+;
+    pop edx
+    pop ebx
+    pop ds
     ret
 get_task_queue  Endp
 
@@ -81,6 +113,37 @@ get_task_queue  Endp
 wait_task_queue_name DB 'Wait Task Queue', 0
 
 wait_task_queue   Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    mov edx,eax
+    ClearSignal
+;
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:task_section
+;
+    GetThread
+    mov ds:task_wait_thread,ax
+;
+    shl edx,4
+    movzx ebx,ds:task_wr_ptr
+    cmp ebx,edx
+    LeaveSection ds:task_section
+    jne wtqDone
+;
+    WaitForSignal
+
+wtqClear:
+    mov ds:task_wait_thread,0
+
+wtqDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
     ret
 wait_task_queue  Endp
 
@@ -96,6 +159,41 @@ wait_task_queue  Endp
     public init_task
 
 init_task    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov ds:task_wr_ptr,0
+    mov ds:task_wait_thread,0
+    InitSection ds:task_section
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ds:task_linear,edx
+;
+    AllocatePhysical64
+    mov ds:task_phys,eax
+    mov ds:task_phys+4,ebx
+;
+    or ax,867h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector32
+    mov ds:task_sel,bx
+;
+    mov es,ebx
+    xor edi,edi
+    xor eax,eax
+    mov ecx,400h
+    rep stosd
+;
+    popad
+    pop es
+    pop ds
     ret
 init_task    Endp
 
