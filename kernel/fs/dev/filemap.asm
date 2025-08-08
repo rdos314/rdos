@@ -982,9 +982,10 @@ AddReq     Proc near
 ;
     mov edi,ds:kf_serv_handle
     mov ds,ds:kf_part_sel
-    EnterSection ds:vfsp_io_section
 
 arRetry:
+    EnterSection ds:vfsp_io_section
+;
     push eax
     mov ax,ds:vfsp_io_sel
     or ax,ax
@@ -1001,8 +1002,7 @@ arRetry:
 ;
     mov ax,25
     WaitMilliSec
-;
-    EnterSection ds:vfsp_io_section
+    jmp arRetry
  
 arRoom:
     mov es:[esi].fqe_p64,eax

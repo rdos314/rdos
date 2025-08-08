@@ -42,6 +42,16 @@ include ..\wait.inc
 include ..\os\protseg.def
 include acpi.def
 
+REQ_CREATE_THREAD     = 1
+REQ_TERMINATE_THREAD  = 2
+
+task_queue_struc    STRUC
+
+tqs_op        DW ?
+tqs_id        DW ?
+
+task_queue_struc    ENDS
+
     .386p
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -128,7 +138,7 @@ wait_task_queue   Proc far
     GetThread
     mov ds:task_wait_thread,ax
 ;
-    shl edx,4
+    shl edx,2
     movzx ebx,ds:task_wr_ptr
     cmp ebx,edx
     LeaveSection ds:task_section
@@ -146,6 +156,125 @@ wtqDone:
     pop ds
     ret
 wait_task_queue  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AddEntry
+;
+;           DESCRIPTION:    Add task entry
+;
+;           PARAMETERS:     BX     ID
+;                           DX     Op
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddEntry   Proc near
+    push ds
+    push es
+    push ecx
+    push esi
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov es,ds:task_sel
+
+aeRetry:
+    EnterSection ds:task_section
+;
+    movzx esi,ds:task_wr_ptr
+    mov ax,es:[esi].tqs_op
+    or ax,ax
+    jz aeRoom
+;
+    LeaveSection ds:task_section
+;
+    mov ax,25
+    WaitMilliSec
+    jmp aeRetry
+ 
+aeRoom:
+    mov es:[esi].tqs_op,dx
+    mov es:[esi].tqs_id,bx
+    add si,4
+    and si,0FFFh
+    mov ds:task_wr_ptr,si
+;
+    mov bx,ds:task_wait_thread
+    or bx,bx
+    jz aeDone
+;
+    Signal
+
+aeDone:
+    LeaveSection ds:task_section
+;
+    pop esi
+    pop ecx
+    pop es
+    pop ds
+    ret
+AddEntry   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateThread
+;
+;           DESCRIPTION:    Create thread callback
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_thread    Proc far
+    push es
+    push eax
+    push ebx
+    push edx
+;    
+    GetThread
+    mov es,eax
+    mov bx,es:p_id
+    mov dx,REQ_CREATE_THREAD
+    call AddEntry
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop es    
+    ret
+create_thread    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TerminateThread
+;
+;           DESCRIPTION:    Terminate thread callback
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+terminate_thread    Proc far
+    push es
+    push eax
+    push ebx
+    push edx
+;    
+    GetThread
+    mov es,eax
+    mov bx,es:p_id
+    mov dx,REQ_TERMINATE_THREAD
+    call AddEntry
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop es    
+    ret
+terminate_thread    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -190,6 +319,20 @@ init_task    Proc near
     xor eax,eax
     mov ecx,400h
     rep stosd
+;
+    xor bx,bx
+    mov dx,REQ_CREATE_THREAD
+    call AddEntry
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+;
+    mov edi,OFFSET create_thread
+    HookCreateThread
+;
+    mov edi,OFFSET terminate_thread
+    HookTerminateThread
 ;
     popad
     pop es
