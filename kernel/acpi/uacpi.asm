@@ -63,6 +63,7 @@ code    SEGMENT byte public use32 'CODE'
     assume cs:code
 
     extern init_server:near
+    extern init_task_server:near
     extern HasApic:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1248,6 +1249,7 @@ lpcmd  DB 0
 
 AcpiServer:
     call init_server
+    call init_task_server
 ;    
     mov eax,cs
     mov ds,eax

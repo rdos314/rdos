@@ -65,3 +65,10 @@
     __parm [__eax] \
     __value [__eax]
 
+#pragma aux ServUacpiGetTaskQueue = \
+    ServGate_uacpi_get_task_queue \
+    __value [__eax]
+
+#pragma aux ServUacpiWaitTaskQueue = \
+    ServGate_uacpi_wait_task_queue \
+    __parm [__eax]

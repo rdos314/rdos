@@ -79,37 +79,6 @@ UacpiHasApic  MACRO
     ServGate uacpi_has_apic_nr
                     ENDM
 
-; IN  ECX               IRQ count
-; IN  AL                Prio
-; OUT AL                Base IRQ
-UacpiAllocateInts  MACRO    
-    ServGate uacpi_allocate_ints_nr
-                    ENDM
-
-; IN  AL                IRQ
-UacpiFreeInt  MACRO    
-    ServGate uacpi_free_int_nr
-                    ENDM
-
-; IN  AX                Core
-; OUT EAX               Address
-UacpiGetMsiAddress  MACRO    
-    ServGate uacpi_get_msi_address_nr
-                    ENDM
-
-; IN  AL                IRQ
-; OUT EAX               Data
-UacpiGetMsiData  MACRO    
-    ServGate uacpi_get_msi_data_nr
-                    ENDM
-
-; IN  ESI               Server proc
-; IN  EDI               Stack to use
-; IN  ECX               Stack size
-UacpiSetupReset  MACRO    
-    ServGate uacpi_setup_reset_nr
-                    ENDM
-
 ; IN  EBX              Dev handle
 ; OUT EDX              Cmd
 WaitForDevCmd  MACRO
@@ -124,4 +93,14 @@ ReplyDevCmd  MACRO
 ; IN  EBX              Dev handle
 ReplyDevDataCmd  MACRO    
     ServGate uacpi_reply_data_cmd_nr
+                    ENDM
+
+; OUT EAX             Pointer to task queue
+UacpiGetTaskQueue  MACRO
+    ServGate uacpi_get_task_queue_nr
+                    ENDM
+
+; IN  EAX             Current index in task queue
+UacpiWaitTaskQueue  MACRO
+    ServGate uacpi_wait_task_queue_nr
                     ENDM

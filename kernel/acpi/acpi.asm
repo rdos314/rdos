@@ -1607,6 +1607,7 @@ hook_thread_done:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern init_task:near
     extern init_irq:near
     extern init_uacpi:near
     extern init_apic:near
@@ -1626,6 +1627,7 @@ init    Proc far
     mov es,ebx
 ;
     mov ds:pci_init_hooks,0
+    call init_task
 ;
     mov eax,cs
     mov ds,eax
