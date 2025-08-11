@@ -40,6 +40,7 @@ include ..\driver.def
 include ..\handle.inc
 include ..\wait.inc
 include ..\os\protseg.def
+include ..\os\core.inc
 include acpi.def
 
 REQ_CREATE_THREAD     = 1
@@ -51,6 +52,17 @@ tqs_op        DW ?
 tqs_id        DW ?
 
 task_queue_struc    ENDS
+
+thread_state_struc  STRUC
+
+ths_core      DW ?
+ths_prio      DW ?
+ths_irq       DB ?
+ths_pad       DB ?
+ths_tics      DD ?,?
+
+thread_state_struc  ENDS
+
 
     .386p
 
@@ -276,6 +288,62 @@ terminate_thread    Proc far
     ret
 terminate_thread    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetThreadState
+;
+;       DESCRIPTION:    Get thread state
+;
+;       PARAMETERS:     EBX            Thread ID
+;                       ES:EDI         State buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_state_name DB 'Get Thread State', 0
+
+get_thread_state   Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+;
+    ThreadToSel
+    jc gtsDone
+;
+    mov ds,ebx
+    mov ax,ds:p_prio
+    shr ax,1
+    mov es:[edi].ths_prio,ax
+;
+    mov ax,ds:p_core
+    or ax,ax
+    jz gtsNoCore
+;
+    mov fs,eax
+    mov ax,fs:cs_id
+
+gtsNoCore:
+    mov es:[edi].ths_core,ax
+;
+    mov al,ds:p_irq
+    mov es:[edi].ths_irq,al
+;
+    mov eax,ds:p_lsb_tics
+    mov es:[edi].ths_tics,eax
+    mov eax,ds:p_msb_tics
+    mov es:[edi].ths_tics+4,eax
+    clc
+
+gtsDone:
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+get_thread_state  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -362,6 +430,12 @@ init_task_server    Proc near
     mov edi,OFFSET wait_task_queue_name
     xor cl,cl
     mov ax,uacpi_wait_task_queue_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET get_thread_state
+    mov edi,OFFSET get_thread_state_name
+    xor cl,cl
+    mov ax,uacpi_get_thread_state_nr
     RegisterPrivateServGate
     ret
 init_task_server    Endp

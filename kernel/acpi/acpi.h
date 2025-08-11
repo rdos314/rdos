@@ -18,6 +18,17 @@
 extern "C" {
 #endif
 
+
+struct TCurrThreadState
+{
+    short int Core;
+    short int Prio;
+    unsigned char Irq;
+    char Pad;
+    long long Tics;
+};
+
+
 long long RDOSAPI ServUacpiGetAcpi();
 void *RDOSAPI ServUacpiMap(long long phys, int size);
 void RDOSAPI ServUacpiUnmap(void *base, int size);
@@ -29,7 +40,10 @@ unsigned char RDOSAPI ServUacpiAllocateInts(int count, unsigned char prio);
 void RDOSAPI ServUacpiFreeInt(unsigned char irq);
 int RDOSAPI ServUacpiGetMsiAddress(int core);
 int RDOSAPI ServUacpiGetMsiData(unsigned char irq);
-int RDOSAPI ServUacpiSetupReset(void (*proc)(), void *stack, int size);
+
+void *RDOSAPI ServUacpiGetTaskQueue();
+void RDOSAPI ServUacpiWaitTaskQueue(int index);
+int RDOSAPI ServUacpiGetThreadState(int id, struct TCurrThreadState *state);
 
 #ifdef __cplusplus
 }

@@ -72,3 +72,13 @@
 #pragma aux ServUacpiWaitTaskQueue = \
     ServGate_uacpi_wait_task_queue \
     __parm [__eax]
+
+#pragma aux ServUacpiGetThreadState = \
+    ServGate_uacpi_get_thread_state \
+    "jc fail " \
+    "mov eax,1" \
+    "jmp done " \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    __parm [__ebx] [__edi] __value [__eax]
