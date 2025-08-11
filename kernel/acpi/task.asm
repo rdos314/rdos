@@ -320,10 +320,6 @@ init_task    Proc near
     mov ecx,400h
     rep stosd
 ;
-    xor bx,bx
-    mov dx,REQ_CREATE_THREAD
-    call AddEntry
-;
     mov eax,cs
     mov ds,eax
     mov es,eax
