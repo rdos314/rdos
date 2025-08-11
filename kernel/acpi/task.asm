@@ -329,11 +329,15 @@ gtsNoCore:
 ;
     mov al,ds:p_irq
     mov es:[edi].ths_irq,al
-;
+
+gtsRetry:
+    mov ebx,ds:p_msb_tics
     mov eax,ds:p_lsb_tics
+    cmp ebx,ds:p_msb_tics
+    jne gtsRetry
+;
     mov es:[edi].ths_tics,eax
-    mov eax,ds:p_msb_tics
-    mov es:[edi].ths_tics+4,eax
+    mov es:[edi].ths_tics+4,ebx
     clc
 
 gtsDone:
