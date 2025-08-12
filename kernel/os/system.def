@@ -425,6 +425,7 @@ p_deb_phys          DD ?,?
 p_pm_deb_sel        DW ?
 p_pm_deb_offs       DD ?
 p_id                        DW ?
+p_index                     DW ?
 p_futex_id          DW ?
 p_flags             DW ?
 p_events                    DW ?

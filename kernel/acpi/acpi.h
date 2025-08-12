@@ -44,6 +44,7 @@ int RDOSAPI ServUacpiGetMsiData(unsigned char irq);
 void *RDOSAPI ServUacpiGetTaskQueue();
 void RDOSAPI ServUacpiWaitTaskQueue(int index);
 int RDOSAPI ServUacpiGetThreadState(int id, struct TCurrThreadState *state);
+int RDOSAPI ServUacpiGetThreadName(int id, char *name);
 
 #ifdef __cplusplus
 }

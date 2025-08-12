@@ -15,6 +15,7 @@
 #define serv_gate_uacpi_get_task_queue 0x0000000F
 #define serv_gate_uacpi_wait_task_queue 0x00000010
 #define serv_gate_uacpi_get_thread_state 0x00000011
+#define serv_gate_uacpi_get_thread_name 0x00000012
 #define ServGate_uacpi_get_acpi 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
 #define ServGate_uacpi_map 0x55 0x67 0x9a 2 0 0 0 4 0 0x5d
 #define ServGate_uacpi_unmap 0x55 0x67 0x9a 3 0 0 0 4 0 0x5d
@@ -32,3 +33,4 @@
 #define ServGate_uacpi_get_task_queue 0x55 0x67 0x9a 15 0 0 0 4 0 0x5d
 #define ServGate_uacpi_wait_task_queue 0x55 0x67 0x9a 16 0 0 0 4 0 0x5d
 #define ServGate_uacpi_get_thread_state 0x55 0x67 0x9a 17 0 0 0 4 0 0x5d
+#define ServGate_uacpi_get_thread_name 0x55 0x67 0x9a 18 0 0 0 4 0 0x5d

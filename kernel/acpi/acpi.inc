@@ -110,3 +110,9 @@ UacpiWaitTaskQueue  MACRO
 UacpiGetThreadState  MACRO
     ServGate uacpi_get_thread_state_nr
                     ENDM
+
+; IN  EBX            Thread ID
+; IN  ES:EDI         Name buffer
+UacpiGetThreadName  MACRO
+    ServGate uacpi_get_thread_name_nr
+                    ENDM

@@ -15,3 +15,4 @@ uacpi_get_msi_data_nr      = 14
 uacpi_get_task_queue_nr    = 15
 uacpi_wait_task_queue_nr   = 16
 uacpi_get_thread_state_nr  = 17
+uacpi_get_thread_name_nr   = 18

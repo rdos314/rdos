@@ -82,3 +82,13 @@
     "xor eax,eax" \
     "done: " \
     __parm [__ebx] [__edi] __value [__eax]
+
+#pragma aux ServUacpiGetThreadName = \
+    ServGate_uacpi_get_thread_name \
+    "jc fail " \
+    "mov eax,1" \
+    "jmp done " \
+    "fail: " \
+    "xor eax,eax" \
+    "done: " \
+    __parm [__ebx] [__edi] __value [__eax]

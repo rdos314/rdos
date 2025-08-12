@@ -71,7 +71,7 @@ thread_state_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
-tarr_entries       DD ?
+tarr_size          DD ?
 tarr_count         DD ?
 tarr_section       section_typ <>
 
@@ -232,6 +232,66 @@ AddEntry   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GrowThreadArr
+;
+;           DESCRIPTION:    Grow thread array
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowThreadArr   Proc near
+    push es
+    pushad
+;
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov ecx,ds:tarr_size
+    mov ebp,ecx
+    inc ecx
+    shl ecx,1
+    mov ds:tarr_size,ecx
+;
+    mov eax,ecx
+    shl eax,1
+    AllocateSmallLinear
+    mov edi,edx
+;
+    or ebx,ebx
+    jz gtaCopied
+;
+    push ecx
+    push edx
+;
+    mov ebx,thread_arr_sel
+    GetSelectorBaseSize
+    mov esi,edx
+    mov ecx,ebp
+    rep movs word ptr es:[edi],es:[esi]
+;
+    FreeLinear
+;
+    pop edx
+    pop ecx
+
+gtaCopied:
+    push ecx
+    sub ecx,ebp
+    xor ax,ax
+    rep stosw
+    pop ecx
+;
+    mov bx,thread_arr_sel
+    shl ecx,1
+    CreateDataSelector32
+;
+    popad
+    pop es
+    ret
+GrowThreadArr   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateThread
 ;
 ;           DESCRIPTION:    Create thread callback
@@ -245,21 +305,62 @@ create_thread    Proc far
     push es
     push eax
     push ebx
+    push ecx
     push edx
 ;    
     mov eax,SEG data
     mov ds,eax
     EnterSection ds:tarr_section
+    mov eax,ds:tarr_size
+    mov ebx,ds:tarr_count
+    cmp eax,ebx
+    jne ctScan
+;
+    call GrowThreadArr
+
+ctScan:
+    mov eax,thread_arr_sel
+    mov es,eax
+    mov ecx,ds:tarr_size
+    sub ecx,ebx
+    
+ctLoop1:
+    mov ax,es:[2*ebx]
+    or ax,ax
+    jz ctOk
+;
+    inc ebx
+    loop ctLoop1
+;
     xor ebx,ebx
+    mov ecx,ds:tarr_count
+
+ctLoop2:
+    mov ax,es:[2*ebx]
+    or ax,ax
+    jz ctOk
+;
+    inc ebx
+    loop ctLoop2
+;
+    int 3
+
+ctOk:
+    GetThread
+    mov es:[2*ebx],ax
+;
+    inc ds:tarr_count
     LeaveSection ds:tarr_section
 ;
-    GetThread
     mov es,eax
+    mov es:p_index,bx
+    shl ebx,16
     mov bx,es:p_id
     mov dx,REQ_CREATE_THREAD
     call AddEntry
 ;
     pop edx
+    pop ecx
     pop ebx
     pop eax
     pop es    
@@ -281,18 +382,33 @@ create_thread    Endp
 terminate_thread    Proc far
     push ds
     push es
+    push fs
     push eax
     push ebx
     push edx
-;    
+;
     mov eax,SEG data
     mov ds,eax
-    EnterSection ds:tarr_section
-    xor ebx,ebx
-    LeaveSection ds:tarr_section
-;    
+    mov eax,thread_arr_sel
+    mov fs,eax
+;
     GetThread
     mov es,eax
+    movzx ebx,es:p_index
+    xor dx,dx
+;    
+    EnterSection ds:tarr_section
+    xchg dx,fs:[2*ebx]
+    dec ds:tarr_count
+    LeaveSection ds:tarr_section
+;
+    cmp ax,dx
+    je ttOk
+;
+    int 3
+
+ttOk:
+    shl ebx,16
     mov bx,es:p_id
     mov dx,REQ_TERMINATE_THREAD
     call AddEntry
@@ -300,11 +416,11 @@ terminate_thread    Proc far
     pop edx
     pop ebx
     pop eax
+    pop fs
     pop es    
     pop ds
     ret
 terminate_thread    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -366,6 +482,24 @@ gtsDone:
 get_thread_state  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetThreadName
+;
+;       DESCRIPTION:    Get thread name
+;
+;       PARAMETERS:     EBX            Thread ID
+;                       ES:EDI         Name buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_name_name DB 'Get Thread Name', 0
+
+get_thread_name   Proc far
+    ret
+get_thread_name  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_task
@@ -387,7 +521,7 @@ init_task    Proc near
     mov ds:task_wait_thread,0
     InitSection ds:task_section
 ;
-    mov ds:tarr_entries,0
+    mov ds:tarr_size,0
     mov ds:tarr_count,0
     InitSection ds:tarr_section
 ;
@@ -461,6 +595,12 @@ init_task_server    Proc near
     mov edi,OFFSET get_thread_state_name
     xor cl,cl
     mov ax,uacpi_get_thread_state_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET get_thread_name
+    mov edi,OFFSET get_thread_name_name
+    xor cl,cl
+    mov ax,uacpi_get_thread_name_nr
     RegisterPrivateServGate
     ret
 init_task_server    Endp
