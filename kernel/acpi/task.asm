@@ -49,7 +49,8 @@ REQ_TERMINATE_THREAD  = 2
 task_queue_struc    STRUC
 
 tqs_op        DW ?
-tqs_id        DW ?
+tqs_spare     DW ?
+tqs_id        DD ?
 
 task_queue_struc    ENDS
 
@@ -150,7 +151,7 @@ wait_task_queue   Proc far
     GetThread
     mov ds:task_wait_thread,ax
 ;
-    shl edx,2
+    shl edx,3
     movzx ebx,ds:task_wr_ptr
     cmp ebx,edx
     LeaveSection ds:task_section
@@ -176,7 +177,7 @@ wait_task_queue  Endp
 ;
 ;           DESCRIPTION:    Add task entry
 ;
-;           PARAMETERS:     BX     ID
+;           PARAMETERS:     EBX    ID
 ;                           DX     Op
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -207,8 +208,8 @@ aeRetry:
  
 aeRoom:
     mov es:[esi].tqs_op,dx
-    mov es:[esi].tqs_id,bx
-    add si,4
+    mov es:[esi].tqs_id,ebx
+    add si,8
     and si,0FFFh
     mov ds:task_wr_ptr,si
 ;
@@ -247,7 +248,7 @@ create_thread    Proc far
 ;    
     GetThread
     mov es,eax
-    mov bx,es:p_id
+    movzx ebx,es:p_id
     mov dx,REQ_CREATE_THREAD
     call AddEntry
 ;
@@ -277,7 +278,7 @@ terminate_thread    Proc far
 ;    
     GetThread
     mov es,eax
-    mov bx,es:p_id
+    movzx ebx,es:p_id
     mov dx,REQ_TERMINATE_THREAD
     call AddEntry
 ;

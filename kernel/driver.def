@@ -197,6 +197,10 @@ serv_mem_sel        EQU 2F0h
 ; GDT selectors device-driver selectors
 ;
 ;
+
+thread_arr_sel      EQU 300h
+proc_arr_sel        EQU 308h
+
 exec_code_sel       EQU 3F0h
 exec_data_sel           EQU 3F8h
 
