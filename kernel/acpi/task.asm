@@ -71,6 +71,10 @@ thread_state_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
+tarr_entries       DD ?
+tarr_count         DD ?
+tarr_section       section_typ <>
+
 task_linear        DD ?
 task_phys          DD ?,?
 task_sel           DW ?
@@ -183,13 +187,10 @@ wait_task_queue  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddEntry   Proc near
-    push ds
     push es
     push ecx
     push esi
 ;
-    mov eax,SEG data
-    mov ds,eax
     mov es,ds:task_sel
 
 aeRetry:
@@ -225,7 +226,6 @@ aeDone:
     pop esi
     pop ecx
     pop es
-    pop ds
     ret
 AddEntry   Endp
 
@@ -241,14 +241,21 @@ AddEntry   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_thread    Proc far
+    push ds
     push es
     push eax
     push ebx
     push edx
 ;    
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:tarr_section
+    xor ebx,ebx
+    LeaveSection ds:tarr_section
+;
     GetThread
     mov es,eax
-    movzx ebx,es:p_id
+    mov bx,es:p_id
     mov dx,REQ_CREATE_THREAD
     call AddEntry
 ;
@@ -256,6 +263,7 @@ create_thread    Proc far
     pop ebx
     pop eax
     pop es    
+    pop ds
     ret
 create_thread    Endp
 
@@ -271,14 +279,21 @@ create_thread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 terminate_thread    Proc far
+    push ds
     push es
     push eax
     push ebx
     push edx
 ;    
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:tarr_section
+    xor ebx,ebx
+    LeaveSection ds:tarr_section
+;    
     GetThread
     mov es,eax
-    movzx ebx,es:p_id
+    mov bx,es:p_id
     mov dx,REQ_TERMINATE_THREAD
     call AddEntry
 ;
@@ -286,6 +301,7 @@ terminate_thread    Proc far
     pop ebx
     pop eax
     pop es    
+    pop ds
     ret
 terminate_thread    Endp
 
@@ -370,6 +386,10 @@ init_task    Proc near
     mov ds:task_wr_ptr,0
     mov ds:task_wait_thread,0
     InitSection ds:task_section
+;
+    mov ds:tarr_entries,0
+    mov ds:tarr_count,0
+    InitSection ds:tarr_section
 ;
     mov eax,1000h
     AllocateBigLinear
