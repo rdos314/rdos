@@ -184,31 +184,6 @@ GetCurrentThread_    Proc near
     pop es
     ret
 GetCurrentThread_    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetThreadHandle
-;
-;           DESCRIPTION:    Get current thread handle
-;
-;           RETURNS:        EAX         Thread handle         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_thread_handle_name  DB 'Get Thread Handle', 0
-
-get_thread_handle    Proc far
-    push es
-;    
-    GetThread
-    mov es,eax
-    movzx eax,es:p_id
-;
-    pop es
-    ret
-get_thread_handle       Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -651,12 +626,6 @@ InitScheduler_    Proc near
     xor cl,cl
     mov ax,set_thread_irq_nr
     RegisterOsGate
-;
-    mov esi,OFFSET get_thread_handle
-    mov edi,OFFSET get_thread_handle_name
-    xor dx,dx
-    mov ax,get_thread_handle_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET move_to_core
     mov edi,OFFSET move_to_core_name

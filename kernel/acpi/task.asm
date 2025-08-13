@@ -766,6 +766,30 @@ thread_to_sel   Proc far
 thread_to_sel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetThreadHandle
+;
+;           DESCRIPTION:    Get current thread handle
+;
+;           RETURNS:        EAX         Thread handle         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_handle_name  DB 'Get Thread Handle', 0
+
+get_thread_handle    Proc far
+    push es
+;    
+    GetThread
+    mov es,eax
+    movzx eax,es:p_id
+;
+    pop es
+    ret
+get_thread_handle       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           GetThreadState
@@ -1259,6 +1283,12 @@ init_task    Proc near
     mov edi,OFFSET get_thread_count_name
     xor dx,dx
     mov ax,get_thread_count_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_thread_handle
+    mov edi,OFFSET get_thread_handle_name
+    xor dx,dx
+    mov ax,get_thread_handle_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_thread_state16
