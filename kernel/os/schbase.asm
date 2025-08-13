@@ -134,46 +134,6 @@ terminate_thread    Proc far
 terminate_thread    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ThreadToSel
-;
-;           DESCRIPTION:    Convert thread # (p_id) to selector
-;
-;           PARAMETERS:     BX      Thread #
-;
-;       RETURNS:    BX      Thread sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-thread_to_sel_name DB 'Thread To Sel',0
-
-thread_to_sel   Proc far
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-;    
-    movzx eax,bx
-    call IdToHandle
-    or eax,eax
-    stc
-    jz thread_to_sel_done
-;
-    mov bx,ax
-    clc
-
-thread_to_sel_done:
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop eax    
-    ret
-thread_to_sel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           SetThreadIrq
@@ -753,12 +713,6 @@ InitScheduler_    Proc near
 ;
     mov edi,OFFSET terminate_thread
     HookTerminateThread
-;
-    mov esi,OFFSET thread_to_sel
-    mov edi,OFFSET thread_to_sel_name
-    xor cl,cl
-    mov ax,thread_to_sel_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET create_pid
     mov edi,OFFSET create_pid_name

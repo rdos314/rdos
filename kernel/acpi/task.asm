@@ -678,6 +678,96 @@ IndexToSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           IdToSel
+;
+;           DESCRIPTION:    Convert thread id to thread selector
+;
+;           PARAMETERS:     AX              Thread ID
+;
+;           RETURNS:        NC              THREAD EXISTS
+;                               AX          Thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdToSel    Proc near
+    push ds
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+;
+    mov dx,ax
+    mov eax,SEG data
+    mov ds,eax
+    mov ecx,ds:tarr_size
+    EnterSection ds:tarr_section
+;
+    or ecx,ecx
+    stc
+    jz idtsDone
+;
+    mov eax,thread_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+idtsLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz idtsNext
+;
+    mov fs,eax
+    cmp dx,fs:p_id
+    clc
+    je idtsDone
+
+idtsNext:
+    add ebx,2
+    loop idtsLoop
+;
+    stc
+
+idtsDone:
+    LeaveSection ds:tarr_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+IdToSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ThreadToSel
+;
+;           DESCRIPTION:    Convert thread # (p_id) to selector
+;
+;           PARAMETERS:     BX      Thread #
+;
+;           RETURNS:        BX      Thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+thread_to_sel_name DB 'Thread To Sel',0
+
+thread_to_sel   Proc far
+    push eax
+;
+    mov ax,bx
+    call IdToSel
+    mov bx,ax
+;
+    pop eax
+    ret
+thread_to_sel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GetThreadState
 ;
 ;           DESCRIPTION:    Get state of a thread
@@ -1092,6 +1182,12 @@ init_task    Proc near
 ;
     mov edi,OFFSET terminate_thread
     HookTerminateThread
+;
+    mov esi,OFFSET thread_to_sel
+    mov edi,OFFSET thread_to_sel_name
+    xor cl,cl
+    mov ax,thread_to_sel_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET get_thread_count
     mov edi,OFFSET get_thread_count_name
