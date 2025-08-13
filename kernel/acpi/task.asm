@@ -429,7 +429,7 @@ terminate_thread    Endp
 ;
 ;       DESCRIPTION:    Get thread state
 ;
-;       PARAMETERS:     EBX            Thread ID
+;       PARAMETERS:     EBX            Handle
 ;                       ES:EDI         State buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -441,16 +441,45 @@ get_thread_state   Proc far
     push fs
     push eax
     push ebx
+    push esi
 ;
-    ThreadToSel
-    jc gtsDone
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,thread_arr_sel
+    mov fs,eax
+    EnterSection ds:tarr_section
 ;
-    mov ds,ebx
-    mov ax,ds:p_prio
+    mov esi,ebx
+    shr esi,16
+    cmp esi,ds:tarr_size
+    jae gtsFail
+;
+    mov ax,fs:[2*esi]
+    or ax,ax
+    jz gtsFail
+;
+    mov fs,eax
+    mov ax,fs:p_id
+    cmp ax,bx
+    jne gtsFail
+;
+    mov ax,fs:p_prio
     shr ax,1
     mov es:[edi].ths_prio,ax
 ;
-    mov ax,ds:p_core
+    mov al,fs:p_irq
+    mov es:[edi].ths_irq,al
+
+gtsRetry:
+    mov ebx,fs:p_msb_tics
+    mov eax,fs:p_lsb_tics
+    cmp ebx,fs:p_msb_tics
+    jne gtsRetry
+;
+    mov es:[edi].ths_tics,eax
+    mov es:[edi].ths_tics+4,ebx
+;
+    mov ax,fs:p_core
     or ax,ax
     jz gtsNoCore
 ;
@@ -460,20 +489,16 @@ get_thread_state   Proc far
 gtsNoCore:
     mov es:[edi].ths_core,ax
 ;
-    mov al,ds:p_irq
-    mov es:[edi].ths_irq,al
-
-gtsRetry:
-    mov ebx,ds:p_msb_tics
-    mov eax,ds:p_lsb_tics
-    cmp ebx,ds:p_msb_tics
-    jne gtsRetry
-;
-    mov es:[edi].ths_tics,eax
-    mov es:[edi].ths_tics+4,ebx
+    LeaveSection ds:tarr_section
     clc
+    jmp gtsDone
+
+gtsFail:
+    LeaveSection ds:tarr_section
+    stc
 
 gtsDone:
+    pop esi
     pop ebx
     pop eax
     pop fs
@@ -496,6 +521,69 @@ get_thread_state  Endp
 get_thread_name_name DB 'Get Thread Name', 0
 
 get_thread_name   Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,thread_arr_sel
+    mov fs,eax
+    EnterSection ds:tarr_section
+;
+    mov esi,ebx
+    shr esi,16
+    cmp esi,ds:tarr_size
+    jae gtnFail
+;
+    mov ax,fs:[2*esi]
+    or ax,ax
+    jz gtnFail
+;
+    mov fs,eax
+    mov ax,fs:p_id
+    cmp ax,bx
+    jne gtnFail
+;
+    mov esi,OFFSET thread_name
+    mov ecx,30
+    rep movs byte ptr es:[edi],fs:[esi]
+;
+    dec edi
+
+gtnLoop:
+    mov al,es:[edi]
+    cmp al,' '
+    jne gtnOk
+;
+    dec edi
+    jmp gtnLoop
+
+gtnOk:
+    inc edi
+    xor al,al
+    stosb
+;
+    LeaveSection ds:tarr_section
+    clc
+    jmp gtnDone
+
+gtnFail:
+    LeaveSection ds:tarr_section
+    stc
+
+gtnDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
     ret
 get_thread_name  Endp
 
