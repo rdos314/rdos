@@ -426,7 +426,7 @@ terminate_thread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetThreadState
+;       NAME:           ServGetThreadState
 ;
 ;       DESCRIPTION:    Get thread state
 ;
@@ -510,7 +510,7 @@ serv_thread_state  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetThreadName
+;       NAME:           ServGetThreadName
 ;
 ;       DESCRIPTION:    Get thread name
 ;
@@ -519,9 +519,9 @@ serv_thread_state  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_thread_name_name DB 'Get Thread Name', 0
+serv_get_thread_name_name DB 'Get Thread Name', 0
 
-get_thread_name   Proc far
+serv_get_thread_name   Proc far
     push ds
     push fs
     push eax
@@ -586,7 +586,31 @@ gtnDone:
     pop fs
     pop ds
     ret
-get_thread_name  Endp
+serv_get_thread_name  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetThreadCount
+;
+;           DESCRIPTION:    Get thread count
+;
+;           RETURNS:        EAX            Thread count      
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_count_name DB 'Get Thread Count',0
+
+get_thread_count    Proc far
+    push ds
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,ds:tarr_count
+;
+    pop ds
+    ret
+get_thread_count    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1069,6 +1093,12 @@ init_task    Proc near
     mov edi,OFFSET terminate_thread
     HookTerminateThread
 ;
+    mov esi,OFFSET get_thread_count
+    mov edi,OFFSET get_thread_count_name
+    xor dx,dx
+    mov ax,get_thread_count_nr
+    RegisterBimodalUserGate
+;
     mov ebx,OFFSET get_thread_state16
     mov esi,OFFSET get_thread_state32
     mov edi,OFFSET get_thread_state_name
@@ -1123,8 +1153,8 @@ init_task_server    Proc near
     mov ax,uacpi_get_thread_state_nr
     RegisterPrivateServGate
 ;
-    mov esi,OFFSET get_thread_name
-    mov edi,OFFSET get_thread_name_name
+    mov esi,OFFSET serv_get_thread_name
+    mov edi,OFFSET serv_get_thread_name_name
     xor cl,cl
     mov ax,uacpi_get_thread_name_nr
     RegisterPrivateServGate
