@@ -337,34 +337,6 @@ int IdToHandle(int ID)
 
 /*##########################################################################
 #
-#   Name       : IndexToHandle
-#
-#   Descr      : Convert from index to handle
-#
-##########################################################################*/
-#pragma aux IndexToHandle "*" rdosdev parm routine [eax]
-int IndexToHandle(int Index)
-{
-    int handle = 0;
-
-    RdosEnterKernelSection(&ThreadSection);
-
-    if (Index >= 0 && Index < ActiveThreads)
-        if (ThreadArr[Index].Valid)
-            handle = ThreadArr[Index].Handle;
-
-    RdosLeaveKernelSection(&ThreadSection);
-
-    if (handle)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return handle;
-}
-
-/*##########################################################################
-#
 #   Name       : CreateTid
 #
 #   Descr      : Get thread ID

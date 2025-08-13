@@ -55,7 +55,6 @@ _TEXT    SEGMENT byte public 'CODE'
     assume cs:_TEXT
 
     extrn IdToHandle:near
-    extrn IndexToHandle:near
     extrn MoveThread:near
     extrn ImplMoveToNewCore:near
 
