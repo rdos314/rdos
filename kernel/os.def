@@ -94,7 +94,6 @@ hook_create_thread_nr           = 93
 hook_create_process_nr          = 94
 hook_terminate_thread_nr        = 95
 hook_init_tasking_nr            = 97
-hook_state_nr                           = 98
 
 sim_sti_nr                                      = 99
 sim_cli_nr                                      = 100
@@ -907,5 +906,7 @@ req_pci_msi_nr              = 866
 get_pci_bar_phys_nr         = 867
 get_pci_bar_io_nr           = 868
 setup_pci_msi_nr            = 869
+
+add_thread_state_nr         = 870
 
 osgate_entries              = 880

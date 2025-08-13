@@ -94,7 +94,6 @@
 #define osgate_hook_create_process 94
 #define osgate_hook_terminate_thread 95
 #define osgate_hook_init_tasking 97
-#define osgate_hook_state 98
 
 #define osgate_sim_sti 99
 #define osgate_sim_cli 100
@@ -908,6 +907,8 @@
 #define osgate_get_pci_bar_io 868
 #define osgate_setup_pci_msi 869
 
+#define osgate_add_thread_state 870
+
 
 
 
@@ -1006,7 +1007,6 @@
 #define OsGate_hook_create_process 0x3E 0x67 0x9a 94 0 0 0 2 0
 #define OsGate_hook_terminate_thread 0x3E 0x67 0x9a 95 0 0 0 2 0
 #define OsGate_hook_init_tasking 0x3E 0x67 0x9a 97 0 0 0 2 0
-#define OsGate_hook_state 0x3E 0x67 0x9a 98 0 0 0 2 0
 
 #define OsGate_sim_sti 0x3E 0x67 0x9a 99 0 0 0 2 0
 #define OsGate_sim_cli 0x3E 0x67 0x9a 100 0 0 0 2 0
@@ -1819,4 +1819,6 @@
 #define OsGate_get_pci_bar_phys 0x3E 0x67 0x9a 99 3 0 0 2 0
 #define OsGate_get_pci_bar_io 0x3E 0x67 0x9a 100 3 0 0 2 0
 #define OsGate_setup_pci_msi 0x3E 0x67 0x9a 101 3 0 0 2 0
+
+#define OsGate_add_thread_state 0x3E 0x67 0x9a 102 3 0 0 2 0
 

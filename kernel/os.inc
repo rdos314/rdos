@@ -1444,6 +1444,13 @@ InitUserTimer    MACRO
 
 ;;;;;;;;;;; Signal & waits ;;;;;;;;;;;;;;;;
 
+; IN  BX          Thread selector
+; IN  ES:EDI      Buffer
+; OUT CX:EDX      List
+AddThreadState  MACRO
+    OsGate add_thread_state_nr
+                    ENDM
+
 ClearSignal     MACRO
     OsGate clear_signal_nr
                     ENDM
@@ -1769,11 +1776,6 @@ HookCreateThread    MACRO
 ;       ES:EDI       ADDRESS TILL CALLBACK
 HookTerminateThread     MACRO
     OsGate hook_terminate_thread_nr
-                    ENDM
-
-;       ES:EDI       PROCEDURE TO CALL
-HookState       MACRO
-    OsGate hook_state_nr
                     ENDM
 
 ;   OUT EAX      Update tics

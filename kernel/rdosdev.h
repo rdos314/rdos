@@ -126,12 +126,6 @@ typedef void __far (__rdos_hook_callback)();
                     __value __struct __routine [__eax] \
                     __modify [__eax __ebx __ecx __edx __esi __edi]
 
-typedef void __far (__rdos_hook_state_callback)(int thread, char *buf);
-
-#pragma aux __rdos_hook_state_callback "*" \
-                    __parm __caller [__ebx] [__es __edi] \
-                    __value __struct __routine [__eax] \
-                    __modify [__eax __ebx __ecx __edx __esi __edi]
 
 typedef void __far (__rdos_irq_callback)();
 
@@ -663,8 +657,6 @@ void RdosHookTerminateProcess(__rdos_hook_callback *callb_proc);
 void RdosHookCreateThread(__rdos_hook_callback *callb_proc);
 void RdosHookTerminateThread(__rdos_hook_callback *callb_proc);
 void RdosHookInitPci(__rdos_hook_callback *callb_proc);
-
-void RdosHookState(__rdos_hook_state_callback *callb_proc);
 
 void RdosSendEoi(int irq);
 int RdosIsIrqFree(int irq);
@@ -1422,10 +1414,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 
 #pragma aux RdosHookTerminateThread = \
     OsGate_hook_terminate_thread \
-    __parm [__es __edi]
-
-#pragma aux RdosHookState = \
-    OsGate_hook_state \
     __parm [__es __edi]
 
 #pragma aux RdosSendEoi = \

@@ -30,6 +30,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 include ..\os\system.def
+INCLUDE ..\os\state.def
 include ..\os.def
 include ..\os.inc
 include ..\serv.def
@@ -434,9 +435,9 @@ terminate_thread    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_thread_state_name DB 'Get Thread State', 0
+serv_thread_state_name DB 'Get Thread State', 0
 
-get_thread_state   Proc far
+serv_thread_state   Proc far
     push ds
     push fs
     push eax
@@ -452,16 +453,16 @@ get_thread_state   Proc far
     mov esi,ebx
     shr esi,16
     cmp esi,ds:tarr_size
-    jae gtsFail
+    jae stsFail
 ;
     mov ax,fs:[2*esi]
     or ax,ax
-    jz gtsFail
+    jz stsFail
 ;
     mov fs,eax
     mov ax,fs:p_id
     cmp ax,bx
-    jne gtsFail
+    jne stsFail
 ;
     mov ax,fs:p_prio
     shr ax,1
@@ -470,41 +471,41 @@ get_thread_state   Proc far
     mov al,fs:p_irq
     mov es:[edi].ths_irq,al
 
-gtsRetry:
+stsRetry:
     mov ebx,fs:p_msb_tics
     mov eax,fs:p_lsb_tics
     cmp ebx,fs:p_msb_tics
-    jne gtsRetry
+    jne stsRetry
 ;
     mov es:[edi].ths_tics,eax
     mov es:[edi].ths_tics+4,ebx
 ;
     mov ax,fs:p_core
     or ax,ax
-    jz gtsNoCore
+    jz stsNoCore
 ;
     mov fs,eax
     mov ax,fs:cs_id
 
-gtsNoCore:
+stsNoCore:
     mov es:[edi].ths_core,ax
 ;
     LeaveSection ds:tarr_section
     clc
-    jmp gtsDone
+    jmp stsDone
 
-gtsFail:
+stsFail:
     LeaveSection ds:tarr_section
     stc
 
-gtsDone:
+stsDone:
     pop esi
     pop ebx
     pop eax
     pop fs
     pop ds
     ret
-get_thread_state  Endp
+serv_thread_state  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -588,6 +589,428 @@ gtnDone:
 get_thread_name  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IndexToSel
+;
+;           DESCRIPTION:    Convert thread number to thread selector
+;
+;           PARAMETERS:     AX              THREAD #
+;
+;           RETURNS:        NC              THREAD EXISTS
+;                               AX          Thread sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IndexToSel    Proc near
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+;
+    movzx edx,ax
+    mov eax,SEG data
+    mov ds,eax
+    mov ecx,ds:tarr_size
+    EnterSection ds:tarr_section
+;
+    or ecx,ecx
+    stc
+    jz itsDone
+;
+    mov eax,thread_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+itsLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz itsNext
+;
+    or edx,edx
+    clc
+    jz itsDone
+;
+    dec edx
+
+itsNext:
+    add ebx,2
+    loop itsLoop
+;
+    stc
+
+itsDone:
+    LeaveSection ds:tarr_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+IndexToSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetThreadState
+;
+;           DESCRIPTION:    Get state of a thread
+;
+;           PARAMETERS:     ES:(E)DI        BUFFER TO PUT STATE IN
+;                           AX              THREAD #
+;                           NC              THREAD EXISTS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_state_name DB 'Get Thread State',0
+
+get_thread_state    Proc near
+    push ds
+    pushad
+;    
+    call IndexToSel
+    jc get_state_done
+;    
+    mov ds,ax
+    mov ax,ds:p_id
+    mov es:[edi].st_id,ax
+    mov esi,OFFSET thread_name
+    mov ecx,32
+    push edi
+    add edi,OFFSET st_name
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop edi
+;       
+    mov eax,ds:p_msb_tics
+    mov es:[edi].st_time,eax
+    mov eax,ds:p_lsb_tics
+    mov es:[edi].st_time+4,eax
+;
+    push edi
+    add edi,OFFSET st_list
+    mov bx,ds    
+    AddThreadState
+    pop edi
+;
+    mov es:[edi].st_sel,cx
+    mov es:[edi].st_offs,edx
+    clc
+
+get_state_done:
+    popad
+    pop ds
+    ret
+get_thread_state    Endp
+
+get_thread_state16      Proc far
+    push edi
+    movzx edi,di
+    call get_thread_state
+    pop edi
+    ret
+get_thread_state16      Endp
+
+get_thread_state32      Proc far
+    call get_thread_state
+    ret
+get_thread_state32      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ReadFlatAppDword
+;
+;   DESCRIPTION:    Read flat app dword
+;
+;   PARAMETERS:     DS  Thread
+;                   ESI Offset
+;
+;   RETURNS:        NC
+;                       EAX Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadFlatAppDword    Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    add esi,3
+    xor ecx,ecx
+    mov edx,flat_data_sel
+    mov bx,ds
+    ReadThreadSelector
+    jc rfadDone
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+;
+    dec esi
+    mov cl,al
+    ReadThreadSelector
+    jc rfadDone
+;
+    shl ecx,8
+    mov cl,al
+    mov eax,ecx
+    clc
+
+rfadDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+ReadFlatAppDword    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           ProbeFlatAppCode
+;
+;   DESCRIPTION:    Proble flat app code
+;
+;   PARAMETERS:     DS  Thread
+;                   ESI Offset
+;
+;   RETURNS:        NC   OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProbeFlatAppCode    Proc near
+    push eax
+    push ebx
+    push edx
+;
+    mov edx,flat_data_sel
+    mov bx,ds
+    ReadThreadSelector
+    jc pfacDone
+;    
+    GetThreadSelectorPage
+    jc pfacDone
+;
+    test al,2
+    jz pfacDone
+;
+    stc
+
+pfacDone:
+    pop edx
+    pop ebx
+    pop eax
+    ret
+ProbeFlatAppCode    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetThreadActionState
+;
+;           DESCRIPTION:    Get action state of a thread
+;
+;           PARAMETERS:     ES:(E)DI        BUFFER TO PUT STATE IN
+;                           AX              THREAD #
+;                           NC              THREAD EXISTS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_action_state_name DB 'Get Thread Action State',0
+
+get_thread_action_state    Proc near
+    push ds
+    push fs
+    pushad
+;    
+    call IndexToSel
+    jc get_action_state_done
+;    
+    mov ds,ax
+    mov ax,ds:p_id
+    mov es:[edi].ast_id,ax
+    mov esi,OFFSET thread_name
+    mov ecx,32
+    push edi
+    add edi,OFFSET ast_name
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop edi
+;    
+    mov esi,OFFSET p_action_text
+    mov ecx,32
+    push edi
+    add edi,OFFSET ast_action
+    rep movs byte ptr es:[edi],ds:[esi]
+    pop edi
+;       
+    mov eax,ds:p_msb_tics
+    mov es:[edi].ast_time,eax
+    mov eax,ds:p_lsb_tics
+    mov es:[edi].ast_time+4,eax
+;
+    push edi
+    add edi,OFFSET ast_list
+    mov bx,ds
+    AddThreadState
+    pop edi
+;
+    mov es:[edi].ast_pos.sep_sel,cx
+    mov dword ptr es:[edi].ast_pos.sep_offs,edx
+    mov dword ptr es:[edi].ast_pos.sep_offs+4,0
+    mov es:[edi].ast_count,0
+;
+    mov ds,ebx
+    test word ptr ds:p_rflags+2,2
+    jnz get_action_user_done
+;
+    mov ax,ds:p_cs
+    cmp ax,flat_code_sel
+    je get_action_app
+;
+    cmp ax,serv_code_sel
+    jne get_action_not_app
+
+get_action_app:   
+    mov edx,edi
+    add edx,OFFSET ast_user
+    mov eax,dword ptr ds:p_rbp    
+    jmp get_action_user_loop
+
+get_action_not_app:    
+    test ax,7
+    jnz get_action_user_done
+;
+    mov ax,ds:p_ss
+    mov fs,ax
+    mov ecx,dword ptr ds:p_rsp
+    cmp ecx,stack0_size
+    jae get_action_user_done
+;
+    mov ecx,stack0_size
+    mov eax,fs:[ecx-4]
+    cmp eax,flat_data_sel    
+    je get_action_user_cs
+;
+    cmp eax,serv_data_sel
+    jne get_action_user_done
+
+get_action_user_cs:    
+    mov eax,fs:[ecx-12]
+    cmp eax,flat_code_sel
+    je get_action_user
+;
+    cmp eax,serv_code_sel
+    jne get_action_user_done
+
+get_action_user:
+    mov edx,edi
+    add edx,OFFSET ast_user
+    mov eax,fs:[ecx-12]
+    mov es:[edx].sep_sel,ax
+    mov eax,fs:[ecx-16]
+    mov dword ptr es:[edx].sep_offs,eax
+    mov dword ptr es:[edx].sep_offs+4,0
+    add edx,SIZE state_ep
+    inc es:[edi].ast_count
+;
+    mov esi,fs:[ecx-8]
+    call ReadFlatAppDword
+    jc get_action_user_done
+
+get_action_user_loop:
+    mov esi,eax
+    push esi
+    add esi,24
+    call ReadFlatAppDword
+    pop esi
+    jc get_action_user_done
+;
+    push esi
+    mov esi,eax
+    call ProbeFlatAppCode
+    pop esi
+    jnc get_action_user_save
+;    
+    push esi
+    add esi,20
+    call ReadFlatAppDword
+    pop esi
+    jc get_action_user_done
+;
+    push esi
+    mov esi,eax
+    call ProbeFlatAppCode
+    pop esi
+    jnc get_action_user_save
+;
+    xor eax,eax
+    
+get_action_user_save:    
+    mov es:[edx].sep_sel,flat_code_sel
+    mov dword ptr es:[edx].sep_offs,eax
+    mov dword ptr es:[edx].sep_offs+4,0
+    add edx,SIZE state_ep
+    mov ax,es:[edi].ast_count
+    inc ax
+    mov es:[edi].ast_count,ax
+    cmp ax,64
+    jae get_action_user_done
+;
+    call ReadFlatAppDword
+    or eax,eax
+    jnz get_action_user_loop
+        
+get_action_user_done:    
+    mov ax,es:[edi].ast_count
+    cmp ax,2
+    jb get_action_user_ok
+;
+    sub edx,SIZE state_ep
+    mov eax,dword ptr es:[edx].sep_offs
+    or eax,dword ptr es:[edx].sep_offs+4
+    jnz get_action_user_ok
+;
+    dec es:[edi].ast_count        
+
+get_action_user_ok:    
+    clc
+
+get_action_state_done:
+    popad
+    pop fs
+    pop ds
+    ret
+get_thread_action_state    Endp
+
+get_thread_action_state16      Proc far
+    push edi
+    movzx edi,di
+    call get_thread_action_state
+    pop edi
+    ret
+get_thread_action_state16      Endp
+
+get_thread_action_state32      Proc far
+    call get_thread_action_state
+    ret
+get_thread_action_state32      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_task
@@ -605,6 +1028,7 @@ init_task    Proc near
 ;
     mov eax,SEG data
     mov ds,eax
+;
     mov ds:task_wr_ptr,0
     mov ds:task_wait_thread,0
     InitSection ds:task_section
@@ -645,6 +1069,20 @@ init_task    Proc near
     mov edi,OFFSET terminate_thread
     HookTerminateThread
 ;
+    mov ebx,OFFSET get_thread_state16
+    mov esi,OFFSET get_thread_state32
+    mov edi,OFFSET get_thread_state_name
+    mov dx,virt_es_in
+    mov ax,get_thread_state_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_thread_action_state16
+    mov esi,OFFSET get_thread_action_state32
+    mov edi,OFFSET get_thread_action_state_name
+    mov dx,virt_es_in
+    mov ax,get_thread_action_state_nr
+    RegisterUserGate
+;
     popad
     pop es
     pop ds
@@ -679,8 +1117,8 @@ init_task_server    Proc near
     mov ax,uacpi_wait_task_queue_nr
     RegisterPrivateServGate
 ;
-    mov esi,OFFSET get_thread_state
-    mov edi,OFFSET get_thread_state_name
+    mov esi,OFFSET serv_thread_state
+    mov edi,OFFSET serv_thread_state_name
     xor cl,cl
     mov ax,uacpi_get_thread_state_nr
     RegisterPrivateServGate

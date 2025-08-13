@@ -7831,17 +7831,19 @@ wait_micro_sec  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CHECK_LIST
+;           NAME:           AddThreadState
 ;
-;           DESCRIPTION:    Check if thread is in list
+;           DESCRIPTION:    Add thread state
 ;
-;           PARAMETERS:         BX      Thread selector
-;               ES:EDI      Buffer
+;           PARAMETERS:     BX      Thread selector
+;                           ES:EDI      Buffer
 ;
-;       RETURNS:        NC          processed
-;               CX:EDX      List
+;           RETURNS:        NC          processed
+;                           CX:EDX      List
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_thread_state_name DB 'Add Thread State', 0
 
 Inactive_state  DB 'Inactive',0
 Realtime_state  DB 'Realtime',0
@@ -7858,7 +7860,9 @@ Wakeup_state    DB 'Wakeup ',0
 Run_state       DB 'Run ', 0
 Ready_cpu_state DB 'Ready ',0
 
-check_list      Proc far
+Unknown_state   DB 'Unknown State',0
+
+add_thread_state      Proc far
     push ds
     push fs
     push ax
@@ -8150,7 +8154,10 @@ check_copy_done:
     jmp check_done
     
 check_failed:
-    stc
+    xor cx,cx
+    xor edx,edx
+    mov si,OFFSET Unknown_state
+    jmp check_copy_cpu
 
 check_done:
     pop si
@@ -8158,8 +8165,7 @@ check_done:
     pop fs
     pop ds
     retf32
-check_list      Endp
-
+add_thread_state      Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -11797,6 +11803,12 @@ timer_free_list_create:
     mov ax,leave_long_int_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET add_thread_state
+    mov edi,OFFSET add_thread_state_name
+    xor cl,cl
+    mov ax,add_thread_state_nr
+    RegisterOsGate
+;
     mov esi,OFFSET set_thread_core
     mov edi,OFFSET set_thread_core_name
     xor cl,cl
@@ -12164,9 +12176,6 @@ timer_free_list_create:
     mov dx,virt_es_in
     mov ax,get_crash_core_info_nr
     RegisterUserGate
-;
-    mov edi,OFFSET check_list
-    HookState
 ;
     call CreateCoreDump
 ;
