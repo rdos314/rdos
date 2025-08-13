@@ -303,40 +303,6 @@ void ThreadTerminated(int handle)
 
 /*##########################################################################
 #
-#   Name       : IdToHandle
-#
-#   Descr      : Convert from ID to handle
-#
-##########################################################################*/
-#pragma aux IdToHandle "*" rdosdev parm routine [eax]
-int IdToHandle(int ID)
-{
-    int i;
-    int handle = 0;
-
-    RdosEnterKernelSection(&ThreadSection);
-
-    for (i = 0; i < ActiveThreads; i++)
-    {
-        if (ThreadArr[i].Valid && ThreadArr[i].ID == ID)
-        {
-            handle = ThreadArr[i].Handle;
-            break;
-        }
-    }
-
-    RdosLeaveKernelSection(&ThreadSection);
-
-    if (handle)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return handle;
-}
-
-/*##########################################################################
-#
 #   Name       : CreateTid
 #
 #   Descr      : Get thread ID

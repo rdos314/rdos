@@ -54,7 +54,6 @@ _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
 
-    extrn IdToHandle:near
     extrn MoveThread:near
     extrn ImplMoveToNewCore:near
 
@@ -209,79 +208,6 @@ get_thread_handle    Proc far
     pop es
     ret
 get_thread_handle       Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SuspendThread
-;
-;           DESCRIPTION:    Suspend thread (put it in debugger)
-;
-;           PARAMETER:          AX          Thread ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-suspend_thread_name     DB 'Suspend Thread',0
-
-suspend_thread  PROC far
-    push ds
-    push es
-    pushad
-;
-    movzx eax,ax
-    call IdToHandle
-    or eax,eax
-    stc
-    jz suspend_thread_done
-;    
-    mov es,ax
-    or es:p_flags,THREAD_FLAG_SUSPEND
-    clc
-
-suspend_thread_done:
-    popad
-    pop es
-    pop ds
-    ret
-suspend_thread  ENDP
-
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           SuspendAndSignalThread
-;
-;           DESCRIPTION:    Suspend and signal thread (put it in debugger)
-;
-;           PARAMETER:          AX          Thread #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-suspend_and_signal_thread_name  DB 'Suspend and Signal Thread',0
-
-suspend_and_signal_thread       PROC far
-    push ds
-    push es
-    pushad
-;
-    movzx eax,ax
-    call IdToHandle
-    or eax,eax
-    stc
-    jz suspend_signal_done
-;
-    mov bx,ax
-    mov es,ax
-    or es:p_flags,THREAD_FLAG_SUSPEND
-    Signal
-    clc
-
-suspend_signal_done:
-    popad
-    pop es
-    pop ds
-    ret
-suspend_and_signal_thread       ENDP
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -730,18 +656,6 @@ InitScheduler_    Proc near
     mov edi,OFFSET get_thread_handle_name
     xor dx,dx
     mov ax,get_thread_handle_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET suspend_thread
-    mov edi,OFFSET suspend_thread_name
-    xor dx,dx
-    mov ax,suspend_thread_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET suspend_and_signal_thread
-    mov edi,OFFSET suspend_and_signal_thread_name
-    xor dx,dx
-    mov ax,suspend_and_signal_thread_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET move_to_core

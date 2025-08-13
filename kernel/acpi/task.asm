@@ -1123,6 +1123,72 @@ get_thread_action_state32      Proc far
     call get_thread_action_state
     ret
 get_thread_action_state32      Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SuspendThread
+;
+;           DESCRIPTION:    Suspend thread (put it in debugger)
+;
+;           PARAMETER:          AX          Thread ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+suspend_thread_name     DB 'Suspend Thread',0
+
+suspend_thread  PROC far
+    push ds
+    push es
+    pushad
+;
+    call IdToSel
+    jc suspend_thread_done
+;    
+    mov es,ax
+    or es:p_flags,THREAD_FLAG_SUSPEND
+    clc
+
+suspend_thread_done:
+    popad
+    pop es
+    pop ds
+    ret
+suspend_thread  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           SuspendAndSignalThread
+;
+;           DESCRIPTION:    Suspend and signal thread (put it in debugger)
+;
+;           PARAMETER:          AX          Thread #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+suspend_and_signal_thread_name  DB 'Suspend and Signal Thread',0
+
+suspend_and_signal_thread       PROC far
+    push ds
+    push es
+    pushad
+;
+    call IdToSel
+    jc suspend_signal_done
+;
+    mov bx,ax
+    mov es,ax
+    or es:p_flags,THREAD_FLAG_SUSPEND
+    Signal
+    clc
+
+suspend_signal_done:
+    popad
+    pop es
+    pop ds
+    ret
+suspend_and_signal_thread       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1208,6 +1274,18 @@ init_task    Proc near
     mov dx,virt_es_in
     mov ax,get_thread_action_state_nr
     RegisterUserGate
+;
+    mov esi,OFFSET suspend_thread
+    mov edi,OFFSET suspend_thread_name
+    xor dx,dx
+    mov ax,suspend_thread_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET suspend_and_signal_thread
+    mov edi,OFFSET suspend_and_signal_thread_name
+    xor dx,dx
+    mov ax,suspend_and_signal_thread_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es
