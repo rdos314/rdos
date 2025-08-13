@@ -154,6 +154,9 @@ pr_section           section_typ <>
 pr_bitness           DB ?
 pr_filler            DB ?
 
+pr_id                DW ?
+pr_index             DW ?
+
 pr_handle_mem_sel    DW ?
 pr_handle_sel        DW ?
 

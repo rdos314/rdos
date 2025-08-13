@@ -60,27 +60,6 @@ _TEXT    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreatePid
-;
-;           DESCRIPTION:    Create new PID for thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    extrn CreateTid:near
-
-create_pid_name DB 'Create PID',0
-
-create_pid    Proc far
-    call CreateTid
-    ret
-create_pid    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           CreateThread
 ;
 ;           DESCRIPTION:    Create thread callback
@@ -614,12 +593,6 @@ InitScheduler_    Proc near
 ;
     mov edi,OFFSET terminate_thread
     HookTerminateThread
-;
-    mov esi,OFFSET create_pid
-    mov edi,OFFSET create_pid_name
-    xor cl,cl
-    mov ax,create_pid_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET set_thread_irq
     mov edi,OFFSET set_thread_irq_name

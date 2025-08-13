@@ -31,6 +31,7 @@
 
 include ..\os\system.def
 INCLUDE ..\os\state.def
+INCLUDE ..\os\exec.def
 include ..\os.def
 include ..\os.inc
 include ..\serv.def
@@ -76,6 +77,11 @@ task_id            DW ?
 tarr_size          DD ?
 tarr_count         DD ?
 tarr_section       section_typ <>
+
+prog_id            DW ?
+parr_size          DD ?
+parr_count         DD ?
+parr_section       section_typ <>
 
 task_linear        DD ?
 task_phys          DD ?,?
@@ -459,6 +465,66 @@ serv_get_thread_name  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GrowProgArr
+;
+;           DESCRIPTION:    Grow program array
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowProgArr   Proc near
+    push es
+    pushad
+;
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov ecx,ds:parr_size
+    mov ebp,ecx
+    inc ecx
+    shl ecx,1
+    mov ds:parr_size,ecx
+;
+    mov eax,ecx
+    shl eax,1
+    AllocateSmallLinear
+    mov edi,edx
+;
+    or ebx,ebx
+    jz gpaCopied
+;
+    push ecx
+    push edx
+;
+    mov ebx,prog_arr_sel
+    GetSelectorBaseSize
+    mov esi,edx
+    mov ecx,ebp
+    rep movs word ptr es:[edi],es:[esi]
+;
+    FreeLinear
+;
+    pop edx
+    pop ecx
+
+gpaCopied:
+    push ecx
+    sub ecx,ebp
+    xor ax,ax
+    rep stosw
+    pop ecx
+;
+    mov bx,prog_arr_sel
+    shl ecx,1
+    CreateDataSelector32
+;
+    popad
+    pop es
+    ret
+GrowProgArr   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GetThreadCount
 ;
 ;           DESCRIPTION:    Get thread count
@@ -692,7 +758,7 @@ notify_terminate_thread    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           IndexToSel
+;           NAME:           ThreadIndexToSel
 ;
 ;           DESCRIPTION:    Convert thread number to thread selector
 ;
@@ -703,7 +769,7 @@ notify_terminate_thread    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IndexToSel    Proc near
+ThreadIndexToSel    Proc near
     push ds
     push es
     push ebx
@@ -718,30 +784,30 @@ IndexToSel    Proc near
 ;
     or ecx,ecx
     stc
-    jz itsDone
+    jz titsDone
 ;
     mov eax,thread_arr_sel
     mov es,eax
     xor ebx,ebx
 
-itsLoop:
+titsLoop:
     mov ax,es:[ebx]
     or ax,ax
-    jz itsNext
+    jz titsNext
 ;
     or edx,edx
     clc
-    jz itsDone
+    jz titsDone
 ;
     dec edx
 
-itsNext:
+titsNext:
     add ebx,2
-    loop itsLoop
+    loop titsLoop
 ;
     stc
 
-itsDone:
+titsDone:
     LeaveSection ds:tarr_section
 ;
     pop edx
@@ -750,12 +816,12 @@ itsDone:
     pop es
     pop ds
     ret
-IndexToSel    Endp
+ThreadIndexToSel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           IdToSel
+;           NAME:           ThreadIdToSel
 ;
 ;           DESCRIPTION:    Convert thread id to thread selector
 ;
@@ -766,7 +832,7 @@ IndexToSel    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IdToSel    Proc near
+ThreadIdToSel    Proc near
     push ds
     push es
     push fs
@@ -782,29 +848,29 @@ IdToSel    Proc near
 ;
     or ecx,ecx
     stc
-    jz idtsDone
+    jz tidtsDone
 ;
     mov eax,thread_arr_sel
     mov es,eax
     xor ebx,ebx
 
-idtsLoop:
+tidtsLoop:
     mov ax,es:[ebx]
     or ax,ax
-    jz idtsNext
+    jz tidtsNext
 ;
     mov fs,eax
     cmp dx,fs:p_id
     clc
-    je idtsDone
+    je tidtsDone
 
-idtsNext:
+tidtsNext:
     add ebx,2
-    loop idtsLoop
+    loop tidtsLoop
 ;
     stc
 
-idtsDone:
+tidtsDone:
     LeaveSection ds:tarr_section
 ;
     pop edx
@@ -814,7 +880,327 @@ idtsDone:
     pop es
     pop ds
     ret
-IdToSel    Endp
+ThreadIdToSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ProgramCreated
+;
+;           DESCRIPTION:    Notify create program
+;
+;           PARAMETERS:     BX         Program sel
+;
+;           RETURNS:        AX         PID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+program_created_name DB 'Notify Create Program', 0
+
+program_created    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edx
+;    
+    mov es,ebx
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:tarr_section
+;
+    mov ax,ds:prog_id
+;
+    mov ecx,ds:parr_size
+    or ecx,ecx
+    stc
+    jz cpidSave
+;
+    mov edx,prog_arr_sel
+    mov fs,edx
+
+cpidRetry:
+    xor ebx,ebx
+
+cpidLoop:
+    mov dx,fs:[ebx]
+    or dx,dx
+    jz cpidNext
+;
+    mov gs,edx
+    cmp ax,gs:pr_id
+    jne cpidNext
+;
+    inc ax
+    and ax,7FFFh
+    jnz cpidRetry
+;
+    inc ax
+    jmp cpidRetry
+
+cpidNext:
+    add ebx,2
+    loop cpidLoop
+
+cpidSave:
+    mov es:pr_id,ax
+    inc ax
+    and ax,7FFFh
+    jnz cpidNextOk
+;
+    inc ax
+
+cpidNextOk:
+    mov ds:prog_id,ax
+;
+    mov eax,ds:parr_size
+    mov ebx,ds:parr_count
+    cmp eax,ebx
+    jne cpScan
+;
+    call GrowProgArr
+
+cpScan:
+    mov eax,prog_arr_sel
+    mov fs,eax
+    mov ecx,ds:parr_size
+    sub ecx,ebx
+    
+cpLoop1:
+    mov ax,fs:[2*ebx]
+    or ax,ax
+    jz cpOk
+;
+    inc ebx
+    loop cpLoop1
+;
+    xor ebx,ebx
+    mov ecx,ds:parr_count
+
+cpLoop2:
+    mov ax,fs:[2*ebx]
+    or ax,ax
+    jz cpOk
+;
+    inc ebx
+    loop cpLoop2
+;
+    int 3
+
+cpOk:
+    mov fs:[2*ebx],es
+;
+    inc ds:parr_count
+    LeaveSection ds:parr_section
+;
+    mov es:pr_index,bx
+;    shl ebx,16
+;    mov bx,es:p_id
+;    mov dx,REQ_CREATE_THREAD
+;    call AddEntry
+;
+    mov ax,es:pr_id
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+program_created    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ProgramTerminated
+;
+;           DESCRIPTION:    Terminate program callback
+;
+;           PARAMETERS:     BX         Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+program_terminated_name DB 'Notify Terminate Program', 0
+
+program_terminated    Proc far
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+    push edx
+;
+    int 3
+    mov es,ebx
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,prog_arr_sel
+    mov fs,eax
+;
+    movzx ebx,es:pr_index
+    xor dx,dx
+    mov eax,es
+;    
+    EnterSection ds:parr_section
+    xchg dx,fs:[2*ebx]
+    dec ds:parr_count
+    LeaveSection ds:parr_section
+;
+    cmp ax,dx
+    je tpOk
+;
+    int 3
+
+tpOk:
+;    shl ebx,16
+;    mov bx,es:p_id
+;    mov dx,REQ_TERMINATE_THREAD
+;    call AddEntry
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+program_terminated    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetProgramId
+;
+;           DESCRIPTION:    Convert program # to program Id
+;
+;           PARAMETERS:     EAX              Program #
+;
+;           RETURNS:        NC              Program exists
+;                               AX          Id
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_id_name DB 'Get Program Id', 0
+
+get_program_id    Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+;
+    mov edx,eax
+    mov eax,SEG data
+    mov ds,eax
+    mov ecx,ds:parr_size
+    EnterSection ds:parr_section
+;
+    or ecx,ecx
+    stc
+    jz gpiDone
+;
+    mov eax,prog_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+gpiLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz gpiNext
+;
+    or edx,edx
+    clc
+    jz gpiDone
+;
+    dec edx
+
+gpiNext:
+    add ebx,2
+    loop gpiLoop
+;
+    stc
+
+gpiDone:
+    LeaveSection ds:parr_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+get_program_id    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetProgramSel
+;
+;           DESCRIPTION:    Convert program id to program selector
+;
+;           PARAMETERS:     EBX             Program ID
+;
+;           RETURNS:        NC              Program Id
+;                               AX          Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+get_program_sel_name DB 'Get Program Sel', 0
+
+get_program_sel    Proc far
+    push ds
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+;
+    mov dx,bx
+    mov eax,SEG data
+    mov ds,eax
+    mov ecx,ds:parr_size
+    EnterSection ds:parr_section
+;
+    or ecx,ecx
+    stc
+    jz gpsDone
+;
+    mov eax,prog_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+gpsLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz gpsNext
+;
+    mov fs,eax
+    cmp dx,fs:pr_id
+    clc
+    je gpsDone
+
+gpsNext:
+    add ebx,2
+    loop gpsLoop
+;
+    stc
+
+gpsDone:
+    LeaveSection ds:parr_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+get_program_sel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -835,7 +1221,7 @@ thread_to_sel   Proc far
     push eax
 ;
     mov ax,bx
-    call IdToSel
+    call ThreadIdToSel
     mov bx,ax
 ;
     pop eax
@@ -885,7 +1271,7 @@ get_thread_state    Proc near
     push ds
     pushad
 ;    
-    call IndexToSel
+    call ThreadIndexToSel
     jc get_state_done
 ;    
     mov ds,ax
@@ -1053,7 +1439,7 @@ get_thread_action_state    Proc near
     push fs
     pushad
 ;    
-    call IndexToSel
+    call ThreadIndexToSel
     jc get_action_state_done
 ;    
     mov ds,ax
@@ -1243,7 +1629,7 @@ suspend_thread  PROC far
     push es
     pushad
 ;
-    call IdToSel
+    call ThreadIdToSel
     jc suspend_thread_done
 ;    
     mov es,ax
@@ -1275,7 +1661,7 @@ suspend_and_signal_thread       PROC far
     push es
     pushad
 ;
-    call IdToSel
+    call ThreadIdToSel
     jc suspend_signal_done
 ;
     mov bx,ax
@@ -1310,6 +1696,7 @@ init_task    Proc near
     mov eax,SEG data
     mov ds,eax
     mov ds:task_id,1
+    mov ds:prog_id,1
 ;
     mov ds:task_wr_ptr,0
     mov ds:task_wait_thread,0
@@ -1318,6 +1705,10 @@ init_task    Proc near
     mov ds:tarr_size,0
     mov ds:tarr_count,0
     InitSection ds:tarr_section
+;
+    mov ds:parr_size,0
+    mov ds:parr_count,0
+    InitSection ds:parr_section
 ;
     mov eax,1000h
     AllocateBigLinear
@@ -1368,6 +1759,30 @@ init_task    Proc near
     xor cl,cl
     mov ax,thread_to_sel_nr
     RegisterOsGate
+;
+;    mov esi,OFFSET program_created
+;    mov edi,OFFSET program_created_name
+;    xor cl,cl
+;    mov ax,program_created_nr
+;    RegisterOsGate
+;
+;    mov esi,OFFSET program_terminated
+;    mov edi,OFFSET program_terminated_name
+;    xor cl,cl
+;    mov ax,program_terminated_nr
+;    RegisterOsGate
+;
+;    mov esi,OFFSET get_program_sel
+;    mov edi,OFFSET get_program_sel_name
+;    xor cl,cl
+;    mov ax,get_program_sel_nr
+;    RegisterOsGate
+;
+;    mov esi,OFFSET get_program_id
+;    mov edi,OFFSET get_program_id_name
+;    xor cl,cl
+;    mov ax,get_program_id_nr
+;    RegisterOsGate
 ;
     mov esi,OFFSET get_thread_count
     mov edi,OFFSET get_thread_count_name

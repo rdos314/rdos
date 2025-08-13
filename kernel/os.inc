@@ -1378,11 +1378,6 @@ SetThreadCore    MACRO
     OsGate set_thread_core_nr
                     ENDM
 
-;  OUT AX   TID
-CreatePid    MACRO
-    OsGate create_pid_nr
-                    ENDM
-
 ;  IN  EBX      Selector
 ;  OUT AX       PID
 ProgramCreated    MACRO
