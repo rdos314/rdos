@@ -495,20 +495,63 @@ create_thread_id_name DB 'Create Thread Id', 0
 
 create_thread_id    Proc far
     push ds
-    push eax
+    push fs
+    push gs
+    pushad
 ;    
     mov eax,SEG data
     mov ds,eax
     EnterSection ds:tarr_section
 ;
     mov ax,ds:task_id
+;
+    mov ecx,ds:tarr_size
+    or ecx,ecx
+    stc
+    jz ctidSave
+;
+    mov edx,thread_arr_sel
+    mov fs,edx
+
+ctidRetry:
+    xor ebx,ebx
+
+ctidLoop:
+    mov dx,fs:[ebx]
+    or dx,dx
+    jz ctidNext
+;
+    mov gs,edx
+    cmp ax,gs:p_id
+    jne ctidNext
+;
+    inc ax
+    and ax,7FFFh
+    jnz ctidRetry
+;
+    inc ax
+    jmp ctidRetry
+
+ctidNext:
+    add ebx,2
+    loop ctidLoop
+
+ctidSave:
     mov es:p_id,ax
     inc ax
+    and ax,7FFFh
+    jnz ctidNextOk
+;
+    inc ax
+
+ctidNextOk:
     mov ds:task_id,ax
 ;
     LeaveSection ds:tarr_section
 ;
-    pop eax
+    popad
+    pop gs
+    pop fs
     pop ds
     ret
 create_thread_id    Endp
