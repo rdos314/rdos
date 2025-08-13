@@ -908,5 +908,7 @@ get_pci_bar_io_nr           = 868
 setup_pci_msi_nr            = 869
 
 add_thread_state_nr         = 870
+notify_create_thread_nr     = 871
+notify_terminate_thread_nr  = 872
 
 osgate_entries              = 880

@@ -72,6 +72,7 @@ thread_state_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
+task_id            DW ?
 tarr_size          DD ?
 tarr_count         DD ?
 tarr_section       section_typ <>
@@ -291,139 +292,6 @@ gtaCopied:
 GrowThreadArr   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateThread
-;
-;           DESCRIPTION:    Create thread callback
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_thread    Proc far
-    push ds
-    push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-;    
-    mov eax,SEG data
-    mov ds,eax
-    EnterSection ds:tarr_section
-    mov eax,ds:tarr_size
-    mov ebx,ds:tarr_count
-    cmp eax,ebx
-    jne ctScan
-;
-    call GrowThreadArr
-
-ctScan:
-    mov eax,thread_arr_sel
-    mov es,eax
-    mov ecx,ds:tarr_size
-    sub ecx,ebx
-    
-ctLoop1:
-    mov ax,es:[2*ebx]
-    or ax,ax
-    jz ctOk
-;
-    inc ebx
-    loop ctLoop1
-;
-    xor ebx,ebx
-    mov ecx,ds:tarr_count
-
-ctLoop2:
-    mov ax,es:[2*ebx]
-    or ax,ax
-    jz ctOk
-;
-    inc ebx
-    loop ctLoop2
-;
-    int 3
-
-ctOk:
-    GetThread
-    mov es:[2*ebx],ax
-;
-    inc ds:tarr_count
-    LeaveSection ds:tarr_section
-;
-    mov es,eax
-    mov es:p_index,bx
-    shl ebx,16
-    mov bx,es:p_id
-    mov dx,REQ_CREATE_THREAD
-    call AddEntry
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop es    
-    pop ds
-    ret
-create_thread    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TerminateThread
-;
-;           DESCRIPTION:    Terminate thread callback
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-terminate_thread    Proc far
-    push ds
-    push es
-    push fs
-    push eax
-    push ebx
-    push edx
-;
-    mov eax,SEG data
-    mov ds,eax
-    mov eax,thread_arr_sel
-    mov fs,eax
-;
-    GetThread
-    mov es,eax
-    movzx ebx,es:p_index
-    xor dx,dx
-;    
-    EnterSection ds:tarr_section
-    xchg dx,fs:[2*ebx]
-    dec ds:tarr_count
-    LeaveSection ds:tarr_section
-;
-    cmp ax,dx
-    je ttOk
-;
-    int 3
-
-ttOk:
-    shl ebx,16
-    mov bx,es:p_id
-    mov dx,REQ_TERMINATE_THREAD
-    call AddEntry
-;
-    pop edx
-    pop ebx
-    pop eax
-    pop fs
-    pop es    
-    pop ds
-    ret
-terminate_thread    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           ServGetThreadState
@@ -611,6 +479,172 @@ get_thread_count    Proc far
     pop ds
     ret
 get_thread_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateThreadId
+;
+;           DESCRIPTION:    Create thread ID
+;
+;           PARAMETERS:     ES       Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_thread_id_name DB 'Create Thread Id', 0
+
+create_thread_id    Proc far
+    push ds
+    push eax
+;    
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:tarr_section
+;
+    mov ax,ds:task_id
+    mov es:p_id,ax
+    inc ax
+    mov ds:task_id,ax
+;
+    LeaveSection ds:tarr_section
+;
+    pop eax
+    pop ds
+    ret
+create_thread_id    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NotifyCreateThread
+;
+;           DESCRIPTION:    Notify create thread
+;
+;           PARAMETERS:     ES       Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_create_thread_name DB 'Notify Create Thread', 0
+
+notify_create_thread    Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push edx
+;    
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:tarr_section
+;
+    mov eax,ds:tarr_size
+    mov ebx,ds:tarr_count
+    cmp eax,ebx
+    jne ctScan
+;
+    call GrowThreadArr
+
+ctScan:
+    mov eax,thread_arr_sel
+    mov fs,eax
+    mov ecx,ds:tarr_size
+    sub ecx,ebx
+    
+ctLoop1:
+    mov ax,fs:[2*ebx]
+    or ax,ax
+    jz ctOk
+;
+    inc ebx
+    loop ctLoop1
+;
+    xor ebx,ebx
+    mov ecx,ds:tarr_count
+
+ctLoop2:
+    mov ax,fs:[2*ebx]
+    or ax,ax
+    jz ctOk
+;
+    inc ebx
+    loop ctLoop2
+;
+    int 3
+
+ctOk:
+    mov fs:[2*ebx],es
+;
+    inc ds:tarr_count
+    LeaveSection ds:tarr_section
+;
+    mov es:p_index,bx
+    shl ebx,16
+    mov bx,es:p_id
+    mov dx,REQ_CREATE_THREAD
+    call AddEntry
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+notify_create_thread    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NotifyTerminateThread
+;
+;           DESCRIPTION:    Terminate thread callback
+;
+;           PARAMETERS:     ES     Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_terminate_thread_name DB 'Notify Terminate Thread', 0
+
+notify_terminate_thread    Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push edx
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,thread_arr_sel
+    mov fs,eax
+;
+    movzx ebx,es:p_index
+    xor dx,dx
+    mov eax,es
+;    
+    EnterSection ds:tarr_section
+    xchg dx,fs:[2*ebx]
+    dec ds:tarr_count
+    LeaveSection ds:tarr_section
+;
+    cmp ax,dx
+    je ttOk
+;
+    int 3
+
+ttOk:
+    shl ebx,16
+    mov bx,es:p_id
+    mov dx,REQ_TERMINATE_THREAD
+    call AddEntry
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+notify_terminate_thread    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1232,6 +1266,7 @@ init_task    Proc near
 ;
     mov eax,SEG data
     mov ds,eax
+    mov ds:task_id,1
 ;
     mov ds:task_wr_ptr,0
     mov ds:task_wait_thread,0
@@ -1267,11 +1302,23 @@ init_task    Proc near
     mov ds,eax
     mov es,eax
 ;
-    mov edi,OFFSET create_thread
-    HookCreateThread
+    mov esi,OFFSET create_thread_id
+    mov edi,OFFSET create_thread_id_name
+    xor cl,cl
+    mov ax,create_thread_id_nr
+    RegisterOsGate
 ;
-    mov edi,OFFSET terminate_thread
-    HookTerminateThread
+    mov esi,OFFSET notify_create_thread
+    mov edi,OFFSET notify_create_thread_name
+    xor cl,cl
+    mov ax,notify_create_thread_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET notify_terminate_thread
+    mov edi,OFFSET notify_terminate_thread_name
+    xor cl,cl
+    mov ax,notify_terminate_thread_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET thread_to_sel
     mov edi,OFFSET thread_to_sel_name

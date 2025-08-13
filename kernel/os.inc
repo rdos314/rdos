@@ -1357,7 +1357,17 @@ UpdateFreq    MACRO
     OsGate update_freq_nr
                     ENDM
 
-;   OUT AX      Thread ID
+;  IN ES      Thread
+NotifyCreateThread    MACRO
+    OsGate notify_create_thread_nr
+                        ENDM
+
+;  IN ES      Thread
+NotifyTerminateThread    MACRO
+    OsGate notify_terminate_thread_nr
+                        ENDM
+
+;  IN ES      Thread
 CreateThreadId    MACRO
     OsGate create_thread_id_nr
                         ENDM

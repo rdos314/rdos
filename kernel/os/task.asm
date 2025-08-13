@@ -8420,9 +8420,12 @@ trap_create_thread_loop:
 
 trap_create_thread_done:
     pop cx
+;
+    GetThread
+    mov es,eax
+    NotifyCreateThread
     ret
 trap_create_thread      ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8436,6 +8439,10 @@ trap_create_thread      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 trap_terminate_thread   PROC near
+    GetThread
+    mov es,eax
+    NotifyTerminateThread
+;
     push cx
     mov ax,hook_sel
     mov ds,ax
@@ -8573,6 +8580,10 @@ trap_init_tasking       PROC near
 ;
     mov al,16
     SetBitness
+;
+    GetThread
+    mov es,ax
+    CreateThreadId
 ;
     call trap_create_process
     CreatePrivateLdt
@@ -9065,8 +9076,7 @@ init_thread_block       PROC near
 ;
     mov es:p_sleep_sel,0
     mov es:p_sleep_offset,0
-    CreatePid
-    mov es:p_id,ax
+    CreateThreadId
     ret
 init_thread_block       ENDP
 
