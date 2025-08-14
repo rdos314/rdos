@@ -33,7 +33,6 @@
 #include "rdosdev.h"
 #include "string.h"
 
-#define MAX_PROCESSES           64
 #define MAX_THREADS             512
 #define MAX_PROCESSOR_COUNT     32
 #define MAX_IRQ_SERVERS         4
@@ -116,9 +115,7 @@ int MaxLoad = 0;
 int NextTid = 1;
 int NextPid = 1;
 int ActiveThreads = 0;
-int ActiveProcesses = 0;
 
-struct TProcess ProcessArr[MAX_PROCESSES];
 struct TThread ThreadArr[MAX_THREADS];
 struct TCore CoreArr[MAX_PROCESSOR_COUNT];
 struct TIrq IrqArr[256];
@@ -497,187 +494,6 @@ void ImplMoveToNewCore()
 int __far ImplGetActiveCores()
 {
     return ActiveProcessors;
-}
-
-/*##########################################################################
-#
-#   Name       : GetProgramCount
-#
-##########################################################################*/
-#pragma aux ImplGetProgramCount "*" rdosdev parm routine
-int __far ImplGetProgramCount()
-{
-    RdosSetSuccess();
-    return ActiveProcesses;
-}
-
-/*##########################################################################
-#
-#   Name       : ProcessCreated
-#
-##########################################################################*/
-#pragma aux ImplProgramCreated "*" rdosdev parm routine [ebx] value [eax]
-int __far ImplProgramCreated(int sel)
-{
-    int i;
-    int ok = FALSE;
-    int Index;
-    int pid;
-
-    RdosEnterKernelSection(&ProcessSection);
-
-    ok = FALSE;
-
-    while (!ok)
-    {
-        pid = NextPid;
-
-        if (NextPid == 0x7FFF)
-            NextPid = 1;
-        else
-            NextPid++;
-
-        ok = TRUE;
-
-        for (i = 0; i < ActiveProcesses; i++)
-        {
-            if (ProcessArr[i].Valid && ProcessArr[i].ID == pid)
-            {
-                ok = FALSE;
-                break;
-            }
-        }
-    }
-
-    ok = FALSE;
-
-    for (i = 0; i < ActiveProcesses; i++)
-    {
-        if (!ProcessArr[i].Valid)
-        {
-            ok = TRUE;
-            Index = i;
-            break;
-        }
-    }
-
-    if (!ok)
-    {
-        if (ActiveProcesses < MAX_PROCESSES)
-        {
-            Index = ActiveProcesses;
-            ActiveProcesses++;
-            ok = TRUE;
-        }
-    }
-
-    if (ok)
-    {
-        ProcessArr[Index].Valid = TRUE;
-        ProcessArr[Index].Sel = sel;
-        ProcessArr[Index].ID = pid;
-    }
-
-    RdosLeaveKernelSection(&ProcessSection);
-
-    if (pid)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return pid;
-}
-
-/*##########################################################################
-#
-#   Name       : ProgramTerminated
-#
-##########################################################################*/
-#pragma aux ImplProgramTerminated "*" rdosdev parm routine [ebx]
-void __far ImplProgramTerminated(int sel)
-{
-    int i;
-
-    RdosEnterKernelSection(&ProcessSection);
-
-    for (i = 0; i < ActiveProcesses; i++)
-    {
-        if (ProcessArr[i].Valid && ProcessArr[i].Sel == sel)
-        {
-            ProcessArr[i].Valid = FALSE;
-
-            if (i == ActiveProcesses - 1)
-                ActiveProcesses--;
-
-            break;
-        }
-    }
-
-    RdosLeaveKernelSection(&ProcessSection);
-
-    RdosSetSuccess();
-}
-
-/*##########################################################################
-#
-#   Name       : GetProgramSel
-#
-#   Descr      : Convert from process ID to selector
-#
-##########################################################################*/
-#pragma aux ImplGetProgramSel "*" rdosdev parm routine [ebx] value [eax]
-int __far ImplGetProgramSel(int ID)
-{
-    int i;
-    int sel = 0;
-
-    RdosEnterKernelSection(&ProcessSection);
-
-    for (i = 0; i < ActiveProcesses; i++)
-    {
-        if (ProcessArr[i].Valid && ProcessArr[i].ID == ID)
-        {
-            sel = ProcessArr[i].Sel;
-            break;
-        }
-    }
-
-    RdosLeaveKernelSection(&ProcessSection);
-
-    if (sel)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return sel;
-}
-
-/*##########################################################################
-#
-#   Name       : GetProgramID
-#
-#   Descr      : Get program ID byte index
-#
-##########################################################################*/
-#pragma aux ImplGetProgramID "*" rdosdev parm routine [eax] value [eax]
-int __far ImplGetProgramID(int Index)
-{
-    int ID = 0;
-
-    RdosEnterKernelSection(&ProcessSection);
-
-    if (Index >= 0 && Index < ActiveProcesses)
-        if (ProcessArr[Index].Valid)
-            ID = ProcessArr[Index].ID;
-
-    RdosLeaveKernelSection(&ProcessSection);
-
-    if (ID)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return ID;
 }
 
 /*##########################################################################
@@ -1213,9 +1029,6 @@ void InitThreadList()
 
     for (i = 0; i < MAX_THREADS; i++)
         ThreadArr[i].Valid = FALSE;
-
-    for (i = 0; i < MAX_PROCESSES; i++)
-        ProcessArr[i].Valid = FALSE;
 
     for (i = 0; i < 256; i++)
     {
