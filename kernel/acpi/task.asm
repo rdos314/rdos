@@ -47,6 +47,8 @@ include acpi.def
 
 REQ_CREATE_THREAD     = 1
 REQ_TERMINATE_THREAD  = 2
+REQ_CREATE_PROGRAM    = 3
+REQ_TERMINATE_PROGRAM = 4
 
 task_queue_struc    STRUC
 
@@ -1020,10 +1022,10 @@ cpOk:
     LeaveSection ds:parr_section
 ;
     mov es:pr_index,bx
-;    shl ebx,16
-;    mov bx,es:p_id
-;    mov dx,REQ_CREATE_THREAD
-;    call AddEntry
+    shl ebx,16
+    mov bx,es:pr_id
+    mov dx,REQ_CREATE_PROGRAM
+    call AddEntry
 ;
     mov ax,es:pr_id
 ;
@@ -1058,7 +1060,6 @@ program_terminated    Proc far
     push ebx
     push edx
 ;
-    int 3
     mov es,ebx
     mov eax,SEG data
     mov ds,eax
@@ -1080,10 +1081,10 @@ program_terminated    Proc far
     int 3
 
 tpOk:
-;    shl ebx,16
-;    mov bx,es:p_id
-;    mov dx,REQ_TERMINATE_THREAD
-;    call AddEntry
+    shl ebx,16
+    mov bx,es:pr_id
+    mov dx,REQ_TERMINATE_PROGRAM
+    call AddEntry
 ;
     pop edx
     pop ebx
