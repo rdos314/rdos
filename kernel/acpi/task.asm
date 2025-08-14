@@ -779,9 +779,9 @@ ThreadIndexToSel    Proc near
     movzx edx,ax
     mov eax,SEG data
     mov ds,eax
-    mov ecx,ds:tarr_size
     EnterSection ds:tarr_section
 ;
+    mov ecx,ds:tarr_size
     or ecx,ecx
     stc
     jz titsDone
@@ -843,9 +843,9 @@ ThreadIdToSel    Proc near
     mov dx,ax
     mov eax,SEG data
     mov ds,eax
-    mov ecx,ds:tarr_size
     EnterSection ds:tarr_section
 ;
+    mov ecx,ds:tarr_size
     or ecx,ecx
     stc
     jz tidtsDone
@@ -885,6 +885,30 @@ ThreadIdToSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetProgramCount
+;
+;           DESCRIPTION:    Get program count
+;
+;           RETURNS:        EAX            Program count      
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_program_count_name DB 'Get Program Count',0
+
+get_program_count    Proc far
+    push ds
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,ds:parr_count
+;
+    pop ds
+    ret
+get_program_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ProgramCreated
 ;
 ;           DESCRIPTION:    Notify create program
@@ -909,7 +933,7 @@ program_created    Proc far
     mov es,ebx
     mov eax,SEG data
     mov ds,eax
-    EnterSection ds:tarr_section
+    EnterSection ds:parr_section
 ;
     mov ax,ds:prog_id
 ;
@@ -1096,9 +1120,9 @@ get_program_id    Proc far
     mov edx,eax
     mov eax,SEG data
     mov ds,eax
-    mov ecx,ds:parr_size
     EnterSection ds:parr_section
 ;
+    mov ecx,ds:parr_size
     or ecx,ecx
     stc
     jz gpiDone
@@ -1113,8 +1137,7 @@ gpiLoop:
     jz gpiNext
 ;
     or edx,edx
-    clc
-    jz gpiDone
+    jz gpiok
 ;
     dec edx
 
@@ -1123,6 +1146,12 @@ gpiNext:
     loop gpiLoop
 ;
     stc
+    jmp gpiDone
+
+gpiOk:
+    mov es,ax
+    mov ax,es:pr_id
+    clc
 
 gpiDone:
     LeaveSection ds:parr_section
@@ -1163,9 +1192,9 @@ get_program_sel    Proc far
     mov dx,bx
     mov eax,SEG data
     mov ds,eax
-    mov ecx,ds:parr_size
     EnterSection ds:parr_section
 ;
+    mov ecx,ds:parr_size
     or ecx,ecx
     stc
     jz gpsDone
@@ -1676,6 +1705,40 @@ suspend_signal_done:
     pop ds
     ret
 suspend_and_signal_thread       ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           Test gate
+;
+;           DESCRIPTION:    Test gate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_pr_name  DB 'Test Gate',0
+
+test_pr       PROC far
+    push ds
+    push es
+    push gs
+    pushad
+;
+    mov eax,SIZE program_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov gs,ax
+;
+    mov ebx,gs
+    call program_created
+    movzx ebx,ax
+    call get_program_sel
+;
+    popad
+    pop gs
+    pop es
+    pop ds
+    ret
+test_pr      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1760,29 +1823,35 @@ init_task    Proc near
     mov ax,thread_to_sel_nr
     RegisterOsGate
 ;
-;    mov esi,OFFSET program_created
-;    mov edi,OFFSET program_created_name
-;    xor cl,cl
-;    mov ax,program_created_nr
-;    RegisterOsGate
+    mov esi,OFFSET program_created
+    mov edi,OFFSET program_created_name
+    xor cl,cl
+    mov ax,program_created_nr
+    RegisterOsGate
 ;
-;    mov esi,OFFSET program_terminated
-;    mov edi,OFFSET program_terminated_name
-;    xor cl,cl
-;    mov ax,program_terminated_nr
-;    RegisterOsGate
+    mov esi,OFFSET program_terminated
+    mov edi,OFFSET program_terminated_name
+    xor cl,cl
+    mov ax,program_terminated_nr
+    RegisterOsGate
 ;
-;    mov esi,OFFSET get_program_sel
-;    mov edi,OFFSET get_program_sel_name
-;    xor cl,cl
-;    mov ax,get_program_sel_nr
-;    RegisterOsGate
+    mov esi,OFFSET get_program_sel
+    mov edi,OFFSET get_program_sel_name
+    xor cl,cl
+    mov ax,get_program_sel_nr
+    RegisterOsGate
 ;
-;    mov esi,OFFSET get_program_id
-;    mov edi,OFFSET get_program_id_name
-;    xor cl,cl
-;    mov ax,get_program_id_nr
-;    RegisterOsGate
+    mov esi,OFFSET get_program_id
+    mov edi,OFFSET get_program_id_name
+    xor cl,cl
+    mov ax,get_program_id_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_pr_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_thread_count
     mov edi,OFFSET get_thread_count_name
@@ -1820,6 +1889,12 @@ init_task    Proc near
     mov edi,OFFSET suspend_and_signal_thread_name
     xor dx,dx
     mov ax,suspend_and_signal_thread_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_program_count
+    mov edi,OFFSET get_program_count_name
+    xor dx,dx
+    mov ax,get_program_count_nr
     RegisterBimodalUserGate
 ;
     popad
