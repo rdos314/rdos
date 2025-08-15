@@ -1002,8 +1002,14 @@ process_created    Proc far
     push ebx
     push ecx
     push edx
+    push edi
 ;    
     mov es,ebx
+    mov edi,OFFSET pf_wait_arr
+    mov ecx,MAX_PROCESS_WAITS
+    xor ax,ax
+    rep stosw
+;
     mov eax,SEG data
     mov ds,eax
     EnterSection ds:parr_section
@@ -1100,6 +1106,7 @@ cprOk:
 ;
     mov ax,es:pf_id
 ;
+    pop edi
     pop edx
     pop ecx
     pop ebx
@@ -1130,7 +1137,9 @@ process_terminated    Proc far
     push fs
     push eax
     push ebx
+    push ecx
     push edx
+    push edi
 ;
     mov es,ebx
     mov eax,SEG data
@@ -1145,6 +1154,21 @@ process_terminated    Proc far
     EnterSection ds:parr_section
     xchg dx,fs:[2*ebx]
     dec ds:parr_count
+;
+    mov ecx,MAX_PROCESS_WAITS
+    mov edi,OFFSET pf_wait_arr
+
+ptWaitLoop:
+    mov bx,es:[edi]
+    or bx,bx
+    jz ptWaitNext
+;
+    SignalWait
+
+ptWaitNext:
+    add edi,2
+    loop ptWaitLoop
+;
     LeaveSection ds:parr_section
 ;
     cmp ax,dx
@@ -1158,7 +1182,9 @@ tprOk:
 ;    mov dx,REQ_TERMINATE_PROGRAM
 ;    call AddEntry
 ;
+    pop edi
     pop edx
+    pop ecx
     pop ebx
     pop eax
     pop fs
