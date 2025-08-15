@@ -68,6 +68,12 @@ ths_tics      DD ?,?
 
 thread_state_struc  ENDS
 
+proc_end_wait_header    STRUC
+
+pew_obj             wait_obj_header <>
+pew_proc_id         DW ?
+
+proc_end_wait_header    ENDS
 
     .386p
 
@@ -1234,6 +1240,66 @@ get_process_id    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           LockedGetProcSel
+;
+;           DESCRIPTION:    Get process sel from ID
+;
+;           PARAMETERS:     EBX             Process ID
+;                           DS              Data sel
+;
+;           RETURNS:        NC              Process Id found
+;                               EBX         Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockedGetProcSel    Proc near
+    push es
+    push fs
+    push eax
+    push ecx
+    push edx
+;
+    mov dx,bx
+    mov ecx,ds:parr_size
+    or ecx,ecx
+    stc
+    jz lgprsDone
+;
+    mov eax,proc_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+lgprsLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz lgprsNext
+;
+    mov fs,eax
+    cmp dx,fs:pf_id
+    jne lgprsNext
+;
+    mov ebx,fs
+    clc
+    jmp lgprsDone
+
+lgprsNext:
+    add ebx,2
+    loop lgprsLoop
+;
+    stc
+
+lgprsDone:
+    pop edx
+    pop ecx
+    pop eax
+    pop fs
+    pop es
+    ret
+LockedGetProcSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           ProcessIdToSel
 ;
 ;           DESCRIPTION:    Convert process id to process selector
@@ -1249,56 +1315,219 @@ process_id_to_sel_name DB 'Process Id To Sel', 0
 
 process_id_to_sel    Proc far
     push ds
-    push es
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:parr_section
+    call LockedGetProcSel
+    LeaveSection ds:parr_section
+;
+    pop eax
+    pop ds
+    ret
+process_id_to_sel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForProcEnd
+;
+;           DESCRIPTION:    Start a wait for process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_proc_end PROC far
+    push ds
     push fs
     push eax
+    push ebx
     push ecx
-    push edx
 ;
-    mov dx,bx
     mov eax,SEG data
     mov ds,eax
     EnterSection ds:parr_section
 ;
-    mov ecx,ds:parr_size
-    or ecx,ecx
-    stc
-    jz gprsDone
+    movzx ebx,es:pew_proc_id
+    call LockedGetProcSel
+    jnc bwpeWait
 ;
-    mov eax,proc_arr_sel
-    mov es,eax
-    xor ebx,ebx
+    mov ebx,es
+    SignalWait
+    jmp bwpeDone
 
-gprsLoop:
-    mov ax,es:[ebx]
+bwpeWait:
+    mov fs,ebx
+    mov ecx,MAX_PROCESS_WAITS
+    mov ebx,OFFSET pf_wait_arr
+
+bwpeLoop:
+    mov ax,fs:[ebx]
     or ax,ax
-    jz gprsNext
+    jnz bwpeNext
 ;
-    mov fs,eax
-    cmp dx,fs:pf_id
-    jne gprsNext
-;
-    mov ebx,fs
-    clc
-    jmp gprsDone
+    mov fs:[ebx],es
+    jmp bwpeDone
 
-gprsNext:
+bwpeNext:
     add ebx,2
-    loop gprsLoop
+    loop bwpeLoop
 ;
-    stc
+    mov ebx,es
+    SignalWait
 
-gprsDone:
+bwpeDone:
     LeaveSection ds:parr_section
 ;
-    pop edx
     pop ecx
+    pop ebx
     pop eax
     pop fs
+    pop ds
+    ret
+start_wait_for_proc_end Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForProcEnd
+;
+;           DESCRIPTION:    Stop a wait for process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_proc_end  PROC far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push ecx
+;
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:parr_section
+;
+    movzx ebx,es:pew_proc_id
+    call LockedGetProcSel
+    jc ewpeDone
+;
+    mov fs,ebx
+    mov ecx,MAX_PROCESS_WAITS
+    mov ebx,OFFSET pf_wait_arr
+
+ewpeLoop:
+    cmp ax,fs:[ebx]
+    jne ewpeNext
+;
+    xor ax,ax
+    mov fs:[ebx],ax
+    jmp ewpeDone
+
+ewpeNext:
+    add ebx,2
+    loop ewpeLoop
+
+ewpeDone:
+    LeaveSection ds:parr_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+stop_wait_for_proc_end Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           DummyClearProcEnd
+;
+;           DESCRIPTION:    Clear process end event
+;
+;           PARAMETERS:         ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dummy_clear_proc_end    PROC far
+    ret
+dummy_clear_proc_end Endp
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsProcEndIdle
+;
+;           DESCRIPTION:    Check if proc end is idle
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_proc_end_idle    PROC far
+    push eax
+    push ebx
+;
+    movzx ebx,es:pew_proc_id
+    IsProcessRunning
+;
+    pop ebx
+    pop eax
+    ret
+is_proc_end_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           AddWaitForProcEnd
+;
+;   DESCRIPTION:    Add a wait for process end
+;
+;   PARAMETERS:     AX      Process handle
+;                   BX      Wait handle
+;                   ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_proc_end_name      DB 'Add Wait For Process End',0
+
+add_wait_proc_tab:
+awp0 DD OFFSET start_wait_for_proc_end,      SEG code
+awp1 DD OFFSET stop_wait_for_proc_end,       SEG code
+awp2 DD OFFSET dummy_clear_proc_end,         SEG code
+awp3 DD OFFSET is_proc_end_idle,             SEG code
+
+add_wait_for_proc_end   PROC far
+    push ds
+    push es
+    push eax
+    push dx
+    push edi
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+    mov ax,SIZE proc_end_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_proc_tab
+    AddWait
+    pop ax
+    jc awpeDone
+;    
+    mov es:pew_proc_id,ax
+
+awpeDone:
+    pop edi
+    pop dx
+    pop eax
     pop es
     pop ds
     ret
-process_id_to_sel    Endp
+add_wait_for_proc_end   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2329,6 +2558,12 @@ init_task    Proc near
     mov edi,OFFSET get_process_count_name
     xor dx,dx
     mov ax,get_process_count_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_proc_end
+    mov edi,OFFSET add_wait_for_proc_end_name
+    xor dx,dx
+    mov ax,add_wait_for_proc_end_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_program_count

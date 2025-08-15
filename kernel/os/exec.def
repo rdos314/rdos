@@ -134,6 +134,7 @@ load_param_struc   ENDS
 
 MAX_PROGRAM_MODULES   = 256
 MAX_PROGRAM_PROCESSES = 256
+MAX_PROCESS_WAITS     = 16
 MAX_PROCESS_THREADS   = 256
 MAX_PROCESS_MODULES   = 256
 
@@ -228,6 +229,8 @@ pf_mem_blocks        DD ?
 pf_mem_section       section_typ <>
 
 pf_section           section_typ <>
+
+pf_wait_arr          DW MAX_PROCESS_WAITS  DUP(?)
 
 pf_thread_count      DW ?
 pf_thread_arr        DW MAX_PROCESS_THREADS DUP(?)
