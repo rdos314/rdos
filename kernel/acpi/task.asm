@@ -51,6 +51,8 @@ REQ_CREATE_PROCESS    = 3
 REQ_TERMINATE_PROCESS = 4
 REQ_CREATE_PROGRAM    = 5
 REQ_TERMINATE_PROGRAM = 6
+REQ_LOAD_MODULE       = 7
+REQ_UNLOAD_MODULE     = 8
 
 task_queue_struc    STRUC
 
@@ -2112,8 +2114,8 @@ mlOk:
     mov es:mod_index,bx
     shl ebx,16
     mov bx,es:mod_id
-;    mov dx,REQ_CREATE_PROCESS
-;    call AddEntry
+    mov dx,REQ_LOAD_MODULE
+    call AddEntry
 ;
     mov ax,es:mod_id
 ;
@@ -2172,8 +2174,8 @@ muOk:
     movzx ebx,es:mod_index
     shl ebx,16
     mov bx,es:mod_id
-;    mov dx,REQ_TERMINATE_PROCESS
-;    call AddEntry
+    mov dx,REQ_UNLOAD_MODULE
+    call AddEntry
 ;
     pop edx
     pop ebx
