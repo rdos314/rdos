@@ -930,13 +930,18 @@ signal_wait_name    DB 'Signal Wait',0
 
 signal_wait Proc far
     push bx
+    mov bx,es
+    or bx,bx
+    jz swDone
+;
     inc es:wo_signalled
     mov bx,es:wo_thread
     Signal
+
+swDone:
     pop bx
     retf32
 signal_wait Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

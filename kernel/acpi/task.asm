@@ -1163,7 +1163,10 @@ ptWaitLoop:
     or bx,bx
     jz ptWaitNext
 ;
+    push es
+    mov es,ebx
     SignalWait
+    pop es
 
 ptWaitNext:
     add edi,2
@@ -1380,7 +1383,6 @@ start_wait_for_proc_end PROC far
     call LockedGetProcSel
     jnc bwpeWait
 ;
-    mov ebx,es
     SignalWait
     jmp bwpeDone
 
@@ -1401,7 +1403,6 @@ bwpeNext:
     add ebx,2
     loop bwpeLoop
 ;
-    mov ebx,es
     SignalWait
 
 bwpeDone:

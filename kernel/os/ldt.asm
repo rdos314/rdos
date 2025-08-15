@@ -414,6 +414,7 @@ destroy_ldt     PROC far
 ;
     GetThread
     mov ds,ax
+    mov ds:p_ldt,0
     mov ds,ds:p_proc_sel
 ;
     xor bx,bx
@@ -447,7 +448,6 @@ dlDone:
     pop ds
     retf32
 destroy_ldt     ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
