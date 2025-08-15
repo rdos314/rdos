@@ -80,6 +80,11 @@ tarr_size          DD ?
 tarr_count         DD ?
 tarr_section       section_typ <>
 
+proc_id            DW ?
+parr_size          DD ?
+parr_count         DD ?
+parr_section       section_typ <>
+
 prog_id            DW ?
 aarr_size          DD ?
 aarr_count         DD ?
@@ -463,6 +468,66 @@ gtnDone:
     pop ds
     ret
 serv_get_thread_name  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GrowProcArr
+;
+;           DESCRIPTION:    Grow process array
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowProcArr   Proc near
+    push es
+    pushad
+;
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov ecx,ds:parr_size
+    mov ebp,ecx
+    inc ecx
+    shl ecx,1
+    mov ds:parr_size,ecx
+;
+    mov eax,ecx
+    shl eax,1
+    AllocateSmallLinear
+    mov edi,edx
+;
+    or ebx,ebx
+    jz gpraCopied
+;
+    push ecx
+    push edx
+;
+    mov ebx,proc_arr_sel
+    GetSelectorBaseSize
+    mov esi,edx
+    mov ecx,ebp
+    rep movs word ptr es:[edi],es:[esi]
+;
+    FreeLinear
+;
+    pop edx
+    pop ecx
+
+gpraCopied:
+    push ecx
+    sub ecx,ebp
+    xor ax,ax
+    rep stosw
+    pop ecx
+;
+    mov bx,proc_arr_sel
+    shl ecx,1
+    CreateDataSelector32
+;
+    popad
+    pop es
+    ret
+GrowProcArr   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -883,6 +948,354 @@ tidtsDone:
     pop ds
     ret
 ThreadIdToSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetProcessCount
+;
+;           DESCRIPTION:    Get process count
+;
+;           RETURNS:        EAX            Process count      
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_process_count_name DB 'Get Process Count',0
+
+get_process_count    Proc far
+    push ds
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,ds:parr_count
+;
+    pop ds
+    ret
+get_process_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ProcessCreated
+;
+;           DESCRIPTION:    Notify create process
+;
+;           PARAMETERS:     BX         Process sel
+;
+;           RETURNS:        AX         PID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+process_created_name DB 'Notify Create Process', 0
+
+process_created    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edx
+;    
+    mov es,ebx
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:parr_section
+;
+    mov ax,ds:proc_id
+;
+    mov ecx,ds:parr_size
+    or ecx,ecx
+    stc
+    jz cpridSave
+;
+    mov edx,proc_arr_sel
+    mov fs,edx
+
+cpridRetry:
+    xor ebx,ebx
+
+cpridLoop:
+    mov dx,fs:[ebx]
+    or dx,dx
+    jz cpridNext
+;
+    mov gs,edx
+    cmp ax,gs:pf_id
+    jne cpridNext
+;
+    inc ax
+    and ax,7FFFh
+    jnz cpridRetry
+;
+    inc ax
+    jmp cpridRetry
+
+cpridNext:
+    add ebx,2
+    loop cpridLoop
+
+cpridSave:
+    mov es:pf_id,ax
+    inc ax
+    and ax,7FFFh
+    jnz cpridNextOk
+;
+    inc ax
+
+cpridNextOk:
+    mov ds:proc_id,ax
+;
+    mov eax,ds:parr_size
+    mov ebx,ds:parr_count
+    cmp eax,ebx
+    jne cprScan
+;
+    call GrowProcArr
+
+cprScan:
+    mov eax,proc_arr_sel
+    mov fs,eax
+    mov ecx,ds:parr_size
+    sub ecx,ebx
+    
+cprLoop1:
+    mov ax,fs:[2*ebx]
+    or ax,ax
+    jz cprOk
+;
+    inc ebx
+    loop cprLoop1
+;
+    xor ebx,ebx
+    mov ecx,ds:parr_count
+
+cprLoop2:
+    mov ax,fs:[2*ebx]
+    or ax,ax
+    jz cprOk
+;
+    inc ebx
+    loop cprLoop2
+;
+    int 3
+
+cprOk:
+    mov fs:[2*ebx],es
+;
+    inc ds:parr_count
+    LeaveSection ds:parr_section
+;
+    mov es:pf_index,bx
+    shl ebx,16
+    mov bx,es:pf_id
+;    mov dx,REQ_CREATE_PROGRAM
+;    call AddEntry
+;
+    mov ax,es:pf_id
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+process_created    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ProcessTerminated
+;
+;           DESCRIPTION:    Terminate process callback
+;
+;           PARAMETERS:     BX         Process sel
+;                           AX         Exit code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+process_terminated_name DB 'Notify Terminate Process', 0
+
+process_terminated    Proc far
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+    push edx
+;
+    mov es,ebx
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,proc_arr_sel
+    mov fs,eax
+;
+    movzx ebx,es:pf_index
+    xor dx,dx
+    mov eax,es
+;    
+    EnterSection ds:parr_section
+    xchg dx,fs:[2*ebx]
+    dec ds:parr_count
+    LeaveSection ds:parr_section
+;
+    cmp ax,dx
+    je tprOk
+;
+    int 3
+
+tprOk:
+    shl ebx,16
+    mov bx,es:pf_id
+;    mov dx,REQ_TERMINATE_PROGRAM
+;    call AddEntry
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+process_terminated    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetProcessId
+;
+;           DESCRIPTION:    Convert process # to process Id
+;
+;           PARAMETERS:     EAX              Process #
+;
+;           RETURNS:        NC              Process exists
+;                               EAX          Id
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_process_id_name DB 'Get Process Id', 0
+
+get_process_id    Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+;
+    mov edx,eax
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:parr_section
+;
+    mov ecx,ds:parr_size
+    or ecx,ecx
+    stc
+    jz gpriDone
+;
+    mov eax,proc_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+gpriLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz gpriNext
+;
+    or edx,edx
+    jz gpriok
+;
+    dec edx
+
+gpriNext:
+    add ebx,2
+    loop gpriLoop
+;
+    stc
+    jmp gpriDone
+
+gpriOk:
+    mov es,ax
+    movzx eax,es:pf_id
+    clc
+
+gpriDone:
+    LeaveSection ds:parr_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+get_process_id    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ProcessIdToSel
+;
+;           DESCRIPTION:    Convert process id to process selector
+;
+;           PARAMETERS:     EBX             Process ID
+;
+;           RETURNS:        NC              Process Id found
+;                               EBX         Process sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+process_id_to_sel_name DB 'Process Id To Sel', 0
+
+process_id_to_sel    Proc far
+    push ds
+    push es
+    push fs
+    push ebx
+    push ecx
+    push edx
+;
+    mov dx,bx
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:parr_section
+;
+    mov ecx,ds:parr_size
+    or ecx,ecx
+    stc
+    jz gprsDone
+;
+    mov eax,proc_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+gprsLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz gprsNext
+;
+    mov fs,eax
+    cmp dx,fs:pf_id
+    clc
+    je gprsDone
+
+gprsNext:
+    add ebx,2
+    loop gprsLoop
+;
+    stc
+
+gprsDone:
+    LeaveSection ds:parr_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+process_id_to_sel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1719,25 +2132,6 @@ suspend_and_signal_thread       ENDP
 test_pr_name  DB 'Test Gate',0
 
 test_pr       PROC far
-    push ds
-    push es
-    push gs
-    pushad
-;
-    mov eax,SIZE program_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov gs,ax
-;
-    mov ebx,gs
-    call program_created
-    movzx ebx,ax
-    call get_program_sel
-;
-    popad
-    pop gs
-    pop es
-    pop ds
     ret
 test_pr      Endp
 
@@ -1769,6 +2163,10 @@ init_task    Proc near
     mov ds:tarr_size,0
     mov ds:tarr_count,0
     InitSection ds:tarr_section
+;
+    mov ds:parr_size,0
+    mov ds:parr_count,0
+    InitSection ds:parr_section
 ;
     mov ds:aarr_size,0
     mov ds:aarr_count,0
@@ -1823,6 +2221,30 @@ init_task    Proc near
     xor cl,cl
     mov ax,thread_to_sel_nr
     RegisterOsGate
+;
+;    mov esi,OFFSET process_created
+;    mov edi,OFFSET process_created_name
+;    xor cl,cl
+;    mov ax,process_created_nr
+;    RegisterOsGate
+;
+;    mov esi,OFFSET process_terminated
+;    mov edi,OFFSET process_terminated_name
+;    xor cl,cl
+;    mov ax,process_terminated_nr
+;    RegisterOsGate
+;
+;    mov esi,OFFSET process_id_to_sel
+;    mov edi,OFFSET process_id_to_sel_name
+;    xor cl,cl
+;    mov ax,process_id_to_sel_nr
+;    RegisterOsGate
+;
+;    mov esi,OFFSET get_process_id
+;    mov edi,OFFSET get_process_id_name
+;    xor cl,cl
+;    mov ax,get_process_id_nr
+;    RegisterOsGate
 ;
     mov esi,OFFSET program_created
     mov edi,OFFSET program_created_name
@@ -1891,6 +2313,12 @@ init_task    Proc near
     xor dx,dx
     mov ax,suspend_and_signal_thread_nr
     RegisterBimodalUserGate
+;
+;    mov esi,OFFSET get_process_count
+;    mov edi,OFFSET get_process_count_name
+;    xor dx,dx
+;    mov ax,get_process_count_nr
+;    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_program_count
     mov edi,OFFSET get_program_count_name

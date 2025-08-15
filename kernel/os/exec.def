@@ -201,6 +201,9 @@ process_struc    STRUC
 pf_program_id        DW ?
 pf_program_sel       DW ?
 
+pf_id                DW ?
+pf_index             DW ?
+
 pf_cr3               DD ?
 pf_page_dir          DD ?
 pf_page_table        DD ?
