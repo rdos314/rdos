@@ -201,6 +201,7 @@ serv_mem_sel        EQU 2F0h
 thread_arr_sel      EQU 300h
 proc_arr_sel        EQU 308h
 prog_arr_sel        EQU 310h
+mod_arr_sel         EQU 318h
 
 exec_code_sel       EQU 3F0h
 exec_data_sel           EQU 3F8h

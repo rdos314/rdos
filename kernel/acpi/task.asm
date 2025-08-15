@@ -98,6 +98,11 @@ aarr_size          DD ?
 aarr_count         DD ?
 aarr_section       section_typ <>
 
+module_id          DW ?
+marr_size          DD ?
+marr_count         DD ?
+marr_section       section_typ <>
+
 task_linear        DD ?
 task_phys          DD ?,?
 task_sel           DW ?
@@ -596,6 +601,66 @@ gpaCopied:
     pop es
     ret
 GrowProgArr   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GrowModArr
+;
+;           DESCRIPTION:    Grow module array
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowModArr   Proc near
+    push es
+    pushad
+;
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov ecx,ds:marr_size
+    mov ebp,ecx
+    inc ecx
+    shl ecx,1
+    mov ds:marr_size,ecx
+;
+    mov eax,ecx
+    shl eax,1
+    AllocateSmallLinear
+    mov edi,edx
+;
+    or ebx,ebx
+    jz gmaCopied
+;
+    push ecx
+    push edx
+;
+    mov ebx,mod_arr_sel
+    GetSelectorBaseSize
+    mov esi,edx
+    mov ecx,ebp
+    rep movs word ptr es:[edi],es:[esi]
+;
+    FreeLinear
+;
+    pop edx
+    pop ecx
+
+gmaCopied:
+    push ecx
+    sub ecx,ebp
+    xor ax,ax
+    rep stosw
+    pop ecx
+;
+    mov bx,mod_arr_sel
+    shl ecx,1
+    CreateDataSelector32
+;
+    popad
+    pop es
+    ret
+GrowModArr   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1908,6 +1973,379 @@ gpsDone:
 get_program_sel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetModuleCount
+;
+;           DESCRIPTION:    Get module count
+;
+;           RETURNS:        EAX            Module count      
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_count_name DB 'Get Module Count',0
+
+get_module_count    Proc far
+    push ds
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,ds:marr_count
+;
+    pop ds
+    ret
+get_module_count    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ModuleLoaded
+;
+;           DESCRIPTION:    Notify module loaded
+;
+;           PARAMETERS:     BX         Module sel
+;
+;           RETURNS:        AX         ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+module_loaded_name DB 'Notify Module Loaded', 0
+
+module_loaded    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edx
+;    
+    mov es,ebx
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:marr_section
+;
+    mov ax,ds:module_id
+;
+    mov ecx,ds:marr_size
+    or ecx,ecx
+    stc
+    jz mlSave
+;
+    mov edx,mod_arr_sel
+    mov fs,edx
+
+mlRetry:
+    xor ebx,ebx
+
+mlLoop:
+    mov dx,fs:[ebx]
+    or dx,dx
+    jz mlNext
+;
+    mov gs,edx
+    cmp ax,gs:mod_id
+    jne mlNext
+;
+    inc ax
+    and ax,7FFFh
+    jnz mlRetry
+;
+    inc ax
+    jmp mlRetry
+
+mlNext:
+    add ebx,2
+    loop mlLoop
+
+mlSave:
+    mov es:mod_id,ax
+    inc ax
+    and ax,7FFFh
+    jnz mlNextOk
+;
+    inc ax
+
+mlNextOk:
+    mov ds:module_id,ax
+;
+    mov eax,ds:marr_size
+    mov ebx,ds:marr_count
+    cmp eax,ebx
+    jne mlScan
+;
+    call GrowModArr
+
+mlScan:
+    mov eax,mod_arr_sel
+    mov fs,eax
+    mov ecx,ds:marr_size
+    sub ecx,ebx
+    
+mlLoop1:
+    mov ax,fs:[2*ebx]
+    or ax,ax
+    jz mlOk
+;
+    inc ebx
+    loop mlLoop1
+;
+    xor ebx,ebx
+    mov ecx,ds:marr_count
+
+mlLoop2:
+    mov ax,fs:[2*ebx]
+    or ax,ax
+    jz mlOk
+;
+    inc ebx
+    loop mlLoop2
+;
+    int 3
+
+mlOk:
+    mov fs:[2*ebx],es
+;
+    inc ds:marr_count
+    LeaveSection ds:marr_section
+;
+    mov es:mod_index,bx
+    shl ebx,16
+    mov bx,es:mod_id
+;    mov dx,REQ_CREATE_PROCESS
+;    call AddEntry
+;
+    mov ax,es:mod_id
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+module_loaded    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ModuleUnloaded
+;
+;           DESCRIPTION:    Module unloaded callback
+;
+;           PARAMETERS:     BX         Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+module_unloaded_name DB 'Notify Module Unloaded', 0
+
+module_unloaded    Proc far
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+    push edx
+;
+    mov es,ebx
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,mod_arr_sel
+    mov fs,eax
+;
+    movzx ebx,es:mod_index
+    xor dx,dx
+    mov eax,es
+;    
+    EnterSection ds:marr_section
+    xchg dx,fs:[2*ebx]
+    dec ds:marr_count
+    LeaveSection ds:marr_section
+;
+    cmp ax,dx
+    je muOk
+;
+    int 3
+
+muOk:
+    movzx ebx,es:mod_index
+    shl ebx,16
+    mov bx,es:mod_id
+;    mov dx,REQ_TERMINATE_PROCESS
+;    call AddEntry
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+module_unloaded    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GetModuleId
+;
+;           DESCRIPTION:    Convert module # to module Id
+;
+;           PARAMETERS:     EAX             Module #
+;
+;           RETURNS:        NC              Module exists
+;                               EAX          Id
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_module_id_name DB 'Get Module Id', 0
+
+get_module_id    Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+;
+    mov edx,eax
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:marr_section
+;
+    mov ecx,ds:marr_size
+    or ecx,ecx
+    stc
+    jz gmiDone
+;
+    mov eax,mod_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+gmiLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz gmiNext
+;
+    or edx,edx
+    jz gmiok
+;
+    dec edx
+
+gmiNext:
+    add ebx,2
+    loop gmiLoop
+;
+    stc
+    jmp gmiDone
+
+gmiOk:
+    mov es,ax
+    movzx eax,es:mod_id
+    clc
+
+gmiDone:
+    LeaveSection ds:marr_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+get_module_id    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           LockedGetModSel
+;
+;           DESCRIPTION:    Get module sel from ID
+;
+;           PARAMETERS:     EBX             Module ID
+;                           DS              Data sel
+;
+;           RETURNS:        NC              Module Id found
+;                               EBX         Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockedGetModSel    Proc near
+    push es
+    push fs
+    push eax
+    push ecx
+    push edx
+;
+    mov dx,bx
+    mov ecx,ds:marr_size
+    or ecx,ecx
+    stc
+    jz lgprsDone
+;
+    mov eax,mod_arr_sel
+    mov es,eax
+    xor ebx,ebx
+
+lgmsLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz lgmsNext
+;
+    mov fs,eax
+    cmp dx,fs:mod_id
+    jne lgmsNext
+;
+    mov ebx,fs
+    clc
+    jmp lgmsDone
+
+lgmsNext:
+    add ebx,2
+    loop lgmsLoop
+;
+    stc
+
+lgmsDone:
+    pop edx
+    pop ecx
+    pop eax
+    pop fs
+    pop es
+    ret
+LockedGetModSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ProcessIdToSel
+;
+;           DESCRIPTION:    Convert process id to process selector
+;
+;           PARAMETERS:     EBX             Module ID
+;
+;           RETURNS:        NC              Module Id found
+;                               EBX         Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+module_id_to_sel_name DB 'Module Id To Sel', 0
+
+module_id_to_sel    Proc far
+    push ds
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:marr_section
+    call LockedGetModSel
+    LeaveSection ds:marr_section
+;
+    pop eax
+    pop ds
+    ret
+module_id_to_sel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           ThreadToSel
@@ -2425,6 +2863,7 @@ init_task    Proc near
     mov ds:task_id,1
     mov ds:proc_id,1
     mov ds:prog_id,1
+    mov ds:module_id,1
 ;
     mov ds:task_wr_ptr,0
     mov ds:task_wait_thread,0
@@ -2441,6 +2880,10 @@ init_task    Proc near
     mov ds:aarr_size,0
     mov ds:aarr_count,0
     InitSection ds:aarr_section
+;
+    mov ds:marr_size,0
+    mov ds:marr_count,0
+    InitSection ds:marr_section
 ;
     mov eax,1000h
     AllocateBigLinear
@@ -2540,6 +2983,30 @@ init_task    Proc near
     mov ax,get_program_id_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET module_loaded
+    mov edi,OFFSET module_loaded_name
+    xor cl,cl
+    mov ax,module_loaded_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET module_unloaded
+    mov edi,OFFSET module_unloaded_name
+    xor cl,cl
+    mov ax,module_unloaded_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET module_id_to_sel
+    mov edi,OFFSET module_id_to_sel_name
+    xor cl,cl
+    mov ax,module_id_to_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_module_id
+    mov edi,OFFSET get_module_id_name
+    xor cl,cl
+    mov ax,get_module_id_nr
+    RegisterOsGate
+;
     mov esi,OFFSET test_pr
     mov edi,OFFSET test_pr_name
     xor dx,dx
@@ -2600,6 +3067,12 @@ init_task    Proc near
     mov edi,OFFSET get_program_count_name
     xor dx,dx
     mov ax,get_program_count_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_module_count
+    mov edi,OFFSET get_module_count_name
+    xor dx,dx
+    mov ax,get_module_count_nr
     RegisterBimodalUserGate
 ;
     popad

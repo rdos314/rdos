@@ -323,12 +323,12 @@ void InitGates()
     for (i = 0; i < MAX_EXIT_CODES; i++)
         ExitArr[i].ID = 0;
 
-    RdosRegisterOsGate(osgate_module_loaded, (__rdos_gate_callback *)&ImplModuleLoaded, "Module Loaded");
-    RdosRegisterOsGate(osgate_module_unloaded, (__rdos_gate_callback *)&ImplModuleUnloaded, "Module Unloaded");
-    RdosRegisterOsGate(osgate_module_id_to_sel, (__rdos_gate_callback *)&ImplModuleIdToSel, "Module ID to Selector");
-    RdosRegisterOsGate(osgate_get_module_id, (__rdos_gate_callback *)&ImplGetModuleId, "Get Module ID");
+//    RdosRegisterOsGate(osgate_module_loaded, (__rdos_gate_callback *)&ImplModuleLoaded, "Module Loaded");
+//    RdosRegisterOsGate(osgate_module_unloaded, (__rdos_gate_callback *)&ImplModuleUnloaded, "Module Unloaded");
+//    RdosRegisterOsGate(osgate_module_id_to_sel, (__rdos_gate_callback *)&ImplModuleIdToSel, "Module ID to Selector");
+//    RdosRegisterOsGate(osgate_get_module_id, (__rdos_gate_callback *)&ImplGetModuleId, "Get Module ID");
 
-    RdosRegisterBimodalUserGate(usergate_get_module_count, (__rdos_gate_callback *)&ImplGetModuleCount, "Get Module Count");
+//    RdosRegisterBimodalUserGate(usergate_get_module_count, (__rdos_gate_callback *)&ImplGetModuleCount, "Get Module Count");
 }
 
 /*##########################################################################

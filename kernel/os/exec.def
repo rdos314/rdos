@@ -409,6 +409,7 @@ mod_code_sel            DW ?
 mod_data_sel            DW ?
 mod_name_offs           DW ?
 mod_id                  DW ?
+mod_index               DW ?
 
 mod_loader              DW ?
 mod_c_file_handle       DW ?
