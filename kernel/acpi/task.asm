@@ -81,9 +81,9 @@ tarr_count         DD ?
 tarr_section       section_typ <>
 
 prog_id            DW ?
-parr_size          DD ?
-parr_count         DD ?
-parr_section       section_typ <>
+aarr_size          DD ?
+aarr_count         DD ?
+aarr_section       section_typ <>
 
 task_linear        DD ?
 task_phys          DD ?,?
@@ -480,11 +480,11 @@ GrowProgArr   Proc near
     mov eax,flat_sel
     mov es,eax
 ;
-    mov ecx,ds:parr_size
+    mov ecx,ds:aarr_size
     mov ebp,ecx
     inc ecx
     shl ecx,1
-    mov ds:parr_size,ecx
+    mov ds:aarr_size,ecx
 ;
     mov eax,ecx
     shl eax,1
@@ -902,7 +902,7 @@ get_program_count    Proc far
 ;
     mov eax,SEG data
     mov ds,eax
-    mov eax,ds:parr_count
+    mov eax,ds:aarr_count
 ;
     pop ds
     ret
@@ -935,11 +935,11 @@ program_created    Proc far
     mov es,ebx
     mov eax,SEG data
     mov ds,eax
-    EnterSection ds:parr_section
+    EnterSection ds:aarr_section
 ;
     mov ax,ds:prog_id
 ;
-    mov ecx,ds:parr_size
+    mov ecx,ds:aarr_size
     or ecx,ecx
     stc
     jz cpidSave
@@ -981,8 +981,8 @@ cpidSave:
 cpidNextOk:
     mov ds:prog_id,ax
 ;
-    mov eax,ds:parr_size
-    mov ebx,ds:parr_count
+    mov eax,ds:aarr_size
+    mov ebx,ds:aarr_count
     cmp eax,ebx
     jne cpScan
 ;
@@ -991,7 +991,7 @@ cpidNextOk:
 cpScan:
     mov eax,prog_arr_sel
     mov fs,eax
-    mov ecx,ds:parr_size
+    mov ecx,ds:aarr_size
     sub ecx,ebx
     
 cpLoop1:
@@ -1003,7 +1003,7 @@ cpLoop1:
     loop cpLoop1
 ;
     xor ebx,ebx
-    mov ecx,ds:parr_count
+    mov ecx,ds:aarr_count
 
 cpLoop2:
     mov ax,fs:[2*ebx]
@@ -1018,8 +1018,8 @@ cpLoop2:
 cpOk:
     mov fs:[2*ebx],es
 ;
-    inc ds:parr_count
-    LeaveSection ds:parr_section
+    inc ds:aarr_count
+    LeaveSection ds:aarr_section
 ;
     mov es:pr_index,bx
     shl ebx,16
@@ -1070,10 +1070,10 @@ program_terminated    Proc far
     xor dx,dx
     mov eax,es
 ;    
-    EnterSection ds:parr_section
+    EnterSection ds:aarr_section
     xchg dx,fs:[2*ebx]
-    dec ds:parr_count
-    LeaveSection ds:parr_section
+    dec ds:aarr_count
+    LeaveSection ds:aarr_section
 ;
     cmp ax,dx
     je tpOk
@@ -1121,9 +1121,9 @@ get_program_id    Proc far
     mov edx,eax
     mov eax,SEG data
     mov ds,eax
-    EnterSection ds:parr_section
+    EnterSection ds:aarr_section
 ;
-    mov ecx,ds:parr_size
+    mov ecx,ds:aarr_size
     or ecx,ecx
     stc
     jz gpiDone
@@ -1155,7 +1155,7 @@ gpiOk:
     clc
 
 gpiDone:
-    LeaveSection ds:parr_section
+    LeaveSection ds:aarr_section
 ;
     pop edx
     pop ecx
@@ -1193,9 +1193,9 @@ get_program_sel    Proc far
     mov dx,bx
     mov eax,SEG data
     mov ds,eax
-    EnterSection ds:parr_section
+    EnterSection ds:aarr_section
 ;
-    mov ecx,ds:parr_size
+    mov ecx,ds:aarr_size
     or ecx,ecx
     stc
     jz gpsDone
@@ -1221,7 +1221,7 @@ gpsNext:
     stc
 
 gpsDone:
-    LeaveSection ds:parr_section
+    LeaveSection ds:aarr_section
 ;
     pop edx
     pop ecx
@@ -1770,9 +1770,9 @@ init_task    Proc near
     mov ds:tarr_count,0
     InitSection ds:tarr_section
 ;
-    mov ds:parr_size,0
-    mov ds:parr_count,0
-    InitSection ds:parr_section
+    mov ds:aarr_size,0
+    mov ds:aarr_count,0
+    InitSection ds:aarr_section
 ;
     mov eax,1000h
     AllocateBigLinear
