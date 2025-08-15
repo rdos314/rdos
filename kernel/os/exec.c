@@ -599,13 +599,13 @@ void InitGates()
     RdosRegisterOsGate(osgate_module_id_to_sel, (__rdos_gate_callback *)&ImplModuleIdToSel, "Module ID to Selector");
     RdosRegisterOsGate(osgate_get_module_id, (__rdos_gate_callback *)&ImplGetModuleId, "Get Module ID");
 
-    RdosRegisterOsGate(osgate_process_created, (__rdos_gate_callback *)&ImplProcessCreated, "Process Created");
-    RdosRegisterOsGate(osgate_process_terminated, (__rdos_gate_callback *)&ImplProcessTerminated, "Process Terminated");
-    RdosRegisterOsGate(osgate_process_id_to_sel, (__rdos_gate_callback *)&ImplProcessIdToSel, "Process ID to Selector");
-    RdosRegisterOsGate(osgate_get_process_id, (__rdos_gate_callback *)&ImplGetProcessId, "Get Process ID");
+//    RdosRegisterOsGate(osgate_process_created, (__rdos_gate_callback *)&ImplProcessCreated, "Process Created");
+//    RdosRegisterOsGate(osgate_process_terminated, (__rdos_gate_callback *)&ImplProcessTerminated, "Process Terminated");
+//    RdosRegisterOsGate(osgate_process_id_to_sel, (__rdos_gate_callback *)&ImplProcessIdToSel, "Process ID to Selector");
+//    RdosRegisterOsGate(osgate_get_process_id, (__rdos_gate_callback *)&ImplGetProcessId, "Get Process ID");
 
     RdosRegisterBimodalUserGate(usergate_get_module_count, (__rdos_gate_callback *)&ImplGetModuleCount, "Get Module Count");
-    RdosRegisterBimodalUserGate(usergate_get_process_count, (__rdos_gate_callback *)&ImplGetProcessCount, "Get Process Count");
+//    RdosRegisterBimodalUserGate(usergate_get_process_count, (__rdos_gate_callback *)&ImplGetProcessCount, "Get Process Count");
 }
 
 /*##########################################################################

@@ -1251,7 +1251,7 @@ process_id_to_sel    Proc far
     push ds
     push es
     push fs
-    push ebx
+    push eax
     push ecx
     push edx
 ;
@@ -1276,8 +1276,11 @@ gprsLoop:
 ;
     mov fs,eax
     cmp dx,fs:pf_id
+    jne gprsNext
+;
+    mov ebx,fs
     clc
-    je gprsDone
+    jmp gprsDone
 
 gprsNext:
     add ebx,2
@@ -1290,7 +1293,7 @@ gprsDone:
 ;
     pop edx
     pop ecx
-    pop ebx
+    pop eax
     pop fs
     pop es
     pop ds
@@ -2132,6 +2135,13 @@ suspend_and_signal_thread       ENDP
 test_pr_name  DB 'Test Gate',0
 
 test_pr       PROC far
+    push eax
+    mov eax,SIZE process_struc + 4
+    AllocateSmallGlobalMem
+;
+    mov bx,es
+    movzx ebx,bx
+    call process_created
     ret
 test_pr      Endp
 
@@ -2154,6 +2164,7 @@ init_task    Proc near
     mov eax,SEG data
     mov ds,eax
     mov ds:task_id,1
+    mov ds:proc_id,1
     mov ds:prog_id,1
 ;
     mov ds:task_wr_ptr,0
@@ -2222,29 +2233,29 @@ init_task    Proc near
     mov ax,thread_to_sel_nr
     RegisterOsGate
 ;
-;    mov esi,OFFSET process_created
-;    mov edi,OFFSET process_created_name
-;    xor cl,cl
-;    mov ax,process_created_nr
-;    RegisterOsGate
+    mov esi,OFFSET process_created
+    mov edi,OFFSET process_created_name
+    xor cl,cl
+    mov ax,process_created_nr
+    RegisterOsGate
 ;
-;    mov esi,OFFSET process_terminated
-;    mov edi,OFFSET process_terminated_name
-;    xor cl,cl
-;    mov ax,process_terminated_nr
-;    RegisterOsGate
+    mov esi,OFFSET process_terminated
+    mov edi,OFFSET process_terminated_name
+    xor cl,cl
+    mov ax,process_terminated_nr
+    RegisterOsGate
 ;
-;    mov esi,OFFSET process_id_to_sel
-;    mov edi,OFFSET process_id_to_sel_name
-;    xor cl,cl
-;    mov ax,process_id_to_sel_nr
-;    RegisterOsGate
+    mov esi,OFFSET process_id_to_sel
+    mov edi,OFFSET process_id_to_sel_name
+    xor cl,cl
+    mov ax,process_id_to_sel_nr
+    RegisterOsGate
 ;
-;    mov esi,OFFSET get_process_id
-;    mov edi,OFFSET get_process_id_name
-;    xor cl,cl
-;    mov ax,get_process_id_nr
-;    RegisterOsGate
+    mov esi,OFFSET get_process_id
+    mov edi,OFFSET get_process_id_name
+    xor cl,cl
+    mov ax,get_process_id_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET program_created
     mov edi,OFFSET program_created_name
@@ -2314,11 +2325,11 @@ init_task    Proc near
     mov ax,suspend_and_signal_thread_nr
     RegisterBimodalUserGate
 ;
-;    mov esi,OFFSET get_process_count
-;    mov edi,OFFSET get_process_count_name
-;    xor dx,dx
-;    mov ax,get_process_count_nr
-;    RegisterBimodalUserGate
+    mov esi,OFFSET get_process_count
+    mov edi,OFFSET get_process_count_name
+    xor dx,dx
+    mov ax,get_process_count_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_program_count
     mov edi,OFFSET get_program_count_name
