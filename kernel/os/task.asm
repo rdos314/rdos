@@ -2321,8 +2321,6 @@ stThreadOk:
 ;
     push ds
     movzx ebx,es:p_proc_sel
-    mov ds,ebx
-    movzx eax,ds:pf_exit_code
     ProcessTerminated
     pop ds
 ;

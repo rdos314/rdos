@@ -245,6 +245,27 @@ int __far ImplGetModuleId(int Index)
     return ID;
 }
 
+
+/*##########################################################################
+#
+#   Name       : AddExitCode
+#
+##########################################################################*/
+#pragma aux AddExitCode "*" rdosdev parm routine [ebx] [eax]
+void AddExitCode(int id, int exit)
+{
+    RdosEnterKernelSection(&ModuleSection);
+
+    ExitArr[CurrExitInd].ID = id;
+    ExitArr[CurrExitInd].ExitCode = exit;
+
+    CurrExitInd++;
+    if (CurrExitInd == MAX_EXIT_CODES)
+        CurrExitInd = 0;
+
+    RdosLeaveKernelSection(&ModuleSection);
+}
+
 /*##########################################################################
 #
 #   Name       : GetProcExit
@@ -258,6 +279,8 @@ int GetProcExit(int ID)
     int i;
     int ok = FALSE;
     int code;
+
+    RdosEnterKernelSection(&ModuleSection);
 
     for (i = CurrExitInd - 1; i >= 0 && !ok; i--)
     {
@@ -276,6 +299,8 @@ int GetProcExit(int ID)
             ok = TRUE;
         }
     }
+
+    RdosLeaveKernelSection(&ModuleSection);
 
     return code;
 }

@@ -81,6 +81,7 @@ _TEXT    SEGMENT byte public 'CODE'
 
     extern AllocateUserTimer:near
     extern FreeUserTimer:near
+    extern AddExitCode:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2773,9 +2774,10 @@ unload_exe:
     push eax
     GetThread
     mov ds,eax
-    mov ds,ds:p_proc_sel
+    movzx ebx,ds:p_proc_id
     pop eax
-    mov ds:pf_exit_code,ax
+    movzx eax,ax
+    call AddExitCode
     pop ds
 ;
     pushfd
