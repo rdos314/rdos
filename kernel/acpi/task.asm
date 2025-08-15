@@ -47,8 +47,10 @@ include acpi.def
 
 REQ_CREATE_THREAD     = 1
 REQ_TERMINATE_THREAD  = 2
-REQ_CREATE_PROGRAM    = 3
-REQ_TERMINATE_PROGRAM = 4
+REQ_CREATE_PROCESS    = 3
+REQ_TERMINATE_PROCESS = 4
+REQ_CREATE_PROGRAM    = 5
+REQ_TERMINATE_PROGRAM = 6
 
 task_queue_struc    STRUC
 
@@ -1101,8 +1103,8 @@ cprOk:
     mov es:pf_index,bx
     shl ebx,16
     mov bx,es:pf_id
-;    mov dx,REQ_CREATE_PROGRAM
-;    call AddEntry
+    mov dx,REQ_CREATE_PROCESS
+    call AddEntry
 ;
     mov ax,es:pf_id
 ;
@@ -1180,10 +1182,11 @@ ptWaitNext:
     int 3
 
 tprOk:
+    movzx ebx,es:pf_index
     shl ebx,16
     mov bx,es:pf_id
-;    mov dx,REQ_TERMINATE_PROGRAM
-;    call AddEntry
+    mov dx,REQ_TERMINATE_PROCESS
+    call AddEntry
 ;
     pop edi
     pop edx
