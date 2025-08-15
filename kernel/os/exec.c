@@ -33,18 +33,10 @@
 #include "rdosdev.h"
 #include "string.h"
 
-#define MAX_MODULES             256
 #define MAX_EXIT_CODES          256
 
 #define FALSE 0
 #define TRUE !FALSE
-
-struct TModule
-{
-    int Valid;
-    int ID;
-    int Sel;
-};
 
 struct TExit
 {
@@ -54,197 +46,12 @@ struct TExit
 
 struct TKernelSection ModuleSection;
 
-int ActiveModules = 0;
-int NextMid = 1;
-
 int CurrExitInd = 0;
 
-struct TModule ModuleArr[MAX_MODULES];
 struct TExit ExitArr[MAX_EXIT_CODES];
 
 extern void InitExec();
 extern void InitTimer();
-
-/*##########################################################################
-#
-#   Name       : GetModuleCount
-#
-##########################################################################*/
-#pragma aux ImplGetModuleCount "*" rdosdev parm routine
-int __far ImplGetModuleCount()
-{
-    RdosSetSuccess();
-    return ActiveModules;
-}
-
-/*##########################################################################
-#
-#   Name       : ModuleLoaded
-#
-##########################################################################*/
-#pragma aux ImplModuleLoaded "*" rdosdev parm routine [ebx] value [eax]
-int __far ImplModuleLoaded(int sel)
-{
-    int i;
-    int ok = FALSE;
-    int Index;
-    int mid;
-
-    RdosEnterKernelSection(&ModuleSection);
-
-    ok = FALSE;
-
-    while (!ok)
-    {
-        mid = NextMid;
-
-        if (NextMid == 0x7FFF)
-            NextMid = 1;
-        else
-            NextMid++;
-
-        ok = TRUE;
-
-        for (i = 0; i < ActiveModules; i++)
-        {
-            if (ModuleArr[i].Valid && ModuleArr[i].ID == mid)
-            {
-                ok = FALSE;
-                break;
-            }
-        }
-    }
-
-    ok = FALSE;
-
-    for (i = 0; i < ActiveModules; i++)
-    {
-        if (!ModuleArr[i].Valid)
-        {
-            ok = TRUE;
-            Index = i;
-            break;
-        }
-    }
-
-    if (!ok)
-    {
-        if (ActiveModules < MAX_MODULES)
-        {
-            Index = ActiveModules;
-            ActiveModules++;
-            ok = TRUE;
-        }
-    }
-
-    if (ok)
-    {
-        ModuleArr[Index].Valid = TRUE;
-        ModuleArr[Index].Sel = sel;
-        ModuleArr[Index].ID = mid;
-    }
-
-    RdosLeaveKernelSection(&ModuleSection);
-
-    if (mid)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return mid;
-}
-
-/*##########################################################################
-#
-#   Name       : ModuleUnloaded
-#
-##########################################################################*/
-#pragma aux ImplModuleUnloaded "*" rdosdev parm routine [ebx]
-void __far ImplModuleUnloaded(int sel)
-{
-    int i;
-
-    RdosEnterKernelSection(&ModuleSection);
-
-    for (i = 0; i < ActiveModules; i++)
-    {
-        if (ModuleArr[i].Valid && ModuleArr[i].Sel == sel)
-        {
-            ModuleArr[i].Valid = FALSE;
-
-            if (i == ActiveModules - 1)
-                ActiveModules--;
-
-            break;
-        }
-    }
-
-    RdosLeaveKernelSection(&ModuleSection);
-    RdosSetSuccess();
-}
-
-/*##########################################################################
-#
-#   Name       : ModuleIdToSel
-#
-#   Descr      : Convert from module ID to selector
-#
-##########################################################################*/
-#pragma aux ImplModuleIdToSel "*" rdosdev parm routine [ebx] value [ebx]
-int __far ImplModuleIdToSel(int ID)
-{
-    int i;
-    int sel = 0;
-
-    RdosEnterKernelSection(&ModuleSection);
-
-    for (i = 0; i < ActiveModules; i++)
-    {
-        if (ModuleArr[i].Valid && ModuleArr[i].ID == ID)
-        {
-            sel = ModuleArr[i].Sel;
-            break;
-        }
-    }
-
-    RdosLeaveKernelSection(&ModuleSection);
-
-    if (sel)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return sel;
-}
-
-/*##########################################################################
-#
-#   Name       : GetModuleID
-#
-#   Descr      : Get module ID byte index
-#
-##########################################################################*/
-#pragma aux ImplGetModuleId "*" rdosdev parm routine [eax] value [eax]
-int __far ImplGetModuleId(int Index)
-{
-    int ID = 0;
-
-    RdosEnterKernelSection(&ModuleSection);
-
-    if (Index >= 0 && Index < ActiveModules)
-        if (ModuleArr[Index].Valid)
-            ID = ModuleArr[Index].ID;
-
-    RdosLeaveKernelSection(&ModuleSection);
-
-    if (ID)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
-
-    return ID;
-}
-
 
 /*##########################################################################
 #
@@ -322,13 +129,6 @@ void InitGates()
 
     for (i = 0; i < MAX_EXIT_CODES; i++)
         ExitArr[i].ID = 0;
-
-//    RdosRegisterOsGate(osgate_module_loaded, (__rdos_gate_callback *)&ImplModuleLoaded, "Module Loaded");
-//    RdosRegisterOsGate(osgate_module_unloaded, (__rdos_gate_callback *)&ImplModuleUnloaded, "Module Unloaded");
-//    RdosRegisterOsGate(osgate_module_id_to_sel, (__rdos_gate_callback *)&ImplModuleIdToSel, "Module ID to Selector");
-//    RdosRegisterOsGate(osgate_get_module_id, (__rdos_gate_callback *)&ImplGetModuleId, "Get Module ID");
-
-//    RdosRegisterBimodalUserGate(usergate_get_module_count, (__rdos_gate_callback *)&ImplGetModuleCount, "Get Module Count");
 }
 
 /*##########################################################################
