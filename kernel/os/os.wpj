@@ -483,7 +483,7 @@ WRect
 864
 768
 5680
-4147
+4138
 0
 0
 100
@@ -491,13 +491,13 @@ WFileName
 8
 exec.tgt
 0
-2
+1
 101
 VComponent
 102
 WRect
 176
-51
+42
 5680
 4224
 0
@@ -539,5 +539,5 @@ WFileName
 7
 sma.tgt
 0
-0
+1
 98

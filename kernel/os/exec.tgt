@@ -131,8 +131,8 @@ WVList
 0
 32
 MItem
-12
-execbase.asm
+8
+exec.asm
 33
 WString
 6
