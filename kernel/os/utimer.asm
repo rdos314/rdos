@@ -50,9 +50,9 @@ ELSE
     .386p
 ENDIF
 
-_TEXT    SEGMENT byte public 'CODE'
+code    SEGMENT byte public 'CODE'
 
-    assume cs:_TEXT
+    assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -648,9 +648,9 @@ signal_timer   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public InitTimer_
+    public init_utimer
 
-InitTimer_    Proc near
+init_utimer    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -671,8 +671,8 @@ InitTimer_    Proc near
     mov ax,signal_timer_nr
     RegisterBimodalUserGate
     ret
-InitTimer_    Endp
+init_utimer    Endp
 
-_TEXT    ENDS
+code    ENDS
 
     END

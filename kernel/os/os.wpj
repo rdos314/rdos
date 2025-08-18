@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-816
-128
+896
+384
 8320
 9216
 2
@@ -483,7 +483,7 @@ WRect
 864
 768
 5680
-4155
+4147
 0
 0
 100
@@ -491,13 +491,13 @@ WFileName
 8
 exec.tgt
 0
-3
+2
 101
 VComponent
 102
 WRect
 176
-59
+51
 5680
 4224
 0
@@ -540,4 +540,4 @@ WFileName
 sma.tgt
 0
 0
-32
+98

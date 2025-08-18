@@ -86,10 +86,11 @@ focus_console_arr       DW 256 DUP(?)
 
 data    ENDS
 
-_TEXT    SEGMENT byte public 'CODE'
+code    SEGMENT byte public 'CODE'
 
-    assume cs:_TEXT
+    assume cs:code
 
+    extern init_utimer:near
     extern AllocateUserTimer:near
     extern FreeUserTimer:near
 
@@ -4404,10 +4405,10 @@ is_debug_event_idle Endp
 add_wait_for_debug_event_name   DB 'Add Wait For Debug Event',0
 
 add_wait_event_tab:
-awe0 DD OFFSET start_wait_for_debug_event,   SEG _text
-awe1 DD OFFSET stop_wait_for_debug_event,    SEG _text
-awe2 DD OFFSET dummy_clear_debug_event,      SEG _text
-awe3 DD OFFSET is_debug_event_idle,          SEG _text
+awe0 DD OFFSET start_wait_for_debug_event,   SEG code
+awe1 DD OFFSET stop_wait_for_debug_event,    SEG code
+awe2 DD OFFSET dummy_clear_debug_event,      SEG code
+awe3 DD OFFSET is_debug_event_idle,          SEG code
 
 add_wait_for_debug_event    PROC far
     push ds
@@ -6470,9 +6471,7 @@ esFail:
 
 system_program_name DB "System", 0
 
-    public InitExec_
-
-InitExec_    Proc near
+init    Proc far
     mov ax,SEG data
     mov ds,eax
     mov es,eax
@@ -6926,9 +6925,13 @@ InitExec_    Proc near
     xor dx,dx
     mov ax,get_process_module_usage_nr
     RegisterBimodalUserGate
+;
+    call init_utimer
+    clc
     ret
-InitExec_    Endp
+init    Endp
 
-_TEXT    ENDS
+code    ENDS
 
-    END
+    END init
+
