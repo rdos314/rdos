@@ -62,12 +62,14 @@ tqs_id        DD ?
 
 task_queue_struc    ENDS
 
+THREAD_FLAG_IRQ    = 1
+
 thread_state_struc  STRUC
 
 ths_core      DW ?
 ths_prio      DW ?
 ths_irq       DB ?
-ths_pad       DB ?
+ths_flags     DB ?
 ths_tics      DD ?,?
 
 thread_state_struc  ENDS
@@ -318,171 +320,6 @@ gtaCopied:
     pop es
     ret
 GrowThreadArr   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           ServGetThreadState
-;
-;       DESCRIPTION:    Get thread state
-;
-;       PARAMETERS:     EBX            Handle
-;                       ES:EDI         State buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-serv_thread_state_name DB 'Get Thread State', 0
-
-serv_thread_state   Proc far
-    push ds
-    push fs
-    push eax
-    push ebx
-    push esi
-;
-    mov eax,SEG data
-    mov ds,eax
-    mov eax,thread_arr_sel
-    mov fs,eax
-    EnterSection ds:tarr_section
-;
-    mov esi,ebx
-    shr esi,16
-    cmp esi,ds:tarr_size
-    jae stsFail
-;
-    mov ax,fs:[2*esi]
-    or ax,ax
-    jz stsFail
-;
-    mov fs,eax
-    mov ax,fs:p_id
-    cmp ax,bx
-    jne stsFail
-;
-    mov ax,fs:p_prio
-    shr ax,1
-    mov es:[edi].ths_prio,ax
-;
-    mov al,fs:p_irq
-    mov es:[edi].ths_irq,al
-
-stsRetry:
-    mov ebx,fs:p_msb_tics
-    mov eax,fs:p_lsb_tics
-    cmp ebx,fs:p_msb_tics
-    jne stsRetry
-;
-    mov es:[edi].ths_tics,eax
-    mov es:[edi].ths_tics+4,ebx
-;
-    mov ax,fs:p_core
-    or ax,ax
-    jz stsNoCore
-;
-    mov fs,eax
-    mov ax,fs:cs_id
-
-stsNoCore:
-    mov es:[edi].ths_core,ax
-;
-    LeaveSection ds:tarr_section
-    clc
-    jmp stsDone
-
-stsFail:
-    LeaveSection ds:tarr_section
-    stc
-
-stsDone:
-    pop esi
-    pop ebx
-    pop eax
-    pop fs
-    pop ds
-    ret
-serv_thread_state  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           ServGetThreadName
-;
-;       DESCRIPTION:    Get thread name
-;
-;       PARAMETERS:     EBX            Thread ID
-;                       ES:EDI         Name buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-serv_get_thread_name_name DB 'Get Thread Name', 0
-
-serv_get_thread_name   Proc far
-    push ds
-    push fs
-    push eax
-    push ebx
-    push ecx
-    push esi
-    push edi
-;
-    mov eax,SEG data
-    mov ds,eax
-    mov eax,thread_arr_sel
-    mov fs,eax
-    EnterSection ds:tarr_section
-;
-    mov esi,ebx
-    shr esi,16
-    cmp esi,ds:tarr_size
-    jae gtnFail
-;
-    mov ax,fs:[2*esi]
-    or ax,ax
-    jz gtnFail
-;
-    mov fs,eax
-    mov ax,fs:p_id
-    cmp ax,bx
-    jne gtnFail
-;
-    mov esi,OFFSET thread_name
-    mov ecx,30
-    rep movs byte ptr es:[edi],fs:[esi]
-;
-    dec edi
-
-gtnLoop:
-    mov al,es:[edi]
-    cmp al,' '
-    jne gtnOk
-;
-    dec edi
-    jmp gtnLoop
-
-gtnOk:
-    inc edi
-    xor al,al
-    stosb
-;
-    LeaveSection ds:tarr_section
-    clc
-    jmp gtnDone
-
-gtnFail:
-    LeaveSection ds:tarr_section
-    stc
-
-gtnDone:
-    pop edi
-    pop esi
-    pop ecx
-    pop ebx
-    pop eax
-    pop fs
-    pop ds
-    ret
-serv_get_thread_name  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -784,7 +621,13 @@ notify_create_thread    Proc far
     push ebx
     push ecx
     push edx
+    push edi
 ;    
+    mov edi,OFFSET p_irq_bitmap
+    mov ecx,8
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
     mov eax,SEG data
     mov ds,eax
     EnterSection ds:tarr_section
@@ -835,6 +678,7 @@ ctOk:
     mov dx,REQ_CREATE_THREAD
     call AddEntry
 ;
+    pop edi
     pop edx
     pop ecx
     pop ebx
@@ -2821,6 +2665,200 @@ suspend_signal_done:
     pop ds
     ret
 suspend_and_signal_thread       ENDP
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServGetThreadState
+;
+;       DESCRIPTION:    Get thread state
+;
+;       PARAMETERS:     EBX            Handle
+;                       ES:EDI         State buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_thread_state_name DB 'Get Thread State', 0
+
+serv_thread_state   Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push esi
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,thread_arr_sel
+    mov fs,eax
+    EnterSection ds:tarr_section
+;
+    mov esi,ebx
+    shr esi,16
+    cmp esi,ds:tarr_size
+    jae stsFail
+;
+    mov ax,fs:[2*esi]
+    or ax,ax
+    jz stsFail
+;
+    mov fs,eax
+    mov ax,fs:p_id
+    cmp ax,bx
+    jne stsFail
+;
+    mov ax,fs:p_prio
+    shr ax,1
+    mov es:[edi].ths_prio,ax
+;
+    mov al,fs:p_irq
+    mov es:[edi].ths_irq,al
+
+stsRetry:
+    mov ebx,fs:p_msb_tics
+    mov eax,fs:p_lsb_tics
+    cmp ebx,fs:p_msb_tics
+    jne stsRetry
+;
+    mov es:[edi].ths_tics,eax
+    mov es:[edi].ths_tics+4,ebx
+;
+    mov ax,fs:p_core
+    or ax,ax
+    jz stsNoCore
+;
+    mov fs,eax
+    mov ax,fs:cs_id
+
+stsNoCore:
+    mov es:[edi].ths_core,ax
+;
+    mov esi,OFFSET p_irq_bitmap
+    xor ebx,ebx
+    lods dword ptr ds:[esi]
+    or ebx,eax
+    lods dword ptr ds:[esi]
+    or ebx,eax
+    lods dword ptr ds:[esi]
+    or ebx,eax
+    lods dword ptr ds:[esi]
+    or ebx,eax
+    lods dword ptr ds:[esi]
+    or ebx,eax
+    lods dword ptr ds:[esi]
+    or ebx,eax
+    lods dword ptr ds:[esi]
+    or ebx,eax
+    lods dword ptr ds:[esi]
+    or eax,ebx
+    jz stsNoIrq
+;
+    mov al,THREAD_FLAG_IRQ
+
+stsNoIrq:
+    mov es:[edi].ths_flags,al
+;
+    LeaveSection ds:tarr_section
+    clc
+    jmp stsDone
+
+stsFail:
+    LeaveSection ds:tarr_section
+    stc
+
+stsDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_thread_state  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServGetThreadName
+;
+;       DESCRIPTION:    Get thread name
+;
+;       PARAMETERS:     EBX            Thread ID
+;                       ES:EDI         Name buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_get_thread_name_name DB 'Get Thread Name', 0
+
+serv_get_thread_name   Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,thread_arr_sel
+    mov fs,eax
+    EnterSection ds:tarr_section
+;
+    mov esi,ebx
+    shr esi,16
+    cmp esi,ds:tarr_size
+    jae gtnFail
+;
+    mov ax,fs:[2*esi]
+    or ax,ax
+    jz gtnFail
+;
+    mov fs,eax
+    mov ax,fs:p_id
+    cmp ax,bx
+    jne gtnFail
+;
+    mov esi,OFFSET thread_name
+    mov ecx,30
+    rep movs byte ptr es:[edi],fs:[esi]
+;
+    dec edi
+
+gtnLoop:
+    mov al,es:[edi]
+    cmp al,' '
+    jne gtnOk
+;
+    dec edi
+    jmp gtnLoop
+
+gtnOk:
+    inc edi
+    xor al,al
+    stosb
+;
+    LeaveSection ds:tarr_section
+    clc
+    jmp gtnDone
+
+gtnFail:
+    LeaveSection ds:tarr_section
+    stc
+
+gtnDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_get_thread_name  Endp
+
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
