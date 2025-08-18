@@ -52,6 +52,13 @@ ELSE
     .386p
 ENDIF
 
+exit_code_struc     STRUC
+
+ecs_id              DW ?
+ecs_code            DW ?
+
+exit_code_struc     ENDS
+
 debug_event_wait_header STRUC
 
 dew_obj             wait_obj_header <>
@@ -71,6 +78,10 @@ focus_section           section_typ <>
 loader_count            DW ?
 loader_arr              DW 16 DUP(?)
 
+exit_section            section_typ <>
+curr_exit_ind           DW ?
+exit_code_arr           DW 2 * 256 DUP(?)
+
 focus_console_arr       DW 256 DUP(?)
 
 data    ENDS
@@ -81,7 +92,6 @@ _TEXT    SEGMENT byte public 'CODE'
 
     extern AllocateUserTimer:near
     extern FreeUserTimer:near
-    extern AddExitCode:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2774,9 +2784,8 @@ unload_exe:
     push eax
     GetThread
     mov ds,eax
-    movzx ebx,ds:p_proc_id
+    mov bx,ds:p_proc_id
     pop eax
-    movzx eax,ax
     call AddExitCode
     pop ds
 ;
@@ -3014,6 +3023,41 @@ apDone:
 app_patch Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddExitCode
+;
+;           DESCRIPTION:    Add exit code
+;
+;           PARAMETERS:     AX          Exit code
+;                           BX          ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddExitCode    Proc near
+    push ds
+    push edx
+    push esi
+;
+    mov edx,SEG data
+    mov ds,edx
+    EnterSection ds:exit_section
+;
+    movzx esi,ds:curr_exit_ind
+    shl esi,2
+    mov ds:[esi].exit_code_arr.ecs_id,bx
+    mov ds:[esi].exit_code_arr.ecs_code,ax
+    inc ds:curr_exit_ind
+;
+    LeaveSection ds:exit_section
+;
+    pop esi
+    pop edx
+    pop ds
+    ret
+AddExitCode    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           GetExitCode
@@ -3044,15 +3088,43 @@ get_exit_code   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extrn GetProcExit:near
-
 get_proc_exit_code_name DB 'Get Process Exit Code',0
     
 get_proc_exit_code   Proc far
-    push ebx
-    movzx ebx,bx
-    call GetProcExit    
-    pop ebx
+    push ds
+    push ecx
+    push esi
+;
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:exit_section
+;
+    movzx esi,ds:curr_exit_ind
+    dec esi
+    mov ecx,100h
+    mov eax,-1
+
+gpecLoop:
+    and si,0FFh
+    cmp bx,ds:[4*esi].exit_code_arr.ecs_id
+    jne gpecNext
+;
+    movzx eax,ds:[4*esi].exit_code_arr.ecs_code
+    clc
+    jmp gpecDone
+
+gpecNext:
+    dec esi
+    loop gpecLoop
+;
+    stc
+
+gpecDone:
+    LeaveSection ds:exit_section
+;
+    pop esi
+    pop ecx
+    pop ds
     ret
 get_proc_exit_code   Endp
     
@@ -6412,6 +6484,14 @@ InitExec_    Proc near
     rep stosw
     mov ds:focus_current_console,0
     InitSection ds:focus_section
+;
+    mov edi,OFFSET exit_code_arr
+    mov ecx,256
+    xor eax,eax
+    rep stosd
+;
+    mov ds:curr_exit_ind,0
+    InitSection ds:exit_section
 ;
     AllocateGdt
     or bl,3

@@ -33,103 +33,8 @@
 #include "rdosdev.h"
 #include "string.h"
 
-#define MAX_EXIT_CODES          256
-
 #define FALSE 0
 #define TRUE !FALSE
-
-struct TExit
-{
-    int ID;
-    int ExitCode;
-};
-
-struct TKernelSection ModuleSection;
-
-int CurrExitInd = 0;
-
-struct TExit ExitArr[MAX_EXIT_CODES];
-
-extern void InitExec();
-extern void InitTimer();
-
-/*##########################################################################
-#
-#   Name       : AddExitCode
-#
-##########################################################################*/
-#pragma aux AddExitCode "*" rdosdev parm routine [ebx] [eax]
-void AddExitCode(int id, int exit)
-{
-    RdosEnterKernelSection(&ModuleSection);
-
-    ExitArr[CurrExitInd].ID = id;
-    ExitArr[CurrExitInd].ExitCode = exit;
-
-    CurrExitInd++;
-    if (CurrExitInd == MAX_EXIT_CODES)
-        CurrExitInd = 0;
-
-    RdosLeaveKernelSection(&ModuleSection);
-}
-
-/*##########################################################################
-#
-#   Name       : GetProcExit
-#
-#   Descr      : Get process exit code
-#
-##########################################################################*/
-#pragma aux GetProcExit "*" rdosdev parm routine [ebx]
-int GetProcExit(int ID)
-{
-    int i;
-    int ok = FALSE;
-    int code;
-
-    RdosEnterKernelSection(&ModuleSection);
-
-    for (i = CurrExitInd - 1; i >= 0 && !ok; i--)
-    {
-        if (ExitArr[i].ID == ID)
-        {
-            code = ExitArr[i].ExitCode;
-            ok = TRUE;
-        }
-    }
-
-    for (i = MAX_EXIT_CODES - 1; i >= CurrExitInd && !ok; i--)
-    {
-        if (ExitArr[i].ID == ID)
-        {
-            code = ExitArr[i].ExitCode;
-            ok = TRUE;
-        }
-    }
-
-    RdosLeaveKernelSection(&ModuleSection);
-
-    return code;
-}
-
-/*##########################################################################
-#
-#   Name       : InitGates
-#
-#   Purpose....: Gate initialization
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void InitGates()
-{
-    int i;
-
-    for (i = 0; i < MAX_EXIT_CODES; i++)
-        ExitArr[i].ID = 0;
-}
 
 /*##########################################################################
 #
@@ -144,8 +49,6 @@ void InitGates()
 ##########################################################################*/
 int main()
 {
-    InitGates();
-    RdosInitKernelSection(&ModuleSection);
     InitExec();
     InitTimer();
     return 0;
