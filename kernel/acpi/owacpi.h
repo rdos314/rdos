@@ -92,3 +92,7 @@
     "xor eax,eax" \
     "done: " \
     __parm [__ebx] [__edi] __value [__eax]
+
+#pragma aux ServUacpiGetThreadIrqArr = \
+    ServGate_uacpi_get_thread_irq_arr \
+    __parm [__ebx] [__edi]

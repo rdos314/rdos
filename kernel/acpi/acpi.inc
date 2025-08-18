@@ -116,3 +116,9 @@ UacpiGetThreadState  MACRO
 UacpiGetThreadName  MACRO
     ServGate uacpi_get_thread_name_nr
                     ENDM
+
+; IN  EBX            Handle
+; IN  ES:EDI         256 bit IRQ array
+UacpiGetThreadIrqArr  MACRO
+    ServGate uacpi_get_thread_irq_arr_nr
+                    ENDM

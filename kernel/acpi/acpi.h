@@ -18,13 +18,14 @@
 extern "C" {
 #endif
 
+#define STATE_FLAG_IRQ   1
 
 struct TCurrThreadState
 {
     short int Core;
     short int Prio;
     unsigned char Irq;
-    char Pad;
+    char Flags;
     long long Tics;
 };
 
@@ -45,6 +46,7 @@ void *RDOSAPI ServUacpiGetTaskQueue();
 void RDOSAPI ServUacpiWaitTaskQueue(int index);
 int RDOSAPI ServUacpiGetThreadState(int handle, struct TCurrThreadState *state);
 int RDOSAPI ServUacpiGetThreadName(int handle, char *name);
+void RDOSAPI ServUacpiGetThreadIrqArr(int handle, int *arr[8]);
 
 #ifdef __cplusplus
 }

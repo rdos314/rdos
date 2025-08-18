@@ -2857,6 +2857,82 @@ gtnDone:
     pop ds
     ret
 serv_get_thread_name  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServGetThreadIrq
+;
+;       DESCRIPTION:    Get thread IRQ array
+;
+;       PARAMETERS:     EBX            Thread ID
+;                       ES:EDI         IRQ array with 256 bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_get_thread_irq_arr_name DB 'Get Thread IRQs', 0
+
+serv_get_thread_irq_arr   Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,thread_arr_sel
+    mov fs,eax
+    EnterSection ds:tarr_section
+;
+    mov esi,ebx
+    shr esi,16
+    cmp esi,ds:tarr_size
+    jae gtiaFail
+;
+    mov ax,fs:[2*esi]
+    or ax,ax
+    jz gtiaFail
+;
+    mov fs,eax
+    mov ax,fs:p_id
+    cmp ax,bx
+    jne gtiaFail
+;
+    mov esi,OFFSET p_irq_bitmap
+    mov ecx,8
+
+gtiaLoop:
+    xor eax,eax
+    xchg eax,fs:[esi]
+    add esi,4
+    stos dword ptr es:[edi]
+    loop gtiaLoop
+;
+    LeaveSection ds:tarr_section
+    clc
+    jmp gtiaDone
+
+gtiaFail:
+    LeaveSection ds:tarr_section
+;
+    xor eax,eax
+    mov ecx,8
+    rep stos dword ptr es:[edi]
+    stc
+
+gtiaDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_get_thread_irq_arr  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3157,6 +3233,12 @@ init_task_server    Proc near
     mov edi,OFFSET serv_get_thread_name_name
     xor cl,cl
     mov ax,uacpi_get_thread_name_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET serv_get_thread_irq_arr
+    mov edi,OFFSET serv_get_thread_irq_arr_name
+    xor cl,cl
+    mov ax,uacpi_get_thread_irq_arr_nr
     RegisterPrivateServGate
     ret
 init_task_server    Endp
