@@ -2737,21 +2737,21 @@ stsNoCore:
 ;
     mov esi,OFFSET p_irq_bitmap
     xor ebx,ebx
-    lods dword ptr ds:[esi]
+    lods dword ptr fs:[esi]
     or ebx,eax
-    lods dword ptr ds:[esi]
+    lods dword ptr fs:[esi]
     or ebx,eax
-    lods dword ptr ds:[esi]
+    lods dword ptr fs:[esi]
     or ebx,eax
-    lods dword ptr ds:[esi]
+    lods dword ptr fs:[esi]
     or ebx,eax
-    lods dword ptr ds:[esi]
+    lods dword ptr fs:[esi]
     or ebx,eax
-    lods dword ptr ds:[esi]
+    lods dword ptr fs:[esi]
     or ebx,eax
-    lods dword ptr ds:[esi]
+    lods dword ptr fs:[esi]
     or ebx,eax
-    lods dword ptr ds:[esi]
+    lods dword ptr fs:[esi]
     or eax,ebx
     jz stsNoIrq
 ;
@@ -2857,8 +2857,6 @@ gtnDone:
     pop ds
     ret
 serv_get_thread_name  Endp
-
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
