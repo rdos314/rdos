@@ -2933,6 +2933,88 @@ gtiaDone:
     pop ds
     ret
 serv_get_thread_irq_arr  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServGetCoreCount
+;
+;       DESCRIPTION:    Get core count
+;
+;       RETURNS:        EAX            Core count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_get_core_count_name DB 'Get Core Count', 0
+
+serv_get_core_count   Proc far
+    push ecx
+;
+    GetCoreCount
+    movzx eax,cx
+    clc
+;
+    pop ecx
+    ret
+serv_get_core_count   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServStartCore
+;
+;       DESCRIPTION:    Start core
+;
+;       PARAMETERS:     EBX            Core #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_start_core_name DB 'Start Core', 0
+
+serv_start_core   Proc far
+    push fs
+    push eax
+;
+    mov ax,bx
+    GetCoreNumber
+    jc sbcDone
+;
+    StartCore
+
+sbcDone:
+    pop eax
+    pop fs
+    ret
+serv_start_core   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServStopCore
+;
+;       DESCRIPTION:    Stop core
+;
+;       PARAMETERS:     EBX            Core #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_stop_core_name DB 'Stop Core', 0
+
+serv_stop_core   Proc far
+    push fs
+    push eax
+;
+    mov ax,bx
+    GetCoreNumber
+    jc secDone
+;
+    lock or fs:cs_flags,CS_FLAG_SHUTDOWN
+
+secDone:
+    pop eax
+    pop fs
+    ret
+serv_stop_core   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3239,6 +3321,24 @@ init_task_server    Proc near
     mov edi,OFFSET serv_get_thread_irq_arr_name
     xor cl,cl
     mov ax,uacpi_get_thread_irq_arr_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET serv_get_core_count
+    mov edi,OFFSET serv_get_core_count_name
+    xor cl,cl
+    mov ax,uacpi_get_core_count_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET serv_start_core
+    mov edi,OFFSET serv_start_core_name
+    xor cl,cl
+    mov ax,uacpi_start_core_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET serv_stop_core
+    mov edi,OFFSET serv_stop_core_name
+    xor cl,cl
+    mov ax,uacpi_stop_core_nr
     RegisterPrivateServGate
     ret
 init_task_server    Endp

@@ -48,6 +48,10 @@ int RDOSAPI ServUacpiGetThreadState(int handle, struct TCurrThreadState *state);
 int RDOSAPI ServUacpiGetThreadName(int handle, char *name);
 void RDOSAPI ServUacpiGetThreadIrqArr(int handle, int arr[8]);
 
+int RDOSAPI ServUacpiGetCoreCount();
+void RDOSAPI ServUacpiStartCore(int num);
+void RDOSAPI ServUacpiStopCore(int num);
+
 #ifdef __cplusplus
 }
 #endif

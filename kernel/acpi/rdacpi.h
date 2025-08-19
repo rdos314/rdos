@@ -17,6 +17,9 @@
 #define serv_gate_uacpi_get_thread_state 0x00000011
 #define serv_gate_uacpi_get_thread_name 0x00000012
 #define serv_gate_uacpi_get_thread_irq_arr 0x00000013
+#define serv_gate_uacpi_get_core_count 0x00000014
+#define serv_gate_uacpi_start_core 0x00000015
+#define serv_gate_uacpi_stop_core 0x00000016
 #define ServGate_uacpi_get_acpi 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
 #define ServGate_uacpi_map 0x55 0x67 0x9a 2 0 0 0 4 0 0x5d
 #define ServGate_uacpi_unmap 0x55 0x67 0x9a 3 0 0 0 4 0 0x5d
@@ -36,3 +39,6 @@
 #define ServGate_uacpi_get_thread_state 0x55 0x67 0x9a 17 0 0 0 4 0 0x5d
 #define ServGate_uacpi_get_thread_name 0x55 0x67 0x9a 18 0 0 0 4 0 0x5d
 #define ServGate_uacpi_get_thread_irq_arr 0x55 0x67 0x9a 19 0 0 0 4 0 0x5d
+#define ServGate_uacpi_get_core_count 0x55 0x67 0x9a 20 0 0 0 4 0 0x5d
+#define ServGate_uacpi_start_core 0x55 0x67 0x9a 21 0 0 0 4 0 0x5d
+#define ServGate_uacpi_stop_core 0x55 0x67 0x9a 22 0 0 0 4 0 0x5d

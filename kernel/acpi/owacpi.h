@@ -96,3 +96,18 @@
 #pragma aux ServUacpiGetThreadIrqArr = \
     ServGate_uacpi_get_thread_irq_arr \
     __parm [__ebx] [__edi]
+
+#pragma aux ServUacpiGetCoreCount = \
+    ServGate_uacpi_get_core_count \
+    "jnc ok " \
+    "mov eax,1" \
+    "ok: " \
+    __value [__eax]
+
+#pragma aux ServUacpiStartCore = \
+    ServGate_uacpi_start_core \
+    __parm [__ebx]
+
+#pragma aux ServUacpiStopCore = \
+    ServGate_uacpi_stop_core \
+    __parm [__ebx]

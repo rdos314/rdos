@@ -122,3 +122,18 @@ UacpiGetThreadName  MACRO
 UacpiGetThreadIrqArr  MACRO
     ServGate uacpi_get_thread_irq_arr_nr
                     ENDM
+
+; OUT EAX            Core count
+UacpiGetCoreCount  MACRO
+    ServGate uacpi_get_core_count_nr
+                    ENDM
+
+; IN  EBX            Core #
+UacpiStartCore  MACRO
+    ServGate uacpi_start_core_nr
+                    ENDM
+
+; IN  EBX            Core #
+UacpiStopCore  MACRO
+    ServGate uacpi_stop_core_nr
+                    ENDM
