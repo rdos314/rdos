@@ -51,6 +51,7 @@ void RDOSAPI ServUacpiGetThreadIrqArr(int handle, int arr[8]);
 int RDOSAPI ServUacpiGetCoreCount();
 void RDOSAPI ServUacpiStartCore(int num);
 void RDOSAPI ServUacpiStopCore(int num);
+void RDOSAPI ServUacpiSetThreadCore(int handle, int num);
 
 #ifdef __cplusplus
 }

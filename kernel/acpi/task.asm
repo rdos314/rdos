@@ -2666,8 +2666,6 @@ suspend_signal_done:
     ret
 suspend_and_signal_thread       ENDP
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -3015,6 +3013,63 @@ secDone:
     pop fs
     ret
 serv_stop_core   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServSetThreadCore
+;
+;       DESCRIPTION:    Set thread core
+;
+;       PARAMETERS:     EBX            Handle
+;                       EAX            Core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_set_thread_core_name DB 'Set Thread Core', 0
+
+serv_set_thread_core   Proc far
+    push ds
+    push es
+    push edx
+    push esi
+;
+    mov edx,SEG data
+    mov ds,edx
+    mov edx,thread_arr_sel
+    mov es,edx
+    EnterSection ds:tarr_section
+;
+    mov esi,ebx
+    shr esi,16
+    cmp esi,ds:tarr_size
+    jae stcFail
+;
+    mov dx,es:[2*esi]
+    or dx,dx
+    jz stcFail
+;
+    mov es,edx
+    mov dx,es:p_id
+    cmp dx,bx
+    jne stcFail
+;
+    SetThreadCore
+    clc
+    jmp stcDone
+
+stcFail:
+    stc
+
+stcDone:
+    LeaveSection ds:tarr_section
+;
+    pop esi
+    pop edx
+    pop es
+    pop ds
+    ret
+serv_set_thread_core   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3339,6 +3394,12 @@ init_task_server    Proc near
     mov edi,OFFSET serv_stop_core_name
     xor cl,cl
     mov ax,uacpi_stop_core_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET serv_set_thread_core
+    mov edi,OFFSET serv_set_thread_core_name
+    xor cl,cl
+    mov ax,uacpi_set_thread_core_nr
     RegisterPrivateServGate
     ret
 init_task_server    Endp

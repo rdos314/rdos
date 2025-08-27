@@ -137,3 +137,9 @@ UacpiStartCore  MACRO
 UacpiStopCore  MACRO
     ServGate uacpi_stop_core_nr
                     ENDM
+
+; IN  EBX           Thread handle
+; IN  EAX           Core #
+UacpiSetThreadCore  MACRO
+    ServGate uacpi_set_thread_core_nr
+                    ENDM

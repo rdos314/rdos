@@ -111,3 +111,7 @@
 #pragma aux ServUacpiStopCore = \
     ServGate_uacpi_stop_core \
     __parm [__ebx]
+
+#pragma aux ServUacpiSetThreadCore = \
+    ServGate_uacpi_set_thread_core \
+    __parm [__ebx] [__eax]
