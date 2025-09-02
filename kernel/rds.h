@@ -53,47 +53,12 @@
 #define serv_gate_serv_file_write_req 0x00000034
 #define serv_gate_serv_update_file_req 0x00000035
 
-#define serv_gate_wait_for_ssl_cmd 0x00000036
-#define serv_gate_reply_ssl_cmd 0x00000037
-#define serv_gate_create_ssl_conn 0x00000038
-
-#define serv_gate_ssl_start 0x00000039
-#define serv_gate_ssl_stop 0x0000003A
-
-#define serv_gate_ssl_init_start 0x0000003B
-#define serv_gate_ssl_init_done 0x0000003C
-#define serv_gate_ssl_get_receive_space 0x0000003D
-#define serv_gate_ssl_add_receive_buf 0x0000003E
-#define serv_gate_ssl_get_send_count 0x0000003F
-#define serv_gate_ssl_get_send_buf 0x00000040
-#define serv_gate_ssl_clear_send_count 0x00000041
-#define serv_gate_ssl_wait_for_change 0x00000042
-
-#define serv_gate_delete_ssl_conn 0x00000043
-#define serv_gate_create_ssl_listen 0x00000044
-#define serv_gate_delete_ssl_listen 0x00000045
-#define serv_gate_add_ssl_listen 0x00000046
-
-#define serv_gate_reply_ssl_data_cmd 0x00000047
-#define serv_gate_vfs_init_parts 0x00000048
-#define serv_gate_vfs_done_parts 0x00000049
-#define serv_gate_get_vfs_part_drive 0x0000004A
-#define serv_gate_serv_disable_file_req 0x0000004B
-#define serv_gate_serv_signal 0x0000004C
-#define serv_gate_serv_update_file 0x0000004D
-
-#define serv_gate_uacpi_get_acpi 0x0000004E
-#define serv_gate_uacpi_map 0x0000004F
-#define serv_gate_uacpi_unmap 0x00000050
-#define serv_gate_uacpi_enable_io 0x00000051
-#define serv_gate_uacpi_in 0x00000052
-#define serv_gate_uacpi_out 0x00000053
-#define serv_gate_uacpi_read_pci_byte 0x00000054
-#define serv_gate_uacpi_read_pci_word 0x00000055
-#define serv_gate_uacpi_read_pci_dword 0x00000056
-#define serv_gate_uacpi_write_pci_byte 0x00000057
-#define serv_gate_uacpi_write_pci_word 0x00000058
-#define serv_gate_uacpi_write_pci_dword 0x00000059
+#define serv_gate_vfs_init_parts 0x00000036
+#define serv_gate_vfs_done_parts 0x00000037
+#define serv_gate_get_vfs_part_drive 0x00000038
+#define serv_gate_serv_disable_file_req 0x00000039
+#define serv_gate_serv_signal 0x0000003A
+#define serv_gate_serv_update_file 0x0000003B
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -150,45 +115,10 @@
 #define ServGate_serv_file_write_req 0x55 0x67 0x9a 52 0 0 0 4 0 0x5d
 #define ServGate_serv_update_file_req 0x55 0x67 0x9a 53 0 0 0 4 0 0x5d
 
-#define ServGate_wait_for_ssl_cmd 0x55 0x67 0x9a 54 0 0 0 4 0 0x5d
-#define ServGate_reply_ssl_cmd 0x55 0x67 0x9a 55 0 0 0 4 0 0x5d
-#define ServGate_create_ssl_conn 0x55 0x67 0x9a 56 0 0 0 4 0 0x5d
-
-#define ServGate_ssl_start 0x55 0x67 0x9a 57 0 0 0 4 0 0x5d
-#define ServGate_ssl_stop 0x55 0x67 0x9a 58 0 0 0 4 0 0x5d
-
-#define ServGate_ssl_init_start 0x55 0x67 0x9a 59 0 0 0 4 0 0x5d
-#define ServGate_ssl_init_done 0x55 0x67 0x9a 60 0 0 0 4 0 0x5d
-#define ServGate_ssl_get_receive_space 0x55 0x67 0x9a 61 0 0 0 4 0 0x5d
-#define ServGate_ssl_add_receive_buf 0x55 0x67 0x9a 62 0 0 0 4 0 0x5d
-#define ServGate_ssl_get_send_count 0x55 0x67 0x9a 63 0 0 0 4 0 0x5d
-#define ServGate_ssl_get_send_buf 0x55 0x67 0x9a 64 0 0 0 4 0 0x5d
-#define ServGate_ssl_clear_send_count 0x55 0x67 0x9a 65 0 0 0 4 0 0x5d
-#define ServGate_ssl_wait_for_change 0x55 0x67 0x9a 66 0 0 0 4 0 0x5d
-
-#define ServGate_delete_ssl_conn 0x55 0x67 0x9a 67 0 0 0 4 0 0x5d
-#define ServGate_create_ssl_listen 0x55 0x67 0x9a 68 0 0 0 4 0 0x5d
-#define ServGate_delete_ssl_listen 0x55 0x67 0x9a 69 0 0 0 4 0 0x5d
-#define ServGate_add_ssl_listen 0x55 0x67 0x9a 70 0 0 0 4 0 0x5d
-
-#define ServGate_reply_ssl_data_cmd 0x55 0x67 0x9a 71 0 0 0 4 0 0x5d
-#define ServGate_vfs_init_parts 0x55 0x67 0x9a 72 0 0 0 4 0 0x5d
-#define ServGate_vfs_done_parts 0x55 0x67 0x9a 73 0 0 0 4 0 0x5d
-#define ServGate_get_vfs_part_drive 0x55 0x67 0x9a 74 0 0 0 4 0 0x5d
-#define ServGate_serv_disable_file_req 0x55 0x67 0x9a 75 0 0 0 4 0 0x5d
-#define ServGate_serv_signal 0x55 0x67 0x9a 76 0 0 0 4 0 0x5d
-#define ServGate_serv_update_file 0x55 0x67 0x9a 77 0 0 0 4 0 0x5d
-
-#define ServGate_uacpi_get_acpi 0x55 0x67 0x9a 78 0 0 0 4 0 0x5d
-#define ServGate_uacpi_map 0x55 0x67 0x9a 79 0 0 0 4 0 0x5d
-#define ServGate_uacpi_unmap 0x55 0x67 0x9a 80 0 0 0 4 0 0x5d
-#define ServGate_uacpi_enable_io 0x55 0x67 0x9a 81 0 0 0 4 0 0x5d
-#define ServGate_uacpi_in 0x55 0x67 0x9a 82 0 0 0 4 0 0x5d
-#define ServGate_uacpi_out 0x55 0x67 0x9a 83 0 0 0 4 0 0x5d
-#define ServGate_uacpi_read_pci_byte 0x55 0x67 0x9a 84 0 0 0 4 0 0x5d
-#define ServGate_uacpi_read_pci_word 0x55 0x67 0x9a 85 0 0 0 4 0 0x5d
-#define ServGate_uacpi_read_pci_dword 0x55 0x67 0x9a 86 0 0 0 4 0 0x5d
-#define ServGate_uacpi_write_pci_byte 0x55 0x67 0x9a 87 0 0 0 4 0 0x5d
-#define ServGate_uacpi_write_pci_word 0x55 0x67 0x9a 88 0 0 0 4 0 0x5d
-#define ServGate_uacpi_write_pci_dword 0x55 0x67 0x9a 89 0 0 0 4 0 0x5d
+#define ServGate_vfs_init_parts 0x55 0x67 0x9a 54 0 0 0 4 0 0x5d
+#define ServGate_vfs_done_parts 0x55 0x67 0x9a 55 0 0 0 4 0 0x5d
+#define ServGate_get_vfs_part_drive 0x55 0x67 0x9a 56 0 0 0 4 0 0x5d
+#define ServGate_serv_disable_file_req 0x55 0x67 0x9a 57 0 0 0 4 0 0x5d
+#define ServGate_serv_signal 0x55 0x67 0x9a 58 0 0 0 4 0 0x5d
+#define ServGate_serv_update_file 0x55 0x67 0x9a 59 0 0 0 4 0 0x5d
 

@@ -53,7 +53,7 @@
 #include "crypto/jsonc.h"
 
 #include "rdos.h"
-#include "serv.h"
+#include "ssl.h"
 #include "apps.h"
 #include "s_apps.h"
 
