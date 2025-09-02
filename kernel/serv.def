@@ -53,33 +53,11 @@ is_vfs_busy_nr             = 51
 serv_file_write_req_nr     = 52
 serv_update_file_req_nr    = 53
 
-wait_for_ssl_cmd_nr        = 54
-reply_ssl_cmd_nr           = 55
-create_ssl_conn_nr         = 56
-
-ssl_start_nr               = 57
-ssl_stop_nr                = 58
-
-ssl_init_start_nr          = 59
-ssl_init_done_nr           = 60
-ssl_get_receive_space_nr   = 61
-ssl_add_receive_buf_nr     = 62
-ssl_get_send_count_nr      = 63
-ssl_get_send_buf_nr        = 64
-ssl_clear_send_count_nr    = 65
-ssl_wait_for_change_nr     = 66
-
-delete_ssl_conn_nr         = 67
-create_ssl_listen_nr       = 68
-delete_ssl_listen_nr       = 69
-add_ssl_listen_nr          = 70
-
-reply_ssl_data_cmd_nr      = 71
-vfs_init_parts_nr          = 72
-vfs_done_parts_nr          = 73
-get_vfs_part_drive_nr      = 74
-serv_disable_file_req_nr   = 75
-serv_signal_nr             = 76
-serv_update_file_nr        = 77
+vfs_init_parts_nr          = 54
+vfs_done_parts_nr          = 55
+get_vfs_part_drive_nr      = 56
+serv_disable_file_req_nr   = 57
+serv_signal_nr             = 58
+serv_update_file_nr        = 59
 
 serv_gate_entries          = 80

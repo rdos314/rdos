@@ -32,8 +32,6 @@
 include ..\os\system.def
 include ..\os.def
 include ..\os.inc
-include ..\serv.def
-include ..\serv.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
@@ -42,7 +40,8 @@ include ..\wait.inc
 include ..\os\protseg.def
 include ..\fs.inc
 include ..\os\exec.def
-include ssl.inc
+include ssl.def
+include dev\ssl.inc
 
     .386p
 
@@ -161,6 +160,8 @@ lpname DB 'sslserv', 0
 lpcmd  DB 0
 
 SslServer:
+    call init_server_gates
+;
     mov eax,cs
     mov ds,eax
     mov es,eax
@@ -185,8 +186,6 @@ ssLoop:
 ;       DESCRIPTION:    Load SSL server
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public LoadSslServer
 
 LoadSslServer  Proc near
     push ds
@@ -277,9 +276,9 @@ GetMsgSel Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           WaitForVfsCmd
+;       NAME:           WaitForSslCmd
 ;
-;       DESCRIPTION:    Wait for VFS cmd
+;       DESCRIPTION:    Wait for SSL cmd
 ;
 ;       PARAMETERS:     EBX        SSL handle
 ;
@@ -1388,6 +1387,130 @@ add_ssl_listen  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           init_server_gates
+;
+;       description:    Init server gates
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_server_gates    Proc near
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+;
+    mov esi,OFFSET wait_for_ssl_cmd
+    mov edi,OFFSET wait_for_ssl_cmd_name
+    xor cl,cl
+    mov ax,wait_for_ssl_cmd_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET reply_ssl_cmd
+    mov edi,OFFSET reply_ssl_cmd_name
+    xor cl,cl
+    mov ax,reply_ssl_cmd_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET reply_ssl_data_cmd
+    mov edi,OFFSET reply_ssl_data_cmd_name
+    xor cl,cl
+    mov ax,reply_ssl_data_cmd_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET create_ssl_conn
+    mov edi,OFFSET create_ssl_conn_name
+    xor cl,cl
+    mov ax,create_ssl_conn_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET delete_ssl_conn
+    mov edi,OFFSET delete_ssl_conn_name
+    xor cl,cl
+    mov ax,delete_ssl_conn_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET handler_start
+    mov edi,OFFSET handler_start_name
+    xor cl,cl
+    mov ax,ssl_start_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET handler_stop
+    mov edi,OFFSET handler_stop_name
+    xor cl,cl
+    mov ax,ssl_stop_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET init_start
+    mov edi,OFFSET init_start_name
+    xor cl,cl
+    mov ax,ssl_init_start_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET init_done
+    mov edi,OFFSET init_done_name
+    xor cl,cl
+    mov ax,ssl_init_done_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET get_receive_space
+    mov edi,OFFSET get_receive_space_name
+    xor cl,cl
+    mov ax,ssl_get_receive_space_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET add_receive_buf
+    mov edi,OFFSET add_receive_buf_name
+    xor cl,cl
+    mov ax,ssl_add_receive_buf_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET get_send_count
+    mov edi,OFFSET get_send_count_name
+    xor cl,cl
+    mov ax,ssl_get_send_count_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET get_send_buf
+    mov edi,OFFSET get_send_buf_name
+    xor cl,cl
+    mov ax,ssl_get_send_buf_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET clear_send_count
+    mov edi,OFFSET clear_send_count_name
+    xor cl,cl
+    mov ax,ssl_clear_send_count_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET wait_for_change
+    mov edi,OFFSET wait_for_change_name
+    xor cl,cl
+    mov ax,ssl_wait_for_change_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET create_ssl_listen
+    mov edi,OFFSET create_ssl_listen_name
+    xor cl,cl
+    mov ax,create_ssl_listen_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET delete_ssl_listen
+    mov edi,OFFSET delete_ssl_listen_name
+    xor cl,cl
+    mov ax,delete_ssl_listen_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET add_ssl_listen
+    mov edi,OFFSET add_ssl_listen_name
+    xor cl,cl
+    mov ax,add_ssl_listen_nr
+    RegisterPrivateServGate
+    ret
+init_server_gates    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           init_server
 ;
 ;       description:    Init server
@@ -1410,118 +1533,6 @@ init_server    Proc near
     mov ecx,MAX_LISTEN_COUNT
     xor ax,ax
     rep stosw
-;
-    mov eax,cs
-    mov ds,eax
-    mov es,eax
-;
-    mov esi,OFFSET wait_for_ssl_cmd
-    mov edi,OFFSET wait_for_ssl_cmd_name
-    xor cl,cl
-    mov ax,wait_for_ssl_cmd_nr
-    RegisterServGate
-;
-    mov esi,OFFSET reply_ssl_cmd
-    mov edi,OFFSET reply_ssl_cmd_name
-    xor cl,cl
-    mov ax,reply_ssl_cmd_nr
-    RegisterServGate
-;
-    mov esi,OFFSET reply_ssl_data_cmd
-    mov edi,OFFSET reply_ssl_data_cmd_name
-    xor cl,cl
-    mov ax,reply_ssl_data_cmd_nr
-    RegisterServGate
-;
-    mov esi,OFFSET create_ssl_conn
-    mov edi,OFFSET create_ssl_conn_name
-    xor cl,cl
-    mov ax,create_ssl_conn_nr
-    RegisterServGate
-;
-    mov esi,OFFSET delete_ssl_conn
-    mov edi,OFFSET delete_ssl_conn_name
-    xor cl,cl
-    mov ax,delete_ssl_conn_nr
-    RegisterServGate
-;
-    mov esi,OFFSET handler_start
-    mov edi,OFFSET handler_start_name
-    xor cl,cl
-    mov ax,ssl_start_nr
-    RegisterServGate
-;
-    mov esi,OFFSET handler_stop
-    mov edi,OFFSET handler_stop_name
-    xor cl,cl
-    mov ax,ssl_stop_nr
-    RegisterServGate
-;
-    mov esi,OFFSET init_start
-    mov edi,OFFSET init_start_name
-    xor cl,cl
-    mov ax,ssl_init_start_nr
-    RegisterServGate
-;
-    mov esi,OFFSET init_done
-    mov edi,OFFSET init_done_name
-    xor cl,cl
-    mov ax,ssl_init_done_nr
-    RegisterServGate
-;
-    mov esi,OFFSET get_receive_space
-    mov edi,OFFSET get_receive_space_name
-    xor cl,cl
-    mov ax,ssl_get_receive_space_nr
-    RegisterServGate
-;
-    mov esi,OFFSET add_receive_buf
-    mov edi,OFFSET add_receive_buf_name
-    xor cl,cl
-    mov ax,ssl_add_receive_buf_nr
-    RegisterServGate
-;
-    mov esi,OFFSET get_send_count
-    mov edi,OFFSET get_send_count_name
-    xor cl,cl
-    mov ax,ssl_get_send_count_nr
-    RegisterServGate
-;
-    mov esi,OFFSET get_send_buf
-    mov edi,OFFSET get_send_buf_name
-    xor cl,cl
-    mov ax,ssl_get_send_buf_nr
-    RegisterServGate
-;
-    mov esi,OFFSET clear_send_count
-    mov edi,OFFSET clear_send_count_name
-    xor cl,cl
-    mov ax,ssl_clear_send_count_nr
-    RegisterServGate
-;
-    mov esi,OFFSET wait_for_change
-    mov edi,OFFSET wait_for_change_name
-    xor cl,cl
-    mov ax,ssl_wait_for_change_nr
-    RegisterServGate
-;
-    mov esi,OFFSET create_ssl_listen
-    mov edi,OFFSET create_ssl_listen_name
-    xor cl,cl
-    mov ax,create_ssl_listen_nr
-    RegisterServGate
-;
-    mov esi,OFFSET delete_ssl_listen
-    mov edi,OFFSET delete_ssl_listen_name
-    xor cl,cl
-    mov ax,delete_ssl_listen_nr
-    RegisterServGate
-;
-    mov esi,OFFSET add_ssl_listen
-    mov edi,OFFSET add_ssl_listen_name
-    xor cl,cl
-    mov ax,add_ssl_listen_nr
-    RegisterServGate
     ret
 init_server    Endp
 

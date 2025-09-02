@@ -1,0 +1,23 @@
+
+wait_for_ssl_cmd_nr        = 1
+reply_ssl_cmd_nr           = 2
+create_ssl_conn_nr         = 3
+
+ssl_start_nr               = 4
+ssl_stop_nr                = 5
+
+ssl_init_start_nr          = 6
+ssl_init_done_nr           = 7
+ssl_get_receive_space_nr   = 8
+ssl_add_receive_buf_nr     = 9
+ssl_get_send_count_nr      = 10
+ssl_get_send_buf_nr        = 11
+ssl_clear_send_count_nr    = 12
+ssl_wait_for_change_nr     = 13
+
+delete_ssl_conn_nr         = 14
+create_ssl_listen_nr       = 15
+delete_ssl_listen_nr       = 16
+add_ssl_listen_nr          = 17
+
+reply_ssl_data_cmd_nr      = 18

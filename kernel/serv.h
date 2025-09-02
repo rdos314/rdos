@@ -118,25 +118,6 @@ void RDOSAPI ServAddWaitForVfsReq(int waithandle, int handle, int id);
 
 void RDOSAPI ServNotifyVfsMsg(int Handle, const char *Msg);
 
-void RDOSAPI ServCreateSslConnection(int index, long IP, int LocalPort, int RemotePort, int BufferSize);
-void RDOSAPI ServDeleteSslConnection(int index);
-
-void RDOSAPI ServCreateSslListen(int index, int Port, int BufferSize);
-void RDOSAPI ServDeleteSslListen(int index);
-void RDOSAPI ServAddSslListen(int index, int entry);
-
-void RDOSAPI ServSslStart(int index, int handle);
-void RDOSAPI ServSslStop(int index, int handle);
-
-void  RDOSAPI ServSslInitStart(int index);
-void  RDOSAPI ServSslInitDone(int index);
-int  RDOSAPI ServSslGetReceiveSpace(int index);
-void RDOSAPI ServSslAddReceiveBuf(int index, const char *buf, int size);
-int RDOSAPI ServSslGetSendCount(int index);
-int RDOSAPI ServSslGetSendBuf(int index, char *buf);
-void RDOSAPI ServSslClearSendCount(int index, int count);
-int RDOSAPI ServSslWaitForChange(int consel);
-
 #ifdef __cplusplus
 }
 #endif

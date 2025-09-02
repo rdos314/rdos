@@ -29,8 +29,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-include ..\serv.def
-include ..\serv.inc
+include ssl.def
+include ssl.inc
 include ..\user.def
 include ..\user.inc
 
