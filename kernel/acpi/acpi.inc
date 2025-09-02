@@ -123,6 +123,17 @@ UacpiGetThreadIrqArr  MACRO
     ServGate uacpi_get_thread_irq_arr_nr
                     ENDM
 
+; IN  EBX            Handle
+; OUT EAX            Process
+UacpiGetThreadProcess  MACRO
+    ServGate uacpi_get_thread_process_nr
+                    ENDM
+
+; OUT EAX            Process
+UacpiGetProcess  MACRO
+    ServGate uacpi_get_process_nr
+                    ENDM
+
 ; OUT EAX            Core count
 UacpiGetCoreCount  MACRO
     ServGate uacpi_get_core_count_nr

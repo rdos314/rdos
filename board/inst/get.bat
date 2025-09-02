@@ -73,8 +73,6 @@ copy ..\..\kernel\netdev\i2xx.rdv files
 copy \rdos-uacpi\rdos\uacpi.exe files
 copy ..\..\kernel\fs\parttool.exe files
 copy ..\..\kernel\fs\fat.exe files
-copy ..\..\kernel\ssl\ssl.rdv files
-copy ..\..\kernel\ssl\sslserv.exe files
 copy \rdosdev\src\power.rdv files
 copy \rdosdev\src\nopower.rdv files
 copy \rdosdev\src\preem.rdv files

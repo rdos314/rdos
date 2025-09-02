@@ -97,6 +97,17 @@
     ServGate_uacpi_get_thread_irq_arr \
     __parm [__ebx] [__edi]
 
+#pragma aux ServUacpiGetThreadProcess = \
+    ServGate_uacpi_get_thread_process \
+    "jnc done " \
+    "xor eax,eax" \
+    "done: " \
+    __parm [__ebx] __value [__eax]
+
+#pragma aux ServUacpiGetProcess = \
+    ServGate_uacpi_get_process \
+    __value [__eax]
+
 #pragma aux ServUacpiGetCoreCount = \
     ServGate_uacpi_get_core_count \
     "jnc ok " \

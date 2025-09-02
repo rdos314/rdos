@@ -2935,6 +2935,88 @@ serv_get_thread_irq_arr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ServGetThreadProcess
+;
+;       DESCRIPTION:    Get thread process
+;
+;       PARAMETERS:     EBX            Handle
+;
+;       RETURNS:        EAX            Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_get_thread_process_name DB 'Get Thread Process', 0
+
+serv_get_thread_process   Proc far
+    push ds
+    push fs
+    push ebx
+    push esi
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,thread_arr_sel
+    mov fs,eax
+    EnterSection ds:tarr_section
+;
+    mov esi,ebx
+    shr esi,16
+    cmp esi,ds:tarr_size
+    jae stpFail
+;
+    mov ax,fs:[2*esi]
+    or ax,ax
+    jz stpFail
+;
+    mov fs,eax
+    mov ax,fs:p_id
+    cmp ax,bx
+    jne stpFail
+;
+    movzx eax,fs:p_proc_id
+    LeaveSection ds:tarr_section
+    clc
+    jmp stpDone
+
+stpFail:
+    LeaveSection ds:tarr_section
+    stc
+
+stpDone:
+    pop esi
+    pop ebx
+    pop fs
+    pop ds
+    ret
+serv_get_thread_process  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServGetProcess
+;
+;       DESCRIPTION:    Get process
+;
+;       RETURNS:        EAX            Process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_get_process_name DB 'Get Process', 0
+
+serv_get_process   Proc far
+    push ds
+;
+    GetThread
+    mov ds,eax
+    movzx eax,ds:p_proc_id
+;
+    pop ds
+    ret
+serv_get_process  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServGetCoreCount
 ;
 ;       DESCRIPTION:    Get core count
@@ -3376,6 +3458,18 @@ init_task_server    Proc near
     mov edi,OFFSET serv_get_thread_irq_arr_name
     xor cl,cl
     mov ax,uacpi_get_thread_irq_arr_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET serv_get_thread_process
+    mov edi,OFFSET serv_get_thread_process_name
+    xor cl,cl
+    mov ax,uacpi_get_thread_process_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET serv_get_process
+    mov edi,OFFSET serv_get_process_name
+    xor cl,cl
+    mov ax,uacpi_get_process_nr
     RegisterPrivateServGate
 ;
     mov esi,OFFSET serv_get_core_count
