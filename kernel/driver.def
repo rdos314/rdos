@@ -240,6 +240,8 @@ pcbios_proc_sel     EQU 498h
 pcbios_code_sel         EQU 4A0h
 pcbios_data_sel         EQU 4A8h
 
+legacy_code_sel     EQU 4B0h
+
 dosemu_code_sel     EQU 4E0h
 dosemu_data_sel     EQU 4E8h
 

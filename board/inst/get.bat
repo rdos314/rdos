@@ -1,7 +1,6 @@
 copy rdos.cfg files
 copy ..\..\kernel\os\kernel.exe files
 copy ..\..\kernel\os\longmode.bin files
-copy ..\..\kernel\os\sched.rdv files
 copy ..\..\kernel\os\task.rdv files
 copy ..\..\kernel\freetype\freetype.rdv files
 copy ..\..\kernel\os\util.rdv files
@@ -23,7 +22,6 @@ copy ..\..\kernel\os\lon.rdv files
 copy ..\..\kernel\os\tlist.rdv files
 copy ..\..\kernel\os\wd.rdv files
 copy ..\..\kernel\os\guidev.rdv files
-copy ..\..\kernel\os\realtime.rdv files
 copy ..\..\kernel\bios\pcbios.rdv files
 copy ..\..\kernel\debug\kdebug.rdv files
 copy ..\..\kernel\debug\pcshut.exe files
@@ -73,6 +71,8 @@ copy ..\..\kernel\netdev\i2xx.rdv files
 copy \rdos-uacpi\rdos\uacpi.exe files
 copy ..\..\kernel\fs\parttool.exe files
 copy ..\..\kernel\fs\fat.exe files
+copy ..\..\kernel\ssl\ssl.rdv files
+copy ..\..\kernel\ssl\sslserv.exe files
 copy \rdosdev\src\power.rdv files
 copy \rdosdev\src\nopower.rdv files
 copy \rdosdev\src\preem.rdv files
@@ -83,6 +83,10 @@ copy \rdosdev\src\pem.rdv files
 copy \rdosdev\src\cancom.rdv files
 copy \rdosdev\src\ioe2.rdv files
 copy \rdosdev\src\ioekey.rdv files
+copy \rdosdev\legacy\pic.rdv files
+copy \rdosdev\legacy\apic.rdv files
+copy \rdosdev\legacy\pci.rdv files
+copy \rdosdev\legacy\sched.rdv files
 copy ..\..\apps\freecom\command.exe files
 copy ..\..\apps\ftpd\ftpd.exe files
 copy ..\..\apps\tcpwd\tcpwd.exe files
