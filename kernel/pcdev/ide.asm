@@ -149,18 +149,10 @@ ide_pci_int Proc far
     add dx,7
     in al,dx
 
-ide_pci_int_base_ok:
-    mov al,1
-    xchg al,ds:IntFlag
-    or al,al
-    clc
-    jnz ide_pci_done
-;
+ide_pci_int_base_ok:    
+    mov ds:IntFlag,1
     mov bx,ds:IdeThread
     Signal
-    stc
-
-ide_pci_done:
     retf32
 ide_pci_int Endp
 
