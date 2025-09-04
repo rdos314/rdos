@@ -129,9 +129,9 @@ UacpiGetThreadProcess  MACRO
     ServGate uacpi_get_thread_process_nr
                     ENDM
 
-; OUT EAX            Process
-UacpiGetProcess  MACRO
-    ServGate uacpi_get_process_nr
+; OUT EAX            Handle
+UacpiGetThread  MACRO
+    ServGate uacpi_get_thread_nr
                     ENDM
 
 ; OUT EAX            Core count

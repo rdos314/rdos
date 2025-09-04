@@ -104,8 +104,8 @@
     "done: " \
     __parm [__ebx] __value [__eax]
 
-#pragma aux ServUacpiGetProcess = \
-    ServGate_uacpi_get_process \
+#pragma aux ServUacpiGetThread = \
+    ServGate_uacpi_get_thread \
     __value [__eax]
 
 #pragma aux ServUacpiGetCoreCount = \

@@ -22,4 +22,4 @@ uacpi_start_core_nr         = 21
 uacpi_stop_core_nr          = 22
 uacpi_set_thread_core_nr    = 23
 uacpi_get_thread_process_nr = 24
-uacpi_get_process_nr        = 25
+uacpi_get_thread_nr         = 25

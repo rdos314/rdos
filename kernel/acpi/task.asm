@@ -2993,26 +2993,28 @@ serv_get_thread_process  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ServGetProcess
+;       NAME:           ServGetThread
 ;
-;       DESCRIPTION:    Get process
+;       DESCRIPTION:    Get thread
 ;
-;       RETURNS:        EAX            Process ID
+;       RETURNS:        EAX            Thread ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-serv_get_process_name DB 'Get Process', 0
+serv_get_my_thread_name DB 'Get Thread', 0
 
-serv_get_process   Proc far
+serv_get_my_thread   Proc far
     push ds
 ;
     GetThread
     mov ds,eax
-    movzx eax,ds:p_proc_id
+    mov ax,ds:p_index
+    shl eax,16
+    mov ax,ds:p_id
 ;
     pop ds
     ret
-serv_get_process  Endp
+serv_get_my_thread  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3120,7 +3122,7 @@ serv_set_thread_core   Proc far
     mov ds,edx
     mov edx,thread_arr_sel
     mov es,edx
-    EnterSection ds:tarr_section
+;    EnterSection ds:tarr_section
 ;
     mov esi,ebx
     shr esi,16
@@ -3144,7 +3146,7 @@ stcFail:
     stc
 
 stcDone:
-    LeaveSection ds:tarr_section
+;    LeaveSection ds:tarr_section
 ;
     pop esi
     pop edx
@@ -3466,10 +3468,10 @@ init_task_server    Proc near
     mov ax,uacpi_get_thread_process_nr
     RegisterPrivateServGate
 ;
-    mov esi,OFFSET serv_get_process
-    mov edi,OFFSET serv_get_process_name
+    mov esi,OFFSET serv_get_my_thread
+    mov edi,OFFSET serv_get_my_thread_name
     xor cl,cl
-    mov ax,uacpi_get_process_nr
+    mov ax,uacpi_get_thread_nr
     RegisterPrivateServGate
 ;
     mov esi,OFFSET serv_get_core_count
