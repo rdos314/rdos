@@ -2935,6 +2935,61 @@ serv_get_thread_irq_arr  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ServSetThreadIrq
+;
+;       DESCRIPTION:    Set thread IRQ
+;
+;       PARAMETERS:     EBX            Thread ID
+;                       AL             IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_set_thread_irq_name DB 'Set Thread IRQ', 0
+
+serv_set_thread_irq   Proc far
+    push ds
+    push fs
+    push esi
+;
+    mov esi,SEG data
+    mov ds,esi
+    mov esi,thread_arr_sel
+    mov fs,esi
+    EnterSection ds:tarr_section
+;
+    mov esi,ebx
+    shr esi,16
+    cmp esi,ds:tarr_size
+    jae stiFail
+;
+    mov si,fs:[2*esi]
+    or si,si
+    jz stiFail
+;
+    mov fs,si
+    mov si,fs:p_id
+    cmp si,bx
+    jne stiFail
+;
+    mov fs:p_irq,al
+    clc
+    jmp stiDone
+
+stiFail:
+    stc
+
+stiDone:
+    LeaveSection ds:tarr_section
+;
+    pop esi
+    pop fs
+    pop ds
+    ret
+serv_set_thread_irq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServGetThreadProcess
 ;
 ;       DESCRIPTION:    Get thread process
@@ -3154,28 +3209,6 @@ stcDone:
     pop ds
     ret
 serv_set_thread_core   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           Test gate
-;
-;           DESCRIPTION:    Test gate
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_pr_name  DB 'Test Gate',0
-
-test_pr       PROC far
-    push eax
-    mov eax,SIZE process_struc + 4
-    AllocateSmallGlobalMem
-;
-    mov bx,es
-    movzx ebx,bx
-    call process_created
-    ret
-test_pr      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3342,12 +3375,6 @@ init_task    Proc near
     mov ax,get_module_id_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_pr_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
-;
     mov esi,OFFSET get_thread_count
     mov edi,OFFSET get_thread_count_name
     xor dx,dx
@@ -3460,6 +3487,12 @@ init_task_server    Proc near
     mov edi,OFFSET serv_get_thread_irq_arr_name
     xor cl,cl
     mov ax,uacpi_get_thread_irq_arr_nr
+    RegisterPrivateServGate
+;
+    mov esi,OFFSET serv_set_thread_irq
+    mov edi,OFFSET serv_set_thread_irq_name
+    xor cl,cl
+    mov ax,uacpi_set_thread_irq_nr
     RegisterPrivateServGate
 ;
     mov esi,OFFSET serv_get_thread_process

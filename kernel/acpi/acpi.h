@@ -47,6 +47,7 @@ void RDOSAPI ServUacpiWaitTaskQueue(int index);
 int RDOSAPI ServUacpiGetThreadState(int handle, struct TCurrThreadState *state);
 int RDOSAPI ServUacpiGetThreadName(int handle, char *name);
 void RDOSAPI ServUacpiGetThreadIrqArr(int handle, int arr[8]);
+void RDOSAPI ServUacpiSetThreadIrq(int handle, unsigned char irq);
 int RDOSAPI ServUacpiGetThreadProcess(int handle);
 int RDOSAPI ServUacpiGetThread();
 

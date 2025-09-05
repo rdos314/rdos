@@ -97,6 +97,10 @@
     ServGate_uacpi_get_thread_irq_arr \
     __parm [__ebx] [__edi]
 
+#pragma aux ServUacpiSetThreadIrq = \
+    ServGate_uacpi_set_thread_irq \
+    __parm [__ebx] [__al]
+
 #pragma aux ServUacpiGetThreadProcess = \
     ServGate_uacpi_get_thread_process \
     "jnc done " \
