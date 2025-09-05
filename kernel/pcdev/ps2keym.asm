@@ -1298,7 +1298,7 @@ init_keyb_thread    PROC far
     mov si,OFFSET mode_pr
     mov di,OFFSET mode_name
     mov cx,stack0_size
-    mov ax,4
+    mov ax,2
     CreateThread
 ;
     mov bx,SEG data
