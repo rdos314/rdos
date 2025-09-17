@@ -68,8 +68,8 @@ r????WLANG_i
 0
 17
 WString
-85
-"\rdos\kernel;\rdos\classlib;\rdos\classlib\rdos;\rdos\classlib\widget;$(%watcom)/rh"
+101
+"\rdos\kernel;\rdos\classlib;\rdos\classlib\rdos;\rdos\classlib\mad;\rdos\classlib\mp3;$(%watcom)/rh"
 18
 WVList
 0

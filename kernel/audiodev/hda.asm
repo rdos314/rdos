@@ -1292,6 +1292,10 @@ wfbRetry:
     jnz wfbHasIrq
 
 wfbWait:    
+    test ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
+    clc
+    jz wfbDone
+;
     WaitForSignal
     jmp wfbRetry
 
@@ -1323,6 +1327,7 @@ wfbPrd1:
     jmp wfbWait
 
 wfbDone:        
+    cmc
     ret
 WaitForBuffer   Endp
 
@@ -1353,7 +1358,11 @@ close_audio_out Proc far
     shl ebx,6
     add ebx,OFFSET StreamArr
 ;
+    test ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
+    jz caoClose
+;
     call WaitForBuffer
+    jc caoClose
 ;
     mov ax,flat_sel
     mov es,ax
@@ -1362,8 +1371,13 @@ close_audio_out Proc far
     shr ecx,2
     xor eax,eax
     rep stosd
+;
+    test ds:[ebx].sdFlags, STREAM_FLAG_RUNNING
+    jz caoClose
+;
     call WaitForBuffer
-;    
+
+caoClose:    
     mov es,ds:HdaSel
     mov eax,1
     mov cx,ds:InStreamCnt
@@ -1443,6 +1457,7 @@ send_audio_out  Proc far
     jz saoBuffer
 ;    
     call WaitForBuffer
+    jc saoDone
 
 saoBuffer:
     mov ax,flat_sel
