@@ -2672,6 +2672,8 @@ dhcp_disc_size_ok:
     mov cx,dx
     push cx
     call CreateUnboundDhcpBroadcast
+    jc dhcp_disc_fail
+;
     mov es:[di].dhcp_op,1
     mov al,ds:class_id
     mov es:[di].dhcp_hw_type,al
@@ -2738,6 +2740,12 @@ dhcp_disc_data_ok:
     pop di
     pop cx
     call SendDhcpBroadcast
+    jmp dhcp_disc_done
+
+dhcp_disc_fail:
+    pop cx
+
+dhcp_disc_done:
     retf32
 DhcpDiscover    Endp
 
@@ -2800,6 +2808,8 @@ dhcp_req_renew:
     call CreateDhcpReqBroadcast
 
 dhcp_req_header_ok:
+    jc dhcp_req_fail
+;
     mov es:[di].dhcp_op,1
     mov al,ds:class_id
     mov es:[di].dhcp_hw_type,al
@@ -2859,6 +2869,12 @@ dhcp_req_data_ok:
     pop di
     pop cx
     call SendDhcpBroadcast
+    jmp dhcp_req_done
+
+dhcp_req_fail:
+    pop cx
+
+dhcp_req_done:
     retf32
 DhcpRequest     Endp
 

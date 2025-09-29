@@ -1666,6 +1666,9 @@ get_buf_arp_done:
 get_net_buffer_do:
     mov ds,ax
     mov fs,ds:prot_driver
+    call fword ptr fs:d_get_link_state
+    jc get_net_buf_done
+;
     call fword ptr fs:d_get_buffer
     clc
 
@@ -1959,7 +1962,12 @@ send_net    Endp
 get_broadcast_buffer_name       DB 'Get Broadcast Buffer',0
 
 get_broadcast_buffer    Proc far
+    call fword ptr fs:d_get_link_state
+    jc gbbDone
+;
     call fword ptr fs:d_get_buffer
+
+gbbDone:
     retf32
 get_broadcast_buffer    Endp
 
@@ -2009,7 +2017,12 @@ send_broadcast  Endp
 get_net_driver_buffer_name       DB 'Get Net Driver Buffer',0
 
 get_net_driver_buffer    Proc far
+    call fword ptr fs:d_get_link_state
+    jc gndbDone
+;
     call fword ptr fs:d_get_buffer
+
+gndbDone:
     retf32
 get_net_driver_buffer    Endp
 
@@ -2251,6 +2264,9 @@ get_ppp_buffer  Proc far
     jz get_ppp_done
 ;
     mov fs,ax
+    call fword ptr fs:d_get_link_state
+    jc get_ppp_done
+;
     call fword ptr fs:d_get_buffer
 
 get_ppp_done:
