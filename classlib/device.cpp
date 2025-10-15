@@ -156,6 +156,22 @@ TDeviceNotify::~TDeviceNotify()
 
 /*##########################################################################
 #
+#   Name       : TDeviceNotify::IsBase
+#
+#   Purpose....: Check if base class
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TDeviceNotify::IsBase()
+{
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TDeviceNotify::NotifyOnline
 #
 #   Purpose....: Online notification

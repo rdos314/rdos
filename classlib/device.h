@@ -60,6 +60,7 @@ public:
     TDeviceNotify();
     virtual ~TDeviceNotify();
 
+    virtual bool IsBase();
     virtual void NotifyOnline(TDevice *Device);
     virtual void NotifyOffline(TDevice *Device);
     virtual void NotifyIdle(TDevice *Device);
