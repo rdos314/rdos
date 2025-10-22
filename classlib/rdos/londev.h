@@ -146,8 +146,8 @@ protected:
                                      unsigned char Size);
 
     virtual void Execute();
-    int GetNextDumpFile();
-    void DumpOnce();
+    void CheckFileCount();
+    void InitFiles();
 
     int FNmPending;
     int FNdPending;
@@ -164,13 +164,14 @@ protected:
     int FEntryCount;
     struct TLonDebug *FEntryArr;
 
-    TSection FDumpSection;
     TSection FEventSection;
-    TSignalDevice FDumpSignal;
-    int FDumpFiles;
-    int FWriteDump;
-    int FDumpStarted;
+    int FCurrId;
+    TFile *FCurrFile;
+    int FFileCount;
     int FNextPos;
+    bool FDumpRunning;
+    bool FNewData;
+
     TString FLogPath;
     int FResetReq;
     int FResponseCounter;
