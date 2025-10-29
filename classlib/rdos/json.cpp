@@ -40,7 +40,7 @@
 #include "sockobj.h"
 #include "rdos.h"
 
-#define MIN_BLOCK_SIZE	0x1000
+#define MIN_BLOCK_SIZE  0x1000
 
 #define json_tokener_success                            1
 #define json_tokener_continue                           2
@@ -127,7 +127,7 @@ TJsonMem::~TJsonMem()
 void *TJsonMem::Allocate(int size)
 {
     char *p;
-    
+
     if (FPos + size <= FSize)
     {
         p = FArr + FPos;
@@ -217,7 +217,7 @@ void *TJsonAlloc::Allocate(int size)
             asize = size;
 
         FArr[FMemCount] = new TJsonMem(asize);
-        blk = FArr[FMemCount]->Allocate(size);        
+        blk = FArr[FMemCount]->Allocate(size);
         FMemCount++;
     }
 
@@ -372,7 +372,7 @@ void TJsonFormString::Reformat(const char *str)
                 if (*str == 0xa)
                     str++;
                 break;
-                
+
             case 0xa:
                 Append(0x5C);
                 Append("n");
@@ -665,7 +665,7 @@ long long TJsonObject::GetInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonObject::GetDouble()
+long double TJsonObject::GetDouble()
 {
     return GetBaseDouble();
 }
@@ -739,9 +739,9 @@ void TJsonObject::CodeInt(long long v)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonObject::CodeDouble(double v, int decimals)
+void TJsonObject::CodeDouble(long double v, int decimals)
 {
-    double temp;
+    long double temp;
     int digits;
     bool done = false;
     char str[80];
@@ -903,11 +903,11 @@ long long TJsonObject::DecodeInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonObject::DecodeDouble()
+long double TJsonObject::DecodeDouble()
 {
     char *end;
 
-    return strtod(FText, &end);
+    return strtold(FText, &end);
 }
 
 /*##########################################################################
@@ -983,7 +983,7 @@ void TJsonObject::SetInt(long long val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonObject::SetDouble(double val, int decimals)
+void TJsonObject::SetDouble(long double val, int decimals)
 {
     SetBaseDouble(val, decimals);
 }
@@ -1079,7 +1079,7 @@ long long TJsonObject::GetBaseInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonObject::GetBaseDouble()
+long double TJsonObject::GetBaseDouble()
 {
     return 0.0;
 }
@@ -1142,7 +1142,7 @@ void TJsonObject::SetBaseInt(long long val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonObject::SetBaseDouble(double val, int decimals)
+void TJsonObject::SetBaseDouble(long double val, int decimals)
 {
 }
 
@@ -1338,7 +1338,7 @@ TJsonArrayObject *TJsonArrayObject::Clone(TJsonAlloc *Alloc)
 #
 #   Name       : TJsonArrayObject::Count
 #
-#   Purpose....: Elements 
+#   Purpose....: Elements
 #
 #   In params..: *
 #   Out params.: *
@@ -1592,7 +1592,7 @@ bool TJsonBooleanArray::IsBooleanArray()
 void TJsonBooleanArray::Grow()
 {
     int i;
-    int NewSize; 
+    int NewSize;
     bool *NewArr;
 
     if (FArr)
@@ -2043,11 +2043,11 @@ TJsonDoubleArray::~TJsonDoubleArray()
 #   Returns....: *
 #
 ##########################################################################*/
-double *TJsonDoubleArray::AllocateArr(int count)
+long double *TJsonDoubleArray::AllocateArr(int count)
 {
-    int size = count * sizeof(double);
+    int size = count * sizeof(long double);
 
-    return (double *)FAlloc->Allocate(size);
+    return (long double *)FAlloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -2061,7 +2061,7 @@ double *TJsonDoubleArray::AllocateArr(int count)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDoubleArray::FreeArr(double *arr)
+void TJsonDoubleArray::FreeArr(long double *arr)
 {
 }
 
@@ -2129,7 +2129,7 @@ void TJsonDoubleArray::Grow()
 {
     int i;
     int NewSize;
-    double *NewArr;
+    long double *NewArr;
 
     if (FArr)
     {
@@ -2168,7 +2168,7 @@ void TJsonDoubleArray::Grow()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonDoubleArray::Get(int Pos)
+long double TJsonDoubleArray::Get(int Pos)
 {
     if (Pos < FArrayCount)
         return FArr[Pos];
@@ -2187,7 +2187,7 @@ double TJsonDoubleArray::Get(int Pos)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDoubleArray::Add(double val)
+void TJsonDoubleArray::Add(long double val)
 {
     if (FArraySize == FArrayCount)
         Grow();
@@ -2230,7 +2230,7 @@ void TJsonDoubleArray::AddNone()
 void TJsonDoubleArray::Write(TJsonDocument *doc, int indent, TString &str)
 {
     int i;
-    double temp;
+    long double temp;
     int digits;
     bool done = false;
     char buf[80];
@@ -2519,7 +2519,7 @@ void TJsonStringArray::Add(const char *str)
     char *s;
 
     s = (char *)Allocate(size + 1);
-    strcpy(s, str);         
+    strcpy(s, str);
 
     if (FArraySize == FArrayCount)
         Grow();
@@ -3008,7 +3008,7 @@ long long TJsonCollection::GetInt(const char *FieldName, long long Default)
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonCollection::GetDouble(const char *FieldName, double Default)
+long double TJsonCollection::GetDouble(const char *FieldName, long double Default)
 {
     TJsonObject *obj = GetObj(FieldName);
 
@@ -3113,7 +3113,7 @@ void TJsonCollection::SetInt(const char *FieldName, long long Val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonCollection::SetDouble(const char *FieldName, double Val, int Decimals)
+void TJsonCollection::SetDouble(const char *FieldName, long double Val, int Decimals)
 {
     TJsonObject *obj = GetObj(FieldName);
 
@@ -3342,7 +3342,7 @@ TJsonObject *TJsonCollection::AddInt(const char *FieldName, long long Val)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonCollection::AddDouble(const char *FieldName, double Val, int Decimals)
+TJsonObject *TJsonCollection::AddDouble(const char *FieldName, long double Val, int Decimals)
 {
     TJsonObject *obj = new(FAlloc) TJsonDouble(FieldName, FAlloc, Val, Decimals);
     Insert(obj);
@@ -3402,7 +3402,7 @@ TJsonObject *TJsonCollection::AddDateTimeZone(const char *FieldName, TDateTime &
         UtcDiff = -UtcDiff;
         sprintf(str,"%04d-%02d-%02dT%02d:%02d:%02d-%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
     }
-        
+
     obj = new(FAlloc) TJsonString(FieldName, FAlloc, str);
     Insert(obj);
     return obj;
@@ -4347,9 +4347,9 @@ long long TJsonInt::GetBaseInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonInt::GetBaseDouble()
+long double TJsonInt::GetBaseDouble()
 {
-    return (double)Val;
+    return (long double)Val;
 }
 
 /*##########################################################################
@@ -4421,7 +4421,7 @@ void TJsonInt::SetBaseInt(long long v)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonInt::SetBaseDouble(double v, int decimals)
+void TJsonInt::SetBaseDouble(long double v, int decimals)
 {
     SetValue((long long)v);
 }
@@ -4486,7 +4486,7 @@ void TJsonInt::SetBaseString(const char *Str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double v, const char *text)
+TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, long double v, const char *text)
  : TJsonObject(FieldName, Alloc)
 {
     TJsonObject::SetBaseString(text);
@@ -4504,7 +4504,7 @@ TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double v, con
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double v, int decimals)
+TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, long double v, int decimals)
  : TJsonObject(FieldName, Alloc)
 {
     SetValue(v, decimals);
@@ -4586,7 +4586,7 @@ TJsonDouble *TJsonDouble::Clone(TJsonAlloc *Alloc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDouble::SetValue(double v, int decimals)
+void TJsonDouble::SetValue(long double v, int decimals)
 {
     Val = v;
     CodeDouble(v, decimals);
@@ -4624,11 +4624,11 @@ bool TJsonDouble::GetBaseBoolean()
 ##########################################################################*/
 long long TJsonDouble::GetBaseInt()
 {
-    double temp = Val;
+    long double temp = Val;
 
     if (temp >= 0.0)
     {
-        if (temp > (double)0x7FFFFFFFFFFFFFFF)
+        if (temp > (long double)0x7FFFFFFFFFFFFFFF)
             return 0x7FFFFFFFFFFFFFFF;
         else
             return (long long)(Val + 0.5);
@@ -4637,7 +4637,7 @@ long long TJsonDouble::GetBaseInt()
     {
         temp = -temp;
 
-        if (temp > (double)0x7FFFFFFFFFFFFFFF)
+        if (temp > (long double)0x7FFFFFFFFFFFFFFF)
             return -0x7FFFFFFFFFFFFFFF;
         else
             return (long long)(Val - 0.5);
@@ -4655,7 +4655,7 @@ long long TJsonDouble::GetBaseInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonDouble::GetBaseDouble()
+long double TJsonDouble::GetBaseDouble()
 {
     return Val;
 }
@@ -4709,7 +4709,7 @@ void TJsonDouble::SetBaseBoolean(bool v)
 ##########################################################################*/
 void TJsonDouble::SetBaseInt(long long v)
 {
-    SetValue((double)v, 0);
+    SetValue((long double)v, 0);
 }
 
 /*##########################################################################
@@ -4723,7 +4723,7 @@ void TJsonDouble::SetBaseInt(long long v)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDouble::SetBaseDouble(double v, int decimals)
+void TJsonDouble::SetBaseDouble(long double v, int decimals)
 {
     SetValue(v, decimals);
 }
@@ -4741,7 +4741,7 @@ void TJsonDouble::SetBaseDouble(double v, int decimals)
 ##########################################################################*/
 void TJsonDouble::SetBaseDateTime(TDateTime &v)
 {
-    SetValue((double)v, 0);
+    SetValue((long double)v, 0);
 }
 
 /*##########################################################################
@@ -4757,7 +4757,7 @@ void TJsonDouble::SetBaseDateTime(TDateTime &v)
 ##########################################################################*/
 void TJsonDouble::SetBaseDateTimeZone(TDateTime &v, int diff)
 {
-    SetValue((double)v, 0);
+    SetValue((long double)v, 0);
 }
 
 /*##########################################################################
@@ -4922,7 +4922,7 @@ long long TJsonBoolean::GetBaseInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonBoolean::GetBaseDouble()
+long double TJsonBoolean::GetBaseDouble()
 {
     if (Val)
         return 1.0;
@@ -4993,7 +4993,7 @@ void TJsonBoolean::SetBaseInt(long long v)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonBoolean::SetBaseDouble(double v, int decimals)
+void TJsonBoolean::SetBaseDouble(long double v, int decimals)
 {
     if (v <= 0.0)
         SetValue(false);
@@ -5180,7 +5180,7 @@ long long TJsonString::GetBaseInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonString::GetBaseDouble()
+long double TJsonString::GetBaseDouble()
 {
     return DecodeDouble();
 }
@@ -5244,7 +5244,7 @@ void TJsonString::SetBaseInt(long long v)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonString::SetBaseDouble(double v, int decimals)
+void TJsonString::SetBaseDouble(long double v, int decimals)
 {
     CodeDouble(v, decimals);
 }
@@ -5945,7 +5945,7 @@ int TJsonStackEntry::DecodeInt(TJsonDocument *doc)
 ##########################################################################*/
 int TJsonStackEntry::DecodeDouble(TJsonDocument *doc)
 {
-    double val;
+    long double val;
     char *end;
 
     val = strtod(FData.GetData(), &end);
@@ -6885,7 +6885,7 @@ void TJsonDocument::AddInt(long long val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDocument::AddDouble(double val, const char *text)
+void TJsonDocument::AddDouble(long double val, const char *text)
 {
     TJsonDouble *obj;
 
@@ -6907,7 +6907,7 @@ void TJsonDocument::AddDouble(double val, const char *text)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDocument::AddDouble(double val, int decimals)
+void TJsonDocument::AddDouble(long double val, int decimals)
 {
     TJsonDouble *obj;
 

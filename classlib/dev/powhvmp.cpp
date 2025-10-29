@@ -206,7 +206,7 @@ int TPowHvmP::GetMode()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetGridVoltage()
+long double TPowHvmP::GetGridVoltage()
 {
     return FGridVoltage;
 }
@@ -222,7 +222,7 @@ double TPowHvmP::GetGridVoltage()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetGridFrequency()
+long double TPowHvmP::GetGridFrequency()
 {
     return FGridFrequency;
 }
@@ -238,7 +238,7 @@ double TPowHvmP::GetGridFrequency()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetGridPower()
+long double TPowHvmP::GetGridPower()
 {
     return FGridPower;
 }
@@ -254,7 +254,7 @@ double TPowHvmP::GetGridPower()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetGridEnergy()
+long double TPowHvmP::GetGridEnergy()
 {
     return FGridEnergy;
 }
@@ -270,7 +270,7 @@ double TPowHvmP::GetGridEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetOutputVoltage()
+long double TPowHvmP::GetOutputVoltage()
 {
     return FOutputVoltage;
 }
@@ -286,7 +286,7 @@ double TPowHvmP::GetOutputVoltage()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetOutputCurrent()
+long double TPowHvmP::GetOutputCurrent()
 {
     return FOutputCurrent;
 }
@@ -302,7 +302,7 @@ double TPowHvmP::GetOutputCurrent()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetOutputFrequency()
+long double TPowHvmP::GetOutputFrequency()
 {
     return FOutputFrequency;
 }
@@ -318,7 +318,7 @@ double TPowHvmP::GetOutputFrequency()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetOutputPower()
+long double TPowHvmP::GetOutputPower()
 {
     return FOutputPower;
 }
@@ -334,7 +334,7 @@ double TPowHvmP::GetOutputPower()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetOutputEnergy()
+long double TPowHvmP::GetOutputEnergy()
 {
     return FOutputEnergy;
 }
@@ -350,7 +350,7 @@ double TPowHvmP::GetOutputEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetSolarVoltage()
+long double TPowHvmP::GetSolarVoltage()
 {
     return FSolarVoltage;
 }
@@ -366,7 +366,7 @@ double TPowHvmP::GetSolarVoltage()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetSolarCurrent()
+long double TPowHvmP::GetSolarCurrent()
 {
     return FSolarCurrent;
 }
@@ -382,7 +382,7 @@ double TPowHvmP::GetSolarCurrent()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetSolarPower()
+long double TPowHvmP::GetSolarPower()
 {
     return FSolarPower;
 }
@@ -398,7 +398,7 @@ double TPowHvmP::GetSolarPower()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetSolarEnergy()
+long double TPowHvmP::GetSolarEnergy()
 {
     return FSolarEnergy;
 }
@@ -414,7 +414,7 @@ double TPowHvmP::GetSolarEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetBatteryVoltage()
+long double TPowHvmP::GetBatteryVoltage()
 {
     return FBatteryVoltage;
 }
@@ -430,7 +430,7 @@ double TPowHvmP::GetBatteryVoltage()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetBatteryCurrent()
+long double TPowHvmP::GetBatteryCurrent()
 {
     return FBatteryCurrent;
 }
@@ -446,7 +446,7 @@ double TPowHvmP::GetBatteryCurrent()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetBatteryPower()
+long double TPowHvmP::GetBatteryPower()
 {
     return FBatteryPower;
 }
@@ -462,7 +462,7 @@ double TPowHvmP::GetBatteryPower()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetBatterySoc()
+long double TPowHvmP::GetBatterySoc()
 {
     return FBatterySoc;
 }
@@ -478,7 +478,7 @@ double TPowHvmP::GetBatterySoc()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetBatteryChargeEnergy()
+long double TPowHvmP::GetBatteryChargeEnergy()
 {
     return FBatteryChargeEnergy;
 }
@@ -494,7 +494,7 @@ double TPowHvmP::GetBatteryChargeEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetBatteryDischargeEnergy()
+long double TPowHvmP::GetBatteryDischargeEnergy()
 {
     return FBatteryDischargeEnergy;
 }
@@ -741,42 +741,42 @@ bool TPowHvmP::GetData()
         FMode = val;
 
         FModbus.GetBufferedHoldingRegister(40203, &val);
-        FGridVoltage = (double)val / 10.0;
+        FGridVoltage = (long double)val / 10.0;
 
         FModbus.GetBufferedHoldingRegister(40204, &val);
-        FGridFrequency = (double)val / 100.0;
+        FGridFrequency = (long double)val / 100.0;
 
         FModbus.GetBufferedHoldingRegister(40205, &val);
-        FGridPower = (double)val;
+        FGridPower = (long double)val;
         FGridEnergy += FGridPower / 60.0 / 4.0;
 
         FModbus.GetBufferedHoldingRegister(40211, &val);
-        FOutputVoltage = (double)val / 10.0;
+        FOutputVoltage = (long double)val / 10.0;
 
         FModbus.GetBufferedHoldingRegister(40212, &val);
-        FOutputCurrent = (double)val / 10.0;
+        FOutputCurrent = (long double)val / 10.0;
 
         FModbus.GetBufferedHoldingRegister(40213, &val);
-        FOutputFrequency = (double)val / 100.0;
+        FOutputFrequency = (long double)val / 100.0;
 
         FModbus.GetBufferedHoldingRegister(40214, &val);
-        FOutputPower = (double)val;
+        FOutputPower = (long double)val;
         FOutputEnergy += FOutputPower / 60.0 / 4.0;
 
         FModbus.GetBufferedHoldingRegister(40216, &val);
-        FBatteryVoltage = (double)val / 10.0;
+        FBatteryVoltage = (long double)val / 10.0;
 
         FModbus.GetBufferedHoldingRegister(40217, &val);
-        FBatteryCurrent = (double)val / 10.0;
+        FBatteryCurrent = (long double)val / 10.0;
 
         FModbus.GetBufferedHoldingRegister(40220, &val);
-        FSolarVoltage = (double)val / 10.0;
+        FSolarVoltage = (long double)val / 10.0;
 
         FModbus.GetBufferedHoldingRegister(40221, &val);
-        FSolarCurrent = (double)val / 10.0;
+        FSolarCurrent = (long double)val / 10.0;
 
         FModbus.GetBufferedHoldingRegister(40224, &val);
-        FSolarPower = (double)val;
+        FSolarPower = (long double)val;
         FSolarEnergy += FSolarPower / 60.0 / 4.0;
 
         FModbus.GetBufferedHoldingRegister(40227, &val);

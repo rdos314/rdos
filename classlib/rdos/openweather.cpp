@@ -48,7 +48,7 @@
 TOpenWeather::TOpenWeather(const char *station, const char *key)
 {
     int len;
-    
+
     FOnline = false;
     FNewData = false;
 
@@ -67,7 +67,7 @@ TOpenWeather::TOpenWeather(const char *station, const char *key)
     len = strlen(key) + 1;
     FKey = new char[len];
     strcpy(FKey, key);
-    
+
     FIp = 0;
 
     Start("openweather.org", 0x8000);
@@ -139,7 +139,7 @@ void TOpenWeather::WaitForData()
 #   Returns....: *
 #
 ##########################################################################*/
-double TOpenWeather::GetTemperature()
+long double TOpenWeather::GetTemperature()
 {
     return FTemp;
 }
@@ -155,7 +155,7 @@ double TOpenWeather::GetTemperature()
 #   Returns....: *
 #
 ##########################################################################*/
-double TOpenWeather::GetWindSpeed()
+long double TOpenWeather::GetWindSpeed()
 {
     return FWindSpeed;
 }
@@ -187,7 +187,7 @@ int TOpenWeather::GetWindDir()
 #   Returns....: *
 #
 ##########################################################################*/
-double TOpenWeather::GetPressure()
+long double TOpenWeather::GetPressure()
 {
     return FPressure;
 }
@@ -203,7 +203,7 @@ double TOpenWeather::GetPressure()
 #   Returns....: *
 #
 ##########################################################################*/
-double TOpenWeather::GetHumidity()
+long double TOpenWeather::GetHumidity()
 {
     return FHumidity;
 }
@@ -275,7 +275,7 @@ void TOpenWeather::HandleJson(const char *str)
             if (obj)
                 FHumidity = obj->GetDouble();
         }
-    
+
         col = root->GetCollection("wind");
         if (col)
         {
@@ -295,7 +295,7 @@ void TOpenWeather::HandleJson(const char *str)
             if (obj)
                 FCloud = (int)obj->GetInt();
         }
-                
+
         obj = root->GetObj("visibility");
         if (obj)
             FVisibility = (int)obj->GetInt();
@@ -329,7 +329,7 @@ void TOpenWeather::Execute()
     FIp = 0;
 
     RdosWaitMilli(2000);
-    
+
     while (FIp == 0)
     {
         FIp = RdosNameToIp("api.openweathermap.org");
@@ -359,7 +359,7 @@ void TOpenWeather::Execute()
 
             size = 0;
             while (FSocket->WaitForData(500) && size < 2047)
-            { 
+            {
                 FBuf[size] = FSocket->Read();
                 size++;
             }
@@ -383,9 +383,9 @@ void TOpenWeather::Execute()
 
             if (*ptr)
                 HandleJson(ptr);
-            
+
             for (i = 0; i < 60 * 10; i++)
                 RdosWaitMilli(1000);
-        }        
-    }    
+        }
+    }
 }

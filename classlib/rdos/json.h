@@ -107,42 +107,42 @@ public:
 
     bool GetBoolean();
     long long GetInt();
-    double GetDouble();
+    long double GetDouble();
     TDateTime GetDateTime();
 
     void SetBoolean(bool val);
     void SetInt(long long val);
-    void SetDouble(double val, int decimals);
+    void SetDouble(long double val, int decimals);
     void SetDateTime(TDateTime &val);
     void SetDateTimeZone(TDateTime &val, int UtcDiff);
     void SetString(const char *Str);
 
-    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str);
 
 protected:
     virtual TJsonObject *CloneObj(TJsonAlloc *Alloc) = 0;
 
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
-    virtual double GetBaseDouble();
+    virtual long double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
 
     virtual void SetBaseBoolean(bool val);
     virtual void SetBaseInt(long long val);
-    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDouble(long double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
     virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
     virtual void SetBaseString(const char *Str);
 
     void CodeBoolean(bool v);
     void CodeInt(long long val);
-    void CodeDouble(double v, int decimals);
+    void CodeDouble(long double v, int decimals);
     void CodeDateTime(TDateTime &time);
     void CodeDateTimeZone(TDateTime &time, int UtcDiff);
 
     bool DecodeBoolean();
     long long DecodeInt();
-    double DecodeDouble();
+    long double DecodeDouble();
     TDateTime DecodeDateTime();
 
     void NewLine(TJsonDocument *doc, TString &str);
@@ -189,7 +189,7 @@ public:
     bool Get(int Pos);
     void Add(bool val);
     TJsonBooleanArray *Clone(TJsonAlloc *Alloc);
-    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str);
 
 protected:
     virtual TJsonObject *CloneObj(TJsonAlloc *Alloc);
@@ -212,7 +212,7 @@ public:
     long long Get(int Pos);
     void Add(long long val);
     TJsonIntArray *Clone(TJsonAlloc *Alloc);
-    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str);
 
 protected:
     virtual TJsonObject *CloneObj(TJsonAlloc *Alloc);
@@ -232,22 +232,22 @@ public:
     virtual ~TJsonDoubleArray();
 
     virtual bool IsDoubleArray();
-    double Get(int Pos);
-    void Add(double val);
+    long double Get(int Pos);
+    void Add(long double val);
     void AddNone();
     TJsonDoubleArray *Clone(TJsonAlloc *Alloc);
-    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str);
 
 protected:
     virtual TJsonObject *CloneObj(TJsonAlloc *Alloc);
 
-    double *AllocateArr(int count);
-    void FreeArr(double *arr);
+    long double *AllocateArr(int count);
+    void FreeArr(long double *arr);
     void Grow();
 
     int FDecimals;
 
-    double *FArr;
+    long double *FArr;
 };
 
 class TJsonStringArray : public TJsonArrayObject
@@ -261,7 +261,7 @@ public:
     const char *Get(int Pos);
     void Add(const char *str);
     TJsonStringArray *Clone(TJsonAlloc *Alloc);
-    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str);
 
 protected:
     virtual TJsonObject *CloneObj(TJsonAlloc *Alloc);
@@ -325,7 +325,7 @@ public:
 
     bool GetBoolean(const char *FieldName, bool Default);
     long long GetInt(const char *FieldName, long long Default);
-    double GetDouble(const char *FieldName, double Default);
+    long double GetDouble(const char *FieldName, long double Default);
     TDateTime GetDateTime(const char *FieldName, TDateTime &Default);
     const char *GetText(const char *FieldName, const char *Default);
 
@@ -338,14 +338,14 @@ public:
 
     TJsonObject *AddBoolean(const char *FieldName, bool Val);
     TJsonObject *AddInt(const char *FieldName, long long Val);
-    TJsonObject *AddDouble(const char *FieldName, double Val, int Decimals);
+    TJsonObject *AddDouble(const char *FieldName, long double Val, int Decimals);
     TJsonObject *AddDateTime(const char *FieldName, TDateTime &time, int UseText);
     TJsonObject *AddDateTimeZone(const char *FieldName, TDateTime &time, int UtcOffset);
     TJsonObject *AddString(const char *FieldName, const char *Str);
 
     void SetBoolean(const char *FieldName, bool Val);
     void SetInt(const char *FieldName, long long Val);
-    void SetDouble(const char *FieldName, double Val, int Decimals);
+    void SetDouble(const char *FieldName, long double Val, int Decimals);
     void SetDateTime(const char *FieldName, TDateTime &Val, int UseText);
     void SetDateTimeZone(const char *FieldName, TDateTime &Val, int UtcOffset);
     void SetString(const char *FieldName, const char *Str);
@@ -368,7 +368,7 @@ public:
     virtual int GetArrayCount();
     virtual int GetObjCount();
     virtual TJsonObject *GetObj(int n);
-    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str);
 
     virtual TJsonObject *GetObj(const char *FieldName);
     virtual TJsonCollection *GetCollection(const char *FieldName);
@@ -395,7 +395,7 @@ public:
     virtual int GetArrayCount();
     virtual int GetObjCount();
     virtual TJsonObject *GetObj(int n);
-    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str);
 
     virtual TJsonObject *GetObj(const char *FieldName);
     virtual TJsonCollection *GetCollection(const char *FieldName);
@@ -422,30 +422,30 @@ protected:
 class TJsonDouble : public TJsonObject
 {
 public:
-    TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double val, int decimals);
-    TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double val, const char *data);
+    TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, long double val, int decimals);
+    TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, long double val, const char *data);
     TJsonDouble(const TJsonDouble &src, TJsonAlloc *Alloc);
     virtual ~TJsonDouble();
 
     TJsonDouble *Clone(TJsonAlloc *Alloc);
 
 protected:
-    void SetValue(double v, int decimals);
+    void SetValue(long double v, int decimals);
     virtual TJsonObject *CloneObj(TJsonAlloc *Alloc);
 
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
-    virtual double GetBaseDouble();
+    virtual long double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
 
     virtual void SetBaseBoolean(bool val);
     virtual void SetBaseInt(long long val);
-    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDouble(long double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
     virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
     virtual void SetBaseString(const char *Str);
 
-    double Val;
+    long double Val;
 };
 
 class TJsonBoolean : public TJsonObject
@@ -463,12 +463,12 @@ protected:
 
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
-    virtual double GetBaseDouble();
+    virtual long double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
 
     virtual void SetBaseBoolean(bool val);
     virtual void SetBaseInt(long long val);
-    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDouble(long double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
     virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
     virtual void SetBaseString(const char *Str);
@@ -491,12 +491,12 @@ protected:
 
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
-    virtual double GetBaseDouble();
+    virtual long double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
 
     virtual void SetBaseBoolean(bool val);
     virtual void SetBaseInt(long long val);
-    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDouble(long double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
     virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
     virtual void SetBaseString(const char *Str);
@@ -512,19 +512,19 @@ public:
     virtual ~TJsonString();
 
     TJsonString *Clone(TJsonAlloc *Alloc);
-    virtual void Write(TJsonDocument *doc, int indent, TString &str); 
+    virtual void Write(TJsonDocument *doc, int indent, TString &str);
 
 protected:
     virtual TJsonObject *CloneObj(TJsonAlloc *Alloc);
 
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
-    virtual double GetBaseDouble();
+    virtual long double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
 
     virtual void SetBaseBoolean(bool val);
     virtual void SetBaseInt(long long val);
-    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDouble(long double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
     virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
 };
@@ -618,8 +618,8 @@ protected:
     void AddArray();
     void AddString(const char *str);
     void AddInt(long long val);
-    void AddDouble(double val, const char *text);
-    void AddDouble(double val, int decimals);
+    void AddDouble(long double val, const char *text);
+    void AddDouble(long double val, int decimals);
     void AddBoolean(bool val);
 
     bool FCompact;

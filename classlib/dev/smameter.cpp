@@ -109,9 +109,9 @@ void TSmaMeter::WaitForMeassure()
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetVolt(int Phase)
+long double TSmaMeter::GetVolt(int Phase)
 {
-    double val = 0.0;
+    long double val = 0.0;
 
     if (Phase >= 1 && Phase <= 3)
     {
@@ -134,9 +134,9 @@ double TSmaMeter::GetVolt(int Phase)
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetCurrent(int Phase)
+long double TSmaMeter::GetCurrent(int Phase)
 {
-    double val = 0.0;
+    long double val = 0.0;
 
     if (Phase >= 1 && Phase <= 3)
     {
@@ -159,9 +159,9 @@ double TSmaMeter::GetCurrent(int Phase)
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetConsumePower()
+long double TSmaMeter::GetConsumePower()
 {
-    double val;
+    long double val;
 
     FSection.Enter();
     val = FConsumePower[0];
@@ -181,9 +181,9 @@ double TSmaMeter::GetConsumePower()
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetConsumePower(int Phase)
+long double TSmaMeter::GetConsumePower(int Phase)
 {
-    double val = 0.0;
+    long double val = 0.0;
 
     if (Phase >= 1 && Phase <= 3)
     {
@@ -206,9 +206,9 @@ double TSmaMeter::GetConsumePower(int Phase)
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetProducePower()
+long double TSmaMeter::GetProducePower()
 {
-    double val;
+    long double val;
 
     FSection.Enter();
     val = FProducePower[0];
@@ -228,9 +228,9 @@ double TSmaMeter::GetProducePower()
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetProducePower(int Phase)
+long double TSmaMeter::GetProducePower(int Phase)
 {
-    double val = 0.0;
+    long double val = 0.0;
 
     if (Phase >= 1 && Phase <= 3)
     {
@@ -253,9 +253,9 @@ double TSmaMeter::GetProducePower(int Phase)
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetConsumeEnergy()
+long double TSmaMeter::GetConsumeEnergy()
 {
-    double val;
+    long double val;
 
     FSection.Enter();
     val = FConsumeEnergy[0];
@@ -275,9 +275,9 @@ double TSmaMeter::GetConsumeEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetConsumeEnergy(int Phase)
+long double TSmaMeter::GetConsumeEnergy(int Phase)
 {
-    double val = 0.0;
+    long double val = 0.0;
 
     if (Phase >= 1 && Phase <= 3)
     {
@@ -300,9 +300,9 @@ double TSmaMeter::GetConsumeEnergy(int Phase)
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetProduceEnergy()
+long double TSmaMeter::GetProduceEnergy()
 {
-    double val;
+    long double val;
 
     FSection.Enter();
     val = FProduceEnergy[0];
@@ -322,9 +322,9 @@ double TSmaMeter::GetProduceEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-double TSmaMeter::GetProduceEnergy(int Phase)
+long double TSmaMeter::GetProduceEnergy(int Phase)
 {
-    double val = 0.0;
+    long double val = 0.0;
 
     if (Phase >= 1 && Phase <= 3)
     {
@@ -352,7 +352,7 @@ void TSmaMeter::Execute()
     char p;
     int ival;
     long long lval;
-    double val;
+    long double val;
 
     for (;;)
     {
@@ -363,35 +363,35 @@ void TSmaMeter::Execute()
         for (p = 1; p <= 3; p++)
         {
             ival = RdosGetAcVoltage(p);
-            val = (double)ival;
+            val = (long double)ival;
             FVolt[p - 1] = val / 1000.0;
         }
 
         for (p = 1; p <= 3; p++)
         {
             ival = RdosGetAcCurrent(p);
-            val = (double)ival;
+            val = (long double)ival;
             FCurrent[p - 1] = val / 1000.0;
         }
 
         for (p = 0; p <= 3; p++)
         {
             ival = RdosGetAcConsumePower(p);
-            val = (double)ival;
+            val = (long double)ival;
             FConsumePower[p] = val / 10.0;
         }
 
         for (p = 0; p <= 3; p++)
         {
             ival = RdosGetAcProducePower(p);
-            val = (double)ival;
+            val = (long double)ival;
             FProducePower[p] = val / 10.0;
         }
 
         for (p = 0; p <= 3; p++)
         {
             lval = RdosGetAcConsumeEnergy(p);
-            val = (double)lval;
+            val = (long double)lval;
             val = val / 1000.0;
             FConsumeEnergy[p] = val / 3600.0;
         }
@@ -399,7 +399,7 @@ void TSmaMeter::Execute()
         for (p = 0; p <= 3; p++)
         {
             lval = RdosGetAcProduceEnergy(p);
-            val = (double)lval;
+            val = (long double)lval;
             val = val / 1000.0;
             FProduceEnergy[p] = val / 3600.0;
         }

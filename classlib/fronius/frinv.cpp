@@ -105,7 +105,7 @@ bool TFroniusInverter::IsOnline()
 #   Returns....: *
 #
 ##########################################################################*/
-double TFroniusInverter::GetCurrentPower()
+long double TFroniusInverter::GetCurrentPower()
 {
     return FCurrP;
 }
@@ -121,7 +121,7 @@ double TFroniusInverter::GetCurrentPower()
 #   Returns....: *
 #
 ##########################################################################*/
-double TFroniusInverter::GetDayEnergy()
+long double TFroniusInverter::GetDayEnergy()
 {
     return FDayE;
 }
@@ -137,7 +137,7 @@ double TFroniusInverter::GetDayEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-double TFroniusInverter::GetYearEnergy()
+long double TFroniusInverter::GetYearEnergy()
 {
     return FYearE;
 }
@@ -153,7 +153,7 @@ double TFroniusInverter::GetYearEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-double TFroniusInverter::GetTotalEnergy()
+long double TFroniusInverter::GetTotalEnergy()
 {
     return FTotalE;
 }
@@ -169,19 +169,19 @@ double TFroniusInverter::GetTotalEnergy()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TFroniusInverter::GetPowerObj(TJsonCollection *data, int index, double *fact)
+TJsonObject *TFroniusInverter::GetPowerObj(TJsonCollection *data, int index, long double *fact)
 {
     TJsonCollection *values;
     TJsonObject *obj;
     TString str;
- 
+
     *fact = 0.0;
-                                
+
     obj = data->GetObj("Unit");
     if (obj)
     {
         str = obj->GetText();
- 
+
         if (str == "W")
             *fact = 1.0;
 
@@ -217,14 +217,14 @@ TJsonObject *TFroniusInverter::GetPowerObj(TJsonCollection *data, int index, dou
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TFroniusInverter::GetEnergyObj(TJsonCollection *data, int index, double *fact)
+TJsonObject *TFroniusInverter::GetEnergyObj(TJsonCollection *data, int index, long double *fact)
 {
     TJsonCollection *values;
     TJsonObject *obj;
     TString str;
- 
+
     *fact = 0.0;
-                                
+
     obj = data->GetObj("Unit");
     if (obj)
     {
@@ -232,14 +232,14 @@ TJsonObject *TFroniusInverter::GetEnergyObj(TJsonCollection *data, int index, do
 
         if (str == "Wh")
             *fact = 1.0;
-  
+
         if (str == "kWh")
             *fact = 1000.0;
 
         if (str == "MWh")
             *fact = 1000000.0;
     }
-                                
+
     if (*fact)
     {
         values = data->GetCollection("Values");
@@ -274,7 +274,7 @@ void TFroniusInverter::HandleJson(const char *str)
     TJsonCollection *data;
     TJsonCollection *col;
     TJsonObject *obj;
-    double fact;
+    long double fact;
 
     if (root)
     {
@@ -290,7 +290,7 @@ void TFroniusInverter::HandleJson(const char *str)
                     obj = GetPowerObj(col, 1, &fact);
                     if (obj)
                     {
-                        FCurrP = fact * obj->GetDouble();                       
+                        FCurrP = fact * obj->GetDouble();
                         if (OnPower)
                             (*OnPower)(this, FCurrP);
                     }
@@ -379,7 +379,7 @@ void TFroniusInverter::Execute()
 
             size = 0;
             while (FSocket->WaitForData(1000) && size < 2047)
-            { 
+            {
                 FBuf[size] = FSocket->Read();
                 size++;
             }
@@ -403,9 +403,9 @@ void TFroniusInverter::Execute()
                 HandleJson(ptr);
 
             RdosWaitMilli(15000);
-        }        
+        }
 
         FOnline = false;
         delete FSocket;
-    }    
+    }
 }

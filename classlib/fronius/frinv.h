@@ -44,24 +44,24 @@ public:
 
     bool IsOnline();
 
-    double GetCurrentPower();
-    double GetDayEnergy();
-    double GetYearEnergy();
-    double GetTotalEnergy();
+    long double GetCurrentPower();
+    long double GetDayEnergy();
+    long double GetYearEnergy();
+    long double GetTotalEnergy();
 
     void (*OnPower)(TFroniusInverter *Device, long double val);
     void (*OnDayEnergy)(TFroniusInverter *Device, long double val);
 
 protected:
-    TJsonObject *GetPowerObj(TJsonCollection *data, int index, double *fact);
-    TJsonObject *GetEnergyObj(TJsonCollection *data, int index, double *fact);
+    TJsonObject *GetPowerObj(TJsonCollection *data, int index, long double *fact);
+    TJsonObject *GetEnergyObj(TJsonCollection *data, int index, long double *fact);
     void HandleJson(const char *str);
     virtual void Execute();
 
-    double FCurrP;
-    double FDayE;
-    double FYearE;
-    double FTotalE;
+    long double FCurrP;
+    long double FDayE;
+    long double FYearE;
+    long double FTotalE;
 
     bool FOnline;
     long FIP;

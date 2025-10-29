@@ -85,27 +85,27 @@ static void UuidToStr(const char *uuid, char *str)
     ival = *ip;
     sprintf(str, "%08lX-", ival);
 
-    sp = (short int *)(uuid + 4); 
+    sp = (short int *)(uuid + 4);
     sval = *sp;
     sprintf(str+9, "%04hX-", sval);
-    
-    sp = (short int *)(uuid + 6); 
+
+    sp = (short int *)(uuid + 6);
     sval = *sp;
     sprintf(str+14, "%04hX-", sval);
 
-    sp = (short int *)(uuid + 8); 
+    sp = (short int *)(uuid + 8);
     sval = RdosSwapShort(*sp);
     sprintf(str+19, "%04hX-", sval);
 
-    sp = (short int *)(uuid + 10); 
+    sp = (short int *)(uuid + 10);
     sval = RdosSwapShort(*sp);
     sprintf(str+24, "%04hX", sval);
 
-    sp = (short int *)(uuid + 12); 
+    sp = (short int *)(uuid + 12);
     sval = RdosSwapShort(*sp);
     sprintf(str+28, "%04hX", sval);
 
-    sp = (short int *)(uuid + 14); 
+    sp = (short int *)(uuid + 14);
     sval = RdosSwapShort(*sp);
     sprintf(str+32, "%04hX", sval);
 }
@@ -123,7 +123,7 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
     const short int *sptr;
     char *ptr;
     int mspart;
-    
+
     if (StartSector > 0)
     {
         Usable = TRUE;
@@ -141,7 +141,7 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
 
             if (*ptr == 0)
                 break;
-                
+
             ptr++;
             sptr++;
         }
@@ -168,7 +168,7 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
             strcpy(GuidStr, "EFI System");
             mspart = TRUE;
         }
-        
+
         if (!strcmp(GuidStr, "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F"))
             strcpy(GuidStr, "Linux Swap");
 
@@ -179,7 +179,7 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
             GetMsFsName();
         else
             strcpy(Name, "UNKNOWN");
-        
+
     }
     else
         Usable = FALSE;
@@ -213,7 +213,7 @@ void TGptPartition::GetMsFsName()
                 memcpy(Name, &Buf[0x36], 8);
                 Name[8] = 0;
                 break;
-                
+
             default:
                 memcpy(Name, &Buf[3], 8);
                 Name[8] = 0;
@@ -235,9 +235,9 @@ void TGptPartition::GetMsFsName()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-double TGptPartition::GetTotalSpace()
+long double TGptPartition::GetTotalSpace()
 {
-    return (double)Size * (double)512 / (double)0x100000;
+    return (long double)Size * (long double)512 / (long double)0x100000;
 }
 
 /*##################  TGptDiscPartition::TGptDiscPartition  #############
@@ -341,7 +341,7 @@ struct TPartEntry *TGptDiscPartition::ReadGpt(long long StartLba, char *HeaderBu
         {
             if (PartHeader->EntrySize == sizeof(struct TPartEntry))
             {
-                count = PartHeader->EntryCount;                
+                count = PartHeader->EntryCount;
                 sectors = count * sizeof(struct TPartEntry) / 512;
                 size = sectors * 512;
                 EntryBuf = new char[size];
@@ -354,14 +354,14 @@ struct TPartEntry *TGptDiscPartition::ReadGpt(long long StartLba, char *HeaderBu
                     FDisc->Read(Lba, ptr, 512);
                     ptr += 512;
                 }
-                                
+
                 Crc32 = RdosCalcCrc32(0xFFFFFFFF, EntryBuf, size);
                 if (PartHeader->EntryCrc32 == Crc32)
                     return EntryData;
-                
+
                 delete EntryBuf;
             }
-        }        
+        }
     }
 
     return 0;
@@ -386,7 +386,7 @@ void TGptDiscPartition::ReadOtherGpt()
     {
         Lba = FDisc->GetTotalSectors() - 1;
         FPartHeader->OtherLba = Lba;
-    }        
+    }
 
     FDisc->Read(Lba, FSecondaryHeader, 512);
 
@@ -411,7 +411,7 @@ void TGptDiscPartition::ReadOtherGpt()
         PartHeader->Revision[3] = 0;
 
         PartHeader->HeaderSize = sizeof(struct TPartHeader);
-        PartHeader->Crc32 = 0;    
+        PartHeader->Crc32 = 0;
         PartHeader->Resv = 0;
 
         PartHeader->CurrLba = Lba;
@@ -420,7 +420,7 @@ void TGptDiscPartition::ReadOtherGpt()
         PartHeader->FirstLba = FPartHeader->FirstLba;
         PartHeader->LastLba = FPartHeader->LastLba;
         RdosCreateUuid(PartHeader->Guid);
-        PartHeader->EntryLba = Lba - 32;    
+        PartHeader->EntryLba = Lba - 32;
         PartHeader->EntrySize = FPartHeader->EntrySize;
         PartHeader->EntryCount = FPartHeader->EntryCount;
         PartHeader->EntryCrc32 = FPartHeader->EntryCrc32;
@@ -445,7 +445,7 @@ void TGptDiscPartition::RecreatePrimaryGpt()
     PartHeader->Revision[3] = 0;
 
     PartHeader->HeaderSize = sizeof(struct TPartHeader);
-    PartHeader->Crc32 = 0;    
+    PartHeader->Crc32 = 0;
     PartHeader->Resv = 0;
 
     PartHeader->CurrLba = 1;
@@ -454,7 +454,7 @@ void TGptDiscPartition::RecreatePrimaryGpt()
     PartHeader->FirstLba = FPartHeader->FirstLba;
     PartHeader->LastLba = FPartHeader->LastLba;
     RdosCreateUuid(PartHeader->Guid);
-    PartHeader->EntryLba = 2;    
+    PartHeader->EntryLba = 2;
     PartHeader->EntrySize = FPartHeader->EntrySize;
     PartHeader->EntryCount = FPartHeader->EntryCount;
     PartHeader->EntryCrc32 = FPartHeader->EntryCrc32;
@@ -483,7 +483,7 @@ void TGptDiscPartition::Read()
     {
         FPartHeader = (struct TPartHeader *)FPrimaryHeader;
         ReadOtherGpt();
-    }    
+    }
     else
     {
         Lba = FDisc->GetTotalSectors() - 1;
@@ -504,7 +504,7 @@ void TGptDiscPartition::Read()
 
         for (i = 0; i < FPartHeader->EntryCount; i++)
         {
-            part = new TGptPartition(   FDisc, 
+            part = new TGptPartition(   FDisc,
                                         EntryData->PartGuid,
                                         EntryData->FirstLba,
                                         EntryData->LastLba,
@@ -516,10 +516,10 @@ void TGptDiscPartition::Read()
                 PartCount++;
             }
             else
-                delete part;                        
+                delete part;
 
-            EntryData++;                      
-        }  
+            EntryData++;
+        }
     }
 }
 
@@ -543,15 +543,15 @@ void TGptDiscPartition::WriteGpt(char *HeaderBuf)
 
     PartHeader = (struct TPartHeader *)HeaderBuf;
 
-    PartHeader->Crc32 = 0;    
+    PartHeader->Crc32 = 0;
 
-    count = PartHeader->EntryCount;                
+    count = PartHeader->EntryCount;
     sectors = count * sizeof(struct TPartEntry) / 512;
     size = sectors * 512;
-    
+
     PartHeader->EntryCrc32 = RdosCalcCrc32(0xFFFFFFFF, EntryBuf, size);
     PartHeader->Crc32 = RdosCalcCrc32(0xFFFFFFFF, HeaderBuf, PartHeader->HeaderSize);
-    
+
     Lba = PartHeader->CurrLba;
     FDisc->Write(Lba, HeaderBuf, 512);
 
@@ -587,7 +587,7 @@ void TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderBuf, int Resv)
     PartHeader->Revision[3] = 0;
 
     PartHeader->HeaderSize = sizeof(struct TPartHeader);
-    PartHeader->Crc32 = 0;    
+    PartHeader->Crc32 = 0;
     PartHeader->Resv = 0;
 
     PartHeader->CurrLba = HeaderLba;
@@ -605,7 +605,7 @@ void TGptDiscPartition::InitGpt(long long HeaderLba, char *HeaderBuf, int Resv)
         PartHeader->EntryLba = 2;
     else
         PartHeader->EntryLba = FDisc->GetTotalSectors() - 33;
-    
+
     PartHeader->EntrySize = 128;
 };
 
@@ -629,8 +629,8 @@ void TGptDiscPartition::Write(int resv)
         InitGpt(FDisc->GetTotalSectors() - 1, FSecondaryHeader, resv);
 
         FPartHeader = (struct TPartHeader *)FPrimaryHeader;
-                
-        count = FPartHeader->EntryCount;                
+
+        count = FPartHeader->EntryCount;
         sectors = count * sizeof(struct TPartEntry) / 512;
         size = sectors * 512;
 
@@ -729,14 +729,14 @@ void TGptDiscPartition::Sort()
         PrevEntry = FPartEntry;
 
         if (PrevEntry)
-        {            
+        {
             CurrEntry = PrevEntry;
             CurrEntry++;
-        
+
             for (i = 1; i < FPartHeader->EntryCount; i++)
             {
                 Exchange = FALSE;
-                
+
                 if (CurrEntry->FirstLba)
                 {
                     if (PrevEntry->FirstLba == 0)
@@ -774,7 +774,7 @@ const char *TGptDiscPartition::GetGuid(const char *FsName)
 {
     static char EfiGuid[] =  {0x28, 0x73, 0x2A, 0xC1, 0x1F, 0xF8, 0xD2, 0x11, 0xBA, 0x4B, 0x00, 0xA0, 0xC9, 0x3E, 0xC9, 0x3B};
     static char DataGuid[] = {0xA2, 0xA0, 0xD0, 0xEB, 0xE5, 0xB9, 0x33, 0x44, 0x87, 0xC0, 0x68, 0xB6, 0xB7, 0x26, 0x99, 0xC7};
-    static char Ext4Guid[] = {0xAF, 0x3D, 0xC6, 0x0F, 0x83, 0x84, 0x72, 0x47, 0x8E, 0x79, 0x3D, 0x69, 0xD8, 0x47, 0x7D, 0xE4};    
+    static char Ext4Guid[] = {0xAF, 0x3D, 0xC6, 0x0F, 0x83, 0x84, 0x72, 0x47, 0x8E, 0x79, 0x3D, 0x69, 0xD8, 0x47, 0x7D, 0xE4};
 
     if (!strcmp(FsName, "EFI"))
         return EfiGuid;
@@ -798,7 +798,7 @@ long long TGptDiscPartition::GetFreeLba(long long Size)
     struct TPartEntry *CurrEntry;
 
     CurrEntry = FPartEntry;
-        
+
     for (i = 0; i < FPartHeader->EntryCount; i++)
     {
         if (CurrEntry->FirstLba)
@@ -815,7 +815,7 @@ long long TGptDiscPartition::GetFreeLba(long long Size)
             else
                 return 0;
         }
-        
+
         CurrEntry++;
     }
     return 0;
@@ -840,7 +840,7 @@ struct TPartEntry *TGptDiscPartition::InsertEntry(long long Lba)
     {
         for (pos = 0; pos < FPartHeader->EntryCount; pos++)
         {
-            if (CurrEntry->FirstLba)             
+            if (CurrEntry->FirstLba)
             {
                 if (Lba < CurrEntry->FirstLba)
                     break;
@@ -920,7 +920,7 @@ int TGptDiscPartition::Remove(long long Lba)
 
     for (pos = 0; pos < FPartHeader->EntryCount; pos++)
     {
-        if (CurrEntry->FirstLba)             
+        if (CurrEntry->FirstLba)
         {
             if (Lba == CurrEntry->FirstLba)
             {

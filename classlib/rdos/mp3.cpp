@@ -128,15 +128,15 @@ void TMp3Player::FindStart()
             FId3V1 = TRUE;
         }
 
-        if (    FMp3Size > 10 && 
+        if (    FMp3Size > 10 &&
                 memcmp(FMp3Start, "ID3", 3) == 0 &&
                 FMp3Start[6] < 0x80 &&
                 FMp3Start[7] < 0x80 &&
                 FMp3Start[8] < 0x80 &&
                 FMp3Start[9] < 0x80)
         {
-            
-            tagsize = GetFourByteSyncSafe(FMp3Start[6], FMp3Start[7], FMp3Start[8], FMp3Start[9]); 
+
+            tagsize = GetFourByteSyncSafe(FMp3Start[6], FMp3Start[7], FMp3Start[8], FMp3Start[9]);
             tagsize += 10;
 
             if (FMp3Size > (tagsize + MIN_FRAME_SIZE))
@@ -150,7 +150,7 @@ void TMp3Player::FindStart()
                 }
             }
         }
-    }   
+    }
 }
 
 /*##########################################################################
@@ -200,8 +200,8 @@ void TMp3Player::Check()
 
         if (FSampleRate != frame.Header.samplerate || FLayer != frame.Header.layer)
             continue;
-                                        
-        break;  
+
+        break;
     }
 
     FMp3Size -= (FirstFrame - FMp3Start);
@@ -243,22 +243,22 @@ int TMp3Player::ParseTag()
                 {
                     FSongFrames = (unsigned int) FTag.xing.frames;
                     FSongSamples = FSongFrames * FSamplesPerFrame;
-                    FSongMs = (unsigned int) ( 1000.0 * (double) FSongFrames * (double) FSamplesPerFrame / (double) FSampleRate);
-                                
-                    // skip XING frame 
-                                        
+                    FSongMs = (unsigned int) ( 1000.0 * (long double) FSongFrames * (long double) FSamplesPerFrame / (long double) FSampleRate);
+
+                    // skip XING frame
+
                     FMp3Size -= ( stream.next_frame - FMp3Start);
                     FMp3Start = (unsigned char*) stream.next_frame;
 
                     FSongBytes = FMp3Size;
-                    FAvgFrameSize = (long double) FSongBytes / (long double) FSongFrames; 
+                    FAvgFrameSize = (long double) FSongBytes / (long double) FSongFrames;
                     FAvgBitRate = (long double) FSongBytes * 8 / (long double)FSongFrames *  (long double) FSampleRate / (long double) FSamplesPerFrame;
-                                                                
-                    FTagFrameSize = stream.next_frame - stream.this_frame;          
+
+                    FTagFrameSize = stream.next_frame - stream.this_frame;
                     FValidTag = TRUE;
-                                        
+
                 }
-            }       
+            }
         }
     }
 
@@ -317,10 +317,10 @@ void TMp3Player::CalcSongParams()
     {
         FSongFrames = (unsigned int)((long double)FrameNum * (long double)FMp3Size / (long double)size);
         FSongSamples = FSongFrames * FSamplesPerFrame;
-        FSongMs = (unsigned int)(1000.0 * (long double)FSongFrames * (long double)FSamplesPerFrame / (long double)FSampleRate); 
+        FSongMs = (unsigned int)(1000.0 * (long double)FSongFrames * (long double)FSamplesPerFrame / (long double)FSampleRate);
         FSongBytes = FMp3Size;
         FAvgFrameSize = (long double)size / (long double)FrameNum;
-        FAvgBitRate = (long double)FSongBytes * 8.0 / (long double)FSongFrames * (long double)FSampleRate / (long double)FSamplesPerFrame;  
+        FAvgBitRate = (long double)FSongBytes * 8.0 / (long double)FSongFrames * (long double)FSampleRate / (long double)FSamplesPerFrame;
     }
 }
 
@@ -352,7 +352,7 @@ void TMp3Player::Load(const char *FileName)
         size--;
         size = size & 0xFFFFF000;
         size += 0x1000;
-            
+
         FFileBuf = (unsigned char *)RdosAllocateMem(size);
         RdosReadFile(FFileHandle, FFileBuf, FFileSize);
 
@@ -439,7 +439,7 @@ void TMp3Player::SetPosition(int ms)
             {
                 percentage = 100.0 * (long double)ms / (long double)FSongMs;
                 perc = (int)percentage;
-    
+
                 if (perc > 99)
                     perc = 99;
 
@@ -451,12 +451,12 @@ void TMp3Player::SetPosition(int ms)
                     pb = 256;
 
                 px = pa + (pb - pa) * (percentage - perc);
-    
+
                 FCurrentPos = FMp3Start + (unsigned int)(( (long double)(FMp3Size + FTagFrameSize) / 256.0) * px);
             }
             else
                 FCurrentPos = FMp3Start + (unsigned int)( (long double)ms / (long double)FSongMs * (long double)FMp3Size);
-        }            
+        }
         else
             FCurrentPos = FMp3Start + (unsigned int)( (long double)ms / (long double)FSongMs * (long double)FMp3Size);
     }

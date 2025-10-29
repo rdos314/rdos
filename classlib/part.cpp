@@ -120,9 +120,9 @@ int TPartition::GetBytesPerSector()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-double TPartition::GetTotalSpace()
+long double TPartition::GetTotalSpace()
 {
-   return (double)Size * (double)GetBytesPerSector() / (double)0x100000;
+   return (long double)Size * (long double)GetBytesPerSector() / (long double)0x100000;
 }
 
 /*##################  TPartition::GetFreeSpace  #############
@@ -132,7 +132,7 @@ double TPartition::GetTotalSpace()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-double TPartition::GetFreeSpace()
+long double TPartition::GetFreeSpace()
 {
     return 0;
 }
@@ -241,7 +241,7 @@ TDiscPartition::TDiscPartition(TDisc *Disc)
     PartCount = 0;
 
     for (i = 0; i < MAX_PART_COUNT; i++)
-        PartArr[i] = 0; 
+        PartArr[i] = 0;
 }
 
 /*##################  TDiscPartition::~TDiscPartition  #############

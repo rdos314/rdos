@@ -136,7 +136,7 @@ template <class T>class Z
 
         };
 
-// Binary Data Container 
+// Binary Data Container
 class BDC
         {
         public:
@@ -176,7 +176,7 @@ struct XMLBINARYHEADER
         {
         int v;
         int t;
-        int tv; 
+        int tv;
         int s;
         };
 #pragma pack(pop)
@@ -263,7 +263,7 @@ class XMLHeader
                 bool IntegrityTest();
                 int Compare(XMLHeader*);
                 void SetEncoding(const char*);
-				void SetVersion(const char* e);
+                                void SetVersion(const char* e);
                 XMLHeader* Duplicate();
 
 
@@ -391,40 +391,40 @@ class XMLElement
                 void RemoveAllContents();
                 unsigned int GetContentsNum();
 
-		void AddContentString(TString str);
-		void AddContentInt(int val);
-		void AddContentUInt(unsigned int val);
-		void AddContentDouble(double val, int decimals);
-		void AddContentInt64(long long val);
-		void AddContentUInt64(unsigned long long val);
-		void AddContentBoolean(bool val);
+                void AddContentString(TString str);
+                void AddContentInt(int val);
+                void AddContentUInt(unsigned int val);
+                void AddContentDouble(long double val, int decimals);
+                void AddContentInt64(long long val);
+                void AddContentUInt64(unsigned long long val);
+                void AddContentBoolean(bool val);
                 void AddContentDateTime(const TDateTime &time);
 
-		XMLElement *AddContentString(const char *tag, TString str);
-		XMLElement *AddContentInt(const char *tag, int val);
-		XMLElement *AddContentUInt(const char *tag, unsigned int val);
-		XMLElement *AddContentDouble(const char *tag, double val, int decimals);
-		XMLElement *AddContentInt64(const char *tag, long long val);
-		XMLElement *AddContentUInt64(const char *tag, unsigned long long val);
-		XMLElement *AddContentBoolean(const char *tag, bool val);
+                XMLElement *AddContentString(const char *tag, TString str);
+                XMLElement *AddContentInt(const char *tag, int val);
+                XMLElement *AddContentUInt(const char *tag, unsigned int val);
+                XMLElement *AddContentDouble(const char *tag, long double val, int decimals);
+                XMLElement *AddContentInt64(const char *tag, long long val);
+                XMLElement *AddContentUInt64(const char *tag, unsigned long long val);
+                XMLElement *AddContentBoolean(const char *tag, bool val);
                 XMLElement *AddContentDateTime(const char *tag, const TDateTime &time);
 
                 TString GetContentString(const char *def);
-		int GetContentInt(int def);
-		unsigned int GetContentUInt(unsigned int def);
-		double GetContentDouble(double def);
-		long long GetContentInt64(long long def);
-		unsigned long long GetContentUInt64(unsigned long long def);
-		bool GetContentBoolean(bool def);
+                int GetContentInt(int def);
+                unsigned int GetContentUInt(unsigned int def);
+                long double GetContentDouble(long double def);
+                long long GetContentInt64(long long def);
+                unsigned long long GetContentUInt64(unsigned long long def);
+                bool GetContentBoolean(bool def);
                 TDateTime GetContentDateTime(TDateTime &def);
 
                 TString GetContentString(const char *tag, const char *def);
-		int GetContentInt(const char *tag, int def);
-		unsigned int GetContentUInt(const char *tag, unsigned int def);
-		double GetContentDouble(const char *tag, double def);
-		long long GetContentInt64(const char *tag, long long def);
-		unsigned long long GetContentUInt64(const char *tag, unsigned long long def);
-		bool GetContentBoolean(const char *tag, bool def);
+                int GetContentInt(const char *tag, int def);
+                unsigned int GetContentUInt(const char *tag, unsigned int def);
+                long double GetContentDouble(const char *tag, long double def);
+                long long GetContentInt64(const char *tag, long long def);
+                unsigned long long GetContentUInt64(const char *tag, unsigned long long def);
+                bool GetContentBoolean(const char *tag, bool def);
                 TDateTime GetContentDateTime(const char *tag, TDateTime &def);
 
 
@@ -460,11 +460,11 @@ class XMLElement
                 bool GetVariableBoolean(const char*  x, bool def);
                 int GetVariableInt(const char*  x, int def);
                 unsigned int GetVariableUInt(const char*  x, unsigned int def);
-                double GetVariableDouble(const char*  x, double def);
+                long double GetVariableDouble(const char*  x, long double def);
                 int GetVariableHex(const char*  x, int def);
                 TString GetVariableString(const char*  x, const char *def);
                 TDateTime GetVariableDateTime(const char *x);
-                             
+
                 XMLElement* GetElementInSection(const char*);
                 int XMLQuery(const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
                 XMLElement* GetParent();
@@ -544,7 +544,7 @@ class XMLVariable
                 size_t GetValue(char*,int NoDecode = 0) const;
                 int GetValueInt();
                 unsigned int GetValueUInt();
-                double GetValueDouble();
+                long double GetValueDouble();
                 long long GetValueInt64();
                 unsigned long long GetValueUInt64();
                 int GetValueHex();
@@ -636,7 +636,7 @@ class XMLContent
                 // constructors/destructor
                 XMLContent(XMLElement* p = 0,int ElementPosition = -1,const char* ht = 0,int NoDecode = 0,int BinarySize = 0);
 //              operator const char*();
-                size_t GetValue(char*,int NoDecode = 0) const; 
+                size_t GetValue(char*,int NoDecode = 0) const;
                 bool GetBinaryValue(char**o,unsigned int* len);
                 void SetValue(const char*,int NoDecode = 0,int BinarySize = 0);
                 size_t MemoryUsage();

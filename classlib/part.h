@@ -36,84 +36,84 @@
 #include "disc.h"
 #include "drive.h"
 
-#define MAX_PART_COUNT	100
+#define MAX_PART_COUNT  100
 
 struct TBootParam
 {
-	short int BytesPerSector;
-	char Resv1;
-	short int MappingSectors;
-	char Resv3;
-	short int Resv4;
-	short int SmallSectors;
-	char Media;
-	short int Resv6;
-	short int SectorsPerCyl;
-	short int Heads;
-	int HiddenSectors;
-	int Sectors;
-	char Drive;
-	char Resv7;
-	char Signature;
-	int Serial;
-	char Volume[11];
-	char Fs[8];
+        short int BytesPerSector;
+        char Resv1;
+        short int MappingSectors;
+        char Resv3;
+        short int Resv4;
+        short int SmallSectors;
+        char Media;
+        short int Resv6;
+        short int SectorsPerCyl;
+        short int Heads;
+        int HiddenSectors;
+        int Sectors;
+        char Drive;
+        char Resv7;
+        char Signature;
+        int Serial;
+        char Volume[11];
+        char Fs[8];
 };
 
 class TPartition
 {
 public:
-	TPartition(TDisc *Disc, long Start, long Size);
-	virtual ~TPartition();
+        TPartition(TDisc *Disc, long Start, long Size);
+        virtual ~TPartition();
 
-	TDisc *GetDisc();
-	int GetBytesPerSector();
-	double GetTotalSpace();
+        TDisc *GetDisc();
+        int GetBytesPerSector();
+        long double GetTotalSpace();
 
-	int Read(long Sector, char *Buf, int Size);
-	int Write(long Sector, const char *Buf, int Size);
+        int Read(long Sector, char *Buf, int Size);
+        int Write(long Sector, const char *Buf, int Size);
 
-	virtual TDrive *GetDrive();
-	virtual double GetFreeSpace();
-	virtual const char *GetPartName() = 0;
-	virtual int IsFree();
+        virtual TDrive *GetDrive();
+        virtual long double GetFreeSpace();
+        virtual const char *GetPartName() = 0;
+        virtual int IsFree();
     virtual int IsFs();
 
-	TDisc *FDisc;
-	long Start;
-	long Size;
+        TDisc *FDisc;
+        long Start;
+        long Size;
 };
 
 class TFreePartition : public TPartition
 {
 public:
-	TFreePartition(TDisc *Disc);
-	virtual ~TFreePartition();
+        TFreePartition(TDisc *Disc);
+        virtual ~TFreePartition();
 
-	virtual const char *GetPartName();
-	virtual int IsFree();
+        virtual const char *GetPartName();
+        virtual int IsFree();
 };
 
 class TDiscPartition
 {
 public:
-	TDiscPartition(TDisc *Disc);
-	virtual ~TDiscPartition();
+        TDiscPartition(TDisc *Disc);
+        virtual ~TDiscPartition();
 
-	TDisc *GetDisc();
+        TDisc *GetDisc();
 
-	virtual void Delete(int Entry) = 0;
-	virtual int Add(const char *FsName, long Size, const char *BootCode, int BootSize) = 0;
+        virtual void Delete(int Entry) = 0;
+        virtual int Add(const char *FsName, long Size, const char *BootCode, int BootSize) = 0;
 
-	int PartCount;
-	TPartition *PartArr[MAX_PART_COUNT];
+        int PartCount;
+        TPartition *PartArr[MAX_PART_COUNT];
 
 protected:
-	void InsertEntry(TPartition *Part);
-	void Sort();
-	void AddFree();
+        void InsertEntry(TPartition *Part);
+        void Sort();
+        void AddFree();
 
-	TDisc *FDisc;
+        TDisc *FDisc;
 };
 
 #endif

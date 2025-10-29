@@ -61,28 +61,28 @@ public:
     void SetMaxChargeCurrent(int i);
     void SetMaxGridChargeCurrent(int i);
 
-    double GetGridVoltage();
-    double GetGridFrequency();
-    double GetGridPower();
-    double GetGridEnergy();
+    long double GetGridVoltage();
+    long double GetGridFrequency();
+    long double GetGridPower();
+    long double GetGridEnergy();
 
-    double GetOutputVoltage();
-    double GetOutputCurrent();
-    double GetOutputFrequency();
-    double GetOutputPower();
-    double GetOutputEnergy();
+    long double GetOutputVoltage();
+    long double GetOutputCurrent();
+    long double GetOutputFrequency();
+    long double GetOutputPower();
+    long double GetOutputEnergy();
 
-    double GetSolarVoltage();
-    double GetSolarCurrent();
-    double GetSolarPower();
-    double GetSolarEnergy();
+    long double GetSolarVoltage();
+    long double GetSolarCurrent();
+    long double GetSolarPower();
+    long double GetSolarEnergy();
 
-    double GetBatteryVoltage();
-    double GetBatteryCurrent();
-    double GetBatteryPower();
-    double GetBatteryChargeEnergy();
-    double GetBatteryDischargeEnergy();
-    double GetBatterySoc();
+    long double GetBatteryVoltage();
+    long double GetBatteryCurrent();
+    long double GetBatteryPower();
+    long double GetBatteryChargeEnergy();
+    long double GetBatteryDischargeEnergy();
+    long double GetBatterySoc();
 
     int GetDcDcTemperature();
     int GetInverterTemperature();
@@ -102,29 +102,29 @@ protected:
 
     int FMode;
 
-    double FGridVoltage;
-    double FGridFrequency;
-    double FGridPower;
-    double FGridEnergy;
+    long double FGridVoltage;
+    long double FGridFrequency;
+    long double FGridPower;
+    long double FGridEnergy;
 
-    double FOutputVoltage;
-    double FOutputCurrent;
-    double FOutputFrequency;
-    double FOutputPower;
-    double FOutputEnergy;
+    long double FOutputVoltage;
+    long double FOutputCurrent;
+    long double FOutputFrequency;
+    long double FOutputPower;
+    long double FOutputEnergy;
 
-    double FSolarVoltage;
-    double FSolarCurrent;
-    double FSolarPower;
-    double FSolarEnergy;
+    long double FSolarVoltage;
+    long double FSolarCurrent;
+    long double FSolarPower;
+    long double FSolarEnergy;
 
-    double FBatteryVoltage;
-    double FBatteryCurrent;
-    double FBatteryPower;
-    double FBatteryChargeEnergy;
-    double FBatteryDischargeEnergy;
-    double FBatteryVc;
-    double FBatterySoc;
+    long double FBatteryVoltage;
+    long double FBatteryCurrent;
+    long double FBatteryPower;
+    long double FBatteryChargeEnergy;
+    long double FBatteryDischargeEnergy;
+    long double FBatteryVc;
+    long double FBatterySoc;
 
     int FOutputPrio;
     int FChargePrio;

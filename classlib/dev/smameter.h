@@ -45,26 +45,26 @@ public:
 
     void WaitForMeassure();
 
-    double GetVolt(int Phase);
-    double GetCurrent(int Phase);
-    double GetConsumePower();
-    double GetConsumePower(int Phase);
-    double GetProducePower();
-    double GetProducePower(int Phase);
-    double GetConsumeEnergy();
-    double GetConsumeEnergy(int Phase);
-    double GetProduceEnergy();
-    double GetProduceEnergy(int Phase);
+    long double GetVolt(int Phase);
+    long double GetCurrent(int Phase);
+    long double GetConsumePower();
+    long double GetConsumePower(int Phase);
+    long double GetProducePower();
+    long double GetProducePower(int Phase);
+    long double GetConsumeEnergy();
+    long double GetConsumeEnergy(int Phase);
+    long double GetProduceEnergy();
+    long double GetProduceEnergy(int Phase);
 
 protected:
     virtual void Execute();
 
-    double FVolt[3];
-    double FCurrent[3];
-    double FConsumePower[4];
-    double FProducePower[4];
-    double FConsumeEnergy[4];
-    double FProduceEnergy[4];
+    long double FVolt[3];
+    long double FCurrent[3];
+    long double FConsumePower[4];
+    long double FProducePower[4];
+    long double FConsumeEnergy[4];
+    long double FProduceEnergy[4];
     TSection FSection;
     TSignalDevice FSignal;
 };

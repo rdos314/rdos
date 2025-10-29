@@ -504,7 +504,7 @@ TIdeFsPartition *TIdePartitionTable::InsertFs(const char *FsName, TFreePartition
                             FsPart->WriteToTable(this, Active);
                         else
                             FsPart->WriteToTable(this, 0);
-                    }            
+                    }
                     return FsPart;
                 }
             }
@@ -539,7 +539,7 @@ void TIdePartitionTable::FreeEntry(int Entry)
             PartTable->WriteToTable(PartTable->FParent, 0);
             PartTable = PartTable->FParent;
         }
-        
+
         Part->DeleteFromTable(this);
         delete Part;
     }
@@ -611,10 +611,10 @@ TDrive *TIdeFsPartition::GetDrive()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-double TIdeFsPartition::GetFreeSpace()
+long double TIdeFsPartition::GetFreeSpace()
 {
     if (FDrive)
-        return (double)FDrive->GetFreeSectors() * (double)GetBytesPerSector() / (double)0x100000;
+        return (long double)FDrive->GetFreeSectors() * (long double)GetBytesPerSector() / (long double)0x100000;
     else
         return 0;
 }
@@ -774,7 +774,7 @@ TIdeFsPartition *TIdeFsPartitionFactory::Parse(TDisc *Disc, unsigned char Type, 
             }
             else
                 break;
-        }                       
+        }
         factory = factory->FList;
     }
 
@@ -847,7 +847,7 @@ void TIdeFsPartitionFactory::Remove()
         prev = ptr;
         ptr = ptr->FList;
     }
-        
+
     if (prev == 0)
         FPartList = FPartList->FList;
     else
@@ -994,7 +994,7 @@ int TIdeDiscPartition::Add(const char *FsName, long Sectors, const char *BootCod
                     Size -= SectorsPerCyl;
                 }
             }
-                    
+
             if (Size >= Sectors)
             {
                 PartArr[i]->Start = Start;
@@ -1055,7 +1055,7 @@ int TIdeDiscPartition::Add(const char *FsName, long Resv, long Sectors, const ch
                     Size -= SectorsPerCyl;
                 }
             }
-                    
+
             if (Size >= TotalSectors)
             {
                 PartArr[i]->Start = Start + Resv;

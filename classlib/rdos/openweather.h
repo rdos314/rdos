@@ -45,25 +45,25 @@ public:
     bool IsOnline();
     void WaitForData();
 
-    double GetTemperature();
-    double GetWindSpeed();
+    long double GetTemperature();
+    long double GetWindSpeed();
     int GetWindDir();
-    double GetPressure();
-    double GetHumidity();
+    long double GetPressure();
+    long double GetHumidity();
     int GetCloud();
     int GetVisibility();
 
 protected:
     void HandleJson(const char *str);
     virtual void Execute();
-    
+
     void ResolveIp();
 
-    double FTemp;
-    double FWindSpeed;
+    long double FTemp;
+    long double FWindSpeed;
     int FWindDir;
-    double FPressure;
-    double FHumidity;
+    long double FPressure;
+    long double FHumidity;
     int FCloud;
     int FVisibility;
     bool FOnline;

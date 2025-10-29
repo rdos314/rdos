@@ -99,8 +99,8 @@ public:
         virtual const char *GetPartName();
         virtual int IsFs();
         virtual int Format();
-    	virtual TDrive *GetDrive();
-    	virtual double GetFreeSpace();
+        virtual TDrive *GetDrive();
+        virtual long double GetFreeSpace();
 
         TString FsName;
 
