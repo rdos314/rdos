@@ -1532,6 +1532,8 @@ void TLonDevice::DumpThread()
     struct TLonDebug *DumpArr;
     TPathName path(FLogPath);
 
+    FDumpRunning = true;
+
     RdosWaitMilli(100);
 
     if (path.MakeDir())
