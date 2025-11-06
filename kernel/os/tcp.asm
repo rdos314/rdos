@@ -1376,6 +1376,8 @@ SendAck Proc near
 ;
     and ds:tcp_pending, NOT FLAG_RESENT
     call CreateSegment
+    jc send_ack_done
+;
     mov es:[di].tcp_flags, ACK
     mov eax,ds:tcp_send_next
     Reverse
@@ -1439,6 +1441,8 @@ send_ack_check_mtu:
 
 send_ack_size_ok:
     call CreateSegment
+    jc send_ack_done
+;
     mov es:[di].tcp_flags, ACK
     mov eax,ds:tcp_send_next
     Reverse
@@ -1616,6 +1620,8 @@ RetransmitSynRcvd       Proc near
 ;
     xor ecx,ecx
     call CreateSegment
+    jc rsrDone
+;
     mov es:[di].tcp_flags, SYN OR ACK
     mov eax,ds:tcp_iss
     Reverse
@@ -1624,6 +1630,8 @@ RetransmitSynRcvd       Proc near
     Reverse
     mov es:[di].tcp_ack,eax
     call SendSegment
+
+rsrDone:
     ret
 RetransmitSynRcvd       Endp
 
@@ -1649,6 +1657,8 @@ RetransmitData  Proc near
 
 retrans_data_mtu_ok:
     call CreateSegment
+    jc retrans_data_done
+;
     mov es:[di].tcp_flags, ACK
 ;
     test ds:tcp_pending,FLAG_CLOSING
@@ -2670,6 +2680,8 @@ ReceiveListen   Proc near
 ;
     xor ecx,ecx
     call CreateSegment
+    jc rlDone
+;
     mov es:[di].tcp_flags, SYN OR ACK
     mov eax,ds:tcp_iss
     Reverse
@@ -2678,10 +2690,10 @@ ReceiveListen   Proc near
     Reverse
     mov es:[di].tcp_ack,eax
     call SendSegment
+
+rlDone:
     ret
 ReceiveListen   Endp
-
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2750,6 +2762,8 @@ receive_syn_sent_answer:
     mov ds:tcp_state, STATE_SYN_RCVD
     xor ecx,ecx
     call CreateSegment
+    jc receive_syn_sent_done
+;
     mov es:[di].tcp_flags, SYN OR ACK
     mov eax,ds:tcp_iss
     Reverse
@@ -2776,6 +2790,8 @@ receive_syn_sent_reset:
     xor ecx,ecx
     push es:[di].tcp_ack
     call CreateSegment
+    jc receive_syn_sent_done
+;
     mov es:[di].tcp_flags, RST
     pop es:[di].tcp_seq
     call SendSegment
@@ -2825,6 +2841,8 @@ receive_syn_rcvd_reset:
     xor ecx,ecx
     push es:[di].tcp_ack
     call CreateSegment
+    jc receive_syn_rcvd_done
+;
     mov es:[di].tcp_flags, RST
     pop es:[di].tcp_seq
     call SendSegment
@@ -3116,6 +3134,8 @@ ReceiveLastAck  Proc near
 ;
     xor ecx,ecx
     call CreateSegment
+    jc receive_last_ack_done
+;
     mov es:[di].tcp_flags, FIN OR ACK
     mov eax,ds:tcp_send_next
     Reverse
@@ -4634,12 +4654,16 @@ AbortDelete     Endp
 AbortReset      Proc near
     xor ecx,ecx
     call CreateSegment
+    jc arDone
+;
     mov es:[di].tcp_flags, RST
     mov eax,ds:tcp_send_next
     Reverse
     mov es:[di].tcp_seq,eax
     call SendSegment
     mov ds:tcp_delete_timeout,240 * 10
+
+arDone:
     ret
 AbortReset      Endp
 
