@@ -1188,7 +1188,11 @@ TSocketServer::TSocketServer(const char *Name, int StackSize, TTcpSocket *Socket
 TSocketServer::~TSocketServer()
 {
     if (FSocket)
+    {
+        FSocket->Push();
+        FSocket->Close();
         delete FSocket;
+    }
 }
 
 /*##########################################################################
@@ -1259,6 +1263,7 @@ void TSocketServer::Execute()
 
     HandleSocket();
 
+    FSocket->Push();
     FSocket->Close();
     delete FSocket;
     FSocket = 0;
