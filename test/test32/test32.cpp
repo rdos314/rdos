@@ -7,39 +7,35 @@
 #include <math.h>
 
 #include "rdos.h"
-#include "mp3.h"
-
-TMp3Player *player = 0;
-
-void Play(const char *filename)
-{
-    if (player->IsRunning())
-        player->Stop();
-
-    player->Load(filename);
-    player->SetPosition(0);
-    player->Start();
-}
+#include "datetime.h"
 
 
 void main()
 {
-    char FileName[80];
-    int ms;
-    int id;
+    int year, month, day;
+    int hour, min, sec;
+    int ms, us;
+    int dow;
+    TDateTime time(17654492, 786814295);
+    
+    year = time.GetYear();
+    month = time.GetMonth();
+    day = time.GetDay();
+    hour = time.GetHour();
+    min = time.GetMin();
+    sec = time.GetSec();
+    ms = time.GetMilliSec();
+    us = time.GetMicroSec();
+    
+    printf("%d.%d.%d %d.%d.%d,%03d %03d\r\n", year, month, day, hour, min, sec, ms, us);
 
-    player = new TMp3Player;
-
-    for (;;)
-    {
-        ms = RdosGetRandom(5000);
-        RdosWaitMilli(ms);
-
-        id = RdosGetRandom(25);
-        sprintf(FileName, "%d.mp3", id);
-        Play(FileName);
-    }
-
+    dow = time.GetDayOfWeek();
+    printf("dow: %d\r\n", dow);
+    
+    time.NextDay();
+    dow = time.GetDayOfWeek();
+    printf("dow: %d\r\n", dow);
+    
     RdosTestGate("");
 }
 
