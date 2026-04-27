@@ -242,6 +242,9 @@ pcbios_data_sel         EQU 4A8h
 
 legacy_code_sel     EQU 4B0h
 
+bsp_code_sel        EQU 4C0h
+bsp_data_sel        EQU 4C8h
+
 dosemu_code_sel     EQU 4E0h
 dosemu_data_sel     EQU 4E8h
 
