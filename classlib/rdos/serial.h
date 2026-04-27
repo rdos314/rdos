@@ -56,15 +56,13 @@ public:
 
     void SetBufferSize(int size);
 
-    virtual void DeviceName(char *Name, int MaxLen) const;
-
     void StartDebug(TFile *File, int InChannel, int OutChannel);
     void StopDebug();
 
-    int DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel);
-    int DumpEvents();
+    bool DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel);
+    bool DumpEvents();
     
-    virtual int IsOpen();
+    virtual bool IsOpen();
     virtual void Open();
     virtual void Close();
         
@@ -86,8 +84,8 @@ public:
     int GetReceiveBufferSpace();
     void Reset();
     void Clear();
-    int GetCts();
-    int GetDsr();
+    bool GetCts();
+    bool GetDsr();
     void ResetDtr();
     void SetDtr();
     void ResetRts();
@@ -95,7 +93,7 @@ public:
 
     void EnableAutoRts();
     void DisableAutoRts();
-    int IsAutoRtsOn();
+    bool IsAutoRtsOn();
 
     void SendBreak(char CharCount);
 
@@ -103,10 +101,10 @@ public:
     void Write(const char *buf, int count);
     void Write(const char *str);
     void WaitForSendCompleted();
-    int Poll();
+    bool Poll();
     char Read();
-    int WaitForChar(long Timeout);
-    int SupportsFullDuplex();
+    bool WaitForChar(long Timeout);
+    bool SupportsFullDuplex();
 
     void EnableCts();
     void DisableCts();
@@ -162,8 +160,8 @@ public:
     TSerialCommand(TSerialDevice *serial);
     virtual ~TSerialCommand();
     int Run();
-    int DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel);
-    int DumpEvents();
+    bool DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel);
+    bool DumpEvents();
 
 protected:
     void Block();
@@ -180,7 +178,7 @@ protected:
     void Write(const char *buf, int count);
     void Write(const char *str);
     char Read();
-    int WaitForChar(long MaxWait);
+    bool WaitForChar(long MaxWait);
 
     TSerialDevice *FSerial;
 

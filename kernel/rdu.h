@@ -1049,6 +1049,8 @@
 #define usergate_is_pci_locked 0x00000370
 #define usergate_eval_pci_int_arr 0x00000371
 
+#define usergate_set_can_serial_number 0x00000372
+
 
 
 #ifdef __FLAT__
@@ -2103,6 +2105,8 @@
 #define CallGate_is_pci_locked 0x55 0x67 0x9a 112 3 0 0 3 0 0x5d
 #define CallGate_eval_pci_int_arr 0x55 0x67 0x9a 113 3 0 0 3 0 0x5d
 
+#define CallGate_set_can_serial_number 0x55 0x67 0x9a 114 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -3154,5 +3158,7 @@
 #define CallGate_get_pci_msix_irqs 0x3e 0x67 0x9a 111 3 0 0 3 0
 #define CallGate_is_pci_locked 0x3e 0x67 0x9a 112 3 0 0 3 0
 #define CallGate_eval_pci_int_arr 0x3e 0x67 0x9a 113 3 0 0 3 0
+
+#define CallGate_set_can_serial_number 0x3e 0x67 0x9a 114 3 0 0 3 0
 
 #endif

@@ -34,9 +34,6 @@
 #include "sockobj.h"
 #include "rdos.h"
 
-#define FALSE 0
-#define TRUE !FALSE
-
 /*##########################################################################
 #
 #   Name       : IpToString
@@ -72,6 +69,22 @@ int StringToIp(const char *str)
         return n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
     else
         return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::TSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocket::TSocket(const char *DeviceName)
+ : TWaitDevice(DeviceName)
+{
 }
 
 /*##########################################################################
@@ -112,7 +125,7 @@ long TSocket::GetLocalIP()
 #   Returns....: TRUE if available
 #
 ##########################################################################*/
-int TSocket::WaitForData(long Timeout)
+bool TSocket::WaitForData(long Timeout)
 {
     if (!FWait)
         CreateWait();
@@ -121,7 +134,7 @@ int TSocket::WaitForData(long Timeout)
         if (FWait->WaitTimeout(Timeout) == this)
             return IsOpen();
 
-    return FALSE;
+    return false;
 }
 
 /*##########################################################################
@@ -150,7 +163,8 @@ void TSocket::SignalNewData()
 #   Returns....: *
 #
 ##########################################################################*/
-TTcpSocket::TTcpSocket()
+TTcpSocket::TTcpSocket(const char *DeviceName)
+ : TSocket(DeviceName)
 {
     FHandle = 0;
 }
@@ -167,6 +181,7 @@ TTcpSocket::TTcpSocket()
 #
 ##########################################################################*/
 TTcpSocket::TTcpSocket(int Handle)
+ : TSocket("TCP Socket")
 {
     FHandle = Handle;
     Open();
@@ -187,6 +202,7 @@ TTcpSocket::TTcpSocket(int Handle)
 #
 ##########################################################################*/
 TTcpSocket::TTcpSocket(long IP, int Port, int Timeout, int BufferSize)
+ : TSocket("TCP Socket")
 {
     FHandle = RdosOpenTcpConnection(IP, 0, Port, Timeout, BufferSize);
     Open();
@@ -208,6 +224,7 @@ TTcpSocket::TTcpSocket(long IP, int Port, int Timeout, int BufferSize)
 #
 ##########################################################################*/
 TTcpSocket::TTcpSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize)
+ : TSocket("TCP Socket")
 {
     FHandle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
     Open();
@@ -235,22 +252,6 @@ TTcpSocket::~TTcpSocket()
 
 /*##########################################################################
 #
-#   Name       : TTcpSocket::DeviceName
-#
-#   Purpose....: Returns device-name
-#
-#   In params..: MaxLen max size of name
-#   Out params.: Name   device name
-#   Returns....: *
-#
-##########################################################################*/
-void TTcpSocket::DeviceName(char *Name, int MaxLen) const
-{
-    strncpy(Name,"TCP Socket",MaxLen);
-}
-
-/*##########################################################################
-#
 #   Name       : TTcpSocket::Add
 #
 #   Purpose....: Add object to wait
@@ -274,12 +275,12 @@ void TTcpSocket::Add(TWait *Wait)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TTcpSocket::IsOpen()
+bool TTcpSocket::IsOpen()
 {
     if (TDevice::IsOpen() && FHandle)
         return !RdosIsTcpConnectionClosed(FHandle);
     else
-        return FALSE;
+        return false;
 }
 
 /*##################  TTcpSocket::NotifyClose  ############################
@@ -360,12 +361,12 @@ void TTcpSocket::Push()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TTcpSocket::IsIdle()
+bool TTcpSocket::IsIdle()
 {
     if (FHandle)
         return RdosIsTcpConnectionIdle(FHandle);
     else
-        return TRUE;
+        return true;
 }
 
 /*##################  TTcpSocket::WaitForConnection  ############################
@@ -375,12 +376,12 @@ int TTcpSocket::IsIdle()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TTcpSocket::WaitForConnection(int Timeout)
+bool TTcpSocket::WaitForConnection(int Timeout)
 {
     if (FHandle)
         return RdosWaitForTcpConnection(FHandle, Timeout);
     else
-        return FALSE;
+        return false;
 }
 
 /*##################  TTcpSocket::GetSize  ############################
@@ -517,6 +518,7 @@ int TTcpSocket::Read(char *buf, int size)
 #
 ##########################################################################*/
 TSslSocket::TSslSocket(int Handle)
+ : TTcpSocket("SSL Socket")
 {
     FSession = 0;
     FHandle = Handle;
@@ -540,6 +542,7 @@ TSslSocket::TSslSocket(int Handle)
 #
 ##########################################################################*/
 TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize)
+ : TTcpSocket("SSL Socket")
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, 0, Port, Timeout, BufferSize);
@@ -564,6 +567,7 @@ TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize)
 #
 ##########################################################################*/
 TSslSocket::TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize)
+ : TTcpSocket("SSL Socket")
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, LocalPort, RemotePort, Timeout, BufferSize);
@@ -589,22 +593,6 @@ TSslSocket::~TSslSocket()
 
     if (FSession)
         RdosCloseSecureSession(FSession);
-}
-
-/*##########################################################################
-#
-#   Name       : TSslSocket::DeviceName
-#
-#   Purpose....: Returns device-name
-#
-#   In params..: MaxLen max size of name
-#   Out params.: Name   device name
-#   Returns....: *
-#
-##########################################################################*/
-void TSslSocket::DeviceName(char *Name, int MaxLen) const
-{
-    strncpy(Name,"SSL Socket",MaxLen);
 }
 
 /*##########################################################################
@@ -648,7 +636,7 @@ void TSslSocket::Add(TWait *Wait)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TSslSocket::IsOpen()
+bool TSslSocket::IsOpen()
 {
     if (TDevice::IsOpen() && FHandle)
     {
@@ -660,7 +648,7 @@ int TSslSocket::IsOpen()
         return !RdosIsSecureConnectionClosed(FHandle);
     }
     else
-        return FALSE;
+        return false;
 }
 
 /*##################  TSslSocket::NotifyClose  ############################
@@ -741,7 +729,7 @@ void TSslSocket::Push()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TSslSocket::IsIdle()
+bool TSslSocket::IsIdle()
 {
     if (FHandle)
     {
@@ -753,7 +741,7 @@ int TSslSocket::IsIdle()
         return RdosIsSecureConnectionIdle(FHandle);
     }
     else
-        return TRUE;
+        return true;
 }
 
 /*##################  TSslSocket::WaitForConnection  ############################
@@ -763,7 +751,7 @@ int TSslSocket::IsIdle()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TSslSocket::WaitForConnection(int Timeout)
+bool TSslSocket::WaitForConnection(int Timeout)
 {
     if (FHandle)
     {
@@ -771,7 +759,7 @@ int TSslSocket::WaitForConnection(int Timeout)
         return RdosWaitForSecureConnection(FHandle, Timeout);
     }
     else
-        return FALSE;
+        return false;
 }
 
 /*##################  TSslSocket::GetSize  ############################
@@ -939,6 +927,7 @@ int TSslSocket::GetCertificate(char *buf, int size)
 
     return count;
 }
+
 /*##########################################################################
 #
 #   Name       : TUdpSocket::TUdpSocket
@@ -953,6 +942,7 @@ int TSslSocket::GetCertificate(char *buf, int size)
 #
 ##########################################################################*/
 TUdpSocket::TUdpSocket(long IP, int LocalPort, int RemotePort)
+ : TSocket("UDP Socket")
 {
     FHandle = RdosOpenUdpConnection(IP, LocalPort, RemotePort);
     FLocalPort = LocalPort;
@@ -976,22 +966,6 @@ TUdpSocket::~TUdpSocket()
 {
     if (FHandle)
         RdosCloseUdpConnection(FHandle);
-}
-
-/*##########################################################################
-#
-#   Name       : TUdpSocket::DeviceName
-#
-#   Purpose....: Returns device-name
-#
-#   In params..: MaxLen max size of name
-#   Out params.: Name   device name
-#   Returns....: *
-#
-##########################################################################*/
-void TUdpSocket::DeviceName(char *Name, int MaxLen) const
-{
-    strncpy(Name,"UDP Socket",MaxLen);
 }
 
 /*##########################################################################
@@ -1068,9 +1042,9 @@ int TUdpSocket::GetLocalPort() const
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TUdpSocket::IsIdle()
+bool TUdpSocket::IsIdle()
 {
-    return TRUE;
+    return true;
 }
 
 /*##################  TUdpSocket::GetSize  ############################
@@ -1282,7 +1256,8 @@ void TSocketServer::Execute()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServerFactory::TSocketServerFactory()
+TSocketServerFactory::TSocketServerFactory(const char *DeviceName)
+ : TWaitDevice(DeviceName)
 {
     FServerCount = 0;
     FList = 0;
@@ -1300,7 +1275,8 @@ TSocketServerFactory::TSocketServerFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServerFactory::TSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+TSocketServerFactory::TSocketServerFactory(const char *DeviceName, int Port, int MaxConnections, int BufferSize)
+ : TWaitDevice(DeviceName)
 {
     FServerCount = 0;
     FList = 0;
@@ -1486,7 +1462,8 @@ void TSocketServerFactory::CloseAllSockets()
 #   Returns....: *
 #
 ##########################################################################*/
-TSslSocketServerFactory::TSslSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+TSslSocketServerFactory::TSslSocketServerFactory(const char *DeviceName, int Port, int MaxConnections, int BufferSize)
+ : TSocketServerFactory(DeviceName)
 {
     FListenHandle = RdosCreateSecureListen(Port, MaxConnections, BufferSize);
 }
@@ -1579,7 +1556,8 @@ void TSslSocketServerFactory::SignalNewData()
 #   Returns....: *
 #
 ##########################################################################*/
-TUdpSocketListner::TUdpSocketListner(int Port, int MaxMessages)
+TUdpSocketListner::TUdpSocketListner(const char *DeviceName, int Port, int MaxMessages)
+ : TWaitDevice(DeviceName)
 {
     FHandle = RdosCreateUdpListen(Port, MaxMessages);
 }
@@ -1630,7 +1608,7 @@ void TUdpSocketListner::Add(TWait *Wait)
 #   Returns....: TRUE if available
 #
 ##########################################################################*/
-int TUdpSocketListner::WaitForMsg(long Timeout)
+bool TUdpSocketListner::WaitForMsg(long Timeout)
 {
     if (!FWait)
         CreateWait();
@@ -1639,7 +1617,7 @@ int TUdpSocketListner::WaitForMsg(long Timeout)
         if (FWait->WaitTimeout(Timeout) == this)
             return HasMsg();
 
-    return FALSE;
+    return false;
 }
 
 /*##########################################################################
@@ -1653,7 +1631,7 @@ int TUdpSocketListner::WaitForMsg(long Timeout)
 #   Returns....: TRUE if available
 #
 ##########################################################################*/
-int TUdpSocketListner::WaitForMsg()
+bool TUdpSocketListner::WaitForMsg()
 {
     if (!FWait)
         CreateWait();
@@ -1662,7 +1640,7 @@ int TUdpSocketListner::WaitForMsg()
         if (FWait->WaitForever() == this)
             return HasMsg();
 
-    return FALSE;
+    return false;
 }
 
 /*##########################################################################
@@ -1691,12 +1669,12 @@ void TUdpSocketListner::SignalNewData()
 #   Returns....: TRUE if available
 #
 ##########################################################################*/
-int TUdpSocketListner::HasMsg()
+bool TUdpSocketListner::HasMsg()
 {
     if (RdosGetUdpListenSize(FHandle))
-        return TRUE;
+        return true;
     else
-        return FALSE;
+        return false;
 }
 
 /*##########################################################################

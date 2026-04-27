@@ -48,6 +48,7 @@
 #
 ##########################################################################*/
 TPrinterDevice::TPrinterDevice()
+ : TWaitDevice("Printer")
 {
     FHandle = 0;
     FPort = 0;
@@ -65,8 +66,14 @@ TPrinterDevice::TPrinterDevice()
 #
 ##########################################################################*/
 TPrinterDevice::TPrinterDevice(int Port)
+ : TWaitDevice("Printer")
 {
-        Init(Port);
+    char str[512];
+
+    Init(Port);
+        
+    if (RdosGetPrinterName(FHandle, str))
+        FDeviceName = str;
 }
 
 /*##########################################################################
@@ -121,27 +128,6 @@ int TPrinterDevice::GetHandle()
 
 /*##########################################################################
 #
-#   Name       : TPrinterDevice::DeviceName
-#
-#   Purpose....: Returns device-name
-#
-#   In params..: MaxLen max size of name
-#   Out params.: Name   device name
-#   Returns....: *
-#
-##########################################################################*/
-void TPrinterDevice::DeviceName(char *Name, int MaxLen) const
-{
-    char str[512];
-
-    if (RdosGetPrinterName(FHandle, str))
-        strncpy(Name, str, MaxLen);
-    else
-        strncpy(Name,"Printer device",MaxLen);
-}
-
-/*##########################################################################
-#
 #   Name       : TPrinterDevice::Add
 #
 #   Purpose....: Add object to wait
@@ -164,7 +150,7 @@ void TPrinterDevice::Add(TWait *Wait)
 #   Returns....: TRUE if online
 #
 ##########################################################################*/
-int TPrinterDevice::IsOnline()
+bool TPrinterDevice::IsOnline()
 {
     return RdosIsPrinterOk(FHandle);
 }
@@ -178,7 +164,7 @@ int TPrinterDevice::IsOnline()
 #   Returns....: TRUE if jammed
 #
 ##########################################################################*/
-int TPrinterDevice::IsJammed()
+bool TPrinterDevice::IsJammed()
 {
     return RdosIsPrinterJammed(FHandle);
 }
@@ -192,7 +178,7 @@ int TPrinterDevice::IsJammed()
 #   Returns....: TRUE if cutter jammed
 #
 ##########################################################################*/
-int TPrinterDevice::IsCutterJammed()
+bool TPrinterDevice::IsCutterJammed()
 {
     return RdosIsPrinterCutterJammed(FHandle);
 }
@@ -206,7 +192,7 @@ int TPrinterDevice::IsCutterJammed()
 #   Returns....: TRUE if paper low
 #
 ##########################################################################*/
-int TPrinterDevice::IsPaperLow()
+bool TPrinterDevice::IsPaperLow()
 {
     return RdosIsPrinterPaperLow(FHandle);
 }
@@ -220,7 +206,7 @@ int TPrinterDevice::IsPaperLow()
 #   Returns....: TRUE if paper end
 #
 ##########################################################################*/
-int TPrinterDevice::IsPaperEnd()
+bool TPrinterDevice::IsPaperEnd()
 {
     return RdosIsPrinterPaperEnd(FHandle);
 }
@@ -234,7 +220,7 @@ int TPrinterDevice::IsPaperEnd()
 #   Returns....: TRUE if printer head lifted
 #
 ##########################################################################*/
-int TPrinterDevice::IsPrintHeadLifted()
+bool TPrinterDevice::IsPrintHeadLifted()
 {
     return RdosIsPrinterHeadLifted(FHandle);
 }
@@ -248,7 +234,7 @@ int TPrinterDevice::IsPrintHeadLifted()
 #   Returns....: TRUE if paper feed error
 #
 ##########################################################################*/
-int TPrinterDevice::HasFeedError()
+bool TPrinterDevice::HasFeedError()
 {
     return RdosHasPrinterFeedError(FHandle);
 }
@@ -262,7 +248,7 @@ int TPrinterDevice::HasFeedError()
 #   Returns....: TRUE if paper temperature error
 #
 ##########################################################################*/
-int TPrinterDevice::HasTemperatureError()
+bool TPrinterDevice::HasTemperatureError()
 {
     return RdosHasPrinterTemperatureError(FHandle);
 }
@@ -276,7 +262,7 @@ int TPrinterDevice::HasTemperatureError()
 #   Returns....: TRUE if paper in presenter
 #
 ##########################################################################*/
-int TPrinterDevice::HasPaperInPresenter()
+bool TPrinterDevice::HasPaperInPresenter()
 {
     return RdosHasPrinterPaperInPresenter(FHandle);
 }

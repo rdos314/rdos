@@ -47,6 +47,7 @@
 #
 ##########################################################################*/
 TSyslogDevice::TSyslogDevice()
+ : TWaitDevice("Syslog")
 {
     FHandle = RdosOpenSyslog();
 }
@@ -65,22 +66,6 @@ TSyslogDevice::TSyslogDevice()
 TSyslogDevice::~TSyslogDevice()
 {
     RdosCloseSyslog(FHandle);
-}
-
-/*##########################################################################
-#
-#   Name       : TSyslogDevice::DeviceName
-#
-#   Purpose....: Returns device-name
-#
-#   In params..: MaxLen max size of name
-#   Out params.: Name   device name
-#   Returns....: *
-#
-##########################################################################*/
-void TSyslogDevice::DeviceName(char *Name, int MaxLen) const
-{
-        strncpy(Name,"Syslog device",MaxLen);
 }
 
 /*##########################################################################

@@ -174,19 +174,17 @@ public:
 	TKeyboardDevice();
 	virtual ~TKeyboardDevice();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-
 	virtual void Clear();
-	virtual int Poll() const;
+	virtual bool Poll() const;
 	virtual int Get();
 	virtual int Peek();
 	virtual void Put(int ch);
 
-	virtual int IsPinPad();
+	virtual bool IsPinPad();
 	
-	int PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
-	int ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
-    int IsStdKey(int ExtKey, int VirtualKey) const;
+	bool PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
+	bool ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
+    bool IsStdKey(int ExtKey, int VirtualKey) const;
 
 	void (*OnKeyPress)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	void (*OnKeyRelease)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);

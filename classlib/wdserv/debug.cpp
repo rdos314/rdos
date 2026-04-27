@@ -957,7 +957,8 @@ TDebugWatch::TDebugWatch(int sel, long offset, int size)
 #
 ##########################################################################*/
 TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
- : FProgram(Program),
+ : TWaitDevice("Debug"),
+   FProgram(Program),
    FParam(Param),
    FStartDir(StartDir),
    FSection("DebugSect")

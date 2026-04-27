@@ -69,7 +69,7 @@ static void OnMsg(TWdSocketServer *serv, const char *msg)
 #
 ##########################################################################*/
 TWdSocketServerFactory::TWdSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+  : TSocketServerFactory("WD Serv", Port, MaxConnections, BufferSize)
 {
     FSupplList = 0;
     OnMsg = 0;

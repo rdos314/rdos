@@ -32,9 +32,23 @@
 #ifndef _FILE_H
 #define _FILE_H
 
-#include "rdos.h"
 #include "datetime.h"
+#include "str.h"
 
+#ifdef __RDOS__
+#include "rdos.h"
+#endif
+
+/**
+ * @class TFile
+ * @brief Represents a file abstraction for performing file operations.
+ *
+ * The TFile class provides methods to interact with files, including reading,
+ * writing, setting file size, accessing file attributes, and file position management.
+ * Additionally, it includes platform-specific support for RDOS.
+
+ * @note The platform-dependent RDOS functionality is enabled via preprocessor directives.
+ */
 class TFile
 {
 public:
@@ -43,9 +57,9 @@ public:
     TFile(const TFile &file);
     ~TFile();
 
-    int IsOpen();
-    int IsDevice();
-    int IsFile();
+    bool IsOpen();
+    bool IsDevice();
+    bool IsFile();
     const char *GetFileName();
 
     long long GetSize();
@@ -60,18 +74,44 @@ public:
     int Write(const char *str);
 
 protected:
+#ifdef __RDOS__
     int VfsReadOne(int index, char *Buf, long long Pos, int Size);
     int VfsWriteOne(int index, char *Buf, long long Pos, int Size);
     int VfsFind(long long Pos);
     int VfsRead(void *Buf, int Size);
     int VfsWrite(const void *Buf, int Size);
+#endif
 
 private:
-    long FHandle;
-    char *FFileName;
+    /**
+     * @variable FHandle
+     * @brief Internal file handle used for low-level file operations.
+     *
+     * FHandle represents a platform-specific handle or descriptor used internally
+     * to manage and interact with a file or device resource. It is initialized during
+     * the construction of a TFile object and is subject to platform-dependent behavior
+     * based on the target operating system.
+     *
+     * @note On certain platforms (e.g., RDOS), FHandle is associated with additional
+     *       file mapping structures to enable efficient file management.
+     */
+    int FHandle;
+    /**
+     * @var TString FFileName
+     * @brief Stores the name of the file associated with the TFile instance.
+     *
+     * This variable holds the file name as a string, which is used internally to
+     * identify the file for various file operations within the TFile class.
+     * It acts as a key reference to the file during tasks such as reading,
+     * writing, and managing file attributes.
+     */
+    TString FFileName;
+
+#ifdef __RDOS__
     struct RdosFileMap *FMap;
     int FMapIndex;
     int FLastIndex;
+#endif
 };
 
 #endif

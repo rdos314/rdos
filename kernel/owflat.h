@@ -1497,6 +1497,12 @@
     CarryToBool \
     __parm [__eax] [__edi]
 
+#pragma aux RdosSetCanSerialNumber = \
+    CallGate_set_can_serial_number  \
+    CarryToBool \
+    __parm [__eax] [__edi] \
+    __value [__eax]
+    
 #pragma aux RdosGetCanModuleRestarts = \
     "xor ecx,ecx" \
     CallGate_get_can_module_restarts  \

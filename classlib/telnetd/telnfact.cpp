@@ -53,7 +53,7 @@
 #
 ##########################################################################*/
 TTelnetSocketServerFactory::TTelnetSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+  : TSocketServerFactory("TELNET", Port, MaxConnections, BufferSize)
 {
     OnCommand = 0;
     SocketId = 0;

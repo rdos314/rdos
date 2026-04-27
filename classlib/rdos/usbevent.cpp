@@ -50,6 +50,7 @@
 #
 ##########################################################################*/
 TUsbEvent::TUsbEvent(int QueueSize)
+ : TWaitDevice("USB event")
 {
     FHandle = RdosOpenUsbEvent(QueueSize);
 }
@@ -83,22 +84,6 @@ TUsbEvent::~TUsbEvent()
 void TUsbEvent::Add(TWait *Wait)
 {
     RdosAddWaitForUsbEvent(Wait->GetHandle(), FHandle, (int)this);
-}
-
-/*##########################################################################
-#
-#   Name       : TUsbEvent::DeviceName
-#
-#   Purpose....: Device name                                      
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TUsbEvent::DeviceName(char *Name, int MaxLen) const
-{
-    strncpy(Name, "USB event", MaxLen);
 }
 
 /*##########################################################################

@@ -629,6 +629,7 @@ int RDOSAPI RdosGetCanModuleInfo(int Module, int *ComCount, int *Id);
 int RDOSAPI RdosGetCanModuleVersion(int Module, int *MajorVersion, int *MinorVersion, int *SubVersion);
 int RDOSAPI RdosGetCanLoaderVersion(int Module, int *MajorVersion, int *MinorVersion, int *SubVersion);
 void RDOSAPI RdosGetCanSerialNumber(int Module, char *Buf);
+int RDOSAPI RdosSetCanSerialNumber(int Module, const char *Buf);
 int RDOSAPI RdosGetCanModuleRestarts(int Module);
 int RDOSAPI RdosCheckCanSerialPort(int ComPort, int *ModuleId, int *PortNr);
 int RDOSAPI RdosProgramCanModule(int Module, const char *ProgramName);

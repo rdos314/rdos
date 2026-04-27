@@ -49,6 +49,7 @@
 #
 ##########################################################################*/
 TMouseDevice::TMouseDevice()
+ : TWaitDevice("Mouse")
 {
         Init();
 }
@@ -101,22 +102,6 @@ void TMouseDevice::Init()
 void TMouseDevice::Add(TWait *Wait)
 {
         RdosAddWaitForMouse(Wait->GetHandle(), (int)this);
-}
-
-/*##########################################################################
-#
-#   Name       : TMouseDevice::DeviceName
-#
-#   Purpose....: Device name                                      
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TMouseDevice::DeviceName(char *Name, int MaxLen) const
-{
-        strncpy(Name, "MOUSE", MaxLen);
 }
 
 /*##########################################################################
@@ -194,7 +179,7 @@ void TMouseDevice::GetPosition(int *x, int *y)
 #   Returns....: TRUE if pressed
 #
 ##########################################################################*/
-int TMouseDevice::IsLeftButtonPressed()
+bool TMouseDevice::IsLeftButtonPressed()
 {
         return RdosGetLeftButton();
 }
@@ -210,7 +195,7 @@ int TMouseDevice::IsLeftButtonPressed()
 #   Returns....: TRUE if pressed
 #
 ##########################################################################*/
-int TMouseDevice::IsRightButtonPressed()
+bool TMouseDevice::IsRightButtonPressed()
 {
         return RdosGetRightButton();
 }

@@ -36,9 +36,6 @@
 #include "path.h"
 #include "direntry.h"
 
-#define FALSE 0
-#define TRUE !FALSE
-
 /*##################  TSerialCommand::TSerialCommand ############
 *   Purpose....: Constructor for TSerialCommand                     #
 *   In params..: *                                                          #
@@ -126,7 +123,7 @@ void TSerialCommand::Clear()
 #   Returns....: *
 #
 ##########################################################################*/
-int TSerialCommand::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
+bool TSerialCommand::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
 {
     return FSerial->DefineEventDebug(LogPath, DumpFiles, EntryCount, InChannel, OutChannel);
 }
@@ -138,7 +135,7 @@ int TSerialCommand::DefineEventDebug(const char *LogPath, int DumpFiles, int Ent
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TSerialCommand::DumpEvents()
+bool TSerialCommand::DumpEvents()
 {
     return FSerial->DumpEvents();
 }
@@ -270,7 +267,7 @@ char TSerialCommand::Read()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TSerialCommand::WaitForChar(long MaxWait)
+bool TSerialCommand::WaitForChar(long MaxWait)
 {
         return FSerial->WaitForChar(MaxWait);
 }
@@ -301,7 +298,7 @@ void TSerialDevice::Init()
     FNextPos = 0;
     FEntryCount = 0;
     FFileCount = 0;
-    FUseCts = FALSE;
+    FUseCts = false;
     FBufferSize = 0x4000;
 }
 
@@ -344,7 +341,8 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice()
- : FSection("Serial"),
+ : TWaitDevice("Serial Device"),
+   FSection("Serial"),
    FEventSection("EvSerial")
 {
     Init();
@@ -361,7 +359,8 @@ TSerialDevice::TSerialDevice()
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(int Handle)
- : FSection("Serial"),
+ : TWaitDevice("Serial Device"),
+   FSection("Serial"),
    FEventSection("EvSerial")
 {
     Init();
@@ -384,7 +383,8 @@ TSerialDevice::TSerialDevice(int Handle)
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate)
-  : FSection("Serial"),
+  : TWaitDevice("Serial Device"),
+    FSection("Serial"),
     FEventSection("EvSerial")
 {
     Init(Port, Baudrate, 'N', 8, 1);
@@ -406,7 +406,8 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate)
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
-  : FSection("Serial"),
+  : TWaitDevice("Serial Device"),
+    FSection("Serial"),
     FEventSection("EvSerial")
 {
     Init(Port, Baudrate, Parity, DataBits, StopBits);
@@ -461,22 +462,6 @@ void TSerialDevice::Block()
 void TSerialDevice::Unblock()
 {
         FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::DeviceName
-#
-#   Purpose....: Returns device-name
-#
-#   In params..: MaxLen max size of name
-#   Out params.: Name   device name
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialDevice::DeviceName(char *Name, int MaxLen) const
-{
-        strncpy(Name,"Serial device",MaxLen);
 }
 
 /*##########################################################################
@@ -695,7 +680,7 @@ void TSerialDevice::InitFiles()
 #   Returns....: *
 #
 ##########################################################################*/
-int TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
+bool TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
 {
     int i;
 
@@ -721,12 +706,12 @@ int TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int Entr
             FEntryArr[i].ch = 0;
         }
 
-        return TRUE;
+        return true;
     }
     else
     {
         FFileCount = 0;
-        return FALSE;
+        return false;
     }
 }
 
@@ -741,7 +726,7 @@ int TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int Entr
 #   Returns....: *
 #
 ##########################################################################*/
-int TSerialDevice::DumpEvents()
+bool TSerialDevice::DumpEvents()
 {
     TString str;
 
@@ -749,10 +734,10 @@ int TSerialDevice::DumpEvents()
     {
         str.printf("ComLog %d", FPort);
         Start(str.GetData(), 0x4000);
-        return TRUE;
+        return true;
     }
     else
-        return FALSE;
+        return false;
 }
 
 /*##################  TSerialDevice::Execute  #######################
@@ -833,12 +818,12 @@ void TSerialDevice::OpenPort()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TSerialDevice::IsOpen()
+bool TSerialDevice::IsOpen()
 {
         if (FHandle)
-            return TRUE;
+            return true;
         else
-            return FALSE;
+            return false;
 }
 
 /*##################  TSerialDevice::Open  ############################
@@ -1066,7 +1051,7 @@ int TSerialDevice::GetReceiveBufferSpace()
 #   Returns....: Number of bytes free space
 #
 ##########################################################################*/
-int TSerialDevice::SupportsFullDuplex()
+bool TSerialDevice::SupportsFullDuplex()
 {
     return FSupportsFullDuplex;
 }
@@ -1101,7 +1086,7 @@ void TSerialDevice::Reset()
 ##########################################################################*/
 void TSerialDevice::EnableCts()
 {
-    FUseCts = TRUE;
+    FUseCts = true;
     
     if (FHandle)
         RdosEnableCts(FHandle);
@@ -1120,7 +1105,7 @@ void TSerialDevice::EnableCts()
 ##########################################################################*/
 void TSerialDevice::DisableCts()
 {
-    FUseCts = FALSE;
+    FUseCts = false;
 
     if (FHandle)
         RdosDisableCts(FHandle);
@@ -1137,12 +1122,12 @@ void TSerialDevice::DisableCts()
 #   Returns....: *
 #
 ##########################################################################*/
-int TSerialDevice::GetCts()
+bool TSerialDevice::GetCts()
 {
     if (FHandle)
         return RdosGetCts(FHandle);
     else
-        return 0;
+        return false;
 }
 
 /*##########################################################################
@@ -1156,12 +1141,12 @@ int TSerialDevice::GetCts()
 #   Returns....: *
 #
 ##########################################################################*/
-int TSerialDevice::GetDsr()
+bool TSerialDevice::GetDsr()
 {
     if (FHandle)
         return RdosGetDsr(FHandle);
     else
-        return 0;
+        return false;
 }
 
 /*##########################################################################
@@ -1277,12 +1262,12 @@ void TSerialDevice::DisableAutoRts()
 #   Returns....: *
 #
 ##########################################################################*/
-int TSerialDevice::IsAutoRtsOn()
+bool TSerialDevice::IsAutoRtsOn()
 {
     if (FHandle)
         return RdosIsAutoRtsOn(FHandle);
     else
-        return FALSE;
+        return false;
 }
 
 /*##########################################################################
@@ -1418,7 +1403,7 @@ void TSerialDevice::WaitForSendCompleted()
 #   Returns....: character
 #
 ##########################################################################*/
-int TSerialDevice::WaitForChar(long Timeout)
+bool TSerialDevice::WaitForChar(long Timeout)
 {
     TWaitDevice *wd;
 
@@ -1429,12 +1414,12 @@ int TSerialDevice::WaitForChar(long Timeout)
     {
         wd = FWait->WaitTimeout(Timeout);
         if (wd == this)
-            return TRUE;
+            return true;
         else
             return Poll();
     }
 
-    return FALSE;
+    return false;
 }
 
 /*##########################################################################
@@ -1448,13 +1433,12 @@ int TSerialDevice::WaitForChar(long Timeout)
 #   Returns....: true if successful
 #
 ##########################################################################*/
-int TSerialDevice::Poll()
+bool TSerialDevice::Poll()
 {
     if (RdosGetComRecCount(FHandle))
-        return TRUE;
+        return true;
     else
-        return FALSE;
-//    return WaitForChar(25);
+        return false;
 }
 
 /*##########################################################################

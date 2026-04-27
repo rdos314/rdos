@@ -54,7 +54,7 @@
 #
 ##########################################################################*/
 THttpSocketServerFactory::THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+  : TSocketServerFactory("HTTP", Port, MaxConnections, BufferSize)
 {
 }
 

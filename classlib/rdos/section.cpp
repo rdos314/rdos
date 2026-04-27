@@ -32,72 +32,87 @@
 #include <string.h>
 #include "section.h"
 
-#define     FALSE   0
-#define     TRUE    !FALSE
-
-/*##########################################################################
-#
-#   Name       : TSection::TSection
-#
-#   Purpose....: Constructor for TSection
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
+/**
+ * Constructs a TSection object by initializing its name and the synchronization mechanism.
+ *
+ * The name is copied and truncated to a maximum of 32 characters. Depending on the platform,
+ * the constructor initializes either a futex or a mutex to provide thread synchronization.
+ *
+ * @param Name A null-terminated string representing the name of the section. It will be truncated to 32 characters if it exceeds this length.
+ * @return None
+ */
 TSection::TSection(const char *Name)
 {
     strncpy(FName, Name, 32);
     FName[32] = 0;
 
+#ifdef __RDOS__
     RdosInitFutex(&Futex, FName);
+#else
+    Mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSection::~TSection
-#
-#   Purpose....: Destructor for TSection
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
+/**
+ * @brief Destructor for the TSection class.
+ *
+ * This destructor is responsible for cleaning up resources associated
+ * with the TSection object. On platforms where the macro `__RDOS__` is
+ * defined, it specifically calls `RdosResetFutex` to reset the futex
+ * associated with the object. This ensures proper release of any system-specific
+ * synchronization constructs used by the TSection instance.
+ *
+ * For non-RDOS platforms, no specific cleanup is performed by this destructor,
+ * as resource management may rely on default behavior or other platform-specific
+ * implementation details.
+ */
 TSection::~TSection()
 {
+#ifdef __RDOS__
     RdosResetFutex(&Futex);
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSection::EnterSection
-#
-#   Purpose....: Enter critical section
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
+/**
+ * @brief Acquires the synchronization lock for the section.
+ *
+ * This method is used to enter a critical section by ensuring exclusive access to
+ * the protected resource. If the lock is already held by another thread, the calling
+ * thread will block until the lock becomes available.
+ *
+ * On systems where `__RDOS__` is defined, the method uses the `RdosEnterFutex` function
+ * to acquire the synchronization lock. On other systems, it utilizes `pthread_mutex_lock`
+ * for mutex-based synchronization.
+ *
+ * Proper usage of this method should always ensure that `Enter` is paired with a
+ * corresponding `Leave` call to prevent deadlocks and resource contention.
+ */
 void TSection::Enter() const
 {
+#ifdef __RDOS__
     RdosEnterFutex(&Futex);
+#else
+    pthread_mutex_lock(&Mutex);
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSection::LeaveSection
-#
-#   Purpose....: Leave critical section
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
+/**
+ * @brief Releases the lock held by the current thread on the synchronization object.
+ *
+ * This method is used to release a previously acquired lock, allowing other threads
+ * to access the shared resource protected by the synchronization mechanism.
+ *
+ * On systems where `__RDOS__` is defined, it uses `RdosLeaveFutex` to unlock the futex.
+ * On other platforms, it utilizes `pthread_mutex_unlock` to release the mutex.
+ *
+ * Ensure that every call to `Enter` is followed by a corresponding call to `Leave`
+ * to maintain proper synchronization and avoid deadlocks in a multi-threaded environment.
+ */
 void TSection::Leave() const
 {
+#ifdef __RDOS__
     RdosLeaveFutex(&Futex);
+#else
+    pthread_mutex_unlock(&Mutex);
+#endif
 }

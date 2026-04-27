@@ -35,14 +35,11 @@
 
 #include <rdos.h>
 
-#define FALSE 0
-#define TRUE !FALSE
-
 /*##########################################################################
 #
 #   Name       : TKeyboardDevice::TKeyboardDevice
 #
-#   Purpose....: Constructor for TKeyboardDevice                                          
+#   Purpose....: Constructor for TKeyboardDevice
 #
 #   In params..: *
 #   Out params.: *
@@ -50,6 +47,7 @@
 #
 ##########################################################################*/
 TKeyboardDevice::TKeyboardDevice()
+ : TWaitDevice("Keyboard")
 {
         Init();
 }
@@ -58,7 +56,7 @@ TKeyboardDevice::TKeyboardDevice()
 #
 #   Name       : TKeyboardDevice::~TKeyboardDevice
 #
-#   Purpose....: Destructor for TKeyboardDevice                                   
+#   Purpose....: Destructor for TKeyboardDevice
 #
 #   In params..: *
 #   Out params.: *
@@ -105,22 +103,6 @@ void TKeyboardDevice::Add(TWait *Wait)
 
 /*##########################################################################
 #
-#   Name       : TKeyboardDevice::DeviceName
-#
-#   Purpose....: Device name                                      
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TKeyboardDevice::DeviceName(char *Name, int MaxLen) const
-{
-        strncpy(Name, "KEYBOARD", MaxLen);
-}
-
-/*##########################################################################
-#
 #   Name       : TKeyboardDevice::Clear
 #
 #   Purpose....: Clear
@@ -149,7 +131,7 @@ void TKeyboardDevice::Clear()
 #   Returns....: TRUE if data available
 #
 ##########################################################################*/
-int TKeyboardDevice::PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode)
+bool TKeyboardDevice::PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode)
 {
         return RdosPeekKeyEvent(ExtKey, KeyState, VirtualKey, ScanCode);
 }
@@ -168,7 +150,7 @@ int TKeyboardDevice::PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int 
 #   Returns....: TRUE if data available
 #
 ##########################################################################*/
-int TKeyboardDevice::ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode)
+bool TKeyboardDevice::ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode)
 {
         return RdosReadKeyEvent(ExtKey, KeyState, VirtualKey, ScanCode);
 }
@@ -184,10 +166,10 @@ int TKeyboardDevice::ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int 
 #   Returns....: TRUE if std key
 #
 ##########################################################################*/
-int TKeyboardDevice::IsStdKey(int ExtKey, int VirtualKey) const
+bool TKeyboardDevice::IsStdKey(int ExtKey, int VirtualKey) const
 {
     if (ExtKey & 0x8000)
-        return FALSE;
+        return false;
 
     switch (VirtualKey)
     {
@@ -203,9 +185,9 @@ int TKeyboardDevice::IsStdKey(int ExtKey, int VirtualKey) const
         case VK_RCONTROL:
         case VK_LMENU:
         case VK_RMENU:
-            return FALSE;
+            return false;
     }
-    return TRUE;
+    return true;
 }
 
 /*##########################################################################
@@ -219,13 +201,13 @@ int TKeyboardDevice::IsStdKey(int ExtKey, int VirtualKey) const
 #   Returns....: TRUE if data available
 #
 ##########################################################################*/
-int TKeyboardDevice::Poll() const
+bool TKeyboardDevice::Poll() const
 {
     int ExtKey;
     int KeyState;
     int VirtualKey;
     int ScanCode;
-        int ok;
+    bool ok;
 
         ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
 
@@ -260,17 +242,17 @@ int TKeyboardDevice::Get()
     int KeyState;
     int VirtualKey;
     int ScanCode;
-    int ok;
+    bool ok;
 
     VirtualKey = 0;
 
-    ok = FALSE;
+    ok = false;
 
     while (!ok)
-    {      
+    {
         ok = RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
         if (ok && !IsStdKey(ExtKey, VirtualKey))
-            ok = FALSE;
+            ok = false;
     }
 
     return VirtualKey;
@@ -293,11 +275,11 @@ int TKeyboardDevice::Peek()
     int KeyState;
     int VirtualKey;
     int ScanCode;
-    int ok;
+    bool ok;
 
     ok = RdosPeekKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
     if (ok && !IsStdKey(ExtKey, VirtualKey))
-        ok = FALSE;
+        ok = false;
 
     if (!ok)
         VirtualKey = 0;
@@ -336,9 +318,9 @@ void TKeyboardDevice::Put(int ch)
 #   Returns....: Virtual key (alpha-num only)
 #
 ##########################################################################*/
-int TKeyboardDevice::IsPinPad()
+bool TKeyboardDevice::IsPinPad()
 {
-    return FALSE;
+    return false;
 }
 
 /*##########################################################################
@@ -411,8 +393,8 @@ void TKeyboardDevice::SignalNewData()
             else
                 RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode);
             }
-        }           
-    
+        }
+
     if (OnKeyPress || OnKeyRelease)
     {
         if (RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))

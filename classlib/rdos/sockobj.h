@@ -51,9 +51,9 @@ public:
     virtual int GetRemotePort() const = 0;
     virtual int GetLocalPort() const = 0;
 
-    int WaitForData(long Timeout);
+    bool WaitForData(long Timeout);
 
-    virtual int IsIdle() = 0;
+    virtual bool IsIdle() = 0;
     virtual int GetSize() = 0;
     virtual int GetWriteSpace() = 0;
     virtual void Write(const char *buf, int count) = 0;
@@ -61,6 +61,7 @@ public:
     virtual int Read(char *buf, int size) = 0;
 
 protected:
+    TSocket(const char *DeviceName);
     virtual void SignalNewData();
 };
 
@@ -72,8 +73,7 @@ public:
     TTcpSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
     virtual ~TTcpSocket();
 
-    virtual void DeviceName(char *Name, int MaxLen) const;
-    virtual int IsOpen();
+    virtual bool IsOpen();
     virtual void NotifyClose();
 
     virtual long GetRemoteIP() const;
@@ -83,9 +83,9 @@ public:
     virtual void Push();
     virtual void Write(char ch);
     virtual char Read();
-    virtual int WaitForConnection(int Timeout);
+    virtual bool WaitForConnection(int Timeout);
 
-    virtual int IsIdle();
+    virtual bool IsIdle();
     virtual int GetSize();
     virtual int GetWriteSpace();
     virtual void Write(const char *buf, int count);
@@ -93,7 +93,7 @@ public:
     virtual int Read(char *buf, int size);
 
 protected:
-    TTcpSocket();
+    TTcpSocket(const char *DeviceName);
 
     virtual void Add(TWait *Wait);
 
@@ -107,14 +107,13 @@ public:
     TUdpSocket(long IP, int LocalPort, int RemotePort);
     virtual ~TUdpSocket();
 
-    virtual void DeviceName(char *Name, int MaxLen) const;
     virtual void NotifyClose();
 
     virtual long GetRemoteIP() const;
     virtual int GetRemotePort() const;
     virtual int GetLocalPort() const;
 
-    virtual int IsIdle();
+    virtual bool IsIdle();
     virtual int GetSize();
     virtual int GetWriteSpace();
     virtual void Write(const char *buf, int count);
@@ -138,8 +137,7 @@ public:
     TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
     virtual ~TSslSocket();
 
-    virtual void DeviceName(char *Name, int MaxLen) const;
-    virtual int IsOpen();
+    virtual bool IsOpen();
     virtual void NotifyClose();
 
     virtual long GetRemoteIP() const;
@@ -149,9 +147,9 @@ public:
     virtual void Push();
     virtual void Write(char ch);
     virtual char Read();
-    virtual int WaitForConnection(int Timeout);
+    virtual bool WaitForConnection(int Timeout);
 
-    virtual int IsIdle();
+    virtual bool IsIdle();
     virtual int GetSize();
     virtual int GetWriteSpace();
     virtual void Write(const char *buf, int count);
@@ -192,7 +190,7 @@ protected:
 class TSocketServerFactory : public TWaitDevice
 {
 public:
-    TSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    TSocketServerFactory(const char *DeviceName, int Port, int MaxConnections, int BufferSize);
     virtual ~TSocketServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket) = 0;
@@ -200,7 +198,7 @@ public:
     int GetConnectionCount();
 
 protected:
-    TSocketServerFactory();
+    TSocketServerFactory(const char *DeviceName);
 
     void Cleanup();
     void Insert(TSocketServer *server);
@@ -218,7 +216,7 @@ private:
 class TSslSocketServerFactory : public TSocketServerFactory
 {
 public:
-    TSslSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    TSslSocketServerFactory(const char *DeviceName, int Port, int MaxConnections, int BufferSize);
     virtual ~TSslSocketServerFactory();
 
     void SetCertificate(const char *CertFileName, const char *PrivateKeyFileName, const char *ChainFileName);
@@ -234,12 +232,12 @@ private:
 class TUdpSocketListner : public TWaitDevice
 {
 public:
-    TUdpSocketListner(int Port, int MaxBufferedMessages);
+    TUdpSocketListner(const char *DeviceName, int Port, int MaxBufferedMessages);
     virtual ~TUdpSocketListner();
 
-    int WaitForMsg(long Timeout);
-    int WaitForMsg();
-    int HasMsg();
+    bool WaitForMsg(long Timeout);
+    bool WaitForMsg();
+    bool HasMsg();
 
     long GetIP();
     int GetPort();

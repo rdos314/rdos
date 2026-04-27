@@ -43,18 +43,16 @@ public:
 
     int GetHandle();
 
-    virtual void DeviceName(char *Name, int MaxLen) const;
+    virtual bool IsOnline();
 
-    virtual int IsOnline();
-
-    virtual int IsJammed();
-    virtual int IsCutterJammed();
-    virtual int IsPaperLow();
-    virtual int IsPaperEnd();
-    virtual int IsPrintHeadLifted();
-    virtual int HasFeedError();
-    virtual int HasTemperatureError();
-    virtual int HasPaperInPresenter();
+    virtual bool IsJammed();
+    virtual bool IsCutterJammed();
+    virtual bool IsPaperLow();
+    virtual bool IsPaperEnd();
+    virtual bool IsPrintHeadLifted();
+    virtual bool HasFeedError();
+    virtual bool HasTemperatureError();
+    virtual bool HasPaperInPresenter();
     virtual void Reset();
 
     virtual void PrintTest();

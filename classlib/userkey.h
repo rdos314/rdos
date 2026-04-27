@@ -42,7 +42,7 @@ public:
 	~TUserKeyboardDevice();
 
 	virtual void Clear();
-	virtual int Poll() const;
+	virtual bool Poll() const;
 	virtual int Get();
 	virtual int Peek();
 	virtual void Put(int ch);

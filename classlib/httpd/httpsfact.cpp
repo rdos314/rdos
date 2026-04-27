@@ -54,7 +54,7 @@
 #
 ##########################################################################*/
 THttpsSocketServerFactory::THttpsSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSslSocketServerFactory(Port, MaxConnections, BufferSize)
+  : TSslSocketServerFactory("HTTPS", Port, MaxConnections, BufferSize)
 {
 }
 

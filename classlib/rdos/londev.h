@@ -86,8 +86,8 @@ public:
     void Reset();
     void SetResetLimit(int ResetLimit);
 
-    int DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount);
-    int DumpEvents();
+    bool DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount);
+    bool DumpEvents();
 
     void DumpThread();
 
@@ -149,14 +149,14 @@ protected:
     void CheckFileCount();
     void InitFiles();
 
-    int FNmPending;
-    int FNdPending;
+    bool FNmPending;
+    bool FNdPending;
 
     int FLonHandle;
     int FLonId;
 
-    int FDomainReq;
-    int FGoConfiguredReq;
+    bool FDomainReq;
+    bool FGoConfiguredReq;
     
     TSection FSection;
     TSignalDevice FSignal;
@@ -173,7 +173,7 @@ protected:
     bool FNewData;
 
     TString FLogPath;
-    int FResetReq;
+    bool FResetReq;
     int FResponseCounter;
     int FResetLimit;
 

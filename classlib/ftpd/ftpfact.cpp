@@ -254,7 +254,7 @@ TFtpCommand *TFtpCommandFactory::Parse(TFtpSocketServer *Server, const char *lin
 #
 ##########################################################################*/
 TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+  : TSocketServerFactory("FTPD", Port, MaxConnections, BufferSize)
 {
         Init(false);
 }
@@ -271,7 +271,7 @@ TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, i
 #
 ##########################################################################*/
 TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *Language)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+  : TSocketServerFactory("FTPD", Port, MaxConnections, BufferSize)
 {
     TFtpLangString::SetLanguage(Language);
     Init(false);
@@ -289,7 +289,7 @@ TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, i
 #
 ##########################################################################*/
 TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, bool ReadOnly)
-  : TSocketServerFactory(Port, MaxConnections, BufferSize)
+  : TSocketServerFactory("FTPD", Port, MaxConnections, BufferSize)
 {
     Init(ReadOnly);
 }

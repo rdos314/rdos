@@ -115,12 +115,12 @@ void TUserKeyboardDevice::Put(int ch)
 #   Returns....: *
 #
 ##########################################################################*/
-int TUserKeyboardDevice::Poll() const
+bool TUserKeyboardDevice::Poll() const
 {
     if (FCurrentSize)
-        return *FOutPtr;
+        return true;
     else
-        return 0;
+        return false;
 }
 
 /*##########################################################################

@@ -49,8 +49,14 @@
 #
 ##########################################################################*/
 TCardReaderDevice::TCardReaderDevice(int Port)
+  : TDevice("Card reader device")
 {
-        Init(Port);
+    char str[512];
+
+    if (RdosGetCardDevName(FHandle, str))
+        FDeviceName = str;
+    
+    Init(Port);
 }
 
 /*##########################################################################
@@ -83,40 +89,14 @@ TCardReaderDevice::~TCardReaderDevice()
 ##########################################################################*/
 void TCardReaderDevice::Init(int Port)
 {
-    char str[512];
-
     BadCard = 0;
     Track1 = 0;
     GoodCard = 0;
 
     FPort = Port - 1;
     FHandle = RdosOpenCardDev(FPort);
-
-    if (!RdosGetCardDevName(FHandle, str))
-        strcpy(str, "Card reader device");
     
-    Start(str, 0x2000);
-}
-
-/*##########################################################################
-#
-#   Name       : TCardReaderDevice::DeviceName
-#
-#   Purpose....: Returns device-name
-#
-#   In params..: MaxLen max size of name
-#   Out params.: Name   device name
-#   Returns....: *
-#
-##########################################################################*/
-void TCardReaderDevice::DeviceName(char *Name, int MaxLen) const
-{
-    char str[512];
-
-    if (RdosGetCardDevName(FHandle, str))
-        strncpy(Name, str, MaxLen);
-    else
-        strncpy(Name,"Card reader device",MaxLen);
+    Start(FDeviceName.GetData(), 0x2000);
 }
 
 /*##########################################################################
@@ -128,7 +108,7 @@ void TCardReaderDevice::DeviceName(char *Name, int MaxLen) const
 #   Returns....: TRUE if online
 #
 ##########################################################################*/
-int TCardReaderDevice::IsOnline() const
+bool TCardReaderDevice::IsOnline() const
 {
     return RdosIsCardDevOk(FHandle);
 }
@@ -142,7 +122,7 @@ int TCardReaderDevice::IsOnline() const
 #   Returns....: TRUE if busy
 #
 ##########################################################################*/
-int TCardReaderDevice::IsBusy() const
+bool TCardReaderDevice::IsBusy() const
 {
     return RdosIsCardDevBusy(FHandle);
 }
@@ -156,7 +136,7 @@ int TCardReaderDevice::IsBusy() const
 #   Returns....: TRUE if card inserted
 #
 ##########################################################################*/
-int TCardReaderDevice::IsCardInserted() const
+bool TCardReaderDevice::IsCardInserted() const
 {
     return RdosIsCardDevInserted(FHandle);
 }
@@ -170,7 +150,7 @@ int TCardReaderDevice::IsCardInserted() const
 #   Returns....: TRUE if card inserted
 #
 ##########################################################################*/
-int TCardReaderDevice::WasCardInserted() const
+bool TCardReaderDevice::WasCardInserted() const
 {
     return RdosHadCardDevInserted(FHandle);
 }

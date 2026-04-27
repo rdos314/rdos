@@ -30,7 +30,7 @@
 ########################################################################*/
 
 #include <stdio.h>
-#include <memory.h>
+#include <string.h>
 #include "rdos.h"
 #include "path.h"
 #include "direntry.h"
@@ -124,9 +124,6 @@
 #define LonAddressBroadcast     3
 #define LonAddressLocal         127
 
-#define FALSE 0
-#define TRUE    !FALSE
-
 struct LonSendSubnetNode
 {
     unsigned char               Type;           /* should be LonAddressSubnetNode for subnet/node addressing */
@@ -171,16 +168,17 @@ static void StartLonDump(void *ptr)
 #
 ##########################################################################*/
 TLonDevice::TLonDevice(int lonid)
-  : FSection("LonDevice"),
+  : TDevice("Lon"),
+    FSection("LonDevice"),
     FEventSection("LonEvent"),
     FSendSection("LonSend")
 {
     char str[80];
 
-    FNmPending = FALSE;
-    FNdPending = FALSE;
-    FDomainReq = FALSE;
-    FGoConfiguredReq = FALSE;
+    FNmPending = false;
+    FNdPending = false;
+    FDomainReq = false;
+    FGoConfiguredReq = false;
 
     FCurrFile = 0;
     FNextPos = 0;
@@ -248,7 +246,7 @@ void TLonDevice::SetResetLimit(int ResetLimit)
 ##########################################################################*/
 void TLonDevice::Reset()
 {
-    FResetReq = TRUE;
+    FResetReq = true;
 }
 
 /*##########################################################################
@@ -269,7 +267,7 @@ void TLonDevice::UpdateDomainConfig(unsigned char Index, TLonDomain *Domain)
     FSection.Enter();
 
     FSignal.Clear();
-    FDomainReq = TRUE;
+    FDomainReq = true;
 
     Buf[16] = Index;
     memcpy(Buf + 17, Domain, sizeof(TLonDomain));
@@ -277,7 +275,7 @@ void TLonDevice::UpdateDomainConfig(unsigned char Index, TLonDomain *Domain)
 
     FSignal.WaitTimeout(10000);
 
-    FDomainReq = FALSE;
+    FDomainReq = false;
 
     FSection.Leave();
 }
@@ -296,13 +294,13 @@ void TLonDevice::GoConfigured()
     FSection.Enter();
 
     FSignal.Clear();
-    FGoConfiguredReq = TRUE;
+    FGoConfiguredReq = true;
 
     SendMsgNoWait(Buf, 3);
 
     FSignal.WaitTimeout(10000);
 
-    FGoConfiguredReq = FALSE;
+    FGoConfiguredReq = false;
 
     FSection.Leave();
 }
@@ -542,8 +540,8 @@ void TLonDevice::NotifyLonReset()
 ##########################################################################*/
 void TLonDevice::HandleReset(const char *msg, int size)
 {
-    FNmPending = FALSE;
-    FNdPending = FALSE;
+    FNmPending = false;
+    FNdPending = false;
 }
 
 /*##########################################################################
@@ -978,12 +976,12 @@ void TLonDevice::HandleResponseExpMsg(const char *msg, int size)
 
         if (FDomainReq)
         {
-            FDomainReq = FALSE;
+            FDomainReq = false;
             FSignal.Signal();
         }
 
-        FNmPending = FALSE;
-        FNdPending = FALSE;
+        FNmPending = false;
+        FNdPending = false;
     }
     else
     {
@@ -1134,12 +1132,12 @@ void TLonDevice::HandleGoConfiguredReceived()
 {
     if (FGoConfiguredReq)
     {
-        FGoConfiguredReq = FALSE;
+        FGoConfiguredReq = false;
         FSignal.Signal();
     }
 
-    FNmPending = FALSE;
-    FNdPending = FALSE;
+    FNmPending = false;
+    FNdPending = false;
 }
 
 /*##########################################################################
@@ -1384,9 +1382,9 @@ void TLonDevice::CheckFileCount()
                 }
             }
         }
-            
+
         ok = FileList.GotoPrev();
-    }    
+    }
 
     delete file;
 }
@@ -1414,7 +1412,7 @@ void TLonDevice::InitFiles()
     int index;
     TString str;
 
-    CheckFileCount();        
+    CheckFileCount();
 
     FCurrId = 0;
 
@@ -1437,14 +1435,14 @@ void TLonDevice::InitFiles()
             if (ptr)
                 *ptr = 0;
 
-            index = atoi(file);            
+            index = atoi(file);
 
             if (index > FCurrId)
                 FCurrId = index;
         }
-            
+
         ok = FileList.GotoNext();
-    }    
+    }
 
     delete file;
 
@@ -1464,7 +1462,7 @@ void TLonDevice::InitFiles()
 #   Returns....: *
 #
 ##########################################################################*/
-int TLonDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount)
+bool TLonDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount)
 {
     int i;
 
@@ -1474,26 +1472,26 @@ int TLonDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCo
     TPathName path(FLogPath);
 
     if (path.MakeDir())
-    {        
+    {
         CheckFileCount();
 
         FEntryCount = EntryCount;
         FEntryArr = new struct TLonDebug[EntryCount];
 
         // initialize cache to empty
-        for (i = 0; i < EntryCount; i++) 
+        for (i = 0; i < EntryCount; i++)
         {
-            FEntryArr[i].Time = 0; 
+            FEntryArr[i].Time = 0;
             FEntryArr[i].Src = 0;
             FEntryArr[i].Len = 0;
         }
 
-        return TRUE;
+        return true;
     }
     else
     {
         FFileCount = 0;
-        return FALSE;
+        return false;
     }
 }
 
@@ -1508,15 +1506,15 @@ int TLonDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCo
 #   Returns....: *
 #
 ##########################################################################*/
-int TLonDevice::DumpEvents()
+bool TLonDevice::DumpEvents()
 {
     if (FFileCount && !FDumpRunning && FNewData)
     {
         RdosCreateThread(StartLonDump, "Lon Dump", this, 0x8000);
-        return TRUE;
+        return true;
     }
     else
-        return FALSE;
+        return false;
 }
 
 /*##################  TLonDevice::DumpThread  #######################
@@ -1537,7 +1535,7 @@ void TLonDevice::DumpThread()
     RdosWaitMilli(100);
 
     if (path.MakeDir())
-    {        
+    {
         InitFiles();
 
         DumpArr = new struct TLonDebug[FEntryCount];
@@ -1556,12 +1554,12 @@ void TLonDevice::DumpThread()
                 FCurrFile->Write(&DumpArr[i], sizeof(struct TLonDebug));
 
         FNewData = false;
-        
+
         FEventSection.Leave();
 
         for (int i = 0; i < FEntryCount; i++)
             DumpArr[i] = FEntryArr[i];
-        
+
 
         delete DumpArr;
         delete FCurrFile;
@@ -1585,7 +1583,7 @@ void TLonDevice::Execute()
     int dumpsize;
     int wait = RdosCreateWait();
 
-    FResetReq = FALSE;
+    FResetReq = false;
 
     buf = new char[255];
 
@@ -1605,7 +1603,7 @@ void TLonDevice::Execute()
             {
                 if (FResetLimit < FResponseCounter)
                 {
-                    FResetReq = TRUE;
+                    FResetReq = true;
                     FResponseCounter = 0;
                 }
             }
@@ -1624,7 +1622,7 @@ void TLonDevice::Execute()
                 wait = RdosCreateWait();
                 RdosAddWaitForLonModule(wait, FLonHandle, (int)this);
 
-                FResetReq = FALSE;
+                FResetReq = false;
             }
 
             RdosWaitTimeout(wait, 1000);

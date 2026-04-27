@@ -40,12 +40,10 @@ public:
     TCardReaderDevice(int Port);
     ~TCardReaderDevice();
 
-    virtual void DeviceName(char *Name, int MaxLen) const;
-
-    virtual int IsOnline() const;
-    virtual int IsBusy() const;
-    virtual int IsCardInserted() const;
-    virtual int WasCardInserted() const;
+    virtual bool IsOnline() const;
+    virtual bool IsBusy() const;
+    virtual bool IsCardInserted() const;
+    virtual bool WasCardInserted() const;
     virtual void ClearCardInserted() const;
 
     void (*Track1)(TCardReaderDevice *CardReader, const char *track1);

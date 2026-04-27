@@ -43,14 +43,12 @@ public:
 	TMouseDevice();
 	virtual ~TMouseDevice();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-
 	void SetWindow(int StartX, int StartY, int EndX, int EndY);
 	void SetMickey(int xdir, int ydir);
 	void SetPosition(int x, int y);
 	void GetPosition(int *x, int *y);
-	int IsLeftButtonPressed();
-	int IsRightButtonPressed();
+	bool IsLeftButtonPressed();
+	bool IsRightButtonPressed();
 	void GetLeftButtonPressPosition(int *x, int *y);
 	void GetLeftButtonReleasePosition(int *x, int *y);
 	void GetRightButtonPressPosition(int *x, int *y);
