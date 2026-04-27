@@ -1,5 +1,5 @@
-# rdos-kernel
-RDOS operating system kernel
+# rdos operating system
+RDOS operating system
 
 <h3>Purpose</h3>
 A multicore, multi-process and multi-threaded protected mode OS for 386+ CPUs.
@@ -7,11 +7,7 @@ Written mostly in assembly. Use segment protection and paging to provide a stabl
 
 <h3>Related repositories</h3>
 <ul>
-    <li>EFI bootloader, https://github.com/rdos314/rdos-efi</li>
     <li>uACPI, https://github.com/rdos314/rdos-uACPI</li>
-    <li>Virtual filesystem, https://github.com/rdos314/rdos-fs</li>
-    <li>Application inferface, https://github.com/rdos314/rdos-user</li>
-    <li>Standard applications, https://github.com/rdos314/rdos-apps</li>
 </ul>
 
 <h3>Supported platforms</h3>
