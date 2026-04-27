@@ -908,6 +908,8 @@
 #define osgate_setup_pci_msi 869
 
 #define osgate_add_thread_state 870
+#define osgate_notify_create_thread 871
+#define osgate_notify_terminate_thread 872
 
 
 
@@ -1821,4 +1823,6 @@
 #define OsGate_setup_pci_msi 0x3E 0x67 0x9a 101 3 0 0 2 0
 
 #define OsGate_add_thread_state 0x3E 0x67 0x9a 102 3 0 0 2 0
+#define OsGate_notify_create_thread 0x3E 0x67 0x9a 103 3 0 0 2 0
+#define OsGate_notify_terminate_thread 0x3E 0x67 0x9a 104 3 0 0 2 0
 

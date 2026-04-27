@@ -4903,6 +4903,12 @@ GetCanSerialNumber      MACRO
                                                 ENDM
 
 ;   IN  EAX         Device #
+;   IN  ES:(E)DI    Buffer
+SetCanSerialNumber      MACRO
+        UserGate set_can_serial_number_nr
+                                                ENDM
+
+;   IN  EAX         Device #
 ;   OUT ECX         Restart count
 GetCanModuleRestarts      MACRO
         UserGate get_can_module_restarts_nr

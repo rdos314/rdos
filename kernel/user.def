@@ -1049,4 +1049,6 @@ get_pci_msix_irqs_nr              = 879
 is_pci_locked_nr                  = 880
 eval_pci_int_arr_nr               = 881
 
+set_can_serial_number_nr          = 882
+
 usergate_entries                  = 900
