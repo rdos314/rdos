@@ -1,4 +1,4 @@
-# rdos operating system
+# RDOS operating system
 RDOS operating system
 
 <h3>Purpose</h3>
