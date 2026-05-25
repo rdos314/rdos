@@ -32,262 +32,932 @@
 #include <string.h>
 #include <stdio.h>
 #include "serial.h"
+
+#ifdef __RDOS__
 #include "rdos.h"
 #include "path.h"
 #include "direntry.h"
+#else
+#include <filesystem>
+#include <fstream>
+#include <string>
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/usbdevice_fs.h>
+#include <linux/serial.h>
+#include <errno.h>
+#include <poll.h>
+#include "str.h"
+#endif
 
-/*##################  TSerialCommand::TSerialCommand ############
-*   Purpose....: Constructor for TSerialCommand                     #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TSerialCommand::TSerialCommand(TSerialDevice *serial)
+#ifndef __RDOS__
+
+namespace fs=std::filesystem;
+
+#define MAX_PORTS 100
+
+
+static bool IsInited = false;
+static TSection FPortSection("Serial Ports");
+static TLinuxSerial *PortArr[MAX_PORTS];
+
+
+TLinuxSerial::TLinuxSerial()
 {
-        FSerial = serial;
+    IsUsed = false;
 }
 
-/*##################  TSerialCommand::~TSerialCommand ############
-*   Purpose....: Destructor for TSerialCommand                      #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
+TLinuxSerial::~TLinuxSerial()
+{
+}
+
+int TLinuxSerial::GetSendBufferSpace()
+{
+    return 1000;
+}
+
+int TLinuxSerial::GetReceiveBufferSpace()
+{
+    return 1000;
+}
+
+void TLinuxSerial::Reset()
+{
+}
+
+bool TLinuxSerial::IsStdSerial()
+{
+    return false;
+}
+
+bool TLinuxSerial::IsUsbSerial()
+{
+    return false;
+}
+
+bool TLinuxSerial::IsCanSerial()
+{
+    return false;
+}
+
+TLinuxTtySerial::TLinuxTtySerial(const char *dev)
+  : FDev(dev)
+{
+    FHandle = -1;
+    FBaudrate = 0;
+    FParity = 0;
+    FDataBits = 0;
+    FStopBits = 0;
+}
+
+
+TLinuxTtySerial::~TLinuxTtySerial()
+{
+}
+
+bool TLinuxTtySerial::Open(long Baudrate, char Parity, int DataBits, int StopBits)
+{
+    struct termios tty;
+    speed_t speed;
+    bool ok;
+
+    if (FHandle > 0)
+        return true;
+
+    FHandle = open(FDev.GetData(), O_RDWR | O_NOCTTY | O_NDELAY);
+
+    if (FHandle < 0)
+        return false; // Could not open the port
+
+    FBaudrate = Baudrate;
+    FParity = Parity;
+    FDataBits = DataBits;
+    FStopBits = StopBits;
+
+    if (tcgetattr(FHandle, &tty) != 0)
+        ok = false;
+    else
+        ok = true;
+
+    if (ok)
+    {
+        switch (Baudrate)
+        {
+            case 110:    speed = B110;    break;
+            case 300:    speed = B300;    break;
+            case 600:    speed = B600;    break;
+            case 1200:   speed = B1200;   break;
+            case 2400:   speed = B2400;   break;
+            case 4800:   speed = B4800;   break;
+            case 9600:   speed = B9600;   break;
+            case 19200:  speed = B19200;  break;
+            case 38400:  speed = B38400;  break;
+            case 57600:  speed = B57600;  break;
+            case 115200: speed = B115200; break;
+            default: ok = false;
+        }
+
+        if (ok)
+        {
+            tty.c_cflag &= ~CRTSCTS;
+            cfsetospeed(&tty, speed);
+            cfsetispeed(&tty, speed);
+        }
+    }
+
+    // Set data bits
+    if (ok)
+    {
+        tty.c_cflag &= ~CSIZE;
+        switch (DataBits)
+        {
+            case 5:
+                tty.c_cflag |= CS5;
+                break;
+
+            case 6:
+                tty.c_cflag |= CS6;
+                break;
+
+            case 7:
+                tty.c_cflag |= CS7;
+                break;
+
+            case 8:
+                tty.c_cflag |= CS8;
+                break;
+
+            default:
+                ok = false;
+        }
+    }
+
+    if (ok)
+    {
+        switch (Parity)
+        {
+            case 'N':
+                tty.c_cflag &= ~PARENB;
+                break;
+
+            case 'E':
+                tty.c_cflag |= PARENB;
+                tty.c_cflag &= ~PARODD;
+                break;
+
+            case 'O':
+                tty.c_cflag |= PARENB;
+                tty.c_cflag |= PARODD;
+                break;
+
+            default:
+                ok = false;
+        }
+    }
+
+    if (ok)
+    {
+        switch (StopBits)
+        {
+            case 1:
+                tty.c_cflag &= ~CSTOPB;
+                break;
+
+            case 2:
+                tty.c_cflag |= CSTOPB;
+                break;
+
+            default:
+                ok = false;
+        }
+    }
+
+    if (tcsetattr(FHandle, TCSANOW, &tty) != 0)
+        ok = false;
+
+    if (!ok && FHandle > 0)
+        close(FHandle);
+
+    return ok;
+}
+
+void TLinuxTtySerial::Close()
+{
+    if (FHandle > 0)
+    {
+        close(FHandle);
+        FHandle = 0;
+    }
+}
+
+bool TLinuxTtySerial::IsOpen()
+{
+    return FHandle > 0;
+}
+
+bool TLinuxTtySerial::Reopen()
+{
+    Close();
+    if (!Open(FBaudrate, FParity, FDataBits, FStopBits))
+    {
+        usleep(100000);
+        return false;
+    }
+    return true;
+}
+
+void TLinuxTtySerial::Clear()
+{
+    if (FHandle > 0)
+        tcflush(FHandle, TCIOFLUSH);
+}
+
+bool TLinuxTtySerial::GetCts()
+{
+    int status;
+
+    if (FHandle <= 0)
+        return false;
+
+    if (ioctl(FHandle, TIOCMGET, &status) == -1)
+        return false;
+
+    return (status & TIOCM_CTS) != 0;
+}
+
+bool TLinuxTtySerial::GetDsr()
+{
+    int status;
+
+    if (FHandle <= 0)
+        return false;
+
+    if (ioctl(FHandle, TIOCMGET, &status) == -1)
+        return false;
+
+    return (status & TIOCM_DSR) != 0;
+}
+
+void TLinuxTtySerial::ResetDtr()
+{
+    int mask = TIOCM_DTR;
+
+    if (FHandle <= 0)
+        return;
+
+    ioctl(FHandle, TIOCMBIC, &mask);
+}
+
+void TLinuxTtySerial::SetDtr()
+{
+    int mask = TIOCM_DTR;
+
+    if (FHandle <= 0)
+        return;
+
+    ioctl(FHandle, TIOCMBIS, &mask);
+}
+
+void TLinuxTtySerial::ResetRts()
+{
+    int mask = TIOCM_RTS;
+
+    if (FHandle <= 0)
+        return;
+
+    ioctl(FHandle, TIOCMBIC, &mask);
+}
+
+void TLinuxTtySerial::SetRts()
+{
+    int mask = TIOCM_RTS;
+
+    if (FHandle <= 0)
+        return;
+
+    ioctl(FHandle, TIOCMBIS, &mask);
+}
+
+void TLinuxTtySerial::EnableAutoRts()
+{
+    struct serial_rs485 rs485conf;
+
+    if (FHandle <= 0)
+        return;
+
+    memset(&rs485conf, 0, sizeof(rs485conf));
+    rs485conf.flags |= SER_RS485_ENABLED;
+    rs485conf.flags |= SER_RS485_RTS_ON_SEND;
+    rs485conf.flags |= SER_RS485_RTS_AFTER_SEND;
+    ioctl(FHandle, TIOCSRS485, &rs485conf);
+}
+
+void TLinuxTtySerial::DisableAutoRts()
+{
+    struct serial_rs485 rs485conf;
+
+    if (FHandle <= 0)
+        return;
+
+    memset(&rs485conf, 0, sizeof(rs485conf));
+    ioctl(FHandle, TIOCSRS485, &rs485conf);
+}
+
+bool TLinuxTtySerial::IsAutoRtsOn()
+{
+    struct serial_rs485 rs485conf;
+
+    if (FHandle <= 0)
+        return false;
+
+    if (ioctl(FHandle, TIOCGRS485, &rs485conf) < 0)
+        return false;
+
+    return (rs485conf.flags & SER_RS485_ENABLED) != 0;
+}
+
+void TLinuxTtySerial::SendBreak(char CharCount)
+{
+    if (FHandle <= 0)
+        return;
+
+    ioctl(FHandle, TCSBRK, 0);
+}
+
+void TLinuxTtySerial::Write(const char *buf, int count)
+{
+    if (FHandle <= 0)
+        return;
+
+    while (count > 0)
+    {
+        int written = write(FHandle, buf, count);
+        if (written > 0)
+        {
+            buf += written;
+            count -= written;
+        }
+        else if (written == -1)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                usleep(1000);
+                continue;
+            }
+            else if (errno == EIO || errno == ENODEV || errno == ENXIO || errno == EBADF)
+                Reopen();
+
+            break;
+        }
+    }
+}
+
+void TLinuxTtySerial::Write(char ch)
+{
+    Write(&ch, 1);
+}
+
+void TLinuxTtySerial::Write(const char *str)
+{
+    Write(str, strlen(str));
+}
+
+void TLinuxTtySerial::WaitForSendCompleted()
+{
+    if (FHandle > 0)
+        tcdrain(FHandle);
+}
+
+bool TLinuxTtySerial::Poll()
+{
+    int bytes_available = 0;
+
+    if (FHandle <= 0)
+        return false;
+
+    if (ioctl(FHandle, FIONREAD, &bytes_available) == -1)
+        return false;
+
+    return bytes_available > 0;
+}
+
+char TLinuxTtySerial::Read()
+{
+    char ch = 0;
+    int n;
+
+    if (FHandle <= 0)
+        return 0;
+
+    n = read(FHandle, &ch, 1);
+
+    if (n == 1)
+        return ch;
+    else if (n == -1)
+    {
+        if (errno == EIO || errno == ENODEV || errno == ENXIO || errno == EBADF)
+            Reopen();
+    }
+    return 0;
+}
+
+bool TLinuxTtySerial::WaitForChar(long Timeout)
+{
+    struct pollfd pfd;
+    int ret;
+
+    if (FHandle <= 0)
+        return false;
+
+    pfd.fd = FHandle;
+    pfd.events = POLLIN;
+
+    ret = poll(&pfd, 1, (int)Timeout);
+
+    if (ret > 0 && (pfd.revents & POLLIN))
+        return true;
+
+    return false;
+}
+
+bool TLinuxTtySerial::SupportsFullDuplex()
+{
+    return false;
+}
+
+void TLinuxTtySerial::EnableCts()
+{
+    struct termios tty;
+
+    if (FHandle <= 0)
+        return;
+
+    if (tcgetattr(FHandle, &tty) == 0)
+    {
+        tty.c_cflag |= CRTSCTS;
+        tcsetattr(FHandle, TCSANOW, &tty);
+    }
+}
+
+void TLinuxTtySerial::DisableCts()
+{
+    struct termios tty;
+
+    if (FHandle <= 0)
+        return;
+
+    if (tcgetattr(FHandle, &tty) == 0)
+    {
+        tty.c_cflag &= ~CRTSCTS;
+        tcsetattr(FHandle, TCSANOW, &tty);
+    }
+}
+
+TLinuxStdSerial::TLinuxStdSerial(const char *dev, int base, int irq)
+  : TLinuxTtySerial(dev)
+{
+    FIoBase = base;
+    FIrq = irq;
+}
+
+TLinuxStdSerial::~TLinuxStdSerial()
+{
+}
+
+bool TLinuxStdSerial::IsStdSerial()
+{
+    return true;
+}
+
+int TLinuxStdSerial::GetBase()
+{
+    return FIoBase;
+}
+
+int TLinuxStdSerial::GetIrq()
+{
+    return FIrq;
+}
+
+TLinuxUsbSerial::TLinuxUsbSerial(const char *dev, int bus, int device, int vendor, int product)
+  : TLinuxTtySerial(dev)
+{
+    FBus = bus;
+    FDevice = device;
+    FVendor = vendor;
+    FProduct = product;
+}
+
+TLinuxUsbSerial::~TLinuxUsbSerial()
+{
+}
+
+bool TLinuxUsbSerial::IsUsbSerial()
+{
+    return true;
+}
+
+void TLinuxUsbSerial::Reset()
+{
+    char path[64];
+    snprintf(path, sizeof(path), "/dev/bus/usb/%03d/%03d", FBus, FDevice);
+    int fd = open(path, O_WRONLY);
+    if (fd >= 0)
+    {
+        ioctl(fd, USBDEVFS_RESET, 0);
+        close(fd);
+    }
+}
+
+int TLinuxUsbSerial::GetBus()
+{
+    return FBus;
+}
+
+int TLinuxUsbSerial::GetDevice()
+{
+    return FDevice;
+}
+
+int TLinuxUsbSerial::GetVendor()
+{
+    return FVendor;
+}
+
+int TLinuxUsbSerial::GetProduct()
+{
+    return FProduct;
+}
+
+static void AddSerial(TLinuxSerial *serial)
+{
+    int i;
+
+    for (i = 0; i < MAX_PORTS; ++i)
+    {
+        if (PortArr[i] == 0)
+        {
+            PortArr[i] = serial;
+            return;
+        }
+    }
+    delete serial;
+}
+
+static bool FindUsbSerial(int bus, int device, int vendor, int product)
+{
+    int i;
+    TLinuxUsbSerial *serial;
+
+    for (i = 0; i < MAX_PORTS; ++i)
+    {
+        if (PortArr[i] && PortArr[i]->IsUsbSerial())
+        {
+            serial = (TLinuxUsbSerial *)PortArr[i];
+            if (serial->GetBus() == bus && serial->GetDevice() == device && serial->GetVendor() == vendor && serial->GetProduct() == product)
+                return true;
+        }
+    }
+    return false;
+}
+
+static void FoundUsbSerial(const char *dev, int bus, int device, int vendor, int product)
+{
+    TLinuxUsbSerial *serial;
+
+    if (!FindUsbSerial(bus, device, vendor, product))
+    {
+        serial = new TLinuxUsbSerial(dev, bus, device, vendor, product);
+        AddSerial(serial);
+    }
+}
+
+static bool readFile(const fs::path& p, std::string& out)
+{
+    std::ifstream f(p);
+    if (!f) return false;
+    f >> out;
+    return true;
+}
+
+static void GetUarts()
+{
+    TLinuxStdSerial *serial;
+    int irq;
+    unsigned long iobase;
+    int type;
+
+    for (int i = 0; i < 32; ++i)
+    {
+        std::string tty = "/dev/ttyS" + std::to_string(i);
+        if (fs::exists(tty))
+        {
+            std::string str;
+            fs::path base = "/sys/class/tty/ttyS" + std::to_string(i);
+
+            readFile(base / "type", str);
+            type = str.empty() ? 0 : std::stoi(str);
+
+            readFile(base / "irq", str);
+            irq = str.empty() ? 0 : std::stoi(str);
+
+            readFile(base / "port", str);
+            iobase = str.empty() ? 0 : std::stoul(str, nullptr, 16);
+
+            if (irq > 0 && type)
+            {
+                serial = new TLinuxStdSerial(tty.c_str(), iobase, irq);
+                AddSerial(serial);
+            }
+        }
+    }
+}
+
+static void GetUsbSerial()
+{
+    int i;
+    int vendor;
+    int product;
+    int bus;
+    int device;
+
+    fs::path usbSerialDir = "/sys/bus/usb-serial/devices";
+    if (fs::exists(usbSerialDir))
+    {
+        for (const auto& entry : fs::directory_iterator(usbSerialDir))
+        {
+            std::string tty = entry.path().filename();
+            fs::path iface = fs::canonical(entry.path());
+            fs::path parent = iface.parent_path();
+            std::string str;
+
+            for (i = 0; i < 3; i++)
+            {
+                readFile(parent / "busnum", str);
+                bus = str.empty() ? -1 : std::stoi(str);
+                if (bus >= 0)
+                    break;
+                else
+                    parent = parent.parent_path();
+            }
+
+            if (bus >= 0)
+            {
+                readFile(parent / "idVendor", str);
+                vendor = str.empty() ? 0 : std::stoul(str, nullptr, 16);
+
+                readFile(parent / "idProduct", str);
+                product = str.empty() ? 0 : std::stoul(str, nullptr, 16);
+
+                readFile(parent / "devnum", str);
+                device = str.empty() ? 0 : std::stoi(str);
+
+                std::string tty_full = "/dev/" + tty;
+
+                FoundUsbSerial(tty_full.c_str(), bus, device, vendor, product);
+            }
+        }
+    }
+}
+
+/**
+ * Enumerates USB CDC devices by scanning /sys/class/tty and printing their USB details.
+ */
+static void GetUsbCdc()
+{
+    int i;
+    TLinuxUsbSerial *serial;
+    int vendor;
+    int product;
+    int bus;
+    int device;
+
+    fs::path usbCdcDir = "/sys/class/tty";
+    if (fs::exists(usbCdcDir))
+    {
+        for (const auto& entry : fs::directory_iterator(usbCdcDir))
+        {
+            std::string tty = entry.path().filename();
+            fs::path iface = fs::canonical(entry.path());
+            fs::path parent = iface.parent_path();
+            std::string str;
+
+            for (i = 0; i < 3; i++)
+            {
+                readFile(parent / "busnum", str);
+                bus = str.empty() ? -1 : std::stoi(str);
+                if (bus >= 0)
+                    break;
+                else
+                    parent = parent.parent_path();
+            }
+
+            if (bus >= 0)
+            {
+                readFile(parent / "idVendor", str);
+                vendor = str.empty() ? 0 : std::stoul(str, nullptr, 16);
+
+                readFile(parent / "idProduct", str);
+                product = str.empty() ? 0 : std::stoul(str, nullptr, 16);
+
+                readFile(parent / "devnum", str);
+                device = str.empty() ? 0 : std::stoi(str);
+
+                std::string tty_full = "/dev/" + tty;
+
+                FoundUsbSerial(tty_full.c_str(), bus, device, vendor, product);
+            }
+        }
+    }
+}
+
+static void UpdateUsbSerial()
+{
+    FPortSection.Enter();
+    GetUsbSerial();
+    GetUsbCdc();
+    FPortSection.Leave();
+}
+
+static void InitSerial()
+{
+    int i;
+
+    if (!IsInited)
+    {
+        IsInited = true;
+
+        for (i = 0; i < MAX_PORTS; ++i)
+            PortArr[i] = 0;
+
+        GetUarts();
+        UpdateUsbSerial();
+    }
+}
+
+#endif
+
+TSerialCommand::TSerialCommand(TSerialDevice *serial)
+{
+    FSerial = serial;
+}
+
 TSerialCommand::~TSerialCommand()
 {
 }
 
-/*##################  TSerialCommand::Block   #########################
-*   Purpose....: Block com port                                                                                     #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-12-11 le                                                #
-*##########################################################################*/
 void TSerialCommand::Block()
 {
-        FSerial->Block();
+    FSerial->Block();
 }
 
-/*##################  TSerialCommand::Unblock   #######################
-*   Purpose....: Unblock com port                                                                                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-12-11 le                                                #
-*##########################################################################*/
 void TSerialCommand::Unblock()
 {
-        FSerial->Unblock();
+    FSerial->Unblock();
 }
 
-/*##################  TSerialCommand::Run   ###########################
-*   Purpose....: Run commands                                                                                       #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-12-11 le                                                #
-*##########################################################################*/
 int TSerialCommand::Run()
 {
-        int stat;
+    int stat;
 
-        FSerial->Block();
-        stat = Execute();
-        FSerial->Unblock();
-        return stat;
+    FSerial->Block();
+    stat = Execute();
+    FSerial->Unblock();
+    return stat;
 }
 
-/*##################  TSerialCommand::DumpEvents ###########################
-*   Purpose....: C                                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::Clear()
 {
-        FSerial->Clear();
+    FSerial->Clear();
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialCommand::DefineEventDebug
-#
-#   Purpose....: Define event debug
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 bool TSerialCommand::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
 {
     return FSerial->DefineEventDebug(LogPath, DumpFiles, EntryCount, InChannel, OutChannel);
 }
 
-/*##################  TSerialCommand::DumpEvents ###########################
-*   Purpose....: Dump events                                     #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 bool TSerialCommand::DumpEvents()
 {
     return FSerial->DumpEvents();
 }
 
-/*##################  TSerialCommand::ResetDtr #######################
-*   Purpose....: Resets DTR in serial device                                        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::ResetDtr()
 {
-        FSerial->ResetDtr();
+    FSerial->ResetDtr();
 }
 
-/*##################  TSerialCommand::SetDtr #########################
-*   Purpose....: Sets DTR in serial device                                                  #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::SetDtr()
 {
-        FSerial->SetDtr();
+    FSerial->SetDtr();
 }
 
-/*##################  TSerialCommand::ResetRts #######################
-*   Purpose....: Resets RTS in serial device                                        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::ResetRts()
 {
-        FSerial->ResetRts();
+    FSerial->ResetRts();
 }
 
-/*##################  TSerialCommand::SetRts #########################
-*   Purpose....: Sets RTS in serial device                                                  #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::SetRts()
 {
-        FSerial->SetRts();
+    FSerial->SetRts();
 }
 
-/*##################  TSerialCommand::EnableAutoRts #######################
-*   Purpose....: Enable use of RTS for RS485 tx enable                      #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::EnableAutoRts()
 {
-        FSerial->EnableAutoRts();
+    FSerial->EnableAutoRts();
 }
 
-/*##################  TSerialCommand::DisableAutoRts #######################
-*   Purpose....: Disable use of RTS for RS485 tx enable                     #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::DisableAutoRts()
 {
-        FSerial->DisableAutoRts();
+    FSerial->DisableAutoRts();
 }
 
-/*##################  TSerialCommand::Write ###########################
-*   Purpose....: Write a char to serial device                                      #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::Write(char ch)
 {
-        FSerial->Write(ch);
+    FSerial->Write(ch);
 }
 
-/*##################  TSerialCommand::Write ###########################
-*   Purpose....: Write a buffer to serial device                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::Write(const char *buf, int count)
 {
-        FSerial->Write(buf, count);
+    FSerial->Write(buf, count);
 }
 
-/*##################  TSerialCommand::Write ###########################
-*   Purpose....: Write a string to serial device                                        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialCommand::Write(const char *str)
 {
-        FSerial->Write(str);
+    FSerial->Write(str);
 }
 
-/*##################  TSerialCommand::Read ###########################
-*   Purpose....: Read a char from serial device             #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 char TSerialCommand::Read()
 {
-        return FSerial->Read();
+    return FSerial->Read();
 }
 
-/*##################  TSerialCommand::WaitForChar ###########################
-*   Purpose....: Wait for char with timeout from serial device              #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 bool TSerialCommand::WaitForChar(long MaxWait)
 {
-        return FSerial->WaitForChar(MaxWait);
+    return FSerial->WaitForChar(MaxWait);
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Init
-#
-#   Purpose....: Init device
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialDevice::Init()
+TSerialDevice::TSerialDevice()
+ : TWaitDevice("Serial Device"),
+   FSection("Serial"),
+   FEventSection("EvSerial")
 {
-    OnChar = 0;    
+    Init();
+}
+
+#ifdef __RDOS__
+
+TSerialDevice::TSerialDevice(int Handle)
+ : TWaitDevice("Serial Device"),
+   FSection("Serial"),
+   FEventSection("EvSerial")
+{
+    Init();
 
     FPort = 0;
-    FHandle = 0;
+    FHandle = Handle;
+    FSupportsFullDuplex = RdosSupportsFullDuplex(FHandle);
+}
+#endif
+
+TSerialDevice::TSerialDevice(int Port, long Baudrate)
+  : TWaitDevice("Serial Device"),
+    FSection("Serial"),
+    FEventSection("EvSerial")
+{
+    Init(Port, Baudrate, 'N', 8, 1);
+}
+
+TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
+  : TWaitDevice("Serial Device"),
+    FSection("Serial"),
+    FEventSection("EvSerial")
+{
+    Init(Port, Baudrate, Parity, DataBits, StopBits);
+}
+
+TSerialDevice::~TSerialDevice()
+{
+    Stop();
+
+#ifdef __RDOS__
+    if (FHandle)
+        RdosCloseCom(FHandle);
+#else
+    if (FSerial)
+    {
+        FSerial->Close();
+        FSerial->IsUsed = false;
+    }
+#endif
+}
+
+void TSerialDevice::Init()
+{
+    OnChar = 0;
+
+    FPort = 0;
     FBaudrate = 9600;
     FParity = 'N';
     FDataBits = 8;
@@ -300,23 +970,18 @@ void TSerialDevice::Init()
     FFileCount = 0;
     FUseCts = false;
     FBufferSize = 0x4000;
+
+#ifdef __RDOS__
+    FHandle = 0;
+#else
+    if (FSerial)
+    {
+        FSerial->Close();
+        FSerial = 0;
+    }
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Init
-#
-#   Purpose....: Init device
-#
-#   In params..: Port       port number (ie COM1 = 1)
-#                Baudrate   baudrate
-#                Parity     parity
-#                DataBits   databits
-#                StopBits   stopbits
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 {
     Init();
@@ -326,204 +991,80 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
     FParity = Parity;
     FDataBits = DataBits;
     FStopBits = StopBits;
-       
+
+#ifndef __RDOS__
+
+    if (Port > 0 && Port <= MAX_PORTS)
+    {
+        if (!IsInited)
+            InitSerial();
+
+        FPortSection.Enter();
+
+        FSerial = PortArr[Port - 1];
+        if (FSerial && FSerial->IsUsed)
+            FSerial = 0;
+
+        if (FSerial)
+            FSerial->IsUsed = true;
+
+        FPortSection.Leave();
+    }
+    else
+        FSerial = 0;
+
+#endif
+
     OpenPort();
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice()
- : TWaitDevice("Serial Device"),
-   FSection("Serial"),
-   FEventSection("EvSerial")
-{
-    Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(int Handle)
- : TWaitDevice("Serial Device"),
-   FSection("Serial"),
-   FEventSection("EvSerial")
-{
-    Init();
-
-    FPort = 0;
-    FHandle = Handle;
-    FSupportsFullDuplex = RdosSupportsFullDuplex(FHandle);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: Port       port number (ie COM1 = 1)
-#                Baudrate   baudrate
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(int Port, long Baudrate)
-  : TWaitDevice("Serial Device"),
-    FSection("Serial"),
-    FEventSection("EvSerial")
-{
-    Init(Port, Baudrate, 'N', 8, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: Port       port number (ie COM1 = 1)
-#                Baudrate   baudrate
-#                Parity     parity
-#                DataBits   databits
-#                StopBits   stopbits
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
-  : TWaitDevice("Serial Device"),
-    FSection("Serial"),
-    FEventSection("EvSerial")
-{
-    Init(Port, Baudrate, Parity, DataBits, StopBits);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::~TSerialDevice
-#
-#   Purpose....: Destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::~TSerialDevice()
-{
-    Stop();
-
-    if (FHandle)
-        RdosCloseCom(FHandle);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Block
-#
-#   Purpose....: Block for exclusive access
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::Block()
 {
-        FSection.Enter();
+    FSection.Enter();
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Unblock
-#
-#   Purpose....: Unblock for exclusive access
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::Unblock()
 {
-        FSection.Leave();
+    FSection.Leave();
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Add
-#
-#   Purpose....: Add object to wait
-#
-#   In params..: wait
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
+#ifdef __RDOS__
+
 void TSerialDevice::Add(TWait *Wait)
 {
     if (FHandle)
         RdosAddWaitForCom(Wait->GetHandle(), FHandle, (int)this);
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::GetHandle
-#
-#   Purpose....: Get handle
-#
-#   In params..: 
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 int TSerialDevice::GetHandle()
 {
     return FHandle;
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::SetBufferSize
-#
-#   Purpose....: Set buffer size
-#
-#   In params..: wait
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
+#else
+
+bool TSerialDevice::WaitForever()
+{
+    return false;
+}
+
+bool TSerialDevice::WaitTimeout(int Timeout)
+{
+    return false;
+}
+
+bool TSerialDevice::WaitUntil(TDateTime &DateTime)
+{
+    return false;
+}
+
+#endif
+
 void TSerialDevice::SetBufferSize(int Size)
 {
     FBufferSize = Size;
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::StartDebug
-#
-#   Purpose....: Start debugging on device
-#
-#   In params..: Handle debug file handle
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::StartDebug(TFile *File, int InChannel, int OutChannel)
 {
     FDebugFile = File;
@@ -531,35 +1072,14 @@ void TSerialDevice::StartDebug(TFile *File, int InChannel, int OutChannel)
     FOutChannel = OutChannel;
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::StopDebug
-#
-#   Purpose....: Stop debugging on device
-#
-#   In params..: Handle debug file handle
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::StopDebug()
 {
     FDebugFile = 0;
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::CheckFileCount
-#
-#   Purpose....: Check file count
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::CheckFileCount()
 {
+#ifdef __RDOS__
     TDirList FileList;
     TDirEntry entry;
     TString basename;
@@ -605,21 +1125,12 @@ void TSerialDevice::CheckFileCount()
     }    
 
     delete file;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::InitFiles
-#
-#   Purpose....: Init files
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::InitFiles()
 {
+#ifdef __RDOS__
     bool ok;
     TDirList FileList;
     TDirEntry entry;
@@ -667,21 +1178,12 @@ void TSerialDevice::InitFiles()
     FCurrId++;
     str.printf("%s/%d.sdd", FLogPath.GetData(), FCurrId);
     FCurrFile = new TFile(str.GetData(), 0);
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::DefineEventDebug
-#
-#   Purpose....: Define event debug
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 bool TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel)
 {
+#ifdef __RDOS__
     int i;
 
     FLogPath = LogPath;
@@ -713,19 +1215,11 @@ bool TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int Ent
         FFileCount = 0;
         return false;
     }
+#else
+    return false;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::DumpEvents
-#
-#   Purpose....: Dump buffer to file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 bool TSerialDevice::DumpEvents()
 {
     TString str;
@@ -740,15 +1234,9 @@ bool TSerialDevice::DumpEvents()
         return false;
 }
 
-/*##################  TSerialDevice::Execute  #######################
-*   Purpose....: Dump thread                                                #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialDevice::Execute()
 {
+#ifdef __RDOS__
     int pos;
     struct TSerialDebug *DumpArr;
     TPathName path(FLogPath);
@@ -784,17 +1272,12 @@ void TSerialDevice::Execute()
         delete FCurrFile;
         FCurrFile = 0;
     }
+#endif
 }
 
-/*##################  TSerialDevice::OpenPort  #######################
-*   Purpose....: Opens V25 comport                                              #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialDevice::OpenPort()
 {
+#ifdef __RDOS__
     if (FPort)
         FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, FBufferSize, FBufferSize);
     else
@@ -809,499 +1292,315 @@ void TSerialDevice::OpenPort()
         else
             RdosDisableCts(FHandle);
     }
+#else
+    if (FSerial)
+        FSerial->Open(FBaudrate, FParity, FDataBits, FStopBits);
+#endif
 }
 
-/*##################  TSerialDevice::IsOpen  ############################
-*   Purpose....: Opens serial com channel                                               #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 bool TSerialDevice::IsOpen()
 {
-        if (FHandle)
-            return true;
-        else
-            return false;
+#ifdef __RDOS__
+    if (FHandle)
+        return true;
+    else
+        return false;
+#else
+    if (FSerial && FSerial->IsOpen())
+        return true;
+    else
+        return false;
+#endif
 }
 
-/*##################  TSerialDevice::Open  ############################
-*   Purpose....: Opens serial com channel                                               #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialDevice::Open()
 {
-        if (!FHandle)
-                OpenPort();
+#ifdef __RDOS__
+    if (!FHandle)
+        OpenPort();
+#else
+    if (FSerial)
+        OpenPort();
+#endif
 }
 
-/*##################  TSerialDevice::Close  ###########################
-*   Purpose....: Closes serial com channel                                              #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-15 le                                                #
-*##########################################################################*/
 void TSerialDevice::Close()
 {
-        if (FHandle)
-        {
-                RdosCloseCom(FHandle);
+#ifdef __RDOS__
+    if (FHandle)
+    {
+        RdosCloseCom(FHandle);
         FHandle = 0;
-        }
+    }
+#else
+    if (FSerial)
+        FSerial->Close();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Clear
-#
-#   Purpose....: Clear buffers
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::Clear()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosFlushCom(FHandle);
+#else
+    if (FSerial)
+        FSerial->Clear();
+#endif
 }
 
-/*##################  TSerialDevice::SetBaudrate  #####################
-*   Purpose....: Change com port baudrate                                               #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialDevice::SetBaudrate(long Baudrate)
 {
-        if (IsOpen())
-        {
-                Close();
-                FBaudrate = Baudrate;
-                Open();
-        }
-        else
-                FBaudrate = Baudrate;
+    if (IsOpen())
+    {
+        Close();
+        FBaudrate = Baudrate;
+        Open();
+    }
+    else
+        FBaudrate = Baudrate;
 }
 
-/*##################  TSerialDevice::SetParity  #####################
-*   Purpose....: Change com port parity                                         #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialDevice::SetParity(char Parity)
 {
-        if (IsOpen())
-        {
-                Close();
-                FParity = Parity;
-                Open();
-        }
-        else
-                FParity = Parity;
+    if (IsOpen())
+    {
+        Close();
+        FParity = Parity;
+        Open();
+    }
+    else
+        FParity = Parity;
 }
 
-/*##################  TSerialDevice::SetDataBits  #####################
-*   Purpose....: Change com port number of data bits                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialDevice::SetDataBits(int DataBits)
 {
-        if (IsOpen())
-        {
-                Close();
-                FDataBits = DataBits;
-                Open();
-        }
-        else
-                FDataBits = DataBits;
+    if (IsOpen())
+    {
+        Close();
+        FDataBits = DataBits;
+        Open();
+    }
+    else
+        FDataBits = DataBits;
 }
 
-/*##################  TSerialDevice::SetStopBits  #####################
-*   Purpose....: Change com port number of stop bits                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 void TSerialDevice::SetStopBits(int StopBits)
 {
-        if (IsOpen())
-        {
-                Close();
-                FStopBits = StopBits;
-                Open();
-        }
-        else
-                FStopBits = StopBits;
+    if (IsOpen())
+    {
+        Close();
+        FStopBits = StopBits;
+        Open();
+    }
+    else
+        FStopBits = StopBits;
 }
 
-/*##################  TSerialDevice::GetPort  #####################
-*   Purpose....: Get com port                                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 int TSerialDevice::GetPort() const
 {
-        return FPort;
+    return FPort;
 }
 
-/*##################  TSerialDevice::GetBaudrate  #####################
-*   Purpose....: Get com port baudrate                                          #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 long TSerialDevice::GetBaudrate() const
 {
-        return FBaudrate;
+    return FBaudrate;
 }
 
-/*##################  TSerialDevice::GetParity  #####################
-*   Purpose....: Get com port parity                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 char TSerialDevice::GetParity() const
 {
-        return FParity;
+    return FParity;
 }
 
-/*##################  TSerialDevice::GetDataBits  #####################
-*   Purpose....: Get com port number of data bits                                               #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 int TSerialDevice::GetDataBits() const
 {
-        return FDataBits;
+    return FDataBits;
 }
 
-/*##################  TSerialDevice::GetStopBits  #####################
-*   Purpose....: Get com port number of stop bits                                               #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
 int TSerialDevice::GetStopBits() const
 {
-        return FStopBits;
+    return FStopBits;
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::GetSendBufferSpace
-#
-#   Purpose....: Get free space in send buffer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: Number of bytes free space
-#
-##########################################################################*/
 int TSerialDevice::GetSendBufferSpace()
 {
     return 1000;
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::GetReceiveBufferSpace
-#
-#   Purpose....: Get free space in receive buffer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: Number of bytes free space
-#
-##########################################################################*/
 int TSerialDevice::GetReceiveBufferSpace()
 {
     return 1000;
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::SupportsFullDuplex
-#
-#   Purpose....: Check if port supports full duplex
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: Number of bytes free space
-#
-##########################################################################*/
 bool TSerialDevice::SupportsFullDuplex()
 {
     return FSupportsFullDuplex;
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Reset
-#
-#   Purpose....: Reset port
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::Reset()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosResetCom(FHandle);
+#else
+    if (FSerial)
+        FSerial->Reset();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::EnableCts
-#
-#   Purpose....: Enable CTS signal
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::EnableCts()
 {
     FUseCts = true;
-    
+
+#ifdef __RDOS__
     if (FHandle)
         RdosEnableCts(FHandle);
+#else
+    if (FSerial)
+        FSerial->EnableCts();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::DisableCts
-#
-#   Purpose....: Disable CTS signal
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::DisableCts()
 {
     FUseCts = false;
 
+#ifdef __RDOS__
     if (FHandle)
         RdosDisableCts(FHandle);
+#else
+    if (FSerial)
+        FSerial->DisableCts();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::GetCts
-#
-#   Purpose....: Get CTS state
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 bool TSerialDevice::GetCts()
 {
+#ifdef __RDOS__
     if (FHandle)
         return RdosGetCts(FHandle);
     else
         return false;
+#else
+    if (FSerial)
+        return FSerial->GetCts();
+    else
+        return false;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::GetDsr
-#
-#   Purpose....: Get DSR state
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 bool TSerialDevice::GetDsr()
 {
+#ifdef __RDOS__
     if (FHandle)
         return RdosGetDsr(FHandle);
     else
         return false;
+#else
+    if (FSerial)
+        return FSerial->GetDsr();
+    else
+        return false;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::ResetDtr
-#
-#   Purpose....: Reset DTR signal
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::ResetDtr()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosResetDtr(FHandle);
+#else
+    if (FSerial)
+        FSerial->ResetDtr();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::SetDtr
-#
-#   Purpose....: Set DTR signal
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::SetDtr()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosSetDtr(FHandle);
+#else
+    if (FSerial)
+        FSerial->SetDtr();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::ResetRts
-#
-#   Purpose....: Reset RTS signal
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::ResetRts()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosResetRts(FHandle);
+#else
+    if (FSerial)
+        FSerial->ResetRts();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::SetRts
-#
-#   Purpose....: Set RTS signal
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::SetRts()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosSetRts(FHandle);
+#else
+    if (FSerial)
+        FSerial->SetRts();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::EnableAutoRts
-#
-#   Purpose....: Enable automatic RTS generation during send
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::EnableAutoRts()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosEnableAutoRts(FHandle);
+#else
+    if (FSerial)
+        FSerial->EnableAutoRts();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::DisableAutoRts
-#
-#   Purpose....: Disable automatic RTS generation during send
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::DisableAutoRts()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosDisableAutoRts(FHandle);
+#else
+    if (FSerial)
+        FSerial->DisableAutoRts();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::IsAutoRtsOn
-#
-#   Purpose....: Check if automatic RTS generation during send is on
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 bool TSerialDevice::IsAutoRtsOn()
 {
+#ifdef __RDOS__
     if (FHandle)
         return RdosIsAutoRtsOn(FHandle);
     else
         return false;
+#else
+    if (FSerial)
+        return FSerial->IsAutoRtsOn();
+    else
+        return false;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::SendBreak
-#
-#   Purpose....: Send com break
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::SendBreak(char CharCount)
 {
+#ifdef __RDOS__
     if (FHandle && CharCount > 0)
         RdosSendComBreak(FHandle, CharCount);
+#else
+    if (FSerial)
+        FSerial->SendBreak(CharCount);
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Write
-#
-#   Purpose....: Write a char
-#
-#   In params..: ch     char to write
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::Write(char ch)
 {
     TSerialDebug Debug;
 
+#ifdef __RDOS__
     if (FHandle)
     {
         RdosWriteCom(FHandle, ch);
@@ -1330,81 +1629,57 @@ void TSerialDevice::Write(char ch)
 
             FEventSection.Leave();
         }        
-    }       
+    }
+#else
+    if (FSerial)
+        FSerial->Write(ch);
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Write
-#
-#   Purpose....: Write a buffer
-#
-#   In params..: buf     buffer to write
-#                count   count to write
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::Write(const char *buf, int count)
 {
-        int i;
-        for (i = 0; i < count; i++)
-        {
-                Write(*buf);
-                buf++;
-        }
+#ifdef __RDOS__
+    int i;
+
+    for (i = 0; i < count; i++)
+    {
+        Write(*buf);
+        buf++;
+    }
+#else
+    if (FSerial)
+        FSerial->Write(buf, count);
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Write
-#
-#   Purpose....: Write a string
-#
-#   In params..: str    string to write
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::Write(const char *str)
 {
-        while (*str != 0)
-        {
-                Write(*str);
-                str++;
-        }
+#ifdef __RDOS__
+    while (*str != 0)
+    {
+        Write(*str);
+        str++;
+    }
+#else
+    if (FSerial)
+        FSerial->Write(str);
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::WaitForSendCompleted
-#
-#   Purpose....: Wait until send buffer is empty
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: character
-#
-##########################################################################*/
 void TSerialDevice::WaitForSendCompleted()
 {
+#ifdef __RDOS__
     if (FHandle)
         RdosWaitForSendCompletedCom(FHandle);
+#else
+    if (FSerial)
+        FSerial->WaitForSendCompleted();
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::WaitForChar
-#
-#   Purpose....: Read a single character
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: character
-#
-##########################################################################*/
 bool TSerialDevice::WaitForChar(long Timeout)
 {
+#ifdef __RDOS__
     TWaitDevice *wd;
 
     if (!FWait)
@@ -1420,40 +1695,32 @@ bool TSerialDevice::WaitForChar(long Timeout)
     }
 
     return false;
+#else
+    if (FSerial)
+        return FSerial->WaitForChar(Timeout);
+    else
+        return false;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Poll
-#
-#   Purpose....: Poll port
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: true if successful
-#
-##########################################################################*/
 bool TSerialDevice::Poll()
 {
+#ifdef __RDOS__
     if (RdosGetComRecCount(FHandle))
         return true;
     else
         return false;
+#else
+    if (FSerial)
+        return FSerial->Poll();
+    else
+        return false;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Read
-#
-#   Purpose....: Read a single character
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: character
-#
-##########################################################################*/
 char TSerialDevice::Read()
 {
+#ifdef __RDOS__
     char ch = 0;
     TSerialDebug Debug;
 
@@ -1488,19 +1755,14 @@ char TSerialDevice::Read()
     }
     
     return ch;
+#else
+    if (FSerial)
+        return FSerial->Read();
+    else
+        return 0;
+#endif
 }
 
-/*##########################################################################
-#
-#   Name       : TSerialDevice::SignalNewData
-#
-#   Purpose....: Signal new data is available
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TSerialDevice::SignalNewData()
 {
     if (OnChar)

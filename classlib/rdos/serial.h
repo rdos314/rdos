@@ -45,13 +45,150 @@ public:
     char ch;
 };
 
+#ifndef __RDOS__
+
+class TLinuxSerial
+{
+public:
+    TLinuxSerial();
+    ~TLinuxSerial();
+
+    virtual bool IsStdSerial();
+    virtual bool IsUsbSerial();
+    virtual bool IsCanSerial();
+
+    virtual bool Open(long Baudrate, char Parity, int DataBits, int StopBits) = 0;
+    virtual void Close() = 0;
+    virtual bool IsOpen() = 0;
+
+    virtual int GetSendBufferSpace();
+    virtual int GetReceiveBufferSpace();
+    virtual void Reset();
+
+    virtual void Clear() = 0;
+    virtual bool GetCts() = 0;
+    virtual bool GetDsr() = 0;
+    virtual void ResetDtr() = 0;
+    virtual void SetDtr() = 0;
+    virtual void ResetRts() = 0;
+    virtual void SetRts() = 0;
+
+    virtual void EnableAutoRts() = 0;
+    virtual void DisableAutoRts() = 0;
+    virtual bool IsAutoRtsOn() = 0;
+
+    virtual void SendBreak(char CharCount) = 0;
+
+    virtual void Write(char ch) = 0;
+    virtual void Write(const char *buf, int count) = 0;
+    virtual void Write(const char *str) = 0;
+    virtual void WaitForSendCompleted() = 0;
+    virtual bool Poll() = 0;
+    virtual char Read() = 0;
+    virtual bool WaitForChar(long Timeout) = 0;
+    virtual bool SupportsFullDuplex() = 0;
+
+    virtual void EnableCts() = 0;
+    virtual void DisableCts() = 0;
+
+    bool IsUsed;
+};
+
+class TLinuxTtySerial : public TLinuxSerial
+{
+public:
+    TLinuxTtySerial(const char *dev);
+    ~TLinuxTtySerial();
+
+    virtual bool Open(long Baudrate, char Parity, int DataBits, int StopBits);
+    virtual void Close();
+    virtual bool IsOpen();
+    virtual bool Reopen();
+
+    virtual void Clear();
+    virtual bool GetCts();
+    virtual bool GetDsr();
+    virtual void ResetDtr();
+    virtual void SetDtr();
+    virtual void ResetRts();
+    virtual void SetRts();
+
+    virtual void EnableAutoRts();
+    virtual void DisableAutoRts();
+    virtual bool IsAutoRtsOn();
+
+    virtual void SendBreak(char CharCount);
+
+    virtual void Write(char ch);
+    virtual void Write(const char *buf, int count);
+    virtual void Write(const char *str);
+    virtual void WaitForSendCompleted();
+    virtual bool Poll();
+    virtual char Read();
+    virtual bool WaitForChar(long Timeout);
+    virtual bool SupportsFullDuplex();
+
+    virtual void EnableCts();
+    virtual void DisableCts();
+
+protected:
+    TString FDev;
+    int FHandle;
+    long FBaudrate;
+    char FParity;
+    int FDataBits;
+    int FStopBits;
+};
+
+class TLinuxStdSerial : public TLinuxTtySerial
+{
+public:
+    TLinuxStdSerial(const char *dev, int base, int irq);
+    ~TLinuxStdSerial();
+
+    virtual bool IsStdSerial();
+    int GetBase();
+    int GetIrq();
+
+protected:
+    int FIoBase;
+    int FIrq;
+};
+
+class TLinuxUsbSerial : public TLinuxTtySerial
+{
+public:
+    TLinuxUsbSerial(const char *dev, int bus, int device, int vendor, int product);
+    ~TLinuxUsbSerial();
+
+    virtual bool IsUsbSerial();
+    virtual void Reset();
+
+    int GetBus();
+    int GetDevice();
+    int GetVendor();
+    int GetProduct();
+
+protected:
+    int FBus;
+    int FDevice;
+    int FVendor;
+    int FProduct;
+};
+
+#endif
+
 class TSerialDevice : public TWaitDevice
 {
 public:
+    TSerialDevice();
     TSerialDevice(int Port, long Baudrate);
     TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-    TSerialDevice(int Port);
-    TSerialDevice();
+
+#ifdef __RDOS__
+    TSerialDevice(int Handle);
+#endif
+
     ~TSerialDevice();
 
     void SetBufferSize(int size);
@@ -69,7 +206,9 @@ public:
     void Block();
     void Unblock();
 
+#ifdef __RDOS__
     int GetHandle();
+#endif
         
     void SetBaudrate(long Baudrate);
     void SetParity(char Parity);
@@ -113,7 +252,14 @@ public:
 
 protected:
     virtual void SignalNewData();
+
+#ifdef __RDOS__
     virtual void Add(TWait *Wait);
+#else
+    virtual bool WaitForever();
+    virtual bool WaitTimeout(int Timeout);
+    virtual bool WaitUntil(TDateTime &DateTime);
+#endif
 
     virtual void Execute();
 
@@ -125,7 +271,13 @@ private:
     void InitFiles();
 
     TSection FSection;
+
+#ifdef __RDOS__
     int FHandle;
+#else
+    TLinuxSerial *FSerial;
+#endif
+
     int FBufferSize;
 
     int FPort;
