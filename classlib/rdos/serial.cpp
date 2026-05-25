@@ -112,7 +112,6 @@ TLinuxTtySerial::TLinuxTtySerial(const char *dev)
     FStopBits = 0;
 }
 
-
 TLinuxTtySerial::~TLinuxTtySerial()
 {
 }
@@ -122,6 +121,9 @@ bool TLinuxTtySerial::Open(long Baudrate, char Parity, int DataBits, int StopBit
     struct termios tty;
     speed_t speed;
     bool ok;
+
+    if (!IsUsed)
+        return false;
 
     if (FHandle > 0)
         return true;
@@ -238,14 +240,17 @@ bool TLinuxTtySerial::Open(long Baudrate, char Parity, int DataBits, int StopBit
         ok = false;
 
     if (!ok && FHandle > 0)
+    {
         close(FHandle);
+        FHandle = 0;
+    }
 
     return ok;
 }
 
 void TLinuxTtySerial::Close()
 {
-    if (FHandle > 0)
+    if (IsUsed && FHandle > 0)
     {
         close(FHandle);
         FHandle = 0;
@@ -254,18 +259,24 @@ void TLinuxTtySerial::Close()
 
 bool TLinuxTtySerial::IsOpen()
 {
-    return FHandle > 0;
+    return IsUsed && FHandle > 0;
 }
 
 bool TLinuxTtySerial::Reopen()
 {
-    Close();
-    if (!Open(FBaudrate, FParity, FDataBits, FStopBits))
+    if (IsUsed)
     {
-        usleep(100000);
-        return false;
+        Close();
+
+        if (!Open(FBaudrate, FParity, FDataBits, FStopBits))
+        {
+            usleep(100000);
+            return false;
+        }
+        return true;
     }
-    return true;
+    else
+        return false;
 }
 
 void TLinuxTtySerial::Clear()
@@ -278,131 +289,138 @@ bool TLinuxTtySerial::GetCts()
 {
     int status;
 
-    if (FHandle <= 0)
+    if (FHandle > 0)
+    {
+        if (ioctl(FHandle, TIOCMGET, &status) == -1)
+            return false;
+        else
+            return (status & TIOCM_CTS) != 0;
+    }
+    else
         return false;
-
-    if (ioctl(FHandle, TIOCMGET, &status) == -1)
-        return false;
-
-    return (status & TIOCM_CTS) != 0;
 }
 
 bool TLinuxTtySerial::GetDsr()
 {
     int status;
 
-    if (FHandle <= 0)
+    if (FHandle > 0)
+    {
+        if (ioctl(FHandle, TIOCMGET, &status) == -1)
+            return false;
+        else
+            return (status & TIOCM_DSR) != 0;
+    }
+    else
         return false;
-
-    if (ioctl(FHandle, TIOCMGET, &status) == -1)
-        return false;
-
-    return (status & TIOCM_DSR) != 0;
 }
 
 void TLinuxTtySerial::ResetDtr()
 {
     int mask = TIOCM_DTR;
 
-    if (FHandle <= 0)
-        return;
-
-    ioctl(FHandle, TIOCMBIC, &mask);
+    if (FHandle > 0)
+        ioctl(FHandle, TIOCMBIC, &mask);
 }
 
 void TLinuxTtySerial::SetDtr()
 {
     int mask = TIOCM_DTR;
 
-    if (FHandle <= 0)
-        return;
-
-    ioctl(FHandle, TIOCMBIS, &mask);
+    if (FHandle > 0)
+        ioctl(FHandle, TIOCMBIS, &mask);
 }
 
 void TLinuxTtySerial::ResetRts()
 {
     int mask = TIOCM_RTS;
 
-    if (FHandle <= 0)
-        return;
-
-    ioctl(FHandle, TIOCMBIC, &mask);
+    if (FHandle > 0)
+        ioctl(FHandle, TIOCMBIC, &mask);
 }
 
 void TLinuxTtySerial::SetRts()
 {
     int mask = TIOCM_RTS;
 
-    if (FHandle <= 0)
-        return;
-
-    ioctl(FHandle, TIOCMBIS, &mask);
+    if (FHandle > 0)
+        ioctl(FHandle, TIOCMBIS, &mask);
 }
 
 void TLinuxTtySerial::EnableAutoRts()
 {
     struct serial_rs485 rs485conf;
 
-    if (FHandle <= 0)
-        return;
-
-    memset(&rs485conf, 0, sizeof(rs485conf));
-    rs485conf.flags |= SER_RS485_ENABLED;
-    rs485conf.flags |= SER_RS485_RTS_ON_SEND;
-    rs485conf.flags |= SER_RS485_RTS_AFTER_SEND;
-    ioctl(FHandle, TIOCSRS485, &rs485conf);
+    if (FHandle > 0)
+    {
+        memset(&rs485conf, 0, sizeof(rs485conf));
+        rs485conf.flags |= SER_RS485_ENABLED;
+        rs485conf.flags |= SER_RS485_RTS_ON_SEND;
+        rs485conf.flags |= SER_RS485_RTS_AFTER_SEND;
+        ioctl(FHandle, TIOCSRS485, &rs485conf);
+    }
 }
 
 void TLinuxTtySerial::DisableAutoRts()
 {
     struct serial_rs485 rs485conf;
 
-    if (FHandle <= 0)
-        return;
-
-    memset(&rs485conf, 0, sizeof(rs485conf));
-    ioctl(FHandle, TIOCSRS485, &rs485conf);
+    if (FHandle > 0)
+    {
+        memset(&rs485conf, 0, sizeof(rs485conf));
+        ioctl(FHandle, TIOCSRS485, &rs485conf);
+    }
 }
 
 bool TLinuxTtySerial::IsAutoRtsOn()
 {
     struct serial_rs485 rs485conf;
 
-    if (FHandle <= 0)
+    if (FHandle > 0)
+    {
+        if (ioctl(FHandle, TIOCGRS485, &rs485conf) < 0)
+            return false;
+        else
+            return (rs485conf.flags & SER_RS485_ENABLED) != 0;
+    }
+    else
         return false;
-
-    if (ioctl(FHandle, TIOCGRS485, &rs485conf) < 0)
-        return false;
-
-    return (rs485conf.flags & SER_RS485_ENABLED) != 0;
 }
 
 void TLinuxTtySerial::SendBreak(char CharCount)
 {
-    if (FHandle <= 0)
-        return;
-
-    ioctl(FHandle, TCSBRK, 0);
+    if (FHandle > 0)
+        ioctl(FHandle, TCSBRK, 0);
 }
 
 void TLinuxTtySerial::Write(const char *buf, int count)
 {
-    if (FHandle <= 0)
-        return;
+    int written;
+    int retries = 0;
 
-    while (count > 0)
+    if (FHandle <= 0)
+        Reopen();
+
+    while (count > 0 && FHandle > 0)
     {
-        int written = write(FHandle, buf, count);
+        written = write(FHandle, buf, count);
+
         if (written > 0)
         {
             buf += written;
             count -= written;
+            retries = 0;
         }
         else if (written == -1)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
+                if (++retries > 2500)
+                {
+                    Reopen();
+                    break;
+                }
+
                 usleep(1000);
                 continue;
             }
@@ -435,12 +453,22 @@ bool TLinuxTtySerial::Poll()
     int bytes_available = 0;
 
     if (FHandle <= 0)
-        return false;
+        Reopen();
 
-    if (ioctl(FHandle, FIONREAD, &bytes_available) == -1)
-        return false;
+    if (FHandle > 0)
+    {
+        if (ioctl(FHandle, FIONREAD, &bytes_available) == -1)
+        {
+            if (errno == EIO || errno == ENODEV || errno == ENXIO || errno == EBADF)
+                Reopen();
 
-    return bytes_available > 0;
+            return false;
+        }
+        else
+            return bytes_available > 0;
+    }
+    else
+        return false;
 }
 
 char TLinuxTtySerial::Read()
@@ -448,19 +476,17 @@ char TLinuxTtySerial::Read()
     char ch = 0;
     int n;
 
-    if (FHandle <= 0)
-        return 0;
-
-    n = read(FHandle, &ch, 1);
-
-    if (n == 1)
-        return ch;
-    else if (n == -1)
+    if (FHandle > 0)
     {
-        if (errno == EIO || errno == ENODEV || errno == ENXIO || errno == EBADF)
-            Reopen();
+        n = read(FHandle, &ch, 1);
+
+        if (n == 1)
+            return ch;
+        else
+            return 0;
     }
-    return 0;
+    else
+        return 0;
 }
 
 bool TLinuxTtySerial::WaitForChar(long Timeout)
@@ -469,17 +495,29 @@ bool TLinuxTtySerial::WaitForChar(long Timeout)
     int ret;
 
     if (FHandle <= 0)
+        Reopen();
+
+    if (FHandle > 0)
+    {
+        pfd.fd = FHandle;
+        pfd.events = POLLIN;
+
+        ret = poll(&pfd, 1, (int)Timeout);
+
+        if (ret > 0)
+        {
+            if (pfd.revents & (POLLHUP | POLLERR | POLLNVAL))
+            {
+                Reopen();
+                return false;
+            }
+            if (pfd.revents & POLLIN)
+                return true;
+        }
         return false;
-
-    pfd.fd = FHandle;
-    pfd.events = POLLIN;
-
-    ret = poll(&pfd, 1, (int)Timeout);
-
-    if (ret > 0 && (pfd.revents & POLLIN))
-        return true;
-
-    return false;
+    }
+    else
+        return false;
 }
 
 bool TLinuxTtySerial::SupportsFullDuplex()
@@ -491,13 +529,13 @@ void TLinuxTtySerial::EnableCts()
 {
     struct termios tty;
 
-    if (FHandle <= 0)
-        return;
-
-    if (tcgetattr(FHandle, &tty) == 0)
+    if (FHandle > 0)
     {
-        tty.c_cflag |= CRTSCTS;
-        tcsetattr(FHandle, TCSANOW, &tty);
+        if (tcgetattr(FHandle, &tty) == 0)
+        {
+            tty.c_cflag |= CRTSCTS;
+            tcsetattr(FHandle, TCSANOW, &tty);
+        }
     }
 }
 
@@ -505,13 +543,13 @@ void TLinuxTtySerial::DisableCts()
 {
     struct termios tty;
 
-    if (FHandle <= 0)
-        return;
-
-    if (tcgetattr(FHandle, &tty) == 0)
+    if (FHandle > 0)
     {
-        tty.c_cflag &= ~CRTSCTS;
-        tcsetattr(FHandle, TCSANOW, &tty);
+        if (tcgetattr(FHandle, &tty) == 0)
+        {
+            tty.c_cflag &= ~CRTSCTS;
+            tcsetattr(FHandle, TCSANOW, &tty);
+        }
     }
 }
 
