@@ -193,56 +193,119 @@ int TCanSerialInfo::GetPort() const
     return FPort;
 }
 
-static void AddSerial(TSerialInfo *info)
+#ifdef __RDOS__
+
+static void GetUarts()
+{
+    int i;
+    int irq;
+    int base;
+    int baud;
+    TString name;
+    TSerialInfo *info;
+    int count = RdosGetMaxComPort();
+
+    for (i = 0; i < count; ++i)
+    {
+        if (RdosGetStdComPar(i, &irq, &base, &baud))
+        {
+            info = InfoArr[i];
+            if (!info)
+            {            
+                name.printf("Com%d: (std)", i + 1);
+                info = new TStdSerialInfo(name.GetData(), base, irq);
+                InfoArr[i] = info;
+            }
+        }
+    }
+}
+
+static void GetUsbSerial()
+{
+    int i;
+    int vendor;
+    int product;
+    int typ;
+    TString name;
+    TSerialInfo *info;
+    int count = RdosGetMaxComPort();
+
+    for (i = 0; i < count; ++i)
+    {
+        if (RdosGetUsbComPar(i, &typ))
+        {
+            name.printf("Com%d: (USB)", i + 1);
+
+            info = InfoArr[i];
+            if (!info)
+            {            
+                info = new TUsbSerialInfo(name.GetData(), 0, 0 , 0, 0);
+                InfoArr[i] = info;
+            }
+        }
+        else
+        {
+            if (RdosGetUsbCdcComPar(i, &vendor, &product))
+            {
+                name.printf("Com%d: (CDC)", i + 1);
+
+                info = InfoArr[i];
+                if (!info)
+                {            
+                    info = new TUsbSerialInfo(name.GetData(), 0, 0 , vendor, product);
+                    InfoArr[i] = info;
+                }       
+            }
+        }
+    }
+}
+
+static void GetCanSerial()
+{
+    int i;
+    int module;
+    int port;
+    TString name;
+    TSerialInfo *info;
+    int count = RdosGetMaxComPort();
+
+    for (i = 0; i < count; ++i)
+    {
+        if (RdosCheckCanSerialPort(i, &module, &port))
+        {
+            info = InfoArr[i];
+            if (!info)
+            {            
+                name.printf("Com%d: (CAN)", i + 1);
+                info = new TCanSerialInfo(name.GetData(), module, port);
+                InfoArr[i] = info;
+            }
+        }
+    }
+}
+
+static void UpdateSerial()
 {
     int i;
 
-    for (i = 0; i < MAX_PORTS; ++i)
+    FInfoSection.Enter();
+
+    if (!IsInited)
     {
-        if (InfoArr[i] == 0)
-        {
-            InfoArr[i] = info;
-            return;
-        }
+        IsInited = true;
+
+        for (i = 0; i < MAX_PORTS; ++i)
+            InfoArr[i] = 0;
     }
-    delete info;
+
+    GetUarts();
+    GetUsbSerial();
+    GetCanSerial();
+
+    FInfoSection.Leave();
 }
 
-static void AddStdSerial(const char *name, int iobase, int irq)
-{
-    TStdSerialInfo *serial = new TStdSerialInfo(name, iobase, irq);
-    AddSerial(serial);
-}
-
-static bool FindUsbSerial(int bus, int device, int vendor, int product)
-{
-    int i;
-    TUsbSerialInfo *serial;
-
-    for (i = 0; i < MAX_PORTS; ++i)
-    {
-        if (InfoArr[i] && InfoArr[i]->IsUsbSerial())
-        {
-            serial = (TUsbSerialInfo *)InfoArr[i];
-            if (serial->GetBus() == bus && serial->GetDevice() == device && serial->GetVendor() == vendor && serial->GetProduct() == product)
-                return true;
-        }
-    }
-    return false;
-}
-
-static void AddUsbSerial(const char *name, int bus, int device, int vendor, int product)
-{
-    TUsbSerialInfo *serial;
-
-    if (!FindUsbSerial(bus, device, vendor, product))
-    {
-        serial = new TUsbSerialInfo(name, bus, device, vendor, product);
-        AddSerial(serial);
-    }
-}
-
-#ifndef __RDOS__
+#else
 
 namespace fs=std::filesystem;
 
@@ -784,6 +847,55 @@ static bool readFile(const fs::path& p, std::string& out)
     if (!f) return false;
     f >> out;
     return true;
+}
+
+static void AddSerial(TSerialInfo *info)
+{
+    int i;
+
+    for (i = 0; i < MAX_PORTS; ++i)
+    {
+        if (InfoArr[i] == 0)
+        {
+            InfoArr[i] = info;
+            return;
+        }
+    }
+    delete info;
+}
+
+static void AddStdSerial(const char *name, int iobase, int irq)
+{
+    TStdSerialInfo *serial = new TStdSerialInfo(name, iobase, irq);
+    AddSerial(serial);
+}
+
+static bool FindUsbSerial(int bus, int device, int vendor, int product)
+{
+    int i;
+    TUsbSerialInfo *serial;
+
+    for (i = 0; i < MAX_PORTS; ++i)
+    {
+        if (InfoArr[i] && InfoArr[i]->IsUsbSerial())
+        {
+            serial = (TUsbSerialInfo *)InfoArr[i];
+            if (serial->GetBus() == bus && serial->GetDevice() == device && serial->GetVendor() == vendor && serial->GetProduct() == product)
+                return true;
+        }
+    }
+    return false;
+}
+
+static void AddUsbSerial(const char *name, int bus, int device, int vendor, int product)
+{
+    TUsbSerialInfo *serial;
+
+    if (!FindUsbSerial(bus, device, vendor, product))
+    {
+        serial = new TUsbSerialInfo(name, bus, device, vendor, product);
+        AddSerial(serial);
+    }
 }
 
 static void GetUarts()
