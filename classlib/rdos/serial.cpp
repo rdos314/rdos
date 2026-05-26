@@ -52,25 +52,219 @@
 #include "str.h"
 #endif
 
+#define MAX_PORTS 100
+
+static bool IsInited = false;
+static TSection FInfoSection("Serial Info");
+static TSerialInfo *InfoArr[MAX_PORTS];
+
+TSerialInfo::TSerialInfo(const char *name)
+    : FName(name)
+{
+    FIsUsed = 0;
+}
+
+TSerialInfo::~TSerialInfo()
+{
+}
+
+const char *TSerialInfo::GetName() const
+{
+    return FName.GetData();
+}
+
+bool TSerialInfo::IsUsed() const
+{
+    return FIsUsed;
+}
+
+void TSerialInfo::SetUsed()
+{
+    FIsUsed = true;
+}
+
+void TSerialInfo::ClearUsed()
+{
+    FIsUsed = false;
+}
+
+bool TSerialInfo::IsStdSerial()
+{
+    return false;
+}
+
+bool TSerialInfo::IsUsbSerial()
+{
+    return false;
+}
+
+bool TSerialInfo::IsCanSerial()
+{
+    return false;
+}
+
+TStdSerialInfo::TStdSerialInfo(const char *name, int base, int irq)
+  : TSerialInfo(name)
+{
+    FIoBase = base;
+    FIrq = irq;
+}
+
+TStdSerialInfo::~TStdSerialInfo()
+{
+}
+
+bool TStdSerialInfo::IsStdSerial()
+{
+    return true;
+}
+
+int TStdSerialInfo::GetBase() const
+{
+    return FIoBase;
+}
+
+int TStdSerialInfo::GetIrq() const
+{
+    return FIrq;
+}
+
+TUsbSerialInfo::TUsbSerialInfo(const char *name, int bus, int device, int vendor, int product)
+  : TSerialInfo(name)
+{
+    FBus = bus;
+    FDevice = device;
+    FVendor = vendor;
+    FProduct = product;
+}
+
+TUsbSerialInfo::~TUsbSerialInfo()
+{
+}
+
+bool TUsbSerialInfo::IsUsbSerial()
+{
+    return true;
+}
+
+int TUsbSerialInfo::GetBus() const
+{
+    return FBus;
+}
+
+int TUsbSerialInfo::GetDevice() const
+{
+    return FDevice;
+}
+
+int TUsbSerialInfo::GetVendor() const
+{
+    return FVendor;
+}
+
+int TUsbSerialInfo::GetProduct() const
+{
+    return FProduct;
+}
+
+TCanSerialInfo::TCanSerialInfo(const char *name, int module, int port)
+  : TSerialInfo(name)
+{
+    FModule = module;
+    FPort = port;
+}
+
+TCanSerialInfo::~TCanSerialInfo()
+{
+}
+
+bool TCanSerialInfo::IsCanSerial()
+{
+    return true;
+}
+
+int TCanSerialInfo::GetModule() const
+{
+    return FModule;
+}
+
+int TCanSerialInfo::GetPort() const
+{
+    return FPort;
+}
+
+static void AddSerial(TSerialInfo *info)
+{
+    int i;
+
+    for (i = 0; i < MAX_PORTS; ++i)
+    {
+        if (InfoArr[i] == 0)
+        {
+            InfoArr[i] = info;
+            return;
+        }
+    }
+    delete info;
+}
+
+static void AddStdSerial(const char *name, int iobase, int irq)
+{
+    TStdSerialInfo *serial = new TStdSerialInfo(name, iobase, irq);
+    AddSerial(serial);
+}
+
+static bool FindUsbSerial(int bus, int device, int vendor, int product)
+{
+    int i;
+    TUsbSerialInfo *serial;
+
+    for (i = 0; i < MAX_PORTS; ++i)
+    {
+        if (InfoArr[i] && InfoArr[i]->IsUsbSerial())
+        {
+            serial = (TUsbSerialInfo *)InfoArr[i];
+            if (serial->GetBus() == bus && serial->GetDevice() == device && serial->GetVendor() == vendor && serial->GetProduct() == product)
+                return true;
+        }
+    }
+    return false;
+}
+
+static void AddUsbSerial(const char *name, int bus, int device, int vendor, int product)
+{
+    TUsbSerialInfo *serial;
+
+    if (!FindUsbSerial(bus, device, vendor, product))
+    {
+        serial = new TUsbSerialInfo(name, bus, device, vendor, product);
+        AddSerial(serial);
+    }
+}
+
 #ifndef __RDOS__
 
 namespace fs=std::filesystem;
 
-#define MAX_PORTS 100
-
-
-static bool IsInited = false;
-static TSection FPortSection("Serial Ports");
-static TLinuxSerial *PortArr[MAX_PORTS];
-
-
-TLinuxSerial::TLinuxSerial()
+TLinuxSerial::TLinuxSerial(TSerialInfo *info)
 {
-    IsUsed = false;
+    FInfoSection.Enter();
+
+    if (info && !info->IsUsed())
+    {
+        FInfo = info;
+        FInfo->SetUsed();
+    }
+    else
+        FInfo = 0;
+
+    FInfoSection.Leave();
 }
 
 TLinuxSerial::~TLinuxSerial()
 {
+    if (FInfo)
+        FInfo->ClearUsed();
 }
 
 int TLinuxSerial::GetSendBufferSpace()
@@ -87,23 +281,32 @@ void TLinuxSerial::Reset()
 {
 }
 
-bool TLinuxSerial::IsStdSerial()
+bool TLinuxSerial::IsStdSerial() const
 {
-    return false;
+    if (FInfo)
+        return FInfo->IsStdSerial();
+    else
+        return false;
 }
 
-bool TLinuxSerial::IsUsbSerial()
+bool TLinuxSerial::IsUsbSerial() const
 {
-    return false;
+    if (FInfo)
+        return FInfo->IsUsbSerial();
+    else
+        return false;
 }
 
-bool TLinuxSerial::IsCanSerial()
+bool TLinuxSerial::IsCanSerial() const
 {
-    return false;
+    if (FInfo)
+        return FInfo->IsCanSerial();
+    else
+        return false;
 }
 
-TLinuxTtySerial::TLinuxTtySerial(const char *dev)
-  : FDev(dev)
+TLinuxTtySerial::TLinuxTtySerial(TSerialInfo *info)
+  : TLinuxSerial(info)
 {
     FHandle = -1;
     FBaudrate = 0;
@@ -122,13 +325,13 @@ bool TLinuxTtySerial::Open(long Baudrate, char Parity, int DataBits, int StopBit
     speed_t speed;
     bool ok;
 
-    if (!IsUsed)
+    if (!FInfo)
         return false;
 
     if (FHandle > 0)
         return true;
 
-    FHandle = open(FDev.GetData(), O_RDWR | O_NOCTTY | O_NDELAY);
+    FHandle = open(FInfo->GetName(), O_RDWR | O_NOCTTY | O_NDELAY);
 
     if (FHandle < 0)
         return false; // Could not open the port
@@ -250,7 +453,7 @@ bool TLinuxTtySerial::Open(long Baudrate, char Parity, int DataBits, int StopBit
 
 void TLinuxTtySerial::Close()
 {
-    if (IsUsed && FHandle > 0)
+    if (FInfo && FHandle > 0)
     {
         close(FHandle);
         FHandle = 0;
@@ -259,12 +462,12 @@ void TLinuxTtySerial::Close()
 
 bool TLinuxTtySerial::IsOpen()
 {
-    return IsUsed && FHandle > 0;
+    return FInfo && FHandle > 0;
 }
 
 bool TLinuxTtySerial::Reopen()
 {
-    if (IsUsed)
+    if (FInfo)
     {
         Close();
 
@@ -283,6 +486,28 @@ void TLinuxTtySerial::Clear()
 {
     if (FHandle > 0)
         tcflush(FHandle, TCIOFLUSH);
+}
+
+void TLinuxTtySerial::Reset()
+{
+    char path[64];
+    TUsbSerialInfo *UsbInfo;
+
+    if (FInfo)
+    {
+        if (FInfo->IsUsbSerial())
+        {
+            UsbInfo = (TUsbSerialInfo *)FInfo;
+
+            snprintf(path, sizeof(path), "/dev/bus/usb/%03d/%03d", UsbInfo->GetBus(), UsbInfo->GetDevice());
+            int fd = open(path, O_WRONLY);
+            if (fd >= 0)
+            {
+                ioctl(fd, USBDEVFS_RESET, 0);
+                close(fd);
+            }
+        }
+    }
 }
 
 bool TLinuxTtySerial::GetCts()
@@ -553,125 +778,6 @@ void TLinuxTtySerial::DisableCts()
     }
 }
 
-TLinuxStdSerial::TLinuxStdSerial(const char *dev, int base, int irq)
-  : TLinuxTtySerial(dev)
-{
-    FIoBase = base;
-    FIrq = irq;
-}
-
-TLinuxStdSerial::~TLinuxStdSerial()
-{
-}
-
-bool TLinuxStdSerial::IsStdSerial()
-{
-    return true;
-}
-
-int TLinuxStdSerial::GetBase()
-{
-    return FIoBase;
-}
-
-int TLinuxStdSerial::GetIrq()
-{
-    return FIrq;
-}
-
-TLinuxUsbSerial::TLinuxUsbSerial(const char *dev, int bus, int device, int vendor, int product)
-  : TLinuxTtySerial(dev)
-{
-    FBus = bus;
-    FDevice = device;
-    FVendor = vendor;
-    FProduct = product;
-}
-
-TLinuxUsbSerial::~TLinuxUsbSerial()
-{
-}
-
-bool TLinuxUsbSerial::IsUsbSerial()
-{
-    return true;
-}
-
-void TLinuxUsbSerial::Reset()
-{
-    char path[64];
-    snprintf(path, sizeof(path), "/dev/bus/usb/%03d/%03d", FBus, FDevice);
-    int fd = open(path, O_WRONLY);
-    if (fd >= 0)
-    {
-        ioctl(fd, USBDEVFS_RESET, 0);
-        close(fd);
-    }
-}
-
-int TLinuxUsbSerial::GetBus()
-{
-    return FBus;
-}
-
-int TLinuxUsbSerial::GetDevice()
-{
-    return FDevice;
-}
-
-int TLinuxUsbSerial::GetVendor()
-{
-    return FVendor;
-}
-
-int TLinuxUsbSerial::GetProduct()
-{
-    return FProduct;
-}
-
-static void AddSerial(TLinuxSerial *serial)
-{
-    int i;
-
-    for (i = 0; i < MAX_PORTS; ++i)
-    {
-        if (PortArr[i] == 0)
-        {
-            PortArr[i] = serial;
-            return;
-        }
-    }
-    delete serial;
-}
-
-static bool FindUsbSerial(int bus, int device, int vendor, int product)
-{
-    int i;
-    TLinuxUsbSerial *serial;
-
-    for (i = 0; i < MAX_PORTS; ++i)
-    {
-        if (PortArr[i] && PortArr[i]->IsUsbSerial())
-        {
-            serial = (TLinuxUsbSerial *)PortArr[i];
-            if (serial->GetBus() == bus && serial->GetDevice() == device && serial->GetVendor() == vendor && serial->GetProduct() == product)
-                return true;
-        }
-    }
-    return false;
-}
-
-static void FoundUsbSerial(const char *dev, int bus, int device, int vendor, int product)
-{
-    TLinuxUsbSerial *serial;
-
-    if (!FindUsbSerial(bus, device, vendor, product))
-    {
-        serial = new TLinuxUsbSerial(dev, bus, device, vendor, product);
-        AddSerial(serial);
-    }
-}
-
 static bool readFile(const fs::path& p, std::string& out)
 {
     std::ifstream f(p);
@@ -682,7 +788,6 @@ static bool readFile(const fs::path& p, std::string& out)
 
 static void GetUarts()
 {
-    TLinuxStdSerial *serial;
     int irq;
     unsigned long iobase;
     int type;
@@ -705,10 +810,7 @@ static void GetUarts()
             iobase = str.empty() ? 0 : std::stoul(str, nullptr, 16);
 
             if (irq > 0 && type)
-            {
-                serial = new TLinuxStdSerial(tty.c_str(), iobase, irq);
-                AddSerial(serial);
-            }
+                AddStdSerial(tty.c_str(), iobase, irq);
         }
     }
 }
@@ -754,7 +856,7 @@ static void GetUsbSerial()
 
                 std::string tty_full = "/dev/" + tty;
 
-                FoundUsbSerial(tty_full.c_str(), bus, device, vendor, product);
+                AddUsbSerial(tty_full.c_str(), bus, device, vendor, product);
             }
         }
     }
@@ -766,7 +868,6 @@ static void GetUsbSerial()
 static void GetUsbCdc()
 {
     int i;
-    TLinuxUsbSerial *serial;
     int vendor;
     int product;
     int bus;
@@ -805,7 +906,7 @@ static void GetUsbCdc()
 
                 std::string tty_full = "/dev/" + tty;
 
-                FoundUsbSerial(tty_full.c_str(), bus, device, vendor, product);
+                AddUsbSerial(tty_full.c_str(), bus, device, vendor, product);
             }
         }
     }
@@ -813,10 +914,10 @@ static void GetUsbCdc()
 
 static void UpdateUsbSerial()
 {
-    FPortSection.Enter();
+    FInfoSection.Enter();
     GetUsbSerial();
     GetUsbCdc();
-    FPortSection.Leave();
+    FInfoSection.Leave();
 }
 
 static void InitSerial()
@@ -828,7 +929,7 @@ static void InitSerial()
         IsInited = true;
 
         for (i = 0; i < MAX_PORTS; ++i)
-            PortArr[i] = 0;
+            InfoArr[i] = 0;
 
         GetUarts();
         UpdateUsbSerial();
@@ -846,12 +947,12 @@ TSerialCommand::~TSerialCommand()
 {
 }
 
-void TSerialCommand::Block()
+void TSerialCommand::Block() const
 {
     FSerial->Block();
 }
 
-void TSerialCommand::Unblock()
+void TSerialCommand::Unblock() const
 {
     FSerial->Unblock();
 }
@@ -936,29 +1037,6 @@ bool TSerialCommand::WaitForChar(long MaxWait)
     return FSerial->WaitForChar(MaxWait);
 }
 
-TSerialDevice::TSerialDevice()
- : TWaitDevice("Serial Device"),
-   FSection("Serial"),
-   FEventSection("EvSerial")
-{
-    Init();
-}
-
-#ifdef __RDOS__
-
-TSerialDevice::TSerialDevice(int Handle)
- : TWaitDevice("Serial Device"),
-   FSection("Serial"),
-   FEventSection("EvSerial")
-{
-    Init();
-
-    FPort = 0;
-    FHandle = Handle;
-    FSupportsFullDuplex = RdosSupportsFullDuplex(FHandle);
-}
-#endif
-
 TSerialDevice::TSerialDevice(int Port, long Baudrate)
   : TWaitDevice("Serial Device"),
     FSection("Serial"),
@@ -986,7 +1064,7 @@ TSerialDevice::~TSerialDevice()
     if (FSerial)
     {
         FSerial->Close();
-        FSerial->IsUsed = false;
+        delete FSerial;
     }
 #endif
 }
@@ -1012,11 +1090,7 @@ void TSerialDevice::Init()
 #ifdef __RDOS__
     FHandle = 0;
 #else
-    if (FSerial)
-    {
-        FSerial->Close();
-        FSerial = 0;
-    }
+    FSerial = 0;
 #endif
 }
 
@@ -1032,24 +1106,20 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
 
 #ifndef __RDOS__
 
+    TSerialInfo *info;
+
     if (Port > 0 && Port <= MAX_PORTS)
     {
         if (!IsInited)
             InitSerial();
 
-        FPortSection.Enter();
-
-        FSerial = PortArr[Port - 1];
-        if (FSerial && FSerial->IsUsed)
-            FSerial = 0;
-
-        if (FSerial)
-            FSerial->IsUsed = true;
-
-        FPortSection.Leave();
+        info = InfoArr[Port - 1];
+        if (info)
+        {
+            if (info->IsStdSerial() || info->IsUsbSerial())
+                FSerial = new TLinuxTtySerial(info);
+        }
     }
-    else
-        FSerial = 0;
 
 #endif
 

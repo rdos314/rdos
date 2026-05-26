@@ -45,17 +45,89 @@ public:
     char ch;
 };
 
+class TSerialInfo
+{
+public:
+    TSerialInfo(const char *name);
+    virtual ~TSerialInfo();
+
+    const char *GetName() const;
+    bool IsUsed() const;
+    void SetUsed();
+    void ClearUsed();
+
+    virtual bool IsStdSerial();
+    virtual bool IsUsbSerial();
+    virtual bool IsCanSerial();
+
+protected:
+    bool FIsUsed;
+    TString FName;
+};
+
+class TStdSerialInfo : public TSerialInfo
+{
+public:
+    TStdSerialInfo(const char *name, int base, int irq);
+    virtual ~TStdSerialInfo();
+
+    virtual bool IsStdSerial();
+    int GetBase() const;
+    int GetIrq() const;
+
+protected:
+    int FIoBase;
+    int FIrq;
+};
+
+class TUsbSerialInfo : public TSerialInfo
+{
+public:
+    TUsbSerialInfo(const char *name, int bus, int device, int vendor, int product);
+    virtual ~TUsbSerialInfo();
+
+    virtual bool IsUsbSerial();
+
+    int GetBus() const;
+    int GetDevice() const;
+    int GetVendor() const;
+    int GetProduct() const;
+
+protected:
+    int FBus;
+    int FDevice;
+    int FVendor;
+    int FProduct;
+};
+
+class TCanSerialInfo : public TSerialInfo
+{
+public:
+    TCanSerialInfo(const char *name, int module, int port);
+    virtual ~TCanSerialInfo();
+
+    virtual bool IsCanSerial();
+
+    int GetModule() const;
+    int GetPort() const;
+
+protected:
+    int FModule;
+    int FPort;
+};
+
 #ifndef __RDOS__
 
 class TLinuxSerial
 {
 public:
-    TLinuxSerial();
-    ~TLinuxSerial();
+    TLinuxSerial(TSerialInfo *info);
+    virtual ~TLinuxSerial();
 
-    virtual bool IsStdSerial();
-    virtual bool IsUsbSerial();
-    virtual bool IsCanSerial();
+    bool IsStdSerial() const;
+    bool IsUsbSerial() const;
+    bool IsCanSerial() const;
+    TSerialInfo *GetInfo();
 
     virtual bool Open(long Baudrate, char Parity, int DataBits, int StopBits) = 0;
     virtual void Close() = 0;
@@ -91,20 +163,22 @@ public:
     virtual void EnableCts() = 0;
     virtual void DisableCts() = 0;
 
-    bool IsUsed;
+protected:
+    TSerialInfo *FInfo;
 };
 
 class TLinuxTtySerial : public TLinuxSerial
 {
 public:
-    TLinuxTtySerial(const char *dev);
-    ~TLinuxTtySerial();
+    TLinuxTtySerial(TSerialInfo *info);
+    virtual ~TLinuxTtySerial();
 
     virtual bool Open(long Baudrate, char Parity, int DataBits, int StopBits);
     virtual void Close();
     virtual bool IsOpen();
     virtual bool Reopen();
 
+    virtual void Reset();
     virtual void Clear();
     virtual bool GetCts();
     virtual bool GetDsr();
@@ -132,7 +206,6 @@ public:
     virtual void DisableCts();
 
 protected:
-    TString FDev;
     int FHandle;
     long FBaudrate;
     char FParity;
@@ -140,55 +213,13 @@ protected:
     int FStopBits;
 };
 
-class TLinuxStdSerial : public TLinuxTtySerial
-{
-public:
-    TLinuxStdSerial(const char *dev, int base, int irq);
-    ~TLinuxStdSerial();
-
-    virtual bool IsStdSerial();
-    int GetBase();
-    int GetIrq();
-
-protected:
-    int FIoBase;
-    int FIrq;
-};
-
-class TLinuxUsbSerial : public TLinuxTtySerial
-{
-public:
-    TLinuxUsbSerial(const char *dev, int bus, int device, int vendor, int product);
-    ~TLinuxUsbSerial();
-
-    virtual bool IsUsbSerial();
-    virtual void Reset();
-
-    int GetBus();
-    int GetDevice();
-    int GetVendor();
-    int GetProduct();
-
-protected:
-    int FBus;
-    int FDevice;
-    int FVendor;
-    int FProduct;
-};
-
 #endif
 
 class TSerialDevice : public TWaitDevice
 {
 public:
-    TSerialDevice();
     TSerialDevice(int Port, long Baudrate);
     TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-
-#ifdef __RDOS__
-    TSerialDevice(int Handle);
-#endif
-
     ~TSerialDevice();
 
     void SetBufferSize(int size);
@@ -316,8 +347,8 @@ public:
     bool DumpEvents();
 
 protected:
-    void Block();
-    void Unblock();
+    void Block() const;
+    void Unblock() const;
     virtual int Execute() = 0;
     void Clear();
     void ResetDtr();
