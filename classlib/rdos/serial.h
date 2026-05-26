@@ -222,6 +222,11 @@ public:
     TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
     ~TSerialDevice();
 
+    static int MaxInfoCount();
+    static void LockInfo();
+    static TSerialInfo *GetInfo(int port);
+    static void UnlockInfo();
+
     void SetBufferSize(int size);
 
     void StartDebug(TFile *File, int InChannel, int OutChannel);

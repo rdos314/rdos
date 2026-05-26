@@ -243,18 +243,30 @@ static void GetUsbSerial()
                 InfoArr[i] = info;
             }
         }
-        else
-        {
-            if (RdosGetUsbCdcComPar(i, &vendor, &product))
-            {
-                name.printf("Com%d: (CDC)", i + 1);
+    }
+}
 
-                info = InfoArr[i];
-                if (!info)
-                {            
-                    info = new TUsbSerialInfo(name.GetData(), 0, 0 , vendor, product);
-                    InfoArr[i] = info;
-                }       
+static void GetCdcSerial()
+{
+    int i;
+    int vendor;
+    int product;
+    int typ;
+    TString name;
+    TSerialInfo *info;
+    int count = RdosGetMaxComPort();
+
+    for (i = 0; i < count; ++i)
+    {
+        if (RdosGetUsbCdcComPar(i, &vendor, &product))
+        {
+            name.printf("Com%d: (CDC)", i + 1);
+
+            info = InfoArr[i];
+            if (!info)
+            {
+                info = new TUsbSerialInfo(name.GetData(), 0, 0 , vendor, product);
+                InfoArr[i] = info;
             }
         }
     }
@@ -288,8 +300,6 @@ static void UpdateSerial()
 {
     int i;
 
-    FInfoSection.Enter();
-
     if (!IsInited)
     {
         IsInited = true;
@@ -300,9 +310,8 @@ static void UpdateSerial()
 
     GetUarts();
     GetUsbSerial();
+    GetCdcSerial();
     GetCanSerial();
-
-    FInfoSection.Leave();
 }
 
 #else
@@ -977,7 +986,7 @@ static void GetUsbSerial()
 /**
  * Enumerates USB CDC devices by scanning /sys/class/tty and printing their USB details.
  */
-static void GetUsbCdc()
+static void GetCdcSerial()
 {
     int i;
     int vendor;
@@ -1024,17 +1033,17 @@ static void GetUsbCdc()
     }
 }
 
-static void UpdateUsbSerial()
+static void UpdateSerial()
 {
-    FInfoSection.Enter();
     GetUsbSerial();
-    GetUsbCdc();
-    FInfoSection.Leave();
+    GetCdcSerial();
 }
 
 static void InitSerial()
 {
     int i;
+
+    FInfoSection.Enter();
 
     if (!IsInited)
     {
@@ -1044,8 +1053,10 @@ static void InitSerial()
             InfoArr[i] = 0;
 
         GetUarts();
-        UpdateUsbSerial();
+        UpdateSerial();
     }
+
+    FInfoSection.Leave();
 }
 
 #endif
@@ -1236,6 +1247,37 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
 #endif
 
     OpenPort();
+}
+
+int TSerialDevice::MaxInfoCount()
+{
+#ifdef __RDOS__
+    return RdosGetMaxComPort();
+#else
+    return MAX_PORTS;
+#endif
+}
+
+void TSerialDevice::LockInfo()
+{
+    if (!IsInited)
+        InitSerial();
+
+    FInfoSection.Enter();
+    UpdateSerial();
+}
+
+TSerialInfo *TSerialDevice::GetInfo(int port)
+{
+    if (port > 0 && port <= MAX_PORTS)
+        return InfoArr[port - 1];
+    else
+        return 0;
+}
+
+void TSerialDevice::UnlockInfo()
+{
+    FInfoSection.Leave();
 }
 
 void TSerialDevice::Block()
