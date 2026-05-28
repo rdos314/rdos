@@ -129,9 +129,10 @@ int TStdSerialInfo::GetIrq() const
     return FIrq;
 }
 
-TUsbSerialInfo::TUsbSerialInfo(const char *name, int bus, int device, int vendor, int product)
+TUsbSerialInfo::TUsbSerialInfo(const char *name, bool cdc, int bus, int device, int vendor, int product)
   : TSerialInfo(name)
 {
+    FCdc = cdc;
     FBus = bus;
     FDevice = device;
     FVendor = vendor;
@@ -145,6 +146,11 @@ TUsbSerialInfo::~TUsbSerialInfo()
 bool TUsbSerialInfo::IsUsbSerial()
 {
     return true;
+}
+
+bool TUsbSerialInfo::IsCdc() const
+{
+    return FCdc;
 }
 
 int TUsbSerialInfo::GetBus() const
@@ -896,13 +902,13 @@ static bool FindUsbSerial(int bus, int device, int vendor, int product)
     return false;
 }
 
-static void AddUsbSerial(const char *name, int bus, int device, int vendor, int product)
+static void AddUsbSerial(const char *name, bool cdc, int bus, int device, int vendor, int product)
 {
     TUsbSerialInfo *serial;
 
     if (!FindUsbSerial(bus, device, vendor, product))
     {
-        serial = new TUsbSerialInfo(name, bus, device, vendor, product);
+        serial = new TUsbSerialInfo(name, cdc, bus, device, vendor, product);
         AddSerial(serial);
     }
 }
@@ -977,7 +983,7 @@ static void GetUsbSerial()
 
                 std::string tty_full = "/dev/" + tty;
 
-                AddUsbSerial(tty_full.c_str(), bus, device, vendor, product);
+                AddUsbSerial(tty_full.c_str(), false, bus, device, vendor, product);
             }
         }
     }
@@ -1027,7 +1033,7 @@ static void GetCdcSerial()
 
                 std::string tty_full = "/dev/" + tty;
 
-                AddUsbSerial(tty_full.c_str(), bus, device, vendor, product);
+                AddUsbSerial(tty_full.c_str(), true, bus, device, vendor, product);
             }
         }
     }

@@ -83,17 +83,19 @@ protected:
 class TUsbSerialInfo : public TSerialInfo
 {
 public:
-    TUsbSerialInfo(const char *name, int bus, int device, int vendor, int product);
+    TUsbSerialInfo(const char *name, bool cdc, int bus, int device, int vendor, int product);
     virtual ~TUsbSerialInfo();
 
     virtual bool IsUsbSerial();
 
+    bool IsCdc() const;
     int GetBus() const;
     int GetDevice() const;
     int GetVendor() const;
     int GetProduct() const;
 
 protected:
+    bool FCdc;
     int FBus;
     int FDevice;
     int FVendor;
