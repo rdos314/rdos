@@ -211,7 +211,7 @@ static void GetUarts()
         {
             info = InfoArr[i];
             if (!info)
-            {            
+            {
                 name.printf("Com%d: (std)", i + 1);
                 info = new TStdSerialInfo(name.GetData(), base, irq);
                 InfoArr[i] = info;
@@ -223,8 +223,6 @@ static void GetUarts()
 static void GetUsbSerial()
 {
     int i;
-    int vendor;
-    int product;
     int typ;
     TString name;
     TSerialInfo *info;
@@ -238,7 +236,7 @@ static void GetUsbSerial()
 
             info = InfoArr[i];
             if (!info)
-            {            
+            {
                 info = new TUsbSerialInfo(name.GetData(), 0, 0 , 0, 0);
                 InfoArr[i] = info;
             }
@@ -251,7 +249,6 @@ static void GetCdcSerial()
     int i;
     int vendor;
     int product;
-    int typ;
     TString name;
     TSerialInfo *info;
     int count = RdosGetMaxComPort();
@@ -287,7 +284,7 @@ static void GetCanSerial()
         {
             info = InfoArr[i];
             if (!info)
-            {            
+            {
                 name.printf("Com%d: (CAN)", i + 1);
                 info = new TCanSerialInfo(name.GetData(), module, port);
                 InfoArr[i] = info;
@@ -296,7 +293,7 @@ static void GetCanSerial()
     }
 }
 
-static void UpdateSerial()
+static void InitSerial()
 {
     int i;
 
@@ -307,7 +304,10 @@ static void UpdateSerial()
         for (i = 0; i < MAX_PORTS; ++i)
             InfoArr[i] = 0;
     }
+}
 
+static void UpdateSerial()
+{
     GetUarts();
     GetUsbSerial();
     GetCdcSerial();
@@ -1382,9 +1382,9 @@ void TSerialDevice::CheckFileCount()
                 }
             }
         }
-            
+
         ok = FileList.GotoPrev();
-    }    
+    }
 
     delete file;
 #endif
@@ -1403,7 +1403,7 @@ void TSerialDevice::InitFiles()
     int index;
     TString str;
 
-    CheckFileCount();        
+    CheckFileCount();
 
     FCurrId = 0;
 
@@ -1426,14 +1426,14 @@ void TSerialDevice::InitFiles()
             if (ptr)
                 *ptr = 0;
 
-            index = atoi(file);            
+            index = atoi(file);
 
             if (index > FCurrId)
                 FCurrId = index;
         }
-            
+
         ok = FileList.GotoNext();
-    }    
+    }
 
     delete file;
 
@@ -1456,14 +1456,14 @@ bool TSerialDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int Ent
     TPathName path(FLogPath);
 
     if (path.MakeDir())
-    {        
+    {
         CheckFileCount();
 
         FEntryCount = EntryCount;
         FEntryArr = new struct TSerialDebug[EntryCount];
 
         // initialize cache to empty
-        for (i = 0; i < EntryCount; i++) 
+        for (i = 0; i < EntryCount; i++)
         {
             FEntryArr[i].Channel = 0;
             FEntryArr[i].Time = 0;
@@ -1506,7 +1506,7 @@ void TSerialDevice::Execute()
     RdosWaitMilli(100);
 
     if (path.MakeDir())
-    {        
+    {
         InitFiles();
 
         DumpArr = new struct TSerialDebug[FEntryCount];
@@ -1519,10 +1519,10 @@ void TSerialDevice::Execute()
             DumpArr[i] = FEntryArr[i];
 
         FNewData = false;
-        
+
         FEventSection.Leave();
-        
-        for (int i = pos; i < FEntryCount; i++) 
+
+        for (int i = pos; i < FEntryCount; i++)
             if (DumpArr[i].Time)
                 FCurrFile->Write(&DumpArr[i], sizeof(struct TSerialDebug));
 
@@ -1544,7 +1544,7 @@ void TSerialDevice::OpenPort()
         FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, FBufferSize, FBufferSize);
     else
         FHandle = 0;
-        
+
     if (FHandle)
     {
         FSupportsFullDuplex = RdosSupportsFullDuplex(FHandle);
@@ -1890,7 +1890,7 @@ void TSerialDevice::Write(char ch)
             FNewData = true;
 
             FEventSection.Leave();
-        }        
+        }
     }
 #else
     if (FSerial)
@@ -1996,7 +1996,7 @@ char TSerialDevice::Read()
             Debug.Channel = FInChannel;
             Debug.ch = ch;
             FDebugFile->Write(&Debug, sizeof(Debug));
-        }   
+        }
 
         if (FFileCount && FEntryCount && FInChannel)
         {
@@ -2015,7 +2015,7 @@ char TSerialDevice::Read()
             FEventSection.Leave();
         }
     }
-    
+
     return ch;
 #else
     if (FSerial)
