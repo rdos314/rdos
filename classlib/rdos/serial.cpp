@@ -243,7 +243,7 @@ static void GetUsbSerial()
             info = InfoArr[i];
             if (!info)
             {
-                info = new TUsbSerialInfo(name.GetData(), 0, 0 , 0, 0);
+                info = new TUsbSerialInfo(name.GetData(), false, 0, 0 , 0, 0);
                 InfoArr[i] = info;
             }
         }
@@ -268,7 +268,7 @@ static void GetCdcSerial()
             info = InfoArr[i];
             if (!info)
             {
-                info = new TUsbSerialInfo(name.GetData(), 0, 0 , vendor, product);
+                info = new TUsbSerialInfo(name.GetData(), true, 0, 0 , vendor, product);
                 InfoArr[i] = info;
             }
         }
