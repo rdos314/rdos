@@ -292,7 +292,7 @@ static void GetCanSerial()
             if (!info)
             {
                 name.printf("Com%d: (CAN)", i + 1);
-                info = new TCanSerialInfo(name.GetData(), module, port);
+                info = new TCanSerialInfo(name.GetData(), module, port + 1);
                 InfoArr[i] = info;
             }
         }
