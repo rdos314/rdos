@@ -241,7 +241,7 @@ void TPathName::Init(const char *PathName)
 
         drive = PathName[0];
         drive = toupper(drive) - 'A';
-        
+
         str[0] = PathName[0];
         str[1] = ':';
         str[2] = '\\';
@@ -365,14 +365,14 @@ const TPathName &TPathName::operator+=(const TString &str)
             case '/':
                 FPathName += ptr;
                 break;
-    
+
             default:
                 if (*path && *ptr != '.')
                     FPathName += "\\" + TString(ptr);
                 else
                     FPathName += ptr;
                 break;
-        }   
+        }
     }
 #else
     while (*ptr == '/')
@@ -439,7 +439,7 @@ const TPathName &TPathName::operator+=(const char *str)
                 else
                     FPathName += TString(str);
                 break;
-        }   
+        }
     }
 #else
     while (*str == '/')
@@ -527,12 +527,12 @@ int TPathName::HasDrive() const
     {
         str = FPathName.GetData();
         if (str[1] == ':')
-            return TRUE;
+            return true;
         else
-            return FALSE;
-    }           
+            return false;
+    }
     else
-        return FALSE;
+        return false;
 }
 
 /**
@@ -592,7 +592,7 @@ bool TPathName::HasFullPath() const
             if (str[0] == '\\')
                 return true;
     }
-    return FALSE;
+    return false;
 #else
     str = FPathName.GetData();
 
@@ -620,7 +620,7 @@ TString TPathName::GetBaseName() const
     const char *ptr;
     int size;
     char ch;
-    
+
     size = FPathName.GetSize();
     str = FPathName.GetData();
     ptr = str;
@@ -763,7 +763,7 @@ TString TPathName::GetFullPathName() const
     char drive_str[3];
     int size;
     bool add;
-    
+
     size = FPathName.GetSize();
 
     if (size <= 2)
@@ -775,7 +775,7 @@ TString TPathName::GetFullPathName() const
             add = false;
         else
             add = true;
-    }       
+    }
 
     if (add)
     {
@@ -886,11 +886,11 @@ bool TPathName::IsFile() const
 {
 #ifdef __RDOS__
     int Attrib;
-    
+
     if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
         if (Attrib != FILE_ATTRIBUTE_DIRECTORY)
             return true;
-        
+
     return false;
 #else
     int attr = GetAttribute();
@@ -1086,7 +1086,7 @@ bool TPathName::CopyFile(const TPathName &NewName) const
 
     if (src)
         delete src;
-        
+
     if (dst)
         delete dst;
 
@@ -1121,7 +1121,7 @@ bool TPathName::AppendFile(const TPathName &NewName) const
 
             ok = true;
             buf = new char[0x1000];
- 
+
             size = src->Read(buf, 0x1000);
             while (ok && size)
             {
@@ -1129,7 +1129,7 @@ bool TPathName::AppendFile(const TPathName &NewName) const
                 if (ok)
                     size = src->Read(buf, 0x1000);
             }
-                        
+
             delete buf;
         }
 
@@ -1139,7 +1139,7 @@ bool TPathName::AppendFile(const TPathName &NewName) const
 
     if (src)
         delete src;
-        
+
     if (dst)
         delete dst;
 
@@ -1159,11 +1159,11 @@ bool TPathName::IsDir() const
 {
 #ifdef __RDOS__
     int Attrib;
-    
+
     if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
         if (Attrib & FILE_ATTRIBUTE_DIRECTORY)
             return true;
-        
+
     return false;
 #else
     int attr = GetAttribute();
@@ -1203,7 +1203,7 @@ bool TPathName::MakeDir() const
 {
 #ifdef __RDOS__
     int Attrib;
-    
+
     if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
     {
         if (Attrib & FILE_ATTRIBUTE_DIRECTORY)
@@ -1220,9 +1220,9 @@ bool TPathName::MakeDir() const
         {
             if (Attrib != FILE_ATTRIBUTE_DIRECTORY)
                 return false;
-        }    
+        }
         else
-        {   
+        {
             TPathName SubPath(Base);
 
             if (!SubPath.MakeDir())
@@ -1249,7 +1249,7 @@ bool TPathName::WipeDir() const
 #ifdef __RDOS__
     int Attrib;
     int ok;
-    
+
     if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
     {
         if (Attrib != FILE_ATTRIBUTE_DIRECTORY)
@@ -1318,7 +1318,10 @@ bool TPathName::WipeDir() const
 }
 
 #ifdef __RDOS__
-TDirList TPathName::Find(const char *SearchString) const
+TDirList TPathName::Find() const
+{
+    return TDirList(FPathName);
+}TDirList TPathName::Find(const char *SearchString) const
 {
     TPathName path(*this);
 
