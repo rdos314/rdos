@@ -38,8 +38,6 @@ public:
         TSignalDevice();
         virtual ~TSignalDevice();
 
-        virtual void DeviceName(char *Name, int MaxLen) const;
-
     void Clear();
         void Signal();
         int IsSignalled();

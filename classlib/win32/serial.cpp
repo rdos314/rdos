@@ -264,6 +264,7 @@ int TSerialCommand::WaitForChar(long MaxWait)
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate)
+  : TDevice("WIN32 COM")
 {
         Init(Port, Baudrate, 'N', 8, 1);
 }
@@ -276,6 +277,7 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate)
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
 TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
+  : TDevice("WIN32 COM")
 {
         Init(Port, Baudrate, Parity, DataBits, StopBits);
 }
@@ -288,6 +290,7 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits,
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
 TSerialDevice::TSerialDevice()
+  : TDevice("WIN32 COM")
 {
         Init(0, 9600, 'N', 8, 1);
 }
@@ -349,18 +352,6 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
                 TDevice::Close();
                 Open();
     }
-}
-
-/*##################  TSerialDevice::DeviceName  ####################
-*   Purpose....: Returns device name                                                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TSerialDevice::DeviceName(char *Name, int MaxLen) const
-{
-        strncpy(Name,"WIN32 COM",MaxLen);
 }
 
 /*##################  TSerialDevice::SetComPort  #######################

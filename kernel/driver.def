@@ -403,9 +403,6 @@ digio_data_sel          EQU 928h
 flash_disc_code_sel     EQU 940h
 flash_disc_data_sel     EQU 948h
 
-bsp_code_sel        EQU 960h
-bsp_data_sel        EQU 968h
-
 touch_code_sel      EQU 970h
 touch_data_sel      EQU 978h
 

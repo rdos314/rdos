@@ -45,6 +45,7 @@
 #
 ##########################################################################*/
 TSignalDevice::TSignalDevice()
+ : TDevice("SIGNAL")
 {
         Init();
 }
@@ -76,22 +77,6 @@ TSignalDevice::~TSignalDevice()
 ##########################################################################*/
 void TSignalDevice::Init()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TSignalDevice::DeviceName
-#
-#   Purpose....: Device name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSignalDevice::DeviceName(char *Name, int MaxLen) const
-{
-        strncpy(Name, "SIGNAL", MaxLen);
 }
 
 /*##########################################################################
