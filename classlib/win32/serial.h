@@ -50,8 +50,6 @@ public:
         TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
         TSerialDevice();
         virtual ~TSerialDevice();
-        
-        virtual void DeviceName(char *Name, int MaxLen) const;
 
         void Block();
         void Unblock();
