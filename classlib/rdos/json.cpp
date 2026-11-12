@@ -6627,8 +6627,10 @@ bool TJsonDocument::Parse(const char *doc)
                 break;
 
             case json_ret_out:
-                ok = false;
-                break;
+                if (*FDocPtr == '}' && FDepth == 1)
+                    return true;
+                else
+                    return false;
         }
     }
 

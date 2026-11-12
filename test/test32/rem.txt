@@ -1,0 +1,7 @@
+{
+  "notify":
+  {
+    "device": "note",
+    "installed": false
+  }
+}

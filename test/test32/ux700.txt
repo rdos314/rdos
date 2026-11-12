@@ -1,0 +1,6 @@
+{
+  "messageType":"LogInRequest",
+  "messageId":"169461b9-5ce9-4ede-992a-3053058fdaf1",
+  "timestamp":"2026-11-12T10:03:21.832+01:00",
+  "serialNumber":"806-832-466"
+}

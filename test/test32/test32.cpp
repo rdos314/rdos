@@ -5,37 +5,48 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <math.h>
+#include "json.h"
 
 #include "rdos.h"
 #include "datetime.h"
 
-
 void main()
 {
-    int year, month, day;
-    int hour, min, sec;
-    int ms, us;
-    int dow;
-    TDateTime time(17654492, 786814295);
-    
-    year = time.GetYear();
-    month = time.GetMonth();
-    day = time.GetDay();
-    hour = time.GetHour();
-    min = time.GetMin();
-    sec = time.GetSec();
-    ms = time.GetMilliSec();
-    us = time.GetMicroSec();
-    
-    printf("%d.%d.%d %d.%d.%d,%03d %03d\r\n", year, month, day, hour, min, sec, ms, us);
+    TFile file("rem.txt");
+    char ch;
+    char temp_str[256];
+    int i;
+    char *dst;
+    TJsonDocument *doc;
+    bool ok;
+    int len = file.GetSize();
 
-    dow = time.GetDayOfWeek();
-    printf("dow: %d\r\n", dow);
-    
-    time.NextDay();
-    dow = time.GetDayOfWeek();
-    printf("dow: %d\r\n", dow);
-    
+    dst = temp_str;
+
+    for (i = 0; i < len; i++)
+    {
+        file.Read(&ch, 1);
+
+        if (ch == '}')
+        {
+            *dst = ch;
+            dst++;
+            *dst = 0;
+
+            doc = new TJsonDocument;
+            ok = doc->Parse(temp_str);
+            if (ok)
+                dst = temp_str;
+        }
+        else
+        {
+            *dst = ch;
+            dst++;
+        }
+    }
+
+
+
     RdosTestGate("");
 }
 
