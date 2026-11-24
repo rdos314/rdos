@@ -615,15 +615,15 @@ DecodeNodeRequest       Endp
 ;       Purpose:        Convert IP address to text notation
 ;
 ;       Parameters:     AL              Digit
-;                       ES:DI       Buffer
-;                       CX              Count 
+;                       ES:EDI           Buffer
+;                       ECX              Count 
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DigitToString   Proc near
-    push di
-    inc di
-    xor cx,cx
+    push edi
+    inc edi
+    xor ecx,ecx
     xor ah,ah
 
 digit_100_loop:
@@ -638,9 +638,9 @@ digit_100_done:
     jz digit_10_loop
 ;
     add ah,'0'
-    mov es:[di],ah
-    inc di
-    inc cx
+    mov es:[edi],ah
+    inc edi
+    inc ecx
     xor ah,ah
 
 digit_10_loop:
@@ -651,7 +651,7 @@ digit_10_loop:
 
 digit_10_done:
     add al,10
-    or cx,cx
+    or ecx,ecx
     jnz digit_10_save
 ;
     or ah,ah
@@ -659,19 +659,19 @@ digit_10_done:
 
 digit_10_save:
     add ah,'0'
-    mov es:[di],ah
-    inc di
-    inc cx
+    mov es:[edi],ah
+    inc edi
+    inc ecx
     xor ah,ah
 
 digit1:
     add al,'0'
-    mov es:[di],al
-    inc cx
-    pop di
-    mov es:[di],cl
-    inc di
-    add di,cx
+    mov es:[edi],al
+    inc ecx
+    pop edi
+    mov es:[edi],cl
+    inc edi
+    add edi,ecx
     ret
 DigitToString   Endp
 
