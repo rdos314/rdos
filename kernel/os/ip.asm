@@ -145,22 +145,22 @@ CalcCheckSum    Endp
 ;
 ;       Purpose:        Calculate checksum for IP header
 ;
-;       Parameters:         DS:DI   IP header
+;       Parameters:         DS:EDI   IP header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CalcHeaderChecksum    Proc near
-    push ax
-    push cx
-    push dx
-    push si
+    push eax
+    push ecx
+    push edx
+    push esi
 ;    
-    mov ds:[di].ip_checksum,0
-    movzx cx,ds:[di].ip_hdr_ver
+    mov ds:[edi].ip_checksum,0
+    movzx ecx,ds:[edi].ip_hdr_ver
     and cl,0Fh
     shl cl,1
-    mov si,di
-    xor     dx,dx
+    mov esi,edi
+    xor dx,dx
     clc
     
 calc_hdr_checksum_loop:
@@ -171,12 +171,12 @@ calc_hdr_checksum_loop:
     adc dx,0
     adc dx,0
     not dx
-    mov ds:[di].ip_checksum,dx
+    mov ds:[edi].ip_checksum,dx
 ;
-    pop si
-    pop dx
-    pop cx
-    pop ax      
+    pop esi
+    pop edx
+    pop ecx
+    pop eax      
     ret
 CalcHeaderChecksum    Endp    
 
@@ -188,13 +188,13 @@ CalcHeaderChecksum    Endp
 ;           description:    Convert one digit
 ;
 ;           RETURNS:        AL          Digit
-;                           SS:BP   Result buffer
+;                           SS:EBP   Result buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ConvertOne      Proc near
-    push ax
-    push cx
+    push eax
+    push ecx
 ;
     cmp al,100
     jb conv_10_cond
@@ -203,8 +203,8 @@ ConvertOne      Proc near
     mov cl,100
     div cl
     add al,'0'
-    mov [bp],al
-    inc bp
+    mov [ebp],al
+    inc ebp
     mov al,ah
     jmp conv_10
 
@@ -217,17 +217,17 @@ conv_10:
     mov cl,10
     div cl
     add al,'0'
-    mov [bp],al
-    inc bp
+    mov [ebp],al
+    inc ebp
     mov al,ah
 
 conv_1:
     add al,'0'
-    mov [bp],al
-    inc bp
+    mov [ebp],al
+    inc ebp
 ;
-    pop cx
-    pop ax
+    pop ecx
+    pop eax
     ret
 ConvertOne      Endp
 
@@ -250,47 +250,47 @@ WriteIpEnv      Proc near
     push ds
     push es
     pushad
-    sub sp,20
-    mov bp,sp
+    sub esp,20
+    mov ebp,esp
 ;
     mov al,dl
     call ConvertOne
     mov al,'.'
-    mov [bp],al
-    inc bp
+    mov [ebp],al
+    inc ebp
     shr edx,8
 ;
     mov al,dl
     call ConvertOne
     mov al,'.'
-    mov [bp],al
-    inc bp
+    mov [ebp],al
+    inc ebp
     shr edx,8
 ;
     mov al,dl
     call ConvertOne
     mov al,'.'
-    mov [bp],al
-    inc bp
+    mov [ebp],al
+    inc ebp
     shr edx,8
 ;
     mov al,dl
     call ConvertOne
     xor al,al
-    mov [bp],al
+    mov [ebp],al
 ;
     OpenSysEnv
 ;
-    mov ax,es
-    mov ds,ax
-    mov si,di
-    mov ax,ss
-    mov es,ax
-    mov di,sp
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
+    mov eax,ss
+    mov es,eax
+    mov edi,esp
     AddEnvVar
     CloseEnv
 ;
-    add sp,20
+    add esp,20
     popad
     pop es
     pop ds
