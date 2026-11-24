@@ -486,7 +486,7 @@ create_ip_header    Proc far
     push ds
     push fs
     push eax
-    push bx
+    push ebx
     push ecx
     push esi
     push ebp
@@ -495,48 +495,48 @@ create_header_dhcp_loop:
     call IsDhcpDone
     jnc create_header_dhcp_done
 ;
-    push ax
+    push eax
     mov ax,10
     WaitMilliSec
-    pop ax
+    pop eax
     jmp create_header_dhcp_loop
 
 create_header_dhcp_done:
     push ds
-    push ax
-    push cx
-    mov cx,SIZE ip_header
+    push eax
+    push ecx
+    mov ecx,SIZE ip_header
     push esi
 create_header_opt_loop:
     mov al,[esi]
     or al,al
     jz create_header_alloc
     inc esi
-    inc cx
+    inc ecx
     cmp al,1
     jz create_header_opt_loop
 ;
     movzx eax,byte ptr [esi]
     dec al
-    add cx,ax
+    add ecx,eax
     add esi,eax
     jmp create_header_opt_loop
 
 create_header_alloc:    
     pop esi
-    mov bx,cx
-    dec cx
-    and cx,NOT 3
-    add cx,4
-    movzx eax,cx
-    pop cx
-    add ax,cx
+    mov ebx,ecx
+    dec ecx
+    and ecx,NOT 3
+    add ecx,4
+    mov eax,ecx
+    pop ecx
+    add eax,ecx
 ;
-    push ax
-    push bx
-    mov cx,ax
-    mov bx,SEG data
-    mov fs,bx
+    push eax
+    push ebx
+    mov ecx,eax
+    mov ebx,SEG data
+    mov fs,ebx
     mov bx,fs:ip_handle
 ;
     cmp edx,fs:my_ip
@@ -560,14 +560,14 @@ create_header_alloc:
     push ds
     push esi
     push eax
-    mov ax,ss
-    mov ds,ax
-    movzx esi,sp
+    mov eax,ss
+    mov ds,eax
+    mov esi,esp
     GetNetBuffer
     jc create_header_gw_pop
 ;       
     mov eax,fs:my_ip
-    mov es:[di].ip_source,eax
+    mov es:[edi].ip_source,eax
 
 create_header_gw_pop:
     pop eax
@@ -577,11 +577,11 @@ create_header_gw_pop:
     jmp create_header_fail_pop
 
 create_header_local:
-    mov di,6
-    movzx eax,cx
-    add ax,di
+    mov edi,6
+    mov eax,ecx
+    add eax,edi
     AllocateSmallGlobalMem
-    mov es:[di].ip_source,edx
+    mov es:[edi].ip_source,edx
     jmp create_header_fill
 
 create_header_ppp:
@@ -589,7 +589,7 @@ create_header_ppp:
 ;       
     push edx
     GetPppIp
-    mov es:[di].ip_source,edx
+    mov es:[edi].ip_source,edx
     pop edx
     jmp create_header_fill
 
@@ -597,14 +597,14 @@ create_header_not_ppp:
     push ds
     push esi
     push edx
-    mov ax,ss
-    mov ds,ax
-    movzx esi,sp
+    mov eax,ss
+    mov ds,eax
+    mov esi,esp
     GetNetBuffer
     jc create_header_local_pop
 ;       
     mov eax,fs:my_ip
-    mov es:[di].ip_source,eax
+    mov es:[edi].ip_source,eax
 
 create_header_local_pop:
     pop edx
@@ -614,30 +614,30 @@ create_header_local_pop:
     jmp create_header_fail_pop
 
 create_header_fill:
-    mov bp,di
+    mov ebp,edi
     mov es:[0],di
-    pop ax
+    pop eax
     dec ax
     shr ax,2
     inc ax
     or al,40h
-    mov es:[di].ip_hdr_ver,al
-    mov es:[di].ip_tos,0
-    pop ax
+    mov es:[edi].ip_hdr_ver,al
+    mov es:[edi].ip_tos,0
+    pop eax
     xchg al,ah
-    mov es:[di].ip_size,ax
-    mov es:[di].ip_frags,40h
-    pop ax
-    mov es:[di].ip_ttl,ah
-    mov es:[di].ip_proto,al
-    mov es:[di].ip_checksum,0
-    mov ax,SEG data
-    mov ds,ax
+    mov es:[edi].ip_size,ax
+    mov es:[edi].ip_frags,40h
+    pop eax
+    mov es:[edi].ip_ttl,ah
+    mov es:[edi].ip_proto,al
+    mov es:[edi].ip_checksum,0
+    mov eax,SEG data
+    mov ds,eax
     mov ax,ds:curr_id
     inc ds:curr_id
     xchg al,ah
-    mov es:[di].ip_id,ax
-    mov es:[di].ip_dest,edx
+    mov es:[edi].ip_id,ax
+    mov es:[edi].ip_dest,edx
 
 create_header_ip_done:
     pop ds
@@ -655,8 +655,8 @@ create_header_copy_opt:
     jmp create_header_copy_opt
 
 create_header_pad:
-    mov si,di
-    sub si,bp
+    mov esi,edi
+    sub esi,ebp
     xor al,al
 create_header_pad_loop:
     test si,3
@@ -667,11 +667,11 @@ create_header_pad_loop:
 
 create_header_fail_pop:
     xor ax,ax
-    mov es,ax
+    mov es,eax
     xor edi,edi
-    pop ax
-    pop ax
-    pop ax
+    pop eax
+    pop eax
+    pop eax
     pop ds
     stc
     jmp create_header_done
@@ -683,7 +683,7 @@ create_header_done:
     pop ebp
     pop esi
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop fs
     pop ds  
@@ -1522,6 +1522,7 @@ receive_not_reroute:
     mov si,cs
     mov ds,si       
     mov esi,OFFSET no_options
+    movzx ecx,cx
     CreateIpHeader
     pop si
     jc receive_forward_fail

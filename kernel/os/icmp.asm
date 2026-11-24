@@ -144,6 +144,7 @@ ReceiveEchoReq  Proc near
     mov esi,OFFSET PingOptions
     mov ah,20h
     mov al,1
+    movzx ecx,cx
     CreateIpHeader
     pop esi
     pop ds
