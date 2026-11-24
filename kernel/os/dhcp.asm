@@ -2649,38 +2649,38 @@ d00 DW OFFSET ClientSize,       OFFSET ClientData
 d01 DW OFFSET ParamSize,        OFFSET ParamData
 d02 DW OFFSET LeaseSize,        OFFSET LeaseData
 d03 DW OFFSET ReqIpSize,        OFFSET ReqIpData
-d04 DW OFFSET HostNameSize,        OFFSET HostNameData
+d04 DW OFFSET HostNameSize,     OFFSET HostNameData
 d05 DW -1
 
 DhcpDiscover    Proc far
-    mov dx,SIZE dhcp_header + 1
-    mov bx,OFFSET DiscOptTab
+    mov edx,SIZE dhcp_header + 1
+    mov ebx,OFFSET DiscOptTab
 
 dhcp_disc_size_loop:
-    mov ax,cs:[bx]
+    mov ax,cs:[ebx]
     cmp ax,-1
     jz dhcp_disc_size_ok
 ;
-    call word ptr cs:[bx]
-    add dx,cx
-    add bx,4
+    call word ptr cs:[ebx]
+    add edx,ecx
+    add ebx,4
     jmp dhcp_disc_size_loop
 
 dhcp_disc_size_ok:
-    mov cx,dx
-    push cx
+    mov ecx,edx
+    push ecx
     call CreateUnboundDhcpBroadcast
     jc dhcp_disc_fail
 ;
-    mov es:[di].dhcp_op,1
+    mov es:[edi].dhcp_op,1
     mov al,ds:class_id
-    mov es:[di].dhcp_hw_type,al
+    mov es:[edi].dhcp_hw_type,al
     mov al,ds:addr_len
-    mov es:[di].dhcp_hw_len,al
-    mov es:[di].dhcp_hops,0
+    mov es:[edi].dhcp_hw_len,al
+    mov es:[edi].dhcp_hops,0
     push ds
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:dhcp_ident
     or eax,eax
     jnz dhcp_ident_ok
@@ -2690,58 +2690,58 @@ dhcp_disc_size_ok:
 dhcp_ident_ok:
     mov ds:dhcp_ident,eax
     pop ds
-    mov es:[di].dhcp_id,eax
-    mov es:[di].dhcp_elapsed,0
-    mov es:[di].dhcp_flags,80h
-    mov es:[di].dhcp_client_ip,0
-    mov es:[di].dhcp_req_ip,0
-    mov es:[di].dhcp_server_ip,0
-    mov es:[di].dhcp_relay_ip,0
-    mov es:[di].dhcp_magic,63538263h
-    mov es:[di].dhcp_msg_code,53
-    mov es:[di].dhcp_msg_len,1
-    mov es:[di].dhcp_msg_type,1
+    mov es:[edi].dhcp_id,eax
+    mov es:[edi].dhcp_elapsed,0
+    mov es:[edi].dhcp_flags,80h
+    mov es:[edi].dhcp_client_ip,0
+    mov es:[edi].dhcp_req_ip,0
+    mov es:[edi].dhcp_server_ip,0
+    mov es:[edi].dhcp_relay_ip,0
+    mov es:[edi].dhcp_magic,63538263h
+    mov es:[edi].dhcp_msg_code,53
+    mov es:[edi].dhcp_msg_len,1
+    mov es:[edi].dhcp_msg_type,1
 ;
-    push di
-    mov cx,34h
-    add di,OFFSET dhcp_hw_addr
+    push edi
+    mov ecx,34h
+    add edi,OFFSET dhcp_hw_addr
     xor eax,eax
     rep stosd
-    pop di
+    pop edi
 ;
-    movzx cx,ds:addr_len
+    movzx ecx,ds:addr_len
     push ds
-    push di
+    push edi
     call fword ptr fs:d_address
-    add di,OFFSET dhcp_hw_addr
+    add edi,OFFSET dhcp_hw_addr
     rep movsb
-    pop di
+    pop edi
     pop ds
 ;
-    push di
-    add di,SIZE dhcp_header
-    mov bx,OFFSET DiscOptTab
+    push edi
+    add edi,SIZE dhcp_header
+    mov ebx,OFFSET DiscOptTab
 
 dhcp_disc_data_loop:
-    mov ax,cs:[bx]
+    mov ax,cs:[ebx]
     cmp ax,-1
     jz dhcp_disc_data_ok
 ;
-    call word ptr cs:[bx+2]
-    add bx,4
+    call word ptr cs:[ebx+2]
+    add ebx,4
     jmp dhcp_disc_data_loop
 
 dhcp_disc_data_ok:
     mov al,-1
     stosb
 ;
-    pop di
-    pop cx
+    pop edi
+    pop ecx
     call SendDhcpBroadcast
     jmp dhcp_disc_done
 
 dhcp_disc_fail:
-    pop cx
+    pop ecx
 
 dhcp_disc_done:
     retf32
@@ -2774,28 +2774,28 @@ ro05 DW OFFSET HostNameSize,        OFFSET HostNameData
 ro06 DW -1
 
 DhcpRequest     Proc far
-    mov dx,SIZE dhcp_header + 1
-    mov bx,OFFSET ReqOptTab
+    mov edx,SIZE dhcp_header + 1
+    mov ebx,OFFSET ReqOptTab
 
 dhcp_req_size_loop:
-    mov ax,cs:[bx]
+    mov ax,cs:[ebx]
     cmp ax,-1
     jz dhcp_req_size_ok
 ;
-    call word ptr cs:[bx]
-    add dx,cx
-    add bx,4
+    call word ptr cs:[ebx]
+    add edx,ecx
+    add ebx,4
     jmp dhcp_req_size_loop
 
 dhcp_req_size_ok:
     push ds
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov al,ds:dhcp_rebind
     pop ds
 ;
-    mov cx,dx
-    push cx
+    mov ecx,edx
+    push ecx
     or al,al
     jz dhcp_req_renew
 ;
@@ -2808,69 +2808,69 @@ dhcp_req_renew:
 dhcp_req_header_ok:
     jc dhcp_req_fail
 ;
-    mov es:[di].dhcp_op,1
+    mov es:[edi].dhcp_op,1
     mov al,ds:class_id
-    mov es:[di].dhcp_hw_type,al
+    mov es:[edi].dhcp_hw_type,al
     mov al,ds:addr_len
-    mov es:[di].dhcp_hw_len,al
-    mov es:[di].dhcp_hops,0
+    mov es:[edi].dhcp_hw_len,al
+    mov es:[edi].dhcp_hops,0
     push ds
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:dhcp_ident
     pop ds
-    mov es:[di].dhcp_id,eax
-    mov es:[di].dhcp_elapsed,0
-    mov es:[di].dhcp_flags,80h
-    mov es:[di].dhcp_client_ip,0
-    mov es:[di].dhcp_req_ip,0
-    mov es:[di].dhcp_server_ip,0
-    mov es:[di].dhcp_relay_ip,0
-    mov es:[di].dhcp_magic,63538263h
-    mov es:[di].dhcp_msg_code,53
-    mov es:[di].dhcp_msg_len,1
-    mov es:[di].dhcp_msg_type,3
+    mov es:[edi].dhcp_id,eax
+    mov es:[edi].dhcp_elapsed,0
+    mov es:[edi].dhcp_flags,80h
+    mov es:[edi].dhcp_client_ip,0
+    mov es:[edi].dhcp_req_ip,0
+    mov es:[edi].dhcp_server_ip,0
+    mov es:[edi].dhcp_relay_ip,0
+    mov es:[edi].dhcp_magic,63538263h
+    mov es:[edi].dhcp_msg_code,53
+    mov es:[edi].dhcp_msg_len,1
+    mov es:[edi].dhcp_msg_type,3
 ;
-    push di
-    mov cx,34h
-    add di,OFFSET dhcp_hw_addr
+    push edi
+    mov ecx,34h
+    add edi,OFFSET dhcp_hw_addr
     xor eax,eax
     rep stosd
-    pop di
+    pop edi
 ;
-    movzx cx,ds:addr_len
+    movzx ecx,ds:addr_len
     push ds
-    push di
+    push edi
     call fword ptr fs:d_address
-    add di,OFFSET dhcp_hw_addr
+    add edi,OFFSET dhcp_hw_addr
     rep movsb
-    pop di
+    pop edi
     pop ds
 ;
-    push di
-    add di,SIZE dhcp_header
-    mov bx,OFFSET ReqOptTab
+    push edi
+    add edi,SIZE dhcp_header
+    mov ebx,OFFSET ReqOptTab
 
 dhcp_req_data_loop:
-    mov ax,cs:[bx]
+    mov ax,cs:[ebx]
     cmp ax,-1
     jz dhcp_req_data_ok
 ;
-    call word ptr cs:[bx+2]
-    add bx,4
+    call word ptr cs:[ebx+2]
+    add ebx,4
     jmp dhcp_req_data_loop
 
 dhcp_req_data_ok:
     mov al,-1
     stosb
 ;
-    pop di
-    pop cx
+    pop edi
+    pop ecx
     call SendDhcpBroadcast
     jmp dhcp_req_done
 
 dhcp_req_fail:
-    pop cx
+    pop ecx
 
 dhcp_req_done:
     retf32
@@ -2900,82 +2900,82 @@ de02 DW OFFSET ServerSize,          OFFSET ServerData
 de03 DW -1
 
 DhcpDecline     Proc far
-    mov dx,SIZE dhcp_header + 1
-    mov bx,OFFSET DeclOptTab
+    mov edx,SIZE dhcp_header + 1
+    mov ebx,OFFSET DeclOptTab
 
 dhcp_decl_size_loop:
-    mov ax,cs:[bx]
+    mov ax,cs:[ebx]
     cmp ax,-1
     jz dhcp_decl_size_ok
 ;
-    call word ptr cs:[bx]
-    add dx,cx
-    add bx,4
+    call word ptr cs:[ebx]
+    add edx,ecx
+    add ebx,4
     jmp dhcp_decl_size_loop
 
 dhcp_decl_size_ok:
-    mov cx,dx
-    push cx
+    mov ecx,edx
+    push ecx
     call CreateDhcpReqBroadcast
-    mov es:[di].dhcp_op,1
+    mov es:[edi].dhcp_op,1
     mov al,ds:class_id
-    mov es:[di].dhcp_hw_type,al
+    mov es:[edi].dhcp_hw_type,al
     mov al,ds:addr_len
-    mov es:[di].dhcp_hw_len,al
-    mov es:[di].dhcp_hops,0
+    mov es:[edi].dhcp_hw_len,al
+    mov es:[edi].dhcp_hops,0
 ;
     push ds
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:dhcp_ident
     pop ds
-    mov es:[di].dhcp_id,eax
-    mov es:[di].dhcp_elapsed,0
-    mov es:[di].dhcp_flags,0
-    mov es:[di].dhcp_client_ip,0
-    mov es:[di].dhcp_req_ip,0
-    mov es:[di].dhcp_server_ip,0
-    mov es:[di].dhcp_relay_ip,0
-    mov es:[di].dhcp_magic,63538263h
-    mov es:[di].dhcp_msg_code,53
-    mov es:[di].dhcp_msg_len,1
-    mov es:[di].dhcp_msg_type,4
+    mov es:[edi].dhcp_id,eax
+    mov es:[edi].dhcp_elapsed,0
+    mov es:[edi].dhcp_flags,0
+    mov es:[edi].dhcp_client_ip,0
+    mov es:[edi].dhcp_req_ip,0
+    mov es:[edi].dhcp_server_ip,0
+    mov es:[edi].dhcp_relay_ip,0
+    mov es:[edi].dhcp_magic,63538263h
+    mov es:[edi].dhcp_msg_code,53
+    mov es:[edi].dhcp_msg_len,1
+    mov es:[edi].dhcp_msg_type,4
 ;
-    push di
-    mov cx,34h
-    add di,OFFSET dhcp_hw_addr
+    push edi
+    mov ecx,34h
+    add edi,OFFSET dhcp_hw_addr
     xor eax,eax
     rep stosd
-    pop di
+    pop edi
 ;
-    movzx cx,ds:addr_len
+    movzx ecx,ds:addr_len
     push ds
-    push di
+    push edi
     call fword ptr fs:d_address
-    add di,OFFSET dhcp_hw_addr
+    add edi,OFFSET dhcp_hw_addr
     rep movsb
-    pop di
+    pop edi
     pop ds
 ;
-    push di
-    add di,SIZE dhcp_header
-    mov bx,OFFSET DeclOptTab
+    push edi
+    add edi,SIZE dhcp_header
+    mov ebx,OFFSET DeclOptTab
 
 dhcp_decl_data_loop:
-    mov ax,cs:[bx]
+    mov ax,cs:[ebx]
     cmp ax,-1
     jz dhcp_decl_data_ok
 ;
-    call word ptr cs:[bx+2]
-    add bx,4
+    call word ptr cs:[ebx+2]
+    add ebx,4
     jmp dhcp_decl_data_loop
 
 dhcp_decl_data_ok:
     mov al,-1
     stosb
 ;
-    pop di
-    pop cx
+    pop edi
+    pop ecx
     call SendDhcpBroadcast
     retf32
 DhcpDecline     Endp
@@ -2999,10 +2999,10 @@ add_dhcp_option_name    DB 'Add DHCP Option',0
 add_dhcp_option Proc far
     push ds
     push es
-    push ax
-    push dx
+    push eax
+    push edx
 ;
-    mov dx,es
+    mov edx,es
     push eax
     mov eax,SIZE dhcp_option
     AllocateSmallGlobalMem
@@ -3010,14 +3010,14 @@ add_dhcp_option Proc far
     mov es:dhcp_opt_code,al
     mov dword ptr es:dhcp_opt_callb,edi
     mov word ptr es:dhcp_opt_callb+4,dx
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ax,ds:dhcp_option_list
     mov es:dhcp_opt_next,ax
     mov ds:dhcp_option_list,es
 ;
-    pop dx
-    pop ax
+    pop edx
+    pop eax
     pop es
     pop ds
     retf32
@@ -3037,10 +3037,10 @@ add_dhcp_option Endp
 
 IsDhcpDone      Proc near
     push ds
-    push ax
+    push eax
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov al,ds:dhcp_done
     or al,al
     stc
@@ -3049,7 +3049,7 @@ IsDhcpDone      Proc near
     clc
 
 is_dhcp_done:
-    pop ax
+    pop eax
     pop ds
     ret
 IsDhcpDone      Endp
@@ -3069,8 +3069,8 @@ IsDhcpActive      Proc near
     push ds
     push eax
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:dhcp_server
     or eax,eax
     jnz is_dhcp_active_ok
@@ -3104,10 +3104,10 @@ IsDhcpActive      Endp
 
 IsDhcpEnabled      Proc near
     push ds
-    push ax
+    push eax
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov al,ds:dhcp_enabled
     or al,al
     stc
@@ -3116,7 +3116,7 @@ IsDhcpEnabled      Proc near
     clc
 
 is_dhcp_enabled_done:
-    pop ax
+    pop eax
     pop ds
     ret
 IsDhcpEnabled      Endp
@@ -3149,15 +3149,15 @@ ReceiveError    Endp
 
 ReceiveNak    Proc near
     push ds
-    push ax
+    push eax
 ;       
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ds:dhcp_server,0
     mov ds:dhcp_lease,1    
     inc ds:dhcp_ident
 ;
-    pop ax
+    pop eax
     pop ds
     ret
 ReceiveNak    Endp
