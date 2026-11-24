@@ -132,14 +132,14 @@ code    SEGMENT byte public 'CODE'
 
 dhcp_link_up    Proc near
     push ds
-    push ax
+    push eax
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ds:dhcp_lease,1
 
 dluDone:
-    pop ax
+    pop eax
     pop ds
     ret
 dhcp_link_up    Endp
@@ -151,9 +151,9 @@ dhcp_link_up    Endp
 ;
 ;           DESCRIPTION:    Calculate checksum for UDP
 ;
-;           PARAMETERS:         AX          Checksum in
+;           PARAMETERS:     AX          Checksum in
 ;                           CX          Size of data
-;                           ES:DI   Data
+;                           ES:EDI      Data
 ;
 ;           RETURNS:        AX          Checksum out
 ;
@@ -161,15 +161,15 @@ dhcp_link_up    Endp
 
 CalcChecksum    Proc near
     push ds
-    push cx
-    push dx
-    push si
+    push ecx
+    push edx
+    push esi
 ;
-    mov si,es
-    mov ds,si
-    mov si,di
+    mov esi,es
+    mov ds,esi
+    mov esi,edi
     mov dx,ax
-    shr cx,1
+    shr ecx,1
     pushf
     clc
 checksum_loop:
@@ -188,9 +188,9 @@ checksum_loop:
 calc_checksum_done:
     mov ax,dx
 ;
-    pop si
-    pop dx
-    pop cx
+    pop esi
+    pop edx
+    pop ecx
     pop ds
     ret
 CalcChecksum    Endp
@@ -356,7 +356,7 @@ CreateDhcpReplyBroadcast    Endp
 ;
 ;       Purpose:        Send DHCP broadcast message
 ;
-;       Parameters:         ES:EDI      Buffer
+;       Parameters:     ES:EDI          Buffer
 ;                       CX              Number of bytes to send
 ;                       FS              Driver selector
 ;
@@ -370,10 +370,10 @@ SendDhcpBroadcast       Proc near
     sub di,8
     add cx,8
     xchg cl,ch
-    mov es:[di].udp_len,cx
+    mov es:[edi].udp_len,cx
     xchg cl,ch
 ;
-    mov es:[di].udp_checksum,0
+    mov es:[edi].udp_checksum,0
     mov ax,cx
     xchg al,ah
     add ax,1100h
@@ -384,7 +384,7 @@ SendDhcpBroadcast       Proc near
     call CalcChecksum
     not ax
     add di,8
-    mov es:[di].udp_checksum,ax
+    mov es:[edi].udp_checksum,ax
     sub cx,8
     SendBroadcastIp
 ;

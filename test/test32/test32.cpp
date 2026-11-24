@@ -9,43 +9,30 @@
 
 #include "rdos.h"
 #include "datetime.h"
+#include "sockobj.h"
 
 void main()
 {
-    TFile file("rem.txt");
-    char ch;
-    char temp_str[256];
-    int i;
-    char *dst;
-    TJsonDocument *doc;
-    bool ok;
-    int len = file.GetSize();
+    TUdpSocketListner listner("mDNS", 5353, 100);
+    char *msg;
+    int size;
+    int ip;
+    char str[40];
 
-    dst = temp_str;
-
-    for (i = 0; i < len; i++)
+    while (listner.WaitForMsg())
     {
-        file.Read(&ch, 1);
+        ip = listner.GetIP();
+        IpToString(str, ip);
+        printf("IP: %s\r\n", str);
 
-        if (ch == '}')
-        {
-            *dst = ch;
-            dst++;
-            *dst = 0;
+        size = listner.GetMsgSize();
+        msg = new char[size + 1];
+        msg[size] = 0;
+        listner.GetMsg(msg, size);
+        delete msg;
 
-            doc = new TJsonDocument;
-            ok = doc->Parse(temp_str);
-            if (ok)
-                dst = temp_str;
-        }
-        else
-        {
-            *dst = ch;
-            dst++;
-        }
+        listner.ClearMsg();
     }
-
-
 
     RdosTestGate("");
 }

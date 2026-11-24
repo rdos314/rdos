@@ -74,6 +74,7 @@ tx_descr         ENDS
 
 CTRL_SC     = 1 SHL 26
 RCTL_RXEN   = 1 SHL 1
+RCTL_MPE    = 1 SHL 4
 RCTL_BAM    = 1 SHL 15
 RXDCTL_EN   = 1 SHL 25
 TCTL_TXEN   = 1 SHL 1
@@ -378,7 +379,7 @@ InitRx  Proc near
 ;
     mov eax,es:REG_RCTL
     and eax,NOT RCTL_RXEN
-    or eax,RCTL_BAM
+    or eax,RCTL_BAM OR RCTL_MPE
     mov es:REG_RCTL,eax
 ;
     mov eax,ds:RxRingPhys
