@@ -3176,12 +3176,12 @@ ReceiveNak    Endp
 ReceiveOffer    Proc near
     push ds
     push fs
-    push ax
-    push bx
-    push si
+    push eax
+    push ebx
+    push esi
 ;       
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov al,ds:dhcp_enabled
     or al,al
     jnz receive_offer_ok
@@ -3190,27 +3190,27 @@ ReceiveOffer    Proc near
     jmp receive_offer_leave
 
 receive_offer_ok:
-    mov eax,es:[di].dhcp_req_ip
+    mov eax,es:[edi].dhcp_req_ip
     mov ds:dhcp_wanted_ip,eax
 ;
     mov eax,ds:dhcp_server
     or eax,eax
     jnz receive_offer_leave
 ;
-    add di,SIZE dhcp_header
+    add edi,SIZE dhcp_header
 
 receive_offer_loop:
-    mov al,es:[di]
+    mov al,es:[edi]
     cmp al,54
     jne receive_offer_next
 ;
-    mov eax,es:[di+2]
+    mov eax,es:[edi+2]
     mov ds:dhcp_server,eax
 ;
     push es
     push edi
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET DhcpRequest
     NetBroadcast
     pop edi
@@ -3218,20 +3218,20 @@ receive_offer_loop:
     jmp receive_offer_leave
 
 receive_offer_next:
-    inc di
-    sub cx,1
+    inc edi
+    sub ecx,1
     jz receive_offer_leave
 ;
-    movzx ax,byte ptr es:[di]
-    inc ax
-    add di,ax
-    sub cx,ax
+    movzx eax,byte ptr es:[edi]
+    inc eax
+    add edi,eax
+    sub ecx,eax
     ja receive_offer_loop
 
 receive_offer_leave:
-    pop si
-    pop bx
-    pop ax
+    pop esi
+    pop ebx
+    pop eax
     pop fs
     pop ds
     ret
@@ -3245,7 +3245,7 @@ ReceiveOffer    Endp
 ;       Purpose:        Receive ACK
 ;
 ;       Parameters:         ES:EDI  UDP data
-;           GS      Driver selector
+;                       GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3253,18 +3253,18 @@ ReceiveAck      Proc near
     push ds
     push fs
     push eax
-    push bx
+    push ebx
     push edx
 ;
-    mov edx,es:[di].dhcp_req_ip
-    mov ax,SEG data
-    mov ds,ax
+    mov edx,es:[edi].dhcp_req_ip
+    mov eax,SEG data
+    mov ds,eax
     mov ds:dhcp_ip,edx
 ;
-    add di,SIZE dhcp_header
+    add edi,SIZE dhcp_header
 
 receive_ack_loop:
-    mov al,es:[di]
+    mov al,es:[edi]
     cmp al,-1
     je receive_ack_leave
 ;
@@ -3274,29 +3274,28 @@ receive_ack_opt_loop:
     or bx,bx
     jz receive_ack_next
 ;
-    mov fs,bx
+    mov fs,ebx
     mov bx,fs:dhcp_opt_next
     cmp al,fs:dhcp_opt_code
     jne receive_ack_opt_loop
 ;
     push ecx
     push edi
-    movzx edi,di
-    movzx ecx,byte ptr es:[di+1]
+    movzx ecx,byte ptr es:[edi+1]
     add edi,2
     call fword ptr fs:dhcp_opt_callb
     pop edi
     pop ecx
 
 receive_ack_next:
-    inc di
-    sub cx,1
+    inc edi
+    sub ecx,1
     jz receive_ack_leave
 ;
-    movzx ax,byte ptr es:[di]
-    inc ax
-    add di,ax
-    sub cx,ax
+    movzx eax,byte ptr es:[edi]
+    inc eax
+    add edi,eax
+    sub ecx,eax
     ja receive_ack_loop
 
 receive_ack_leave:
@@ -3315,7 +3314,7 @@ receive_ack_leave:
 
 receive_ack_done:
     pop edx
-    pop bx
+    pop ebx
     pop eax
     pop fs
     pop ds
@@ -3330,7 +3329,7 @@ ReceiveAck      Endp
 ;       Purpose:        Receive notify from UDP
 ;
 ;       Parameters:         GS      Net driver selector
-;           ES:EDI      UDP data
+;                       ES:EDI      UDP data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3360,19 +3359,19 @@ rr08    DW OFFSET ReceiveError
 
 ReceiveClientDhcp       Proc near
     push ds
-    push ax
-    push bx
-    push dx
+    push eax
+    push ebx
+    push edx
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;
-    mov ax,es:[di].udp_source
+    mov ax,es:[edi].udp_source
     xchg al,ah
     cmp ax,67
     jne receive_cl_free
 ;
-    mov ax,es:[di].udp_dest
+    mov ax,es:[edi].udp_dest
     xchg al,ah
     mov dx,ax
     cmp ax,68
@@ -3382,22 +3381,22 @@ ReceiveClientDhcp       Proc near
     jne receive_cl_free
 
 receive_cl_dest_ok:
-    add di,8
-    sub cx,8
-    sub cx,SIZE dhcp_header
+    add edi,8
+    sub ecx,8
+    sub ecx,SIZE dhcp_header
     jb receive_cl_free
 ;
-    add cx,SIZE dhcp_header
-    mov al,es:[di].dhcp_op
+    add ecx,SIZE dhcp_header
+    mov al,es:[edi].dhcp_op
     cmp al,2
     jne receive_cl_free
 ;
-    mov al,es:[di].dhcp_msg_code
+    mov al,es:[edi].dhcp_msg_code
     cmp al,53
     jne receive_cl_free
 ;
-    movzx bx,es:[di].dhcp_msg_type
-    cmp bx,8
+    movzx ebx,es:[edi].dhcp_msg_type
+    cmp ebx,8
     jae receive_cl_free
 ;
     cmp dx,67
@@ -3407,17 +3406,17 @@ receive_cl_dest_ok:
     jc receive_cl_local
 
 receive_cl_relay:
-    add bx,bx
-    call word ptr cs:[bx].rl_receive_tab    
+    add ebx,ebx
+    call word ptr cs:[ebx].rl_receive_tab    
     jmp receive_cl_free
 
 receive_cl_local:
     mov eax,ds:dhcp_ident
-    cmp eax,es:[di].dhcp_id
+    cmp eax,es:[edi].dhcp_id
     jne receive_cl_check
 ;
-    add bx,bx
-    call word ptr cs:[bx].cl_receive_tab    
+    add ebx,ebx
+    call word ptr cs:[ebx].cl_receive_tab    
     jmp receive_cl_free
 
 receive_cl_check:
@@ -3425,14 +3424,14 @@ receive_cl_check:
     or eax,eax
     jz receive_cl_free
 ;
-    add di,SIZE dhcp_header
+    add edi,SIZE dhcp_header
 
 receive_cl_insp_loop:
-    mov al,es:[di]
+    mov al,es:[edi]
     cmp al,54
     jne receive_cl_insp_next
 ;
-    mov eax,es:[di+2]
+    mov eax,es:[edi+2]
     cmp eax,ds:dhcp_server
     je receive_cl_free
 ;
@@ -3442,20 +3441,20 @@ receive_cl_insp_loop:
     jmp receive_cl_free
 
 receive_cl_insp_next:
-    inc di
-    sub cx,1
+    inc edi
+    sub ecx,1
     jz receive_cl_free
 ;
-    movzx ax,byte ptr es:[di]
-    inc ax
-    add di,ax
-    sub cx,ax
+    movzx eax,byte ptr es:[edi]
+    inc eax
+    add edi,eax
+    sub ecx,eax
     ja receive_cl_insp_loop
 
 receive_cl_free:
-    pop dx
-    pop bx
-    pop ax
+    pop edx
+    pop ebx
+    pop eax
     pop ds
     ret
 ReceiveClientDhcp       Endp
@@ -3476,12 +3475,12 @@ define_lease_time      Proc far
     push ds
     push eax
 ;
-    mov ax,SEG data
-    mov ds,ax
-    or cx,cx
+    mov eax,SEG data
+    mov ds,eax
+    or ecx,ecx
     jz define_lease_done
 ;
-    mov eax,es:[di]
+    mov eax,es:[edi]
     Reverse
     sub eax,10
     ja define_lease_save
@@ -3511,8 +3510,8 @@ define_lease_time      Endp
 HandleDiscoverDhcp   Proc near
     mov ds:dhcp_driver_sel,0
 ;
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET DhcpDiscover
     NetBroadcast
 ;
@@ -3527,8 +3526,8 @@ HandleDiscoverDhcp   Proc near
     call is_ip_in_use
     jc hdidOk
 ;
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET DhcpDecline
     NetBroadcast
 
@@ -3557,8 +3556,8 @@ HandleDiscoverDhcp  Endp
 HandleRenewDhcp   Proc near
     mov ds:dhcp_driver_sel,0
 ;
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET DhcpRequest
     NetBroadcast
 ;
@@ -3573,8 +3572,8 @@ HandleRenewDhcp   Proc near
     call is_ip_in_use
     jc hrdOk
 ;
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET DhcpDecline
     NetBroadcast
 
@@ -3644,13 +3643,13 @@ dhcp_thread_pr:
     mov ax,250
     WaitMilliSec
 ;
-    mov bx,SEG data
-    mov ds,bx
+    mov ebx,SEG data
+    mov ds,ebx
 ;       
     GetIpAddress
     mov ds:dhcp_ip,edx
 ;
-    mov cx,8
+    mov ecx,8
 
 dtRedo:
     mov al,ds:dhcp_enabled
@@ -3668,7 +3667,7 @@ dtRenew:
     jnc dtNext
 
 dtFail:
-    mov cx,8
+    mov ecx,8
     mov ds:dhcp_server,0
     mov ds:dhcp_lease,1    
     mov ds:dhcp_rebind,1    
@@ -3687,10 +3686,10 @@ dtDisabled:
     jmp dtDone
 
 dtNext:
-    or cx,cx
+    or ecx,ecx
     jz dtWait
 ;
-    sub cx,1
+    sub ecx,1
     jnz dtWait
 ;
     mov ds:dhcp_done,1
@@ -3725,19 +3724,20 @@ get_dhcp_entry_name    DB 'Get DHCP Entry', 0
 get_dhcp_entry Proc far
     push ds
 ;
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,OFFSET dhcp_relay_arr
+    mov ebx,SEG data
+    mov ds,ebx
+    mov ebx,OFFSET dhcp_relay_arr
     or ah,ah
     jnz gdeFail
-;
-    add ax,ax
-    add bx,ax
-    mov ax,ds:[bx]
+;  
+    movzx eax,ax
+    add eax,eax
+    add ebx,eax
+    mov ax,ds:[ebx]
     or ax,ax
     jz gdeFail
 ;
-    mov ds,ax
+    mov ds,eax
     mov eax,ds:dre_last_update
     mov edx,ds:dre_last_update+4
     mov ebx,ds:dre_ip
@@ -3770,9 +3770,9 @@ dhcp_ip_name        DB 'DHCP.IP',0
     public init_task_dhcp
 
 init_task_dhcp       PROC near
-    mov bx,SEG data
-    mov ds,bx
-    mov es,bx
+    mov ebx,SEG data
+    mov ds,ebx
+    mov es,ebx
     mov es:dhcp_option_list,0
     mov es:dhcp_driver_sel,0
     mov es:dhcp_server,0
@@ -3782,36 +3782,36 @@ init_task_dhcp       PROC near
     GetIpAddress
     mov es:dhcp_wanted_ip,edx
     mov es:dhcp_ident,0
-    mov di,OFFSET dhcp_serv_arr
-    mov cx,256
+    mov edi,OFFSET dhcp_serv_arr
+    mov ecx,256
     xor ax,ax
     rep stosw
 ;
-    mov di,OFFSET dhcp_relay_arr
-    mov cx,256
+    mov edi,OFFSET dhcp_relay_arr
+    mov ecx,256
     xor ax,ax
     rep stosw
 ;
-    mov ax,es
-    mov ds,ax
-    mov ax,cs
-    mov es,ax
+    mov eax,es
+    mov ds,eax
+    mov eax,cs
+    mov es,eax
 ;
-    mov di,OFFSET dhcp_ip_name
+    mov edi,OFFSET dhcp_ip_name
     call GetIPNumber
     mov ds:dhcp_ip2,eax
 ;
     mov ds:dhcp_enabled,1
-    mov di,OFFSET dhcp_name
+    mov edi,OFFSET dhcp_name
     call GetValue       
     jc init_dhcp_enabled_ok
 ;
     mov ds:dhcp_enabled,al
 
 init_dhcp_enabled_ok:
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov esi,OFFSET get_dhcp_entry
     mov edi,OFFSET get_dhcp_entry_name
@@ -3829,13 +3829,13 @@ init_dhcp_enabled_ok:
     mov edi,OFFSET define_lease_time
     AddDhcpOption
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET dhcp_thread_pr
-    mov di,OFFSET dhcp_thread_name
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET dhcp_thread_pr
+    mov edi,OFFSET dhcp_thread_name
     mov ax,3
-    mov cx,stack0_size
+    mov ecx,stack0_size
     CreateThread
 ;
     ret
