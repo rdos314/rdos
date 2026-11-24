@@ -2123,14 +2123,14 @@ sr08    DW OFFSET ReceiveError
 
 ReceiveServerDhcp       Proc near
     push ds
-    push ax
-    push bx
+    push eax
+    push ebx
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;
     mov ax,ds:dhcp_driver_sel
-    mov bx,gs
+    mov ebx,gs
     or ax,ax
     jz receive_serv_check_enabled
 ;
@@ -2144,40 +2144,40 @@ receive_serv_check_enabled:
     jnz receive_serv_free
 
 receive_serv_ok:
-    mov ax,es:[di].udp_source
+    mov ax,es:[edi].udp_source
     xchg al,ah
     cmp ax,68
     jne receive_serv_free
 ;
-    mov ax,es:[di].udp_dest
+    mov ax,es:[edi].udp_dest
     xchg al,ah
     cmp ax,67
     jne receive_serv_free
 ;
-    add di,8
-    sub cx,8
-    sub cx,SIZE dhcp_header
+    add edi,8
+    sub ecx,8
+    sub ecx,SIZE dhcp_header
     jb receive_serv_free
 ;
-    add cx,SIZE dhcp_header
-    mov al,es:[di].dhcp_op
+    add ecx,SIZE dhcp_header
+    mov al,es:[edi].dhcp_op
     cmp al,1
     jne receive_serv_free
 ;
-    mov al,es:[di].dhcp_msg_code
+    mov al,es:[edi].dhcp_msg_code
     cmp al,53
     jne receive_serv_free
 ;
-    movzx bx,es:[di].dhcp_msg_type
-    cmp bx,8
+    movzx ebx,es:[edi].dhcp_msg_type
+    cmp ebx,8
     jae receive_serv_free
 ;
-    add bx,bx
-    call word ptr cs:[bx].serv_receive_tab  
+    add ebx,ebx
+    call word ptr cs:[ebx].serv_receive_tab  
 
 receive_serv_free:
-    pop bx
-    pop ax
+    pop ebx
+    pop eax
     pop ds
     ret
 ReceiveServerDhcp       Endp
@@ -2189,16 +2189,16 @@ ReceiveServerDhcp       Endp
 ;
 ;       Purpose:        Size of client hardware address
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
 ;
-;       Returns:        CX              Size of client address
+;       Returns:        ECX              Size of client address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClientSize      Proc near
-    movzx cx,ds:addr_len
-    add cx,2
+    movzx ecx,ds:addr_len
+    add ecx,2
     ret
 ClientSize      Endp
     
@@ -2209,29 +2209,29 @@ ClientSize      Endp
 ;
 ;       Purpose:        Copy client hardware address
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
-;                       ES:DI       Position to copy at
+;                       ES:EDI       Position to copy at
 ;
-;       Returns:        ES:DI       New position
+;       Returns:        ES:EDI       New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClientData      Proc near
     push ds
-    push si
-    push cx
+    push esi
+    push ecx
 ;
-    movzx cx,ds:addr_len
+    movzx ecx,ds:addr_len
     mov al,61
     stosb
-    mov es:[di],cl
-    inc di
+    mov es:[edi],cl
+    inc edi
     call fword ptr fs:d_address
     rep movsb
 ;
-    pop cx
-    pop si
+    pop ecx
+    pop esi
     pop ds
     ret
 ClientData      Endp
@@ -2243,7 +2243,7 @@ ClientData      Endp
 ;
 ;       Purpose:        Size of parameters
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
 ;
 ;       Returns:        CX              Size of client address
@@ -2252,11 +2252,11 @@ ClientData      Endp
 
 ParamSize       Proc near
     push ds
-    push bx
+    push ebx
 ;
-    mov cx,2
-    mov bx,SEG data
-    mov ds,bx
+    mov ecx,2
+    mov ebx,SEG data
+    mov ds,ebx
     mov bx,ds:dhcp_option_list
 
 param_size_loop:
@@ -2269,7 +2269,7 @@ param_size_loop:
     jmp param_size_loop
 
 param_size_done:
-    pop bx
+    pop ebx
     pop ds
     ret
 ParamSize       Endp
@@ -2281,28 +2281,28 @@ ParamSize       Endp
 ;
 ;       Purpose:        Fill in param data
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
-;                       ES:DI       Position to copy at
+;                       ES:EDI       Position to copy at
 ;
-;       Returns:        ES:DI       New position
+;       Returns:        ES:EDI       New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ParamData       Proc near
     push ds
-    push bx
-    push si
-    push cx
+    push ebx
+    push esi
+    push ecx
 ;
     xor cl,cl
     mov al,55
     stosb
-    mov si,di
-    inc di
+    mov esi,edi
+    inc edi
 ;
-    mov bx,SEG data
-    mov ds,bx
+    mov ebx,SEG data
+    mov ds,ebx
     mov bx,ds:dhcp_option_list
 
 param_data_loop:
@@ -2318,11 +2318,11 @@ param_data_loop:
     jmp param_data_loop
 
 param_data_done:
-    mov es:[si],cl
+    mov es:[esi],cl
 ;
-    pop cx
-    pop si
-    pop bx
+    pop ecx
+    pop esi
+    pop ebx
     pop ds
     ret
 ParamData       Endp
@@ -2334,15 +2334,15 @@ ParamData       Endp
 ;
 ;       Purpose:        Size of IP lease time
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
 ;
-;       Returns:        CX              Size of client address
+;       Returns:        ECX              Size of client address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LeaseSize       Proc near
-    mov cx,6
+    mov ecx,6
     ret
 LeaseSize       Endp
         
@@ -2352,11 +2352,11 @@ LeaseSize       Endp
 ;
 ;       Purpose:        Copy IP lease time
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
-;                       ES:DI       Position to copy at
+;                       ES:EDI       Position to copy at
 ;
-;       Returns:        ES:DI       New position
+;       Returns:        ES:EDI       New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2382,15 +2382,15 @@ LeaseData       Endp
 ;
 ;       Purpose:        Size of server IP
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
 ;
-;       Returns:        CX              Size of server IP
+;       Returns:        ECX              Size of server IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServerSize      Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ServerSize      Endp
     
@@ -2401,11 +2401,11 @@ ServerSize      Endp
 ;
 ;       Purpose:        Copy server IP
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
-;                       ES:DI       Position to copy at
+;                       ES:EDI       Position to copy at
 ;
-;       Returns:        ES:DI       New position
+;       Returns:        ES:EDI       New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2418,8 +2418,8 @@ ServerData      Proc near
     mov al,4
     stosb
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:dhcp_server
     stosd
 ;
@@ -2435,15 +2435,15 @@ ServerData      Endp
 ;
 ;       Purpose:        Size of client IP
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
 ;
-;       Returns:        CX              Size of client IP
+;       Returns:        ECX              Size of client IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqIpSize       Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ReqIpSize       Endp
     
@@ -2454,11 +2454,11 @@ ReqIpSize       Endp
 ;
 ;       Purpose:        Copy client IP
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
-;                       ES:DI       Position to copy at
+;                       ES:EDI       Position to copy at
 ;
-;       Returns:        ES:DI       New position
+;       Returns:        ES:EDI       New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2471,8 +2471,8 @@ ReqIpData       Proc near
     mov al,4
     stosb
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:dhcp_wanted_ip
     stosd
 ;
@@ -2491,31 +2491,31 @@ ReqIpData       Endp
 ;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
 ;
-;       Returns:        CX              Size of client IP
+;       Returns:        ECX              Size of client IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HostNameSize       Proc near
     push ds
-    push ax
-    push si
+    push eax
+    push esi
 ;    
     call get_host_name
-    mov ds,ax
-    xor si,si
-    mov cx,2
+    mov ds,eax
+    xor esi,esi
+    mov ecx,2
 
 hnsLoop:
     lodsb
     or al,al
     jz hnsOk
 ;
-    inc cx
+    inc ecx
     jmp hnsLoop
 
 hnsOk:
-    pop si
-    pop ax
+    pop esi
+    pop eax
     pop ds
     ret
 HostNameSize       Endp
@@ -2529,30 +2529,30 @@ HostNameSize       Endp
 ;
 ;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
-;                       ES:DI       Position to copy at
+;                       ES:EDI       Position to copy at
 ;
-;       Returns:        ES:DI       New position
+;       Returns:        ES:EDI       New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HostNameData       Proc near
     push ds
-    push ax
-    push cx
-    push si
+    push eax
+    push ecx
+    push esi
 ;
     call get_host_name
-    mov ds,ax
-    xor si,si
+    mov ds,eax
+    xor esi,esi
 ;
     mov al,12
     stosb
 ;
-    push di
-    inc di
+    push edi
+    inc edi
 ;    
-    xor si,si
-    xor cx,cx
+    xor esi,esi
+    xor ecx,ecx
 
 hndLoop:
     lodsb
@@ -2560,16 +2560,16 @@ hndLoop:
     jz hndOk
 ;
     stosb
-    inc cx
+    inc ecx
     jmp hndLoop
 
 hndOk:
-    pop si
-    mov es:[si],cl
+    pop esi
+    mov es:[esi],cl
 ;
-    pop si
-    pop cx
-    pop ax
+    pop esi
+    pop ecx
+    pop eax
     pop ds
     ret
 HostNameData       Endp
@@ -2581,15 +2581,15 @@ HostNameData       Endp
 ;
 ;       Purpose:        Size of declined IP
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
 ;
-;       Returns:        CX              Size of client IP
+;       Returns:        ECX              Size of client IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeclIpSize      Proc near
-    mov cx,6
+    mov ecx,6
     ret
 DeclIpSize      Endp
     
@@ -2600,11 +2600,11 @@ DeclIpSize      Endp
 ;
 ;       Purpose:        Copy declined client IP
 ;
-;       Parameters:         DS              Class selector
+;       Parameters:     DS              Class selector
 ;                       FS              Driver selector
-;                       ES:DI       Position to copy at
+;                       ES:EDI       Position to copy at
 ;
-;       Returns:        ES:DI       New position
+;       Returns:        ES:EDI       New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2617,8 +2617,8 @@ DeclIpData      Proc near
     mov al,4
     stosb
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:dhcp_ip
     stosd
 ;
@@ -2635,7 +2635,7 @@ DeclIpData      Endp
 ;
 ;           DESCRIPTION:    Send DHCP discover for a driver
 ;
-;       PARAMETERS:     DS              Class selector
+;       PARAMETERS:         DS              Class selector
 ;                           FS              Driver selector
 ;
 ;           RETURNS:        
@@ -2645,12 +2645,12 @@ DeclIpData      Endp
 ;       size-proc                   data-proc
 
 DiscOptTab:
-d00     DW OFFSET ClientSize,       OFFSET ClientData
+d00 DW OFFSET ClientSize,       OFFSET ClientData
 d01 DW OFFSET ParamSize,        OFFSET ParamData
 d02 DW OFFSET LeaseSize,        OFFSET LeaseData
 d03 DW OFFSET ReqIpSize,        OFFSET ReqIpData
 d04 DW OFFSET HostNameSize,        OFFSET HostNameData
-d05     DW -1
+d05 DW -1
 
 DhcpDiscover    Proc far
     mov dx,SIZE dhcp_header + 1
