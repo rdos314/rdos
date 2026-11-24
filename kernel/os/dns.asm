@@ -910,55 +910,55 @@ ip_to_name32    Endp
 
 define_dns      Proc far
     push ds
-    push ax
-    push cx
+    push eax
+    push ecx
     push edx
-    push di
+    push edi
 ;
-    mov ax,SEG data
-    mov ds,ax
-    or cx,cx
+    mov eax,SEG data
+    mov ds,eax
+    or ecx,ecx
     jz define_dns_done
 ;
-    mov edx,es:[di]
+    mov edx,es:[edi]
     cmp edx,ds:dns1
     je define_dns1_ok
 ;
     mov ds:dns1,edx
 ;
     push es
-    push di
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET dns1_name
+    push edi
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET dns1_name
     call WriteIpEnv
-    pop di
+    pop edi
     pop es
 
 define_dns1_ok:
-    add di,4
-    sub cx,4
-    or cx,cx
+    add edi,4
+    sub ecx,4
+    or ecx,ecx
     jz define_dns_done
 ;
-    mov edx,es:[di]
+    mov edx,es:[edi]
     cmp edx,ds:dns2
     je define_dns_done
 ;
     mov ds:dns2,edx
 ;
     push es
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET dns2_name
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET dns2_name
     call WriteIpEnv
     pop es
 
 define_dns_done:
-    pop di
+    pop edi
     pop edx
-    pop cx
-    pop ax
+    pop ecx
+    pop eax
     pop ds
     retf32
 define_dns      Endp
@@ -979,25 +979,25 @@ dns2_name           DB 'DNS2',0
     public init_task_dns
 
 init_task_dns    PROC near
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ds:dns_curr_id,1
     InitSpinlock ds:dns_spinlock
 ;
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
 ;
-    mov di,OFFSET dns1_name
+    mov edi,OFFSET dns1_name
     call GetIPNumber
     mov ds:dns1,eax
 ;
-    mov di,OFFSET dns2_name
+    mov edi,OFFSET dns2_name
     call GetIPNumber
     mov ds:dns2,eax
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov ebx,OFFSET name_to_ip16
     mov esi,OFFSET name_to_ip32
