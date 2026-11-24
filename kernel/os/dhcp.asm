@@ -101,6 +101,7 @@ dhcp_rebind     DB ?
 
 data    ENDS
 
+    extrn CalcCheckSum:near
     extrn is_ip_in_use:near
     extrn define_ip:near
     extrn get_gateway_driver:near
@@ -143,58 +144,6 @@ dluDone:
     pop ds
     ret
 dhcp_link_up    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CalcChecksum
-;
-;           DESCRIPTION:    Calculate checksum for UDP
-;
-;           PARAMETERS:     AX          Checksum in
-;                           CX          Size of data
-;                           ES:EDI      Data
-;
-;           RETURNS:        AX          Checksum out
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcChecksum    Proc near
-    push ds
-    push ecx
-    push edx
-    push esi
-;
-    mov esi,es
-    mov ds,esi
-    mov esi,edi
-    mov dx,ax
-    shr ecx,1
-    pushf
-    clc
-checksum_loop:
-    lodsw
-    adc dx,ax
-    loop checksum_loop
-    adc dx,0
-    adc dx,0
-    popf
-    jnc calc_checksum_done
-    xor ah,ah
-    lodsb
-    add dx,ax
-    adc dx,0
-    adc dx,0
-calc_checksum_done:
-    mov ax,dx
-;
-    pop esi
-    pop edx
-    pop ecx
-    pop ds
-    ret
-CalcChecksum    Endp
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

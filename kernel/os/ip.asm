@@ -89,6 +89,103 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CalcChecksum
+;
+;           DESCRIPTION:    Calculate checksum for UDP
+;
+;           PARAMETERS:     AX          Checksum in
+;                           CX          Size of data
+;                           ES:EDI      Data
+;
+;           RETURNS:        AX          Checksum out
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CalcCheckSum
+
+CalcChecksum    Proc near
+    push ds
+    push ecx
+    push edx
+    push esi
+;
+    mov esi,es
+    mov ds,esi
+    mov esi,edi
+    mov dx,ax
+    shr ecx,1
+    pushf
+    clc
+checksum_loop:
+    lodsw
+    adc dx,ax
+    loop checksum_loop
+    adc dx,0
+    adc dx,0
+    popf
+    jnc calc_checksum_done
+    xor ah,ah
+    lodsb
+    add dx,ax
+    adc dx,0
+    adc dx,0
+calc_checksum_done:
+    mov ax,dx
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+CalcChecksum    Endp
+
+
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CalcHeaderChecksum
+;
+;       Purpose:        Calculate checksum for IP header
+;
+;       Parameters:         DS:DI   IP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcHeaderChecksum    Proc near
+    push ax
+    push cx
+    push dx
+    push si
+;    
+    mov ds:[di].ip_checksum,0
+    movzx cx,ds:[di].ip_hdr_ver
+    and cl,0Fh
+    shl cl,1
+    mov si,di
+    xor     dx,dx
+    clc
+    
+calc_hdr_checksum_loop:
+    lodsw
+    adc     dx,ax
+    loop calc_hdr_checksum_loop
+;       
+    adc dx,0
+    adc dx,0
+    not dx
+    mov ds:[di].ip_checksum,dx
+;
+    pop si
+    pop dx
+    pop cx
+    pop ax      
+    ret
+CalcHeaderChecksum    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ConvertOne
 ;
 ;           description:    Convert one digit
@@ -599,48 +696,6 @@ create_ip_header    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           CalcChecksum
-;
-;       Purpose:        Calculate checksum for IP header
-;
-;       Parameters:         DS:DI   IP header
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcChecksum    Proc near
-    push ax
-    push cx
-    push dx
-    push si
-;    
-    mov ds:[di].ip_checksum,0
-    movzx cx,ds:[di].ip_hdr_ver
-    and cl,0Fh
-    shl cl,1
-    mov si,di
-    xor     dx,dx
-    clc
-    
-calc_checksum_loop:
-    lodsw
-    adc     dx,ax
-    loop calc_checksum_loop
-;       
-    adc dx,0
-    adc dx,0
-    not dx
-    mov ds:[di].ip_checksum,dx
-;
-    pop si
-    pop dx
-    pop cx
-    pop ax      
-    ret
-CalcChecksum    Endp    
-
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ;       Name:           send_ip_data
 ;
 ;       Purpose:        send IP data
@@ -664,7 +719,7 @@ send_ip_data    Proc far
     mov ax,es
     mov ds,ax
     mov di,ds:[0]
-    call CalcChecksum
+    call CalcHeaderChecksum
 ;
     movzx ecx,ds:[di].ip_size
     xchg cl,ch
@@ -1042,7 +1097,7 @@ send_broadcast_ip       Proc far
     mov ax,es
     mov ds,ax
     mov di,ds:[0]
-    call CalcChecksum
+    call CalcHeaderChecksum
 ;
     movzx ecx,ds:[di].ip_size
     xchg cl,ch
@@ -1230,7 +1285,7 @@ send_driver_ip       Proc far
     mov ax,es
     mov ds,ax
     mov di,ds:[0]
-    call CalcChecksum
+    call CalcHeaderChecksum
 ;
     movzx ecx,ds:[di].ip_size
     xchg cl,ch
@@ -1408,7 +1463,7 @@ receive_dhcp_done:
     mov di,gs
     mov ds,di
     mov di,si
-    call CalcCheckSum
+    call CalcHeaderCheckSum
 ;
     mov di,si
     mov al,ds:[di].ip_hdr_ver
@@ -1447,7 +1502,7 @@ receive_test_src_reroute:
     mov di,gs
     mov ds,di
     mov di,si
-    call CalcCheckSum
+    call CalcHeaderCheckSum
 ;
     mov di,si
     mov al,ds:[di].ip_hdr_ver
