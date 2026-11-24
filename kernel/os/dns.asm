@@ -470,105 +470,130 @@ DecodeNodeRequest       Proc near
     push ax
     push cx
 ;
-    mov ax,es:[di].dns_id
+    mov ax,es:[edi].dns_id
     cmp ax,fs:dns_id
-    jne decode_node_inv_resp
-    mov ax,es:[di].dns_op
+    jne decode_node_temp_inv
+;    
+    mov ax,es:[edi].dns_op
     xchg al,ah
     test ah,80h
-    jz decode_node_inv_resp
-    mov dx,es:[di].dns_qdcount
+    jz decode_node_temp_inv
+;    
+    mov dx,es:[edi].dns_qdcount
     xchg dl,dh
     cmp dx,1
-    jne decode_node_inv_resp
-    mov dx,es:[di].dns_ancount
+    jne decode_node_temp_inv
+; 
+    mov dx,es:[edi].dns_ancount
     xchg dl,dh
     or dx,dx
-    jz decode_node_inv_resp
-    add di,SIZE dns_header
-    sub cx,SIZE dns_header
-    jc decode_node_inv_resp
-    jz decode_node_inv_resp
+    jz decode_node_temp_inv
+;    
+    add edi,SIZE dns_header
+    sub ecx,SIZE dns_header
+    jc decode_node_temp_inv
+    jz decode_node_temp_inv
 
 decode_node_question:
-    movzx ax,byte ptr es:[di]
-    or ax,ax
+    movzx eax,byte ptr es:[edi]
+    or eax,eax
     jz decode_node_question_opt
-    add di,ax
-    sub cx,ax
-    jc decode_node_inv_resp
-    inc di
-    sub cx,1
-    jz decode_node_inv_resp
+;
+    add edi,eax
+    sub ecx,eax
+    jc decode_node_temp_inv
+;    
+    inc edi
+    sub ecx,1
+    jz decode_node_temp_inv
     jmp decode_node_question    
 
 decode_node_question_opt:
-    add di,1
-    sub cx,5
-    jc decode_node_inv_resp
-    mov ax,es:[di]
+    add edi,1
+    sub ecx,5
+    jc decode_node_temp_inv
+;    
+    mov ax,es:[edi]
     xchg al,ah
     cmp ax,1
-    jnz decode_node_inv_resp
-    add di,2
-    mov ax,es:[di]
+    jnz decode_node_temp_inv
+;    
+    add edi,2
+    mov ax,es:[edi]
     xchg al,ah
     cmp ax,1
-    jnz decode_node_inv_resp
-    add di,2
+    jnz decode_node_temp_inv
+;    
+    add edi,2
 
 decode_node_answer:
     or cx,cx
-    jz short decode_node_inv_resp
-    mov al,es:[di]
+    jz decode_node_temp_inv
+;    
+    mov al,es:[edi]
     test al,80h
     jnz decode_node_answer_ref
-    movzx ax,al
-    or ax,ax
+;    
+    movzx eax,al
+    or eax,eax
     jz decode_node_answer_opt
-    add di,ax
-    sub cx,ax
-    jc decode_node_inv_resp
-    inc di
-    sub cx,1
-    jz decode_node_inv_resp
+;    
+    add edi,eax
+    sub ecx,eax
+    jc decode_node_temp_inv
+;    
+    inc edi
+    sub ecx,1
+    jz decode_node_temp_inv
     jmp decode_node_answer
+    
+decode_node_temp_inv:
+    FreeMem
+    stc
+    jmp decode_node_done
 
 decode_node_answer_ref:
-    add di,2
-    sub cx,2
+    add edi,2
+    sub ecx,2
     jc decode_node_inv_resp
 
 decode_node_answer_opt:
-    sub cx,SIZE dns_host_answer
+    sub ecx,SIZE dns_host_answer
     jc decode_node_inv_resp
-    mov ax,es:[di].dns_atype
+;    
+    mov ax,es:[edi].dns_atype
     xchg al,ah
     cmp ax,1
     jne decode_node_skip_answer
-    mov ax,es:[di].dns_aclass
+;    
+    mov ax,es:[edi].dns_aclass
     xchg al,ah
     cmp ax,1
     jne decode_node_skip_answer
-    mov ax,es:[di].dns_alen
+;    
+    mov ax,es:[edi].dns_alen
     xchg al,ah
     cmp ax,4
     jne decode_node_inv_resp
-    add di,SIZE dns_host_answer
-    sub cx,4
+;    
+    add edi,SIZE dns_host_answer
+    sub ecx,4
     jc decode_node_inv_resp
-    mov edx,es:[di]
+;    
+    mov edx,es:[edi]
     FreeMem
     clc
     jmp decode_node_done
 
 decode_node_skip_answer:
-    mov ax,es:[di].dns_alen
-    add di,SIZE dns_host_answer
+    mov ax,es:[edi].dns_alen
+    add edi,SIZE dns_host_answer
     xchg al,ah
-    sub cx,ax
+    movzx eax,ax
+    sub ecx,eax
     jc decode_node_inv_resp
-    add di,ax
+;    
+    add edi,eax
     sub dx,1
     jnz decode_node_answer
 
@@ -577,8 +602,8 @@ decode_node_inv_resp:
     stc
 
 decode_node_done:
-    pop cx
-    pop ax
+    pop ecx
+    pop eax
     ret
 DecodeNodeRequest       Endp
 
@@ -589,7 +614,7 @@ DecodeNodeRequest       Endp
 ;
 ;       Purpose:        Convert IP address to text notation
 ;
-;       Parameters:         AL              Digit
+;       Parameters:     AL              Digit
 ;                       ES:DI       Buffer
 ;                       CX              Count 
 ;
@@ -600,6 +625,7 @@ DigitToString   Proc near
     inc di
     xor cx,cx
     xor ah,ah
+
 digit_100_loop:
     sub al,100
     jc digit_100_done
@@ -681,7 +707,7 @@ get_dns Endp
 ;
 ;       Purpose:        Convert IP address to host name
 ;
-;       Parameters:         EDX             IP address
+;       Parameters:     EDX             IP address
 ;                       ES:(E)DI    Host name buffer
 ;                       (E)CX       Size of name buffer
 ;
@@ -780,6 +806,7 @@ ip_to_name_second:
     mov bx,53
     mov eax,2000
     push cx
+;    
     or edx,edx
     jz ip_to_name_fail
 ;
