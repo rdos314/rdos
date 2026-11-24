@@ -80,7 +80,7 @@ ENDIF
 ;
 ;       Purpose:        Decode DNS name request answer
 ;
-;       Parameters:         ES:DI       DNS answer
+;       Parameters:     ES:EDI       DNS answer
 ;
 ;       Returns:        NC              ok
 ;                       EDX             IP address
@@ -89,108 +89,130 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DecodeNameRequest       Proc near
-    push ax
-    push cx
+    push eax
+    push ecx
 ;
-    mov ax,es:[di].dns_id
+    mov ax,es:[edi].dns_id
     cmp ax,fs:dns_id
-    jne decode_name_inv_resp
-    mov ax,es:[di].dns_op
+    jne decode_name_temp_inv
+    mov ax,es:[edi].dns_op
     xchg al,ah
     test ah,80h
-    jz decode_name_inv_resp
-    mov dx,es:[di].dns_qdcount
+    jz decode_name_temp_inv
+;    
+    mov dx,es:[edi].dns_qdcount
     xchg dl,dh
     cmp dx,1
-    jne decode_name_inv_resp
-    mov dx,es:[di].dns_ancount
+    jne decode_name_temp_inv
+;    
+    mov dx,es:[edi].dns_ancount
     xchg dl,dh
     or dx,dx
-    jz decode_name_inv_resp
-    add di,SIZE dns_header
-    sub cx,SIZE dns_header
-    jc decode_name_inv_resp
-    jz decode_name_inv_resp
+    jz decode_name_temp_inv
+;
+    add edi,SIZE dns_header
+    sub ecx,SIZE dns_header
+    jc decode_name_temp_inv
+    jz decode_name_temp_inv
 
 decode_name_question:
-    movzx ax,byte ptr es:[di]
-    or ax,ax
+    movzx eax,byte ptr es:[edi]
+    or eax,eax
     jz decode_name_question_opt
-    add di,ax
-    sub cx,ax
-    jc decode_name_inv_resp
-    inc di
-    sub cx,1
-    jz decode_name_inv_resp
+;    
+    add edi,eax
+    sub ecx,eax
+    jc decode_name_temp_inv
+    inc edi
+    sub ecx,1
+    jz decode_name_temp_inv
     jmp decode_name_question    
+    
+decode_name_temp_inv:
+    FreeMem
+    stc
+    jmp decode_name_done
 
 decode_name_question_opt:
-    add di,1
-    sub cx,5
+    add edi,1
+    sub ecx,5
     jc decode_name_inv_resp
-    mov ax,es:[di]
+    mov ax,es:[edi]
     xchg al,ah
     cmp ax,1
     jnz decode_name_inv_resp
-    add di,2
-    mov ax,es:[di]
+;    
+    add edi,2
+    mov ax,es:[edi]
     xchg al,ah
     cmp ax,1
     jnz decode_name_inv_resp
-    add di,2
+;
+    add edi,2
 
 decode_name_answer:
-    or cx,cx
-    jz short decode_name_inv_resp
-    mov al,es:[di]
+    or ecx,ecx
+    jz decode_name_inv_resp
+;    
+    mov al,es:[edi]
     test al,80h
     jnz decode_name_answer_ref
-    movzx ax,al
-    or ax,ax
+;    
+    movzx eax,al
+    or eax,eax
     jz decode_name_answer_opt
-    add di,ax
-    sub cx,ax
+;    
+    add edi,eax
+    sub ecx,eax
     jc decode_name_inv_resp
-    inc di
-    sub cx,1
+;    
+    inc edi
+    sub ecx,1
     jz decode_name_inv_resp
     jmp decode_name_answer
 
 decode_name_answer_ref:
-    add di,2
-    sub cx,2
+    add edi,2
+    sub ecx,2
     jc decode_name_inv_resp
 
 decode_name_answer_opt:
-    sub cx,SIZE dns_host_answer
+    sub ecx,SIZE dns_host_answer
     jc decode_name_inv_resp
-    mov ax,es:[di].dns_atype
+;    
+    mov ax,es:[edi].dns_atype
     xchg al,ah
     cmp ax,1
     jne decode_name_skip_answer
-    mov ax,es:[di].dns_aclass
+;    
+    mov ax,es:[edi].dns_aclass
     xchg al,ah
     cmp ax,1
     jne decode_name_skip_answer
-    mov ax,es:[di].dns_alen
+;    
+    mov ax,es:[edi].dns_alen
     xchg al,ah
     cmp ax,4
     jne decode_name_inv_resp
-    add di,SIZE dns_host_answer
-    sub cx,4
+;    
+    add edi,SIZE dns_host_answer
+    sub ecx,4
     jc decode_name_inv_resp
-    mov edx,es:[di]
+;    
+    mov edx,es:[edi]
     FreeMem
     clc
     jmp decode_name_done
 
 decode_name_skip_answer:
-    mov ax,es:[di].dns_alen
-    add di,SIZE dns_host_answer
+    mov ax,es:[edi].dns_alen
+    add edi,SIZE dns_host_answer
     xchg al,ah
-    sub cx,ax
+    movzx eax,ax
+    sub ecx,eax
     jc decode_name_inv_resp
-    add di,ax
+; 
+    add edi,eax
     sub dx,1
     jnz decode_name_answer
 
@@ -199,8 +221,8 @@ decode_name_inv_resp:
     stc
 
 decode_name_done:
-    pop cx
-    pop ax
+    pop ecx
+    pop eax
     ret
 DecodeNameRequest       Endp
 
@@ -227,20 +249,20 @@ name_to_ip      Proc near
     push fs
     push gs
     push eax
-    push bx
+    push ebx
     push ecx
     push esi
     push edi
     push ebp
 ;
-    mov ax,es
-    mov gs,ax
+    mov eax,es
+    mov gs,eax
     mov ebp,edi
 ;
     call FindHostByName
     jc name_to_ip_lookup
 ;
-    mov ds,ax
+    mov ds,eax
     mov edx,ds:host_addr
     jmp name_to_ip_done
 
@@ -250,24 +272,28 @@ name_to_ip_lookup:
 ;
     push es
     push edi
-    movzx ecx,cx
     mov eax,ecx
     add eax,SIZE dns_header + SIZE dns_host_query + 2
     AllocateSmallGlobalMem
     pop esi
     pop ds
-    push ax
+;    
+    push eax
     mov edi,SIZE dns_header
     xor ecx,ecx
+
 name_to_ip_move_loop:
     push esi
     xor cl,cl
+
 name_to_ip_move_dot_loop:
     mov al,[esi]
     cmp al,'.'
     je name_to_ip_move_part
+;    
     or al,al
     je name_to_ip_move_part
+;    
     inc esi
     inc cl
     jmp name_to_ip_move_dot_loop
@@ -283,8 +309,8 @@ name_to_ip_move_part:
 ;
     xor al,al
     stosb
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;    
     RequestSpinlock ds:dns_spinlock
     mov ax,ds:dns_curr_id
@@ -300,14 +326,14 @@ name_to_ip_move_part:
     mov ax,100h
     stosw                       ; qtype = 1
     stosw                       ; qclass = 1
-    mov ax,es
-    mov fs,ax
-    pop cx  
+    mov eax,es
+    mov fs,eax
+    pop ecx  
 ;
     mov edx,ds:dns1
     mov bx,53
     mov eax,2000
-    push cx
+    push ecx
     or edx,edx
     jz name_to_ip_ppp
 ;    
@@ -319,14 +345,14 @@ name_to_ip_move_part:
     jnc name_to_ip_ok
 
 name_to_ip_second:
-    pop cx
-    mov ax,fs
-    mov es,ax
+    pop ecx
+    mov eax,fs
+    mov es,eax
 ;
     mov edx,ds:dns2
     mov bx,53
     mov eax,2000
-    push cx
+    push ecx
     or edx,edx
     jz name_to_ip_ppp
 ;
@@ -338,15 +364,15 @@ name_to_ip_second:
     jnc name_to_ip_ok
 
 name_to_ip_ppp:
-    pop cx
-    mov ax,fs
-    mov es,ax
+    pop ecx
+    mov eax,fs
+    mov es,eax
 ;
     GetPppDns
     mov edx,eax
     mov bx,53
     mov eax,2000
-    push cx
+    push ecx
     or edx,edx
     jz name_to_ip_fail
 ;
@@ -358,9 +384,9 @@ name_to_ip_ppp:
     jnc name_to_ip_ok
 
 name_to_ip_ppp_second:
-    pop cx
-    mov ax,fs
-    mov es,ax
+    pop ecx
+    mov eax,fs
+    mov es,eax
 ;
     GetPppDns
     mov bx,53
@@ -376,24 +402,24 @@ name_to_ip_ppp_second:
     jnc name_to_ip_ok
 
 name_to_ip_fail:
-    pop ax
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
+    pop eax
+    mov eax,fs
+    mov es,eax
+    xor eax,eax
+    mov fs,eax
     FreeMem
     stc
     jmp name_to_ip_done
 
 name_to_ip_ok:
-    pop ax
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
+    pop eax
+    mov eax,fs
+    mov es,eax
+    xor eax,eax
+    mov fs,eax
     FreeMem
-    mov ax,gs
-    mov es,ax
+    mov eax,gs
+    mov es,eax
     mov edi,ebp
     call DefineHostByName
     clc
@@ -403,7 +429,7 @@ name_to_ip_done:
     pop edi
     pop esi
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     pop gs
     pop fs

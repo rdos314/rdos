@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-896
-384
+16
+0
 8320
 9216
 2
@@ -244,14 +244,14 @@ WRect
 0
 5504
 3584
-1
+0
 0
 55
 WFileName
 6
 ip.tgt
 0
-1
+2
 56
 VComponent
 57
@@ -483,7 +483,7 @@ WRect
 864
 768
 5680
-4138
+4131
 0
 0
 100
@@ -497,7 +497,7 @@ VComponent
 102
 WRect
 176
-42
+35
 5680
 4224
 0
@@ -528,8 +528,8 @@ printer.tgt
 VComponent
 108
 WRect
-208
-128
+892
+853
 5680
 4224
 0
@@ -540,4 +540,4 @@ WFileName
 sma.tgt
 0
 1
-98
+53
