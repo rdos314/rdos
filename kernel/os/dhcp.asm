@@ -470,30 +470,30 @@ find_serv_done:
     ret
 FindServer  Endp
 
-        
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           InitServerSel
 ;
 ;       Purpose:        Init server selector
 ;
-;       Parameters:         DS:SI   Original UDP data
-;           FS      Server sel
-;           GS      Driver selector
+;       Parameters:     DS:ESI   Original UDP data
+;                       FS      Server sel
+;                       GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitServerSel   Proc near
     push eax
-    push bx
-    push cx
+    push ebx
+    push ecx
 ;    
-    mov eax,[si].dhcp_id
+    mov eax,[esi].dhcp_id
     mov fs:dsd_orig_ident,eax
     mov fs:dsd_driver_sel,gs
-    mov al,[si].dhcp_hw_type
+    mov al,[esi].dhcp_hw_type
     mov fs:dsd_hw_type,al
-    movzx cx,[si].dhcp_hw_len
+    movzx ecx,[esi].dhcp_hw_len
     cmp cl,10h
     jb init_serv_len_ok
 ;
@@ -505,17 +505,17 @@ init_serv_len_ok:
     or cl,cl
     jz init_serv_done
 ;    
-    xor bx,bx
+    xor ebx,ebx
 
 init_serv_loop:
-    mov al,[bx+si].dhcp_hw_addr
-    mov fs:[bx].dsd_hw_data,al
-    inc bx
+    mov al,[ebx+esi].dhcp_hw_addr
+    mov fs:[ebx].dsd_hw_data,al
+    inc ebx
     loop init_serv_loop
 
 init_serv_done:
-    pop cx
-    pop bx
+    pop ecx
+    pop ebx
     pop eax
     ret
 InitServerSel   Endp
@@ -527,8 +527,8 @@ InitServerSel   Endp
 ;
 ;       Purpose:        Create, initializr & link server selector
 ;
-;       Parameters:         DS:ESI   Original UDP data
-;           GS      Driver selector
+;       Parameters:     DS:ESI   Original UDP data
+;                       GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -592,79 +592,77 @@ create_serv_done:
     ret
 CreateServerSel Endp
 
-
-        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           FindRelay
 ;
 ;       Purpose:        Find relay request
 ;
-;       Parameters:     ES:DI           UDP data
+;       Parameters:     ES:EDI           UDP data
 ;
 ;       Returns:        NC
-;                           AX          Relay selector
+;                       AX          Relay selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindRelay       Proc near
     push ds
     push fs
-    push bx
-    push cx
-    push bp
+    push ebx
+    push ecx
+    push ebp
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;
-    mov bx,OFFSET dhcp_relay_arr
-    mov cx,256
+    mov ebx,OFFSET dhcp_relay_arr
+    mov ecx,256
 
 frLoop:
-    mov ax,ds:[bx]
+    mov ax,ds:[ebx]
     or ax,ax
     jz frNext
 ;
-    mov fs,ax
-    mov al,es:[di].dhcp_hw_type
+    mov fs,eax
+    mov al,es:[edi].dhcp_hw_type
     cmp al,fs:dre_hw_type
     jne frNext
 ;
-    mov al,es:[di].dhcp_hw_len
+    mov al,es:[edi].dhcp_hw_len
     cmp al,fs:dre_hw_len
     jne frNext
 ;
-    push cx
-    movzx cx,al
-    xor bp,bp
+    push ecx
+    movzx ecx,al
+    xor ebp,ebp
 
 frCompLoop:
-    mov al,es:[bp+di].dhcp_hw_addr
-    cmp al,fs:[bp].dre_hw_data
+    mov al,es:[ebp+edi].dhcp_hw_addr
+    cmp al,fs:[ebp].dre_hw_data
     je frCompNext
 ;
-    pop cx
+    pop ecx
     jmp frNext
 
 frCompNext:
-    inc bp
+    inc ebp
     loop frCompLoop
 ;
-    pop cx
-    mov ax,fs
+    pop ecx
+    mov eax,fs
     clc
     jmp frDone
 
 frNext:
-    add bx,2
+    add ebx,2
     loop frLoop
 ;
     stc
 
 frDone:
-    pop bp
-    pop cx
-    pop bx
+    pop ebp
+    pop ecx
+    pop ebx
     pop fs
     pop ds
     ret
@@ -676,26 +674,26 @@ FindRelay    Endp
 ;
 ;       Purpose:        Set hardware address
 ;
-;       Parameters:         DS:SI   source DHCP header
-;           ES:DI   dest DHCP header
+;       Parameters:     DS:ESI   source DHCP header
+;                       ES:EDI   dest DHCP header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetHwAddress    Proc near
     push eax
-    push cx
-    push si
-    push di
+    push ecx
+    push esi
+    push edi
 ;    
-    mov cx,34h
-    add si,OFFSET dhcp_hw_addr
-    add di,OFFSET dhcp_hw_addr
+    mov ecx,34h
+    add esi,OFFSET dhcp_hw_addr
+    add edi,OFFSET dhcp_hw_addr
     xor eax,eax
     rep movsd
 ;
-    pop di
-    pop si
-    pop cx
+    pop edi
+    pop esi
+    pop ecx
     pop eax
     ret
 SetHwAddress    Endp    
@@ -707,12 +705,12 @@ SetHwAddress    Endp
 ;
 ;       Purpose:        Size of IP lease time
 ;
-;       Returns:        CX              Size of client address
+;       Returns:        ECX              Size of client address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServLeaseSize   Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ServLeaseSize   Endp
     
@@ -723,12 +721,12 @@ ServLeaseSize   Endp
 ;
 ;       Purpose:        Copy IP lease time
 ;
-;       Parameters:         FS      Dhcp server data selector
-;           ES:DI           Position to copy at
-;           CX      Byte remaining
+;       Parameters:     FS      Dhcp server data selector
+;                       ES:EDI  Position to copy at
+;                       ECX     Byte remaining
 ;
-;       Returns:        ES:DI       New dest
-;           CX      new size
+;       Returns:        ES:EDI  New dest
+;                       ECX     new size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -741,7 +739,7 @@ ServLeaseData   Proc near
     stosb
     mov eax,-1
     stosd
-    sub cx,6
+    sub ecx,6
 ;
     pop eax
     ret
@@ -754,12 +752,12 @@ ServLeaseData   Endp
 ;
 ;       Purpose:        Size of renewal msg
 ;
-;       Returns:        CX              Size of client address
+;       Returns:        ECX              Size of client address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServRenewSize   Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ServRenewSize   Endp
     
@@ -770,12 +768,12 @@ ServRenewSize   Endp
 ;
 ;       Purpose:        Add renew 
 ;
-;       Parameters:         FS      Dhcp server data selector
-;           ES:DI           Position to copy at
-;           CX      Byte remaining
+;       Parameters:     FS      Dhcp server data selector
+;                       ES:EDI           Position to copy at
+;                       ECX      Byte remaining
 ;
-;       Returns:        ES:DI       New dest
-;           CX      new size
+;       Returns:        ES:EDI       New dest
+;                       ECX      new size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -788,7 +786,7 @@ ServRenewData   Proc near
     stosb
     mov eax,0FFFFFF7Fh
     stosd
-    sub cx,6
+    sub ecx,6
 ;
     pop eax
     ret
@@ -801,12 +799,12 @@ ServRenewData   Endp
 ;
 ;       Purpose:        Size of rebind msg
 ;
-;       Returns:        CX              Size of client address
+;       Returns:        ECX              Size of client address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServRebindSize  Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ServRebindSize  Endp
     
@@ -817,12 +815,12 @@ ServRebindSize  Endp
 ;
 ;       Purpose:        Add rebind
 ;
-;       Parameters:         FS      Dhcp server data selector
-;           ES:DI           Position to copy at
-;           CX      Byte remaining
+;       Parameters:     FS      Dhcp server data selector
+;                       ES:EDI           Position to copy at
+;                       ECX      Byte remaining
 ;
-;       Returns:        ES:DI       New dest
-;           CX      new size
+;       Returns:        ES:EDI       New dest
+;                       ECX      new size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -835,27 +833,26 @@ ServRebindData  Proc near
     stosb
     mov eax,0F9FFFFDFh
     stosd
-    sub cx,6
+    sub ecx,6
 ;
     pop eax
     ret
 ServRebindData  Endp
-    
-        
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           ServReqIpSize
 ;
 ;       Purpose:        Size of client IP
 ;
-;       Parameters:         ES:DI       DHCP header
+;       Parameters:     ES:EDI       DHCP header
 ;
-;       Returns:        CX              Size of client IP
+;       Returns:        ECX              Size of client IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServReqIpSize   Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ServReqIpSize   Endp
     
@@ -866,12 +863,12 @@ ServReqIpSize   Endp
 ;
 ;       Purpose:        Copy client IP
 ;
-;       Parameters:         FS      Dhcp server data selector
-;           ES:DI           Position to copy at
-;           CX      Byte remaining
+;       Parameters:     FS      Dhcp server data selector
+;                       ES:EDI           Position to copy at
+;                       ECX      Byte remaining
 ;
-;       Returns:        ES:DI       New position
-;           CX      Byte remaining
+;       Returns:        ES:EDI       New position
+;                       ECX      Byte remaining
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -886,7 +883,7 @@ ServReqIpData   Proc near
 ;
     mov eax,fs:dsd_local_ip
     stosd
-    sub cx,6
+    sub ecx,6
 ;
     pop eax
     pop ds
@@ -900,14 +897,14 @@ ServReqIpData   Endp
 ;
 ;       Purpose:        Size of net mask
 ;
-;       Parameters:         ES:DI       DHCP header
+;       Parameters:     ES:EDI       DHCP header
 ;
-;       Returns:        CX              Size of client IP
+;       Returns:        ECX              Size of client IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServReqMaskSize Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ServReqMaskSize Endp
     
@@ -918,12 +915,12 @@ ServReqMaskSize Endp
 ;
 ;       Purpose:        Add net mask
 ;
-;       Parameters:         FS      Dhcp server data selector
-;           ES:DI           Position to copy at
-;           CX      Byte remaining
+;       Parameters:     FS      Dhcp server data selector
+;                       ES:EDI           Position to copy at
+;                       ECX      Byte remaining
 ;
-;       Returns:        ES:DI       New position
-;           CX      Byte remaining
+;       Returns:        ES:EDI       New position
+;                       ECX      Byte remaining
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -939,7 +936,7 @@ ServReqMaskData Proc near
     GetIpMask
     mov eax,edx
     stosd
-    sub cx,6
+    sub ecx,6
 ;
     pop edx
     pop eax
@@ -953,14 +950,14 @@ ServReqMaskData Endp
 ;
 ;       Purpose:        Size of gateway
 ;
-;       Parameters:         ES:DI       DHCP header
+;       Parameters:     ES:EDI       DHCP header
 ;
-;       Returns:        CX              Size of client IP
+;       Returns:        ECX              Size of client IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServReqGwSize   Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ServReqGwSize   Endp
     
@@ -971,12 +968,12 @@ ServReqGwSize   Endp
 ;
 ;       Purpose:        Add gateway
 ;
-;       Parameters:         FS      Dhcp server data selector
-;           ES:DI           Position to copy at
-;           CX      Byte remaining
+;       Parameters:     FS      Dhcp server data selector
+;                       ES:EDI           Position to copy at
+;                       ECX      Byte remaining
 ;
-;       Returns:        ES:DI       New position
-;           CX      Byte remaining
+;       Returns:        ES:EDI       New position
+;                       ECX      Byte remaining
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -993,7 +990,7 @@ ServReqGwData   Proc near
     GetIpAddress
     mov eax,edx
     stosd
-    sub cx,6
+    sub ecx,6
 ;
     pop edx
     pop eax
@@ -1008,25 +1005,25 @@ ServReqGwData   Endp
 ;
 ;       Purpose:        Size DNS
 ;
-;       Parameters:         ES:DI       DHCP header
+;       Parameters:     ES:EDI       DHCP header
 ;
-;       Returns:        CX              Size of client IP
+;       Returns:        ECX              Size of client IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServReqDnsSize  Proc near
     push edx
 ;
-    mov cx,2
+    mov ecx,2
     GetDns
     or eax,eax
     jz ServReqDnsSizeDone
 ;
-    add cx,4
+    add ecx,4
     or edx,edx
     jz ServReqDnsSizeDone
 ;
-    add cx,4
+    add ecx,4
 
 ServReqDnsSizeDone:   
     pop edx
@@ -1040,12 +1037,12 @@ ServReqDnsSize  Endp
 ;
 ;       Purpose:        Add dns servers
 ;
-;       Parameters:         FS      Dhcp server data selector
-;           ES:DI           Position to copy at
-;           CX      Byte remaining
+;       Parameters:     FS      Dhcp server data selector
+;                       ES:EDI           Position to copy at
+;                       ECX      Byte remaining
 ;
-;       Returns:        ES:DI       New position
-;           CX      Byte remaining
+;       Returns:        ES:EDI       New position
+;                       ECX      Byte remaining
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1056,13 +1053,13 @@ ServReqDnsData  Proc near
     mov al,6
     stosb
 ;       
-    push cx
+    push ecx
     call ServReqDnsSize
     mov al,cl
     sub al,2
     stosb
-    pop cx
-    sub cx,2
+    pop ecx
+    sub ecx,2
 ;
     GetDns
     or eax,eax
@@ -1070,13 +1067,13 @@ ServReqDnsData  Proc near
 ;
     stosd
     mov eax,edx
-    sub cx,4
+    sub ecx,4
 ;       
     or eax,eax
     jz ServReqDnsDataDone
 ;
     stosd
-    sub cx,4
+    sub ecx,4
     
 ServReqDnsDataDone:
     pop edx
@@ -1091,14 +1088,14 @@ ServReqDnsData  Endp
 ;
 ;       Purpose:        Size server ID field
 ;
-;       Parameters:         ES:DI       DHCP header
+;       Parameters:     ES:DI       DHCP header
 ;
-;       Returns:        CX              Size of server ID
+;       Returns:        ECX              Size of server ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServReqIdSize   Proc near
-    mov cx,6
+    mov ecx,6
     ret
 ServReqIdSize   Endp
     
@@ -1109,12 +1106,12 @@ ServReqIdSize   Endp
 ;
 ;       Purpose:        Add server ID field
 ;
-;       Parameters:         FS      Dhcp server data selector
-;           ES:DI           Position to copy at
-;           CX      Byte remaining
+;       Parameters:     FS      Dhcp server data selector
+;                       ES:EDI           Position to copy at
+;                       ECX      Byte remaining
 ;
-;       Returns:        ES:DI       New position
-;           CX      Byte remaining
+;       Returns:        ES:EDI       New position
+;                       ECX      Byte remaining
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1131,7 +1128,7 @@ ServReqIdData   Proc near
     GetIpAddress
     mov eax,edx
     stosd
-    sub cx,6
+    sub ecx,6
 ;
     pop edx
     pop eax
@@ -1146,42 +1143,42 @@ ServReqIdData   Endp
 ;
 ;       Purpose:        Find option
 ;
-;       Parameters:     ES:DI    DHCP message
-;                       CX       Message size
+;       Parameters:     ES:EDI    DHCP message
+;                       ECX       Message size
 ;                       AL       Option
 ;
-;       Returns:        BX       Option position
+;       Returns:        EBX       Option position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindOption   Proc near
-    push ax
-    push cx
-    push di
+    push eax
+    push ecx
+    push edi
 ;
-    add di,SIZE dhcp_header
-    sub cx,SIZE dhcp_header
+    add edi,SIZE dhcp_header
+    sub ecx,SIZE dhcp_header
 
-    mov bx,OFFSET DiscReqOptTab
+    mov ebx,OFFSET DiscReqOptTab
 
 foLoop:
-    mov ah,es:[di]
+    mov ah,es:[edi]
     cmp ah,-1
     je foFail
 ;
     cmp al,ah
     je foOk
 ;
-    movzx bx,es:[di+1]
-    add bx,2
-    sub cx,bx
+    movzx bx,es:[edi+1]
+    add ebx,2
+    sub ecx,ebx
     jbe foFail
 ;
-    add di,bx
+    add edi,ebx
     jmp foLoop
 
 foOk:
-    mov bx,di
+    mov ebx,edi
     clc
     jmp foDone
 
@@ -1189,9 +1186,9 @@ foFail:
     stc
 
 foDone:
-    pop di
-    pop cx
-    pop ax
+    pop edi
+    pop ecx
+    pop eax
     ret
 Findoption      Endp
 
@@ -1202,37 +1199,37 @@ Findoption      Endp
 ;
 ;       Purpose:        Find option end
 ;
-;       Parameters:     ES:DI    DHCP message
-;                       CX       Message size
+;       Parameters:     ES:EDI    DHCP message
+;                       ECX       Message size
 ;
-;       Returns:        BX       Option end position
+;       Returns:        EBX       Option end position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindOptionEnd   Proc near
-    push cx
-    push di
+    push ecx
+    push edi
 ;
-    add di,SIZE dhcp_header
-    sub cx,SIZE dhcp_header
+    add edi,SIZE dhcp_header
+    sub ecx,SIZE dhcp_header
 
-    mov bx,OFFSET DiscReqOptTab
+    mov ebx,OFFSET DiscReqOptTab
 
 foeLoop:
-    mov al,es:[di]
+    mov al,es:[edi]
     cmp al,-1
     je foeOk
 ;
-    movzx bx,es:[di+1]
-    add bx,2
-    sub cx,bx
+    movzx bx,es:[edi+1]
+    add ebx,2
+    sub ecx,ebx
     jbe foeFail
 ;
-    add di,bx
+    add edi,ebx
     jmp foeLoop
 
 foeOk:
-    mov bx,di
+    mov ebx,edi
     clc
     jmp foeDone
 
@@ -1240,8 +1237,8 @@ foeFail:
     stc
 
 foeDone:
-    pop di
-    pop cx
+    pop edi
+    pop ecx
     ret
 FindoptionEnd   Endp
         
@@ -1251,28 +1248,28 @@ FindoptionEnd   Endp
 ;
 ;       Purpose:        Get size of requested IP address
 ;
-;       Parameters:     ES:DI    DHCP message
-;                       CX       Message size
+;       Parameters:     ES:EDI    DHCP message
+;                       ECX       Message size
 ;
-;       Returns:        AX       Additional size
+;       Returns:        EAX       Additional size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetRequestedIpSize   Proc near
-    push bx
+    push ebx
 ;
     mov al,50
     call FindOption
     jc grisFailed
 ;
-    xor ax,ax
+    xor eax,eax
     jmp grisDone
 
 grisFailed:
-    mov ax,6
+    mov eax,6
 
 grisDone:
-    pop bx
+    pop ebx
     ret
 GetRequestedIpSize      Endp
         
@@ -1282,23 +1279,23 @@ GetRequestedIpSize      Endp
 ;
 ;       Purpose:        Update requested IP address
 ;
-;       Parameters:     ES:DI    DHCP message
-;                       CX       Message size
+;       Parameters:     ES:EDI    DHCP message
+;                       ECX       Message size
 ;
-;       Returns:        CX       New message size
+;       Returns:        ECX       New message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateRequestedIp   Proc near
     push eax
-    push bx
+    push ebx
 ;
     mov al,50
     call FindOption
     jc urqAdd
 ;
     mov eax,ds:dhcp_ip2
-    mov es:[bx+2],eax
+    mov es:[ebx+2],eax
     jmp urqDone
 
 urqAdd:
@@ -1306,14 +1303,14 @@ urqAdd:
     jc urqDone
 ;
     mov eax,ds:dhcp_ip2
-    mov byte ptr es:[bx],50
-    mov byte ptr es:[bx+1],4
-    mov es:[bx+2],eax
-    mov byte ptr es:[bx+6],-1
-    add cx,6
+    mov byte ptr es:[ebx],50
+    mov byte ptr es:[ebx+1],4
+    mov es:[ebx+2],eax
+    mov byte ptr es:[ebx+6],-1
+    add ecx,6
 
 urqDone:
-    pop bx
+    pop ebx
     pop eax
     ret
 UpdateRequestedIp       Endp
@@ -1324,28 +1321,28 @@ UpdateRequestedIp       Endp
 ;
 ;       Purpose:        Get size of lease time
 ;
-;       Parameters:     ES:DI    DHCP message
-;                       CX       Message size
+;       Parameters:     ES:EDI    DHCP message
+;                       ECX       Message size
 ;
-;       Returns:        AX       Additional size
+;       Returns:        EAX       Additional size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetLeaseSize   Proc near
-    push bx
+    push ebx
 ;
     mov al,51
     call FindOption
     jc glsFailed
 ;
-    xor ax,ax
+    xor eax,eax
     jmp glsDone
 
 glsFailed:
-    mov ax,6
+    mov eax,6
 
 glsDone:
-    pop bx
+    pop ebx
     ret
 GetLeaseSize    Endp
         
@@ -1355,16 +1352,16 @@ GetLeaseSize    Endp
 ;
 ;       Purpose:        Update lease time
 ;
-;       Parameters:     ES:DI    DHCP message
-;                       CX       Message size
+;       Parameters:     ES:EDI    DHCP message
+;                       ECX       Message size
 ;
-;       Returns:        CX       New message size
+;       Returns:        ECX       New message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateLease   Proc near
     push eax
-    push bx
+    push ebx
 ;
     mov al,51
     call FindOption
@@ -1372,7 +1369,7 @@ UpdateLease   Proc near
 ;
     mov eax,DEFAULT_LEASE
     Reverse
-    mov es:[bx+2],eax
+    mov es:[ebx+2],eax
     jmp ulDone
 
 ulAdd:
@@ -1381,14 +1378,14 @@ ulAdd:
 ;
     mov eax,DEFAULT_LEASE
     Reverse
-    mov byte ptr es:[bx],51
-    mov byte ptr es:[bx+1],4
-    mov es:[bx+2],eax
-    mov byte ptr es:[bx+6],-1
-    add cx,6
+    mov byte ptr es:[ebx],51
+    mov byte ptr es:[ebx+1],4
+    mov es:[ebx+2],eax
+    mov byte ptr es:[ebx+6],-1
+    add ecx,6
 
 ulDone:
-    pop bx
+    pop ebx
     pop eax
     ret
 UpdateLease     Endp
@@ -1399,16 +1396,16 @@ UpdateLease     Endp
 ;
 ;       Purpose:        Update reply server IP
 ;
-;       Parameters:     ES:DI    DHCP message
-;                       CX       Message size
+;       Parameters:     ES:EDI    DHCP message
+;                       ECX       Message size
 ;
-;       Returns:        CX       New message size
+;       Returns:        ECX       New message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateReplyServerIp   Proc near
     push eax
-    push bx
+    push ebx
     push edx
 ;
     mov al,54
@@ -1416,11 +1413,11 @@ UpdateReplyServerIp   Proc near
     jc urpsiDone
 ;
     GetIpAddress
-    mov es:[bx+2],edx
+    mov es:[ebx+2],edx
 
 urpsiDone:
     pop edx
-    pop bx
+    pop ebx
     pop eax
     ret
 UpdateReplyServerIp     Endp
@@ -1431,30 +1428,30 @@ UpdateReplyServerIp     Endp
 ;
 ;       Purpose:        Update req server IP
 ;
-;       Parameters:     ES:DI    DHCP message
-;                       CX       Message size
+;       Parameters:     ES:EDI    DHCP message
+;                       ECX       Message size
 ;
-;       Returns:        CX       New message size
+;       Returns:        ECX       New message size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateReqServerIp   Proc near
     push eax
-    push bx
+    push ebx
 ;
     mov al,54
     call FindOption
     jc urqsiDone
 ;
     push ds
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov eax,ds:dhcp_server    
-    mov es:[bx+2],eax
+    mov es:[ebx+2],eax
     pop ds
 
 urqsiDone:
-    pop bx
+    pop ebx
     pop eax
     ret
 UpdateReqServerIp       Endp
@@ -1465,8 +1462,8 @@ UpdateReqServerIp       Endp
 ;
 ;       Purpose:        Receive discover
 ;
-;       Parameters:         ES:EDI  UDP data
-;           GS      Driver selector
+;       Parameters:     ES:EDI  UDP data
+;                       GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1754,36 +1751,36 @@ ReceiveRelayOffer Proc near
     push es
     push fs
     push gs
-    push bx
-    push si
-    push di
+    push ebx
+    push esi
+    push edi
 ;
-    mov gs,ax
+    mov gs,eax
     mov fs,gs:dre_driver
 ;
-    mov ax,es
-    mov ds,ax
-    mov si,di
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
 ;
     call CreateUnboundDhcpBroadcast
 ;
-    push cx
-    push di
-    sub si,8
-    sub di,8
-    add cx,8
+    push ecx
+    push edi
+    sub esi,8
+    sub edi,8
+    add ecx,8
     rep movsb
-    pop di
-    pop cx
+    pop edi
+    pop ecx
 ;
     call UpdateReplyServerIp
 ;
-    or es:[di].dhcp_flags,80h
+    or es:[edi].dhcp_flags,80h
     call SendDhcpBroadcast
 ;
-    pop di
-    pop si
-    pop bx
+    pop edi
+    pop esi
+    pop ebx
     pop gs
     pop fs
     pop es
@@ -1798,8 +1795,8 @@ ReceiveRelayOffer Endp
 ;
 ;       Purpose:        Receive request
 ;
-;       Parameters:         ES:EDI  UDP data
-;           GS      Driver selector
+;       Parameters:     ES:EDI  UDP data
+;                       GS      Driver selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2003,43 +2000,43 @@ ReceiveRelayAck Proc near
     push es
     push fs
     push gs
-    push bx
+    push ebx
     push edx
-    push si
-    push di
+    push esi
+    push edi
 ;
-    mov gs,ax
+    mov gs,eax
     mov fs,gs:dre_driver
-    mov edx,es:[di].dhcp_req_ip
+    mov edx,es:[edi].dhcp_req_ip
     mov gs:dre_ip,edx
     GetSystemTime
     mov gs:dre_last_update,eax
     mov gs:dre_last_update+4,edx
 ;
-    mov ax,es
-    mov ds,ax
-    mov si,di
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
 ;
     call CreateUnboundDhcpBroadcast
 ;
-    push cx
-    push di
-    sub si,8
-    sub di,8
-    add cx,8
+    push ecx
+    push edi
+    sub esi,8
+    sub edi,8
+    add ecx,8
     rep movsb
-    pop di
-    pop cx
+    pop edi
+    pop ecx
 ;
     call UpdateReplyServerIp
 ;
-    or es:[di].dhcp_flags,80h
+    or es:[edi].dhcp_flags,80h
     call SendDhcpBroadcast
 ;
-    pop di
-    pop si
+    pop edi
+    pop esi
     pop edx
-    pop bx
+    pop ebx
     pop gs
     pop fs
     pop es
@@ -2063,36 +2060,36 @@ ReceiveRelayNak Proc near
     push es
     push fs
     push gs
-    push bx
-    push si
-    push di
+    push ebx
+    push esi
+    push edi
 ;
-    mov gs,ax
+    mov gs,eax
     mov fs,gs:dre_driver
 ;
-    mov ax,es
-    mov ds,ax
-    mov si,di
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
 ;
     call CreateUnboundDhcpBroadcast
 ;
-    push cx
-    push di
-    sub si,8
-    sub di,8
-    add cx,8
+    push ecx
+    push edi
+    sub esi,8
+    sub edi,8
+    add ecx,8
     rep movsb
-    pop di
-    pop cx
+    pop edi
+    pop ecx
 ;
     call UpdateReplyServerIp
 ;
-    or es:[di].dhcp_flags,80h
+    or es:[edi].dhcp_flags,80h
     call SendDhcpBroadcast
 ;
-    pop di
-    pop si
-    pop bx
+    pop edi
+    pop esi
+    pop ebx
     pop gs
     pop fs
     pop es
@@ -2106,8 +2103,8 @@ ReceiveRelayNak Endp
 ;
 ;       Purpose:        Receive notify from UDP
 ;
-;       Parameters:         GS      Net driver selector
-;           ES:EDI      UDP data
+;       Parameters:     GS      Net driver selector
+;                       ES:EDI      UDP data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
