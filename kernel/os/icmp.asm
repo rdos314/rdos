@@ -92,7 +92,7 @@ code    SEGMENT byte public 'CODE'
 ;
 ;       Purpose:        Received echo reply from IP
 ;
-;       Parameters:         ECX         Size of data
+;       Parameters:     ECX         Size of data
 ;                       EDX         Source IP address
 ;                       DS:ESI  Options
 ;                       ES:EDI  IP Data
@@ -100,8 +100,8 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveEchoReply    Proc near
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov bx,ds:ping_thread
     or bx,bx
     jz receive_echo_reply_done
@@ -124,7 +124,7 @@ ReceiveEchoReply    Endp
 ;
 ;       Purpose:        Received echo from IP
 ;
-;       Parameters:         ECX         Size of data
+;       Parameters:     ECX         Size of data
 ;                       EDX         Source IP address
 ;                       DS:ESI  Options
 ;                       ES:EDI  IP Data
@@ -139,10 +139,8 @@ ReceiveEchoReq  Proc near
 ;
     push es
     push edi
-    mov si,es:[0]
-    mov edx,es:[si].ip_source
-    mov ax,cs
-    mov ds,ax
+    mov ex,cs
+    mov ds,eax
     mov esi,OFFSET PingOptions
     mov ah,20h
     mov al,1
@@ -151,25 +149,25 @@ ReceiveEchoReq  Proc near
     pop ds
     jc rerDone
 ;
-    mov es:[di].icmp_type,0
-    mov es:[di].icmp_code,0
-    mov es:[di].icmp_checksum,0
+    mov es:[edi].icmp_type,0
+    mov es:[edi].icmp_code,0
+    mov es:[edi].icmp_checksum,0
 ;
-    push cx
-    push si
-    push di
-    add si,4
-    add di,4
-    sub cx,4
+    push ecx
+    push esi
+    push edi
+    add esi,4
+    add edi,4
+    sub ecx,4
     rep movsb
-    pop di
-    pop si
-    pop cx
+    pop edi
+    pop esi
+    pop ecx
 ;
     xor ax,ax
     call CalcCheckSum
     not ax
-    mov es:[di].icmp_checksum,ax
+    mov es:[edi].icmp_checksum,ax
 ;        
     SendIp
 
