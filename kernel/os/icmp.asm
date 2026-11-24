@@ -139,7 +139,7 @@ ReceiveEchoReq  Proc near
 ;
     push es
     push edi
-    mov ex,cs
+    mov eax,cs
     mov ds,eax
     mov esi,OFFSET PingOptions
     mov ah,20h
@@ -221,7 +221,7 @@ ReceiveUnreachable    Endp
 ;
 ;       Purpose:        Receive notify from IP
 ;
-;       Parameters:         AX          Size of options
+;       Parameters:     AX          Size of options
 ;                       ECX         Size of data
 ;                       EDX         Source IP address
 ;                       DS:ESI  Options
@@ -252,8 +252,8 @@ rt0E DW OFFSET ReceiveDiscard
 rt0F DW OFFSET ReceiveDiscard
 
 Receive Proc far
-    push ax
-    push bx
+    push eax
+    push ebx
 ;
     xor ax,ax
     call CalcCheckSum
@@ -261,16 +261,16 @@ Receive Proc far
     or ax,ax
     jnz receive_done
 ;
-    movzx bx,es:[di].icmp_type
+    movzx ebx,es:[edi].icmp_type
     cmp bl,16
     ja receive_done
 ;
-    shl bx,1
-    call word ptr cs:[bx].ReceiveTab
+    shl ebx,1
+    call word ptr cs:[ebx].ReceiveTab
 
 receive_done:
-    pop bx
-    pop ax
+    pop ebx
+    pop eax
     retf32
 Receive Endp
 
@@ -281,7 +281,7 @@ Receive Endp
 ;
 ;       Purpose:        Ping node
 ;
-;       Parameters:         EAX         Timeout in ms
+;       Parameters:     EAX         Timeout in ms
 ;                       EDX         Dest IP address
 ;
 ;       Returns:        NC          Ok
@@ -291,8 +291,8 @@ Receive Endp
 ping_name       DB 'Ping',0
 
 PingTimeout     Proc far
-    mov bx,SEG data
-    mov ds,bx
+    mov ebx,SEG data
+    mov ds,ebx
     mov bx,ds:ping_thread
     Signal
     retf32
@@ -312,8 +312,8 @@ ping_node Proc far
     push ebp
 ;
     push eax
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     EnterSection ds:ping_section
     push edx
     GetSystemTime
@@ -324,8 +324,8 @@ ping_node Proc far
     mov ds:ping_status,0
     ClearSignal
 ;
-    mov dx,cs
-    mov ds,dx
+    mov edx,cs
+    mov ds,edx
     mov esi,OFFSET PingOptions
     pop edx
     mov ah,20h
@@ -334,28 +334,28 @@ ping_node Proc far
     CreateIpHeader
     jc ping_pop_fail
 ;
-    mov es:[di].icmp_type,8
-    mov es:[di].icmp_code,0
-    mov es:[di].icmp_checksum,0
-    mov dword ptr es:[di].icmp_data,ebp
-    push cx
-    push di
-    add di,8
-    mov cx,32
+    mov es:[edi].icmp_type,8
+    mov es:[edi].icmp_code,0
+    mov es:[edi].icmp_checksum,0
+    mov dword ptr es:[edi].icmp_data,ebp
+    push ecx
+    push edi
+    add edi,8
+    mov ecx,32
     mov al,'r'
     rep stosb
-    pop di
-    pop cx
+    pop edi
+    pop ecx
     xor ax,ax
     call CalcCheckSum
     not ax
-    mov es:[di].icmp_checksum,ax
+    mov es:[edi].icmp_checksum,ax
     SendIp
 ;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,cs
-    mov es,ax
+    mov eax,SEG data
+    mov ds,eax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET PingTimeout
     pop eax
 ;
@@ -388,8 +388,8 @@ ping_fail:
     jmp ping_done
     
 ping_pop_fail:
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     LeaveSection ds:ping_section
     pop eax
 
@@ -418,14 +418,14 @@ ping_node       Endp
     public init_task_icmp
 
 init_task_icmp       PROC near
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     InitSection ds:ping_section
     mov ds:ping_thread,0
 ;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
 ;
     mov al,1
     mov edi,OFFSET Receive
