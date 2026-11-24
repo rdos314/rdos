@@ -89,7 +89,7 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CalcChecksum
+;           NAME:           CalcCheckSum
 ;
 ;           DESCRIPTION:    Calculate checksum for UDP
 ;
@@ -103,7 +103,7 @@ code    SEGMENT byte public 'CODE'
 
     public CalcCheckSum
 
-CalcChecksum    Proc near
+CalcCheckSum    Proc near
     push ds
     push ecx
     push edx
@@ -137,10 +137,7 @@ calc_checksum_done:
     pop ecx
     pop ds
     ret
-CalcChecksum    Endp
-
-
-
+CalcCheckSum    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

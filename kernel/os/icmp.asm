@@ -82,60 +82,9 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
+    extrn CalcCheckSum:near
     extrn RebindIP:near
     extrn IsDhcpActive:near
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CalcChecksum
-;
-;           DESCRIPTION:    Calculate checksum for TCP
-;
-;           PARAMETERS:         AX          Checksum in
-;                           CX          Size of data
-;                           ES:DI   Data
-;
-;           RETURNS:        AX          Checksum out
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcChecksum    Proc near
-    push ds
-    push cx
-    push dx
-    push si
-;
-    mov si,es
-    mov ds,si
-    mov si,di
-    mov dx,ax
-    shr cx,1
-    pushf
-    clc
-checksum_loop:
-    lodsw
-    adc dx,ax
-    loop checksum_loop
-    adc dx,0
-    adc dx,0
-    popf
-    jnc calc_checksum_done
-    xor ah,ah
-    lodsb
-    add dx,ax
-    adc dx,0
-    adc dx,0
-calc_checksum_done:
-    mov ax,dx
-;
-    pop si
-    pop dx
-    pop cx
-    pop ds
-    ret
-CalcChecksum    Endp
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -218,7 +167,7 @@ ReceiveEchoReq  Proc near
     pop cx
 ;
     xor ax,ax
-    call CalcChecksum
+    call CalcCheckSum
     not ax
     mov es:[di].icmp_checksum,ax
 ;        
@@ -309,7 +258,7 @@ Receive Proc far
     push bx
 ;
     xor ax,ax
-    call CalcChecksum
+    call CalcCheckSum
     not ax
     or ax,ax
     jnz receive_done
@@ -400,7 +349,7 @@ ping_node Proc far
     pop di
     pop cx
     xor ax,ax
-    call CalcChecksum
+    call CalcCheckSum
     not ax
     mov es:[di].icmp_checksum,ax
     SendIp
