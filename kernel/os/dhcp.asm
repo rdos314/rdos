@@ -202,11 +202,11 @@ CalcChecksum    Endp
 ;
 ;       Purpose:        Create a req DHCP broadcast header
 ;
-;       Parameters:         CX              Number of bytes to allocate
+;       Parameters:     CX              Number of bytes to allocate
 ;                       FS              Driver selector
 ;
 ;       Returns:        NC              Ok
-;                       ES:DI       Allocate buffer
+;                       ES:EDI          Allocate buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -214,12 +214,12 @@ ip_options      DB 0
 
 CreateDhcpReqBroadcast  Proc near
     push ds
-    push ax
+    push eax
     push ecx
     push esi
 ;
-    mov ax,cs
-    mov ds,ax
+    mov eax,cs
+    mov ds,eax
     mov esi,OFFSET ip_options
     mov al,17
     mov ah,30
@@ -241,7 +241,7 @@ CreateDhcpReqBroadcast  Proc near
 create_req_br_done:
     pop esi
     pop ecx
-    pop ax
+    pop eax
     pop ds
     ret
 CreateDhcpReqBroadcast  Endp
@@ -253,7 +253,7 @@ CreateDhcpReqBroadcast  Endp
 ;
 ;       Purpose:        Create an unbound req DHCP broadcast header
 ;
-;       Parameters:         CX              Number of bytes to allocate
+;       Parameters:     CX              Number of bytes to allocate
 ;                       FS              Driver selector
 ;
 ;       Returns:        NC              Ok
@@ -263,12 +263,12 @@ CreateDhcpReqBroadcast  Endp
 
 CreateUnboundDhcpBroadcast  Proc near
     push ds
-    push ax
+    push eax
     push ecx
     push esi
 ;
-    mov ax,cs
-    mov ds,ax
+    mov eax,cs
+    mov ds,eax
     mov esi,OFFSET ip_options
     mov al,17
     mov ah,30
@@ -290,7 +290,7 @@ CreateUnboundDhcpBroadcast  Proc near
 create_unb_req_br_done:
     pop esi
     pop ecx
-    pop ax
+    pop eax
     pop ds
     ret
 CreateUnboundDhcpBroadcast  Endp
@@ -302,7 +302,7 @@ CreateUnboundDhcpBroadcast  Endp
 ;
 ;       Purpose:        Create a reply DHCP broadcast header
 ;
-;       Parameters:         CX              Number of bytes to allocate
+;       Parameters:     CX              Number of bytes to allocate
 ;                       FS              Driver selector
 ;
 ;       Returns:        NC              Ok
@@ -312,13 +312,13 @@ CreateUnboundDhcpBroadcast  Endp
 
 CreateDhcpReplyBroadcast    Proc near
     push ds
-    push ax
+    push eax
     push ecx
     push edx
     push esi
 ;
-    mov ax,cs
-    mov ds,ax
+    mov eax,cs
+    mov ds,eax
     mov esi,OFFSET ip_options
     mov al,17
     mov ah,30
@@ -336,7 +336,7 @@ CreateDhcpReplyBroadcast    Proc near
     mov es:[edi].udp_source,ax
 ;
     GetIpAddress
-    mov es:[di-8],edx   
+    mov es:[edi-8],edx   
     add edi,8
     clc
 
@@ -344,7 +344,7 @@ create_reply_br_done:
     pop esi
     pop edx
     pop ecx
-    pop ax
+    pop eax
     pop ds
     ret
 CreateDhcpReplyBroadcast    Endp
@@ -365,10 +365,10 @@ CreateDhcpReplyBroadcast    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendDhcpBroadcast       Proc near
-    push di
+    push edi
 ;
-    sub di,8
-    add cx,8
+    sub edi,8
+    add ecx,8
     xchg cl,ch
     mov es:[edi].udp_len,cx
     xchg cl,ch
@@ -383,12 +383,12 @@ SendDhcpBroadcast       Proc near
     add cx,8
     call CalcChecksum
     not ax
-    add di,8
+    add edi,8
     mov es:[edi].udp_checksum,ax
-    sub cx,8
+    sub ecx,8
     SendBroadcastIp
 ;
-    pop ax
+    pop eax
     ret
 SendDhcpBroadcast       Endp
 
