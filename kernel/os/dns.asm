@@ -692,10 +692,12 @@ get_dns_name    DB 'Get DNS IP',0
 
 get_dns Proc far
     push ds
-    mov dx,SEG data
-    mov ds,dx
+;    
+    mov edx,SEG data
+    mov ds,edx
     mov eax,ds:dns1
     mov edx,ds:dns2
+;    
     pop ds
     retf32
 get_dns Endp
@@ -725,7 +727,7 @@ ip_to_name      Proc near
     push ds
     push es
     push fs
-    push bx
+    push ebx
     push ecx
     push edx
     push esi
@@ -737,8 +739,8 @@ ip_to_name      Proc near
     call FindHostByAddress
     jc ip_to_name_lookup
 ;
-    mov ds,ax
-    mov al,[bx]
+    mov ds,eax
+    mov al,[ebx]
     or al,al
     jnz ip_to_name_registered
 
@@ -759,14 +761,14 @@ ip_to_name_lookup:
     call DigitToString
     mov al,dh
     call DigitToString      
-    mov ax,cs
-    mov ds,ax
-    mov si,OFFSET ReverseDomain
-    mov cx,7
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET ReverseDomain
+    mov ecx,7
     rep movsw
 ;
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
 ;    
     RequestSpinlock ds:dns_spinlock
     mov ax,ds:dns_curr_id
@@ -783,29 +785,29 @@ ip_to_name_lookup:
     stosw                       ; qtype = 12 (PTR)
     mov ax,100h
     stosw                       ; qclass = 1
-    mov ax,es
-    mov fs,ax
-    mov cx,di
+    mov eax,es
+    mov fs,eax
+    mov ecx,edi
     mov edx,ds:dns1
     mov bx,53
     mov eax,2000
-    push cx
+    push ecx
     or edx,edx
     jz ip_to_name_fail
 ;
-    xor di,di
+    xor edi,edi
     QueryUdp
     jc ip_to_name_second
     call DecodeNodeRequest
     jnc ip_to_name_ok
 ip_to_name_second:
-    pop cx
-    mov ax,fs
-    mov es,ax
+    pop ecx
+    mov eax,fs
+    mov es,eax
     mov edx,ds:dns2
     mov bx,53
     mov eax,2000
-    push cx
+    push ecx
 ;    
     or edx,edx
     jz ip_to_name_fail
@@ -817,11 +819,11 @@ ip_to_name_second:
     jnc ip_to_name_ok
 
 ip_to_name_fail:
-    pop ax
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
+    pop eax
+    mov eax,fs
+    mov es,eax
+    xor eax,eax
+    mov fs,eax
     FreeMem
     pop edi
     pop ecx
@@ -830,17 +832,17 @@ ip_to_name_fail:
     jmp ip_to_name_done
 
 ip_to_name_ok:
-    pop ax
+    pop eax
     pop edi
     pop ecx
     pop es
 ;
 ; decode it here!
 ;
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
+    mov eax,fs
+    mov es,eax
+    xor eax,eax
+    mov fs,eax
     FreeMem
     stc
     jmp ip_to_name_done
@@ -850,7 +852,7 @@ ip_to_name_registered:
     pop ecx
     pop es
     xor edx,edx
-    mov si,bx
+    mov esi,ebx
 
 ip_to_name_retr_loop:
     or ecx,ecx
@@ -871,7 +873,7 @@ ip_to_name_done:
     pop esi
     pop edx
     pop ecx
-    pop bx
+    pop ebx
     pop fs
     pop es
     pop ds

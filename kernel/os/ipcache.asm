@@ -99,7 +99,7 @@ ctF8 DB 0,          0,          0,          0,          0,          0,          
 ;       Parameters:         EDX         IP address to find
 ;
 ;       Returns:        AX          Host selector
-;                       BX          Offset to host name
+;                       EBX         Offset to host name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -134,7 +134,7 @@ find_address_fail:
 find_address_ok:
     LeaveSection ds:ip_cache_section
     mov ax,es
-    mov bx,ds:ip_cache_entry_size
+    movzx ebx,ds:ip_cache_entry_size
     clc
 
 find_address_done:
@@ -153,7 +153,7 @@ FindHostByAddress       Endp
 ;       Parameters:         ES:EDI      Host name to find
 ;
 ;       Returns:        AX              Host selector
-;                       BX              Offset to name
+;                       EBX              Offset to name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -217,7 +217,7 @@ find_name_ok:
     pop edi
     LeaveSection ds:ip_cache_section
     mov ax,fs
-    mov bx,ds:ip_cache_entry_size
+    movzx ebx,ds:ip_cache_entry_size
     clc
 
 find_name_done:
