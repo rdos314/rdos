@@ -393,7 +393,7 @@ InitHost    Endp
 ;
 ;       Parameters:         ES:EDI      Host name
 ;
-;       Returns:        CX              Size of host name (0 if invalid)
+;       Returns:        ECX              Size of host name (0 if invalid)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -404,7 +404,8 @@ GetHostNameSize Proc near
     push bx
     push edi
 ;
-    xor cx,cx
+    xor ecx,ecx
+
 get_name_size_loop:
     movzx bx,es:[edi]
     or bl,bl
