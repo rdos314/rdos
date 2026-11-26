@@ -367,25 +367,25 @@ hook_ip Proc far
     push ds
     push es
     push eax
-    push bx
+    push ebx
 ;
-    push ax
-    mov bx,es
+    push eax
+    mov ebx,es
     mov eax,SIZE ip_protocol_data
     AllocateSmallGlobalMem
     mov dword ptr es:prot_callback,edi
     mov word ptr es:prot_callback+4,bx
-    pop ax
+    pop eax
     mov es:prot_id,al
 ;
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,ds:protocol_count
+    mov eax,SEG data
+    mov ds,eax
+    movzx ebx,ds:protocol_count
     inc ds:protocol_count
-    add bx,bx
-    mov ds:[bx].protocol_arr,es
+    add ebx,ebx
+    mov ds:[ebx].protocol_arr,es
 ;
-    pop bx
+    pop ebx
     pop eax
     pop es
     pop ds
@@ -408,8 +408,8 @@ get_ip_address_name     DB 'Get IP Address',0
 get_ip_address  Proc far
     push ds
 ;
-    mov dx,SEG data
-    mov ds,dx
+    mov edx,SEG data
+    mov ds,edx
     mov edx,ds:my_ip
 ;
     pop ds
@@ -432,8 +432,8 @@ get_gateway_name    DB 'Get Gateway',0
 get_gateway     Proc far
     push ds
 ;
-    mov dx,SEG data
-    mov ds,dx
+    mov edx,SEG data
+    mov ds,edx
     mov edx,ds:gateway
 ;
     pop ds
@@ -456,8 +456,8 @@ get_ip_mask_name    DB 'Get IP Mask',0
 get_ip_mask     Proc far
     push ds
 ;
-    mov dx,SEG data
-    mov ds,dx
+    mov edx,SEG data
+    mov ds,edx
     mov edx,ds:ip_mask
 ;
     pop ds
@@ -666,7 +666,7 @@ create_header_pad_loop:
     jmp create_header_pad_loop          
 
 create_header_fail_pop:
-    xor ax,ax
+    xor eax,eax
     mov es,eax
     xor edi,edi
     pop eax
@@ -707,24 +707,24 @@ send_ip_data    Proc far
     push ds
     push fs
     push eax
-    push bx
-    push dx
+    push ebx
+    push edx
     push ecx
     push esi
     push edi
 ;
     mov ax,es
     mov ds,ax
-    mov di,ds:[0]
+    movzx edi,ds:[0]
     call CalcHeaderChecksum
 ;
-    movzx ecx,ds:[di].ip_size
+    movzx ecx,ds:[edi].ip_size
     xchg cl,ch
 ;
-    mov ax,SEG data
-    mov fs,ax
+    mov eax,SEG data
+    mov fs,eax
     mov bx,fs:ip_handle
-    mov eax,ds:[di].ip_dest
+    mov eax,ds:[edi].ip_dest
     cmp eax,fs:my_ip
     je send_self
 ;
@@ -746,8 +746,8 @@ send_ppp:
     jmp send_done
 
 send_gateway:
-    mov ax,fs
-    mov ds,ax
+    mov eax,fs
+    mov ds,eax
     mov esi,OFFSET gateway
     SendNet
     jmp send_done
@@ -761,16 +761,16 @@ send_self:
     push ax
     call near ptr Receive
 ;
-    xor ax,ax
-    mov ds,ax
+    xor eax,eax
+    mov ds,eax
     FreeMem
     jmp send_done
 
 send_local_net:
-    push ds:[di].ip_dest
-    mov ax,ss
-    mov ds,ax
-    movzx esi,sp
+    push ds:[edi].ip_dest
+    mov eax,ss
+    mov ds,eax
+    mov esi,esp
     SendNet
     pop eax
 
@@ -778,8 +778,8 @@ send_done:
     pop edi
     pop esi
     pop ecx
-    pop dx
-    pop bx
+    pop edx
+    pop ebx
     pop eax
     pop fs
     pop ds
