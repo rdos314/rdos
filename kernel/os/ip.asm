@@ -807,80 +807,80 @@ create_broadcast_ip_name    DB 'Create Broadcast IP',0
 
 create_broadcast_ip     Proc far
     push eax
-    push bx
+    push ebx
     push ecx
     push esi
     push ebp
 ;
     push ds
-    push ax
-    push cx
-    mov cx,SIZE ip_header
+    push eax
+    push ecx
+    mov ecx,SIZE ip_header
     push esi
 create_broad_opt_loop:
     mov al,[esi]
     or al,al
     jz create_broad_alloc
     inc esi
-    inc cx
+    inc ecx
     cmp al,1
     jz create_broad_opt_loop
 ;
     movzx eax,byte ptr [esi]
     dec al
-    add cx,ax
+    add ecx,eax
     add esi,eax
     jmp create_broad_opt_loop
 
 create_broad_alloc:     
     pop esi
-    mov bx,cx
-    dec cx
-    and cx,NOT 3
-    add cx,4
-    movzx eax,cx
-    pop cx
-    add ax,cx
+    mov ebx,ecx
+    dec ecx
+    and ecx,NOT 3
+    add ecx,4
+    mov eax,ecx
+    pop ecx
+    add eax,ecx
 ;
-    push ax
-    push bx
-    mov cx,ax
-    mov bx,SEG data
-    mov ds,bx
+    push eax
+    push ebx
+    mov ecx,eax
+    mov ebx,SEG data
+    mov ds,ebx
     mov bx,ds:ip_handle
     GetBroadcastBuffer
-    pop ax
-    pop cx
-    pop dx
+    pop eax
+    pop ecx
+    pop edx
     pop ds
     jc create_broad_fail
 
 create_broad_fill:
-    mov bp,di
+    mov ebp,edi
     mov es:[0],di
     dec ax
     shr ax,2
     inc ax
     or al,40h
-    mov es:[di].ip_hdr_ver,al
-    mov es:[di].ip_tos,0
+    mov es:[edi].ip_hdr_ver,al
+    mov es:[edi].ip_tos,0
     xchg cl,ch
-    mov es:[di].ip_size,cx
-    mov es:[di].ip_frags,40h
-    mov es:[di].ip_ttl,dh
-    mov es:[di].ip_proto,dl
-    mov es:[di].ip_checksum,0
+    mov es:[edi].ip_size,cx
+    mov es:[edi].ip_frags,40h
+    mov es:[edi].ip_ttl,dh
+    mov es:[edi].ip_proto,dl
+    mov es:[edi].ip_checksum,0
 ;
     push ds
-    mov ax,SEG data
-    mov ds,ax
+    mov eax,SEG data
+    mov ds,eax
     mov ax,ds:curr_id
     inc ds:curr_id
     xchg al,ah
-    mov es:[di].ip_id,ax
+    mov es:[edi].ip_id,ax
     mov eax,ds:bc_ip
-    mov es:[di].ip_source,eax
-    mov es:[di].ip_dest,-1
+    mov es:[edi].ip_source,eax
+    mov es:[edi].ip_dest,-1
     pop ds
 ;
     add edi,SIZE ip_header
@@ -896,19 +896,19 @@ create_broad_copy_opt:
     jmp create_broad_copy_opt
 
 create_broad_pad:
-    mov si,di
-    sub si,bp
+    mov esi,edi
+    sub esi,ebp
     xor al,al
 create_broad_pad_loop:
-    test si,3
+    test esi,3
     jz create_broad_ok
     stos byte ptr es:[edi]
-    inc si
+    inc esi
     jmp create_broad_pad_loop           
 
 create_broad_fail:
-    xor ax,ax
-    mov es,ax
+    xor eax,eax
+    mov es,eax
     xor edi,edi
     stc
     jmp create_broad_done
@@ -920,7 +920,7 @@ create_broad_done:
     pop ebp
     pop esi
     pop ecx
-    pop bx
+    pop ebx
     pop eax
     retf32
 create_broadcast_ip     Endp
